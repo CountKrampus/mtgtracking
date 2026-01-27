@@ -121,6 +121,10 @@ function App() {
   const [commanderRecs, setCommanderRecs] = useState([]);
   const [loadingCommanders, setLoadingCommanders] = useState(false);
   const [commanderColorFilter, setCommanderColorFilter] = useState('auto');
+  const [commanderFinderMode, setCommanderFinderMode] = useState('collection'); // 'collection' | 'finder'
+  const [finderColors, setFinderColors] = useState([]);
+  const [finderThemes, setFinderThemes] = useState([]);
+  const [finderCreatureType, setFinderCreatureType] = useState('');
 
   // Set Completion Tracker
   const [showSetCompletion, setShowSetCompletion] = useState(false);
@@ -1502,6 +1506,68 @@ function App() {
     }
   };
 
+  const searchCommandersByPreference = async () => {
+    setLoadingCommanders(true);
+    setCommanderRecs([]);
+
+    const themeSearches = {
+      tokens: 'o:"create" o:"token"',
+      graveyard: 'o:"graveyard"',
+      counters: 'o:"+1/+1 counter"',
+      lifegain: 'o:"gain" o:"life"',
+      sacrifice: 'o:"sacrifice"',
+      spellslinger: '(o:"instant" o:"sorcery")',
+      artifacts: 'o:"artifact"',
+      enchantments: 'o:"enchantment"',
+      tribal: 'o:"creature you control"',
+      ramp: 'o:"search your library" o:"land"',
+      draw: 'o:"draw" o:"card"',
+      control: '(o:"counter target" OR o:"destroy target")',
+      voltron: '(o:"equip" OR o:"aura" OR o:"attach")',
+      mill: 'o:"mill"',
+      blink: '(o:"exile" o:"return" o:"battlefield")',
+      stax: '(o:"can\'t" OR o:"don\'t untap")',
+      grouphug: '(o:"each player" o:"draw")',
+      aristocrats: '(o:"when" o:"dies")',
+      storm: '(o:"copy" o:"spell")',
+      landfall: 'o:"landfall"',
+    };
+
+    try {
+      let parts = ['t:legendary', 't:creature'];
+
+      // Color identity
+      if (finderColors.length > 0) {
+        parts.push(`id<=${finderColors.join('').toLowerCase()}`);
+      }
+
+      // Themes (OR them together if multiple)
+      const themeQueries = finderThemes.map(t => themeSearches[t]).filter(Boolean);
+      if (themeQueries.length === 1) {
+        parts.push(themeQueries[0]);
+      } else if (themeQueries.length > 1) {
+        parts.push(`(${themeQueries.join(' OR ')})`);
+      }
+
+      // Creature type
+      if (finderCreatureType.trim()) {
+        parts.push(`t:${finderCreatureType.trim().toLowerCase()}`);
+      }
+
+      const searchQuery = parts.join(' ');
+      const response = await axios.get(
+        `https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}&order=edhrec&unique=cards`
+      );
+
+      setCommanderRecs(response.data.data.slice(0, 20));
+    } catch (error) {
+      console.error('Error searching commanders by preference:', error);
+      setCommanderRecs([]);
+    } finally {
+      setLoadingCommanders(false);
+    }
+  };
+
   // Set Completion Tracker Functions
   const getSetCompletionData = async () => {
     setShowSetCompletion(true);
@@ -1924,7 +1990,7 @@ function App() {
       if (showLocationManager) { setShowLocationManager(false); return; }
       if (showSimilarCards) { setShowSimilarCards(false); return; }
       if (showSynergies) { setShowSynergies(false); return; }
-      if (showCommanderRecs) { setShowCommanderRecs(false); return; }
+      if (showCommanderRecs) { setShowCommanderRecs(false); setCommanderFinderMode('collection'); return; }
       if (showSetCompletion) { setShowSetCompletion(false); return; }
       if (showComboFinder) { setShowComboFinder(false); return; }
       if (showImportResults) { setShowImportResults(false); return; }
@@ -3435,52 +3501,139 @@ function App() {
                   <h2 className="text-2xl font-bold text-white flex items-center gap-2">
                     <Crown className="text-amber-500" size={24} /> Commander Recommendations
                   </h2>
-                  <p className="text-white/60 mt-1">
-                    Commanders that match your collection's colors and themes
-                  </p>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => setCommanderFinderMode('collection')}
+                      className={`px-3 py-1 rounded text-sm font-medium transition ${commanderFinderMode === 'collection' ? 'bg-amber-600 text-white' : 'bg-white/10 text-white/60 hover:bg-white/20'}`}
+                    >
+                      From Collection
+                    </button>
+                    <button
+                      onClick={() => setCommanderFinderMode('finder')}
+                      className={`px-3 py-1 rounded text-sm font-medium transition ${commanderFinderMode === 'finder' ? 'bg-amber-600 text-white' : 'bg-white/10 text-white/60 hover:bg-white/20'}`}
+                    >
+                      Commander Finder
+                    </button>
+                  </div>
                 </div>
                 <button
-                  onClick={() => { setShowCommanderRecs(false); setCommanderRecs([]); }}
+                  onClick={() => { setShowCommanderRecs(false); setCommanderRecs([]); setCommanderFinderMode('collection'); }}
                   className="text-white/60 hover:text-white transition"
                 >
                   <X size={24} />
                 </button>
               </div>
 
-              {/* Color Filter */}
-              <div className="px-6 py-3 bg-white/5 border-b border-white/10 flex items-center gap-4">
-                <span className="text-white/60 text-sm">Filter by color:</span>
-                <select
-                  value={commanderColorFilter}
-                  onChange={(e) => { setCommanderColorFilter(e.target.value); }}
-                  className="px-3 py-1 bg-white/20 border border-white/30 rounded text-white text-sm"
-                >
-                  <option value="auto">Auto (based on collection)</option>
-                  <option value="all">All Colors</option>
-                  <option value="w">White</option>
-                  <option value="u">Blue</option>
-                  <option value="b">Black</option>
-                  <option value="r">Red</option>
-                  <option value="g">Green</option>
-                  <option value="wubrg">5-Color</option>
-                </select>
-                <button
-                  onClick={getCommanderRecommendations}
-                  className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm transition"
-                >
-                  Refresh
-                </button>
-              </div>
+              {/* Mode-specific controls */}
+              {commanderFinderMode === 'collection' ? (
+                <div className="px-6 py-3 bg-white/5 border-b border-white/10 flex items-center gap-4">
+                  <span className="text-white/60 text-sm">Filter by color:</span>
+                  <select
+                    value={commanderColorFilter}
+                    onChange={(e) => { setCommanderColorFilter(e.target.value); }}
+                    className="px-3 py-1 bg-white/20 border border-white/30 rounded text-white text-sm"
+                  >
+                    <option value="auto">Auto (based on collection)</option>
+                    <option value="all">All Colors</option>
+                    <option value="w">White</option>
+                    <option value="u">Blue</option>
+                    <option value="b">Black</option>
+                    <option value="r">Red</option>
+                    <option value="g">Green</option>
+                    <option value="wubrg">5-Color</option>
+                  </select>
+                  <button
+                    onClick={getCommanderRecommendations}
+                    className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm transition"
+                  >
+                    Refresh
+                  </button>
+                </div>
+              ) : (
+                <div className="px-6 py-4 bg-white/5 border-b border-white/10 space-y-3">
+                  {/* Color Identity Picker */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-white/60 text-sm w-24 shrink-0">Colors:</span>
+                    <div className="flex gap-2">
+                      {[
+                        { code: 'W', label: 'W', bg: 'bg-yellow-100', active: 'bg-yellow-300 ring-2 ring-yellow-400', text: 'text-yellow-900' },
+                        { code: 'U', label: 'U', bg: 'bg-blue-200', active: 'bg-blue-400 ring-2 ring-blue-500', text: 'text-blue-900' },
+                        { code: 'B', label: 'B', bg: 'bg-gray-400', active: 'bg-gray-600 ring-2 ring-gray-500', text: 'text-gray-100' },
+                        { code: 'R', label: 'R', bg: 'bg-red-200', active: 'bg-red-500 ring-2 ring-red-400', text: 'text-red-900' },
+                        { code: 'G', label: 'G', bg: 'bg-green-200', active: 'bg-green-500 ring-2 ring-green-400', text: 'text-green-900' },
+                      ].map(({ code, label, bg, active, text }) => (
+                        <button
+                          key={code}
+                          onClick={() => setFinderColors(prev => prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code])}
+                          className={`w-8 h-8 rounded-full font-bold text-sm flex items-center justify-center transition ${text} ${finderColors.includes(code) ? active : `${bg} opacity-40 hover:opacity-70`}`}
+                          title={code === 'W' ? 'White' : code === 'U' ? 'Blue' : code === 'B' ? 'Black' : code === 'R' ? 'Red' : 'Green'}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                      {finderColors.length > 0 && (
+                        <button
+                          onClick={() => setFinderColors([])}
+                          className="px-2 py-1 text-white/40 hover:text-white/70 text-xs transition"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    {finderColors.length === 0 && <span className="text-white/40 text-xs">Any color</span>}
+                  </div>
+
+                  {/* Strategy/Theme Selector */}
+                  <div className="flex items-start gap-3">
+                    <span className="text-white/60 text-sm w-24 shrink-0 pt-1">Themes:</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        'tokens', 'graveyard', 'counters', 'lifegain', 'sacrifice',
+                        'spellslinger', 'artifacts', 'enchantments', 'tribal', 'ramp',
+                        'draw', 'control', 'voltron', 'mill', 'blink',
+                        'stax', 'grouphug', 'aristocrats', 'storm', 'landfall'
+                      ].map(theme => (
+                        <button
+                          key={theme}
+                          onClick={() => setFinderThemes(prev => prev.includes(theme) ? prev.filter(t => t !== theme) : [...prev, theme])}
+                          className={`px-2 py-0.5 rounded text-xs font-medium transition ${finderThemes.includes(theme) ? 'bg-amber-600 text-white' : 'bg-white/10 text-white/60 hover:bg-white/20'}`}
+                        >
+                          {theme === 'grouphug' ? 'Group Hug' : theme === 'counters' ? '+1/+1 Counters' : theme === 'blink' ? 'Blink/Flicker' : theme.charAt(0).toUpperCase() + theme.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Creature Type Input + Search Button */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-white/60 text-sm w-24 shrink-0">Type:</span>
+                    <input
+                      type="text"
+                      value={finderCreatureType}
+                      onChange={(e) => setFinderCreatureType(e.target.value)}
+                      placeholder="e.g. Dragon, Elf, Zombie (optional)"
+                      className="px-3 py-1 bg-white/10 border border-white/20 rounded text-white text-sm placeholder-white/30 w-64"
+                      onKeyDown={(e) => { if (e.key === 'Enter') searchCommandersByPreference(); }}
+                    />
+                    <button
+                      onClick={searchCommandersByPreference}
+                      className="px-4 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm font-medium transition flex items-center gap-1.5"
+                    >
+                      <Search size={14} /> Search
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="p-6 overflow-y-auto flex-1">
                 {loadingCommanders ? (
                   <div className="flex flex-col items-center justify-center py-12">
                     <RefreshCw size={48} className="text-amber-500 animate-spin mb-4" />
-                    <p className="text-white/60">Analyzing your collection and finding commanders...</p>
+                    <p className="text-white/60">{commanderFinderMode === 'collection' ? 'Analyzing your collection and finding commanders...' : 'Searching for commanders...'}</p>
                   </div>
                 ) : commanderRecs.length === 0 ? (
                   <div className="text-center py-12">
-                    <p className="text-white/60">No commanders found. Try adjusting the color filter.</p>
+                    <p className="text-white/60">{commanderFinderMode === 'collection' ? 'No commanders found. Try adjusting the color filter.' : 'Select colors, themes, or a creature type and click Search.'}</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -3514,7 +3667,7 @@ function App() {
 
               <div className="p-4 border-t border-white/10 bg-white/5">
                 <p className="text-white/40 text-xs text-center">
-                  Recommendations based on your collection's colors and card themes • Sorted by EDHREC popularity
+                  {commanderFinderMode === 'collection' ? 'Recommendations based on your collection\'s colors and card themes' : 'Search results based on your selected preferences'} • Sorted by EDHREC popularity
                 </p>
               </div>
             </div>
