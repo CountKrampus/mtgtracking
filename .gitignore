@@ -3,6 +3,8 @@ node_modules/
 
 # Environment (contains database credentials)
 backend/.env
+.env.cloud
+.env.local
 
 # Cached card images (downloaded per-install)
 backend/cached-images/
