@@ -1,0 +1,30 @@
+════════════════════════════════════════════════════════════
+  MTG Tracker - Linux One-Command Installation
+════════════════════════════════════════════════════════════
+
+Just run this:
+
+    chmod +x install-linux.sh && ./install-linux.sh
+
+
+That's it! The script will install everything automatically:
+  ✓ Node.js 20.x
+  ✓ MongoDB 7.0
+  ✓ All dependencies
+  ✓ Configuration files
+  ✓ Start services
+  ✓ Launch the app
+
+Supported: Ubuntu, Debian, Fedora, RHEL, CentOS, Arch, Manjaro
+
+════════════════════════════════════════════════════════════
+
+After installation, start the app anytime with:
+
+    npm start
+
+or
+
+    ./start.sh
+
+════════════════════════════════════════════════════════════

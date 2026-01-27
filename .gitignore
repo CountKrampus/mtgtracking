@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Environment (contains database credentials)
+backend/.env
+
+# Cached card images (downloaded per-install)
+backend/cached-images/
+
+# Frontend build output
+frontend/build/
+
+# MongoDB local data
+data/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

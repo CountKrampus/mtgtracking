@@ -1,0 +1,15 @@
+  [boo]
+     path = /home/boo
+     browseable = yes
+     read only = no
+     guest ok = yes
+     force user = boo
+     create mask = 0644
+     directory mask = 0755
+
+     sudo nano /etc/samba/smb.conf
+     sudo systemctl restart smbd
+
+
+     mongodump --db mtg-tracker
+     mongorestore --db mtg-tracker ./dump/mtg-tracker

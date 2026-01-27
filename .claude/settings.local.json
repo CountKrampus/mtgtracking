@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod:*)",
+      "Bash(npm install:*)",
+      "Bash(curl:*)",
+      "Bash(timeout 30 npm start)",
+      "Bash(npx eslint:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm i:*)",
+      "Bash(sudo npm i:*)",
+      "WebSearch",
+      "Bash(ls:*)",
+      "Bash(npx react-scripts build)"
+    ]
+  }
+}

@@ -1,0 +1,126 @@
+/* Fix dropdown option visibility */
+select {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+select option {
+  background-color: #1f2937;
+  color: white;
+  padding: 8px;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+  background-color: #4f46e5;
+  color: white;
+}
+
+/* Additional styling for better dropdown UX */
+select::-ms-expand {
+  display: none;
+}
+
+/* Print Proxy Styles */
+@media print {
+  /* Hide everything except print content */
+  body * {
+    visibility: hidden;
+  }
+
+  .print-content,
+  .print-content * {
+    visibility: visible;
+  }
+
+  .print-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  .print-page {
+    page-break-after: always;
+    margin: 0 !important;
+    padding: 0.25in !important;
+    box-shadow: none !important;
+  }
+
+  .print-page:last-child {
+    page-break-after: avoid;
+  }
+
+  .proxy-card {
+    border: 1px solid #ccc;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .proxy-card img {
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  /* Hide scrollbars and overflow */
+  html, body {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: letter portrait;
+    margin: 0;
+  }
+
+  /* QR Label Print Styles */
+  .label-item {
+    page-break-inside: avoid;
+    border: 1px solid #ccc !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+/* QR Label Styles */
+.label-item {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+/* Mobile sidebar overlay - prevent body scroll when open */
+body.sidebar-open {
+  overflow: hidden;
+}
+
+/* Smooth transitions for sidebar */
+.sidebar-transition {
+  transition: width 300ms ease, transform 300ms ease;
+}
+
+/* Mobile hamburger button offset for main content */
+@media (max-width: 639px) {
+  .mobile-content-offset {
+    padding-top: 3.5rem;
+  }
+}
+
+/* Scrollbar styling for main content area */
+main::-webkit-scrollbar {
+  width: 8px;
+}
+
+main::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+main::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+main::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
