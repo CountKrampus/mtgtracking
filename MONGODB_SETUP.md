@@ -63,7 +63,7 @@ MONGODB_URI=mongodb://localhost:27017/mtg-tracker
 
 **For cloud:**
 ```
-MONGODB_URI=mongodb+srv://coltongass_db_user:M1gDfkZSXDX6XIAD@mtgcards.hbqvogq.mongodb.net/
+MONGODB_URI=
 ```
 
 ## Important Notes
@@ -118,3 +118,4 @@ Look at your terminal when starting the backend:
 **Data not showing up**
 - You switched databases (local and cloud are separate)
 - Each database stores its own data independently
+
