@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
 
 export function LoginForm({ onLogin, onSwitchToRegister, error: externalError }) {
@@ -6,6 +7,7 @@ export function LoginForm({ onLogin, onSwitchToRegister, error: externalError })
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,6 +24,11 @@ export function LoginForm({ onLogin, onSwitchToRegister, error: externalError })
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleForgotPassword = (e) => {
+    e.preventDefault();
+    navigate('/forgot-password');
   };
 
   const displayError = error || externalError;
@@ -74,6 +81,16 @@ export function LoginForm({ onLogin, onSwitchToRegister, error: externalError })
                 required
               />
             </div>
+          </div>
+
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              className="text-sm text-purple-400 hover:text-purple-300"
+            >
+              Forgot password?
+            </button>
           </div>
 
           <button

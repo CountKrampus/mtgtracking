@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Search, Plus, Trash2, Edit2, Save, X, Download, RefreshCw, DollarSign, Upload, Camera, Settings, Heart, CheckSquare, Square, MapPin, Star, Layers, Zap, Crown, BarChart3, Users, QrCode, Printer, Home, BookOpen } from 'lucide-react';
 import QRCode from 'qrcode';
@@ -12,6 +13,9 @@ import { AuthProvider, useAuthContext } from './contexts/AuthContext';
 import { AuthGuard } from './components/auth/AuthGuard';
 import { AccountSettings } from './components/auth/AccountSettings';
 import { AdminPanel } from './components/admin/AdminPanel';
+import ForgotPasswordForm from './components/auth/ForgotPasswordForm';
+import ResetPasswordForm from './components/auth/ResetPasswordForm';
+import MainDashboard from './MainDashboard';
 
 const DeckBuilder = React.lazy(() => import('./components/DeckBuilder'));
 const CameraModal = React.lazy(() => import('./components/CameraModal'));
@@ -5068,15 +5072,78 @@ function App() {
   );
 }
 
-// Wrap App with AuthProvider and AuthGuard
-function AppWithAuth() {
+// Login Wrapper Component to access navigate
+function LoginWrapper() {
+  const navigate = useNavigate();
+  const { login } = useAuthContext();
+
+  const handleLogin = async (email, password) => {
+    return await login(email, password);
+  };
+
+  const handleSwitchToRegister = () => {
+    navigate('/register');
+  };
+
   return (
-    <AuthProvider>
-      <AuthGuard>
-        <App />
-      </AuthGuard>
-    </AuthProvider>
+    <LoginForm 
+      onLogin={handleLogin}
+      onSwitchToRegister={handleSwitchToRegister}
+    />
   );
 }
 
-export default AppWithAuth;
+// Main App Component with Routing
+function AppContent() {
+  const location = useLocation();
+  const { isMultiUserEnabled } = useAuthContext();
+
+  // Determine if we should show auth forms based on location or system status
+  const showAuthForms = location.pathname.startsWith('/login') || 
+                       location.pathname.startsWith('/register') || 
+                       location.pathname.startsWith('/forgot-password') || 
+                       location.pathname.startsWith('/reset-password') ||
+                       !isMultiUserEnabled;
+
+  if (showAuthForms) {
+    // Show auth forms when on auth routes or multi-user is disabled
+    return (
+      <div className="min-h-screen bg-gray-900">
+        <Routes>
+          <Route path="/login" element={<LoginWrapper />} />
+          <Route path="/register" element={<RegisterForm />} />
+          <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordForm />} />
+          <Route path="/" element={
+            isMultiUserEnabled ? 
+            <Navigate to="/login" replace /> : 
+            <MainDashboard />
+          } />
+          <Route path="*" element={
+            isMultiUserEnabled ? 
+            <Navigate to="/login" replace /> : 
+            <MainDashboard />
+          } />
+        </Routes>
+      </div>
+    );
+  }
+
+  // For protected routes, show the main dashboard
+  return <MainDashboard />;
+}
+
+// Wrap App with AuthProvider and Router
+function AppWithProviders() {
+  return (
+    <Router>
+      <AuthProvider>
+        <AuthGuard>
+          <AppContent />
+        </AuthGuard>
+      </AuthProvider>
+    </Router>
+  );
+}
+
+export default AppWithProviders;

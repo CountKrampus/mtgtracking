@@ -4,10 +4,12 @@ const router = express.Router();
 const User = require('../models/User');
 const Session = require('../models/Session');
 const SystemSettings = require('../models/SystemSettings');
+const PasswordResetToken = require('../models/PasswordResetToken');
 const { hashPassword, verifyPassword, validatePasswordStrength } = require('../utils/passwords');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/jwt');
 const { isMultiUserEnabled, verifyToken, requireAuth } = require('../middleware/auth');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
+const { sendPasswordResetEmail, sendPasswordChangedEmail } = require('../utils/email');
 
 /**
  * GET /api/auth/status
@@ -385,6 +387,170 @@ router.get('/me', verifyToken, requireAuth, async (req, res) => {
     res.json(user.toSafeObject());
   } catch (error) {
     console.error('Get user error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * POST /api/auth/forgot-password
+ * Send password reset email to user
+ */
+router.post('/forgot-password', async (req, res) => {
+  try {
+    if (!isMultiUserEnabled()) {
+      return res.status(400).json({
+        message: 'Multi-user mode is not enabled',
+        code: 'MULTI_USER_DISABLED'
+      });
+    }
+
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        message: 'Email is required',
+        code: 'MISSING_EMAIL'
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    // Don't reveal if user exists or not for security
+    if (!user) {
+      // Still return success to prevent user enumeration
+      return res.json({
+        message: 'If an account with that email exists, a password reset link has been sent.'
+      });
+    }
+
+    // Check if user is active
+    if (!user.isActive) {
+      return res.json({
+        message: 'If an account with that email exists, a password reset link has been sent.'
+      });
+    }
+
+    // Create password reset token
+    const resetToken = await PasswordResetToken.createToken(user._id);
+
+    // Send password reset email
+    const emailSent = await sendPasswordResetEmail(user, resetToken.token);
+
+    if (!emailSent) {
+      console.error('Failed to send password reset email for user:', user.email);
+      // Still return success to prevent user enumeration
+      return res.json({
+        message: 'If an account with that email exists, a password reset link has been sent.'
+      });
+    }
+
+    // Log activity
+    await logActivity({
+      userId: user._id,
+      action: 'forgot_password_request',
+      category: 'auth',
+      targetType: 'user',
+      targetId: user._id,
+      targetName: user.username,
+      ipAddress: getClientIp(req),
+      metadata: {
+        email: user.email
+      }
+    });
+
+    res.json({
+      message: 'If an account with that email exists, a password reset link has been sent.'
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * POST /api/auth/reset-password
+ * Reset user password using token
+ */
+router.post('/reset-password', async (req, res) => {
+  try {
+    if (!isMultiUserEnabled()) {
+      return res.status(400).json({
+        message: 'Multi-user mode is not enabled',
+        code: 'MULTI_USER_DISABLED'
+      });
+    }
+
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({
+        message: 'Token and new password are required',
+        code: 'MISSING_FIELDS'
+      });
+    }
+
+    // Validate password strength
+    const passwordValidation = validatePasswordStrength(newPassword);
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({
+        message: 'New password does not meet requirements',
+        code: 'WEAK_PASSWORD',
+        errors: passwordValidation.errors
+      });
+    }
+
+    // Find valid reset token
+    const resetTokenDoc = await PasswordResetToken.findValidToken(token);
+
+    if (!resetTokenDoc) {
+      return res.status(400).json({
+        message: 'Invalid or expired reset token',
+        code: 'INVALID_TOKEN'
+      });
+    }
+
+    // Check if token has already been used
+    if (resetTokenDoc.used) {
+      return res.status(400).json({
+        message: 'Reset token has already been used',
+        code: 'TOKEN_USED'
+      });
+    }
+
+    // Hash the new password
+    const newPasswordHash = await hashPassword(newPassword);
+
+    // Update user's password
+    const user = resetTokenDoc.userId;
+    user.passwordHash = newPasswordHash;
+    await user.save();
+
+    // Mark the reset token as used
+    await resetTokenDoc.markAsUsed();
+
+    // Invalidate all sessions for this user for security
+    await Session.invalidateAllUserSessions(user._id);
+
+    // Send password changed notification
+    await sendPasswordChangedEmail(user);
+
+    // Log activity
+    await logActivity({
+      userId: user._id,
+      action: 'password_reset',
+      category: 'auth',
+      targetType: 'user',
+      targetId: user._id,
+      targetName: user.username,
+      ipAddress: getClientIp(req)
+    });
+
+    res.json({
+      message: 'Password has been reset successfully. You can now log in with your new password.'
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
     res.status(500).json({ message: error.message });
   }
 });
