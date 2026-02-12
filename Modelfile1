@@ -1,0 +1,15 @@
+FROM qwen3-coder:30b
+TEMPLATE {{ .Prompt }}
+RENDERER qwen3-coder
+PARSER qwen3-coder
+PARAMETER num_gpu 1
+PARAMETER repeat_penalty 1.05
+PARAMETER stop
+PARAMETER stop
+PARAMETER stop
+PARAMETER temperature 0.7
+PARAMETER top_k 20
+PARAMETER top_p 0.8
+LICENSE """                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/

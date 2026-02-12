@@ -5,6 +5,7 @@ node_modules/
 backend/.env
 .env.cloud
 .env.local
+nul
 
 # Cached card images (downloaded per-install)
 backend/cached-images/

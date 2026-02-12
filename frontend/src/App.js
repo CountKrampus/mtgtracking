@@ -7,6 +7,11 @@ import Sidebar from './components/Sidebar';
 import Breadcrumb from './components/Breadcrumb';
 import CommandPalette from './components/CommandPalette';
 import useKeyboardShortcuts, { buildShortcutKey } from './hooks/useKeyboardShortcuts';
+import useSettings from './hooks/useSettings';
+import { AuthProvider, useAuthContext } from './contexts/AuthContext';
+import { AuthGuard } from './components/auth/AuthGuard';
+import { AccountSettings } from './components/auth/AccountSettings';
+import { AdminPanel } from './components/admin/AdminPanel';
 
 const DeckBuilder = React.lazy(() => import('./components/DeckBuilder'));
 const CameraModal = React.lazy(() => import('./components/CameraModal'));
@@ -14,6 +19,65 @@ const LifeCounter = React.lazy(() => import('./components/LifeCounter/LifeCounte
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
 
 const API_URL = 'http://localhost:5000/api';
+
+// Helper to get auth headers for API calls
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('mtg_access_token');
+  if (token) {
+    return { Authorization: `Bearer ${token}` };
+  }
+  return {};
+};
+
+// Set up axios interceptor to add auth headers to all requests
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem('mtg_access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Axios response interceptor for token refresh on 401
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      const refreshToken = localStorage.getItem('mtg_refresh_token');
+      if (refreshToken) {
+        try {
+          const response = await fetch(`${API_URL}/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('mtg_access_token', data.accessToken);
+            localStorage.setItem('mtg_user', JSON.stringify(data.user));
+
+            originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+            return axios(originalRequest);
+          }
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
+        }
+      }
+
+      // If refresh failed, clear tokens
+      localStorage.removeItem('mtg_access_token');
+      localStorage.removeItem('mtg_refresh_token');
+      localStorage.removeItem('mtg_user');
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 // Standard MTG card types
 const standardTypes = [
@@ -29,6 +93,13 @@ const standardTypes = [
 ];
 
 function App() {
+  // Auth context - available when wrapped with AuthProvider
+  const authContext = useAuthContext();
+  const { user: authUser, isMultiUserEnabled, logout: authLogout } = authContext || {};
+
+  // Settings must be first so other state can use its values
+  const { settings, updateSettings, resetSettings } = useSettings();
+
   const [cards, setCards] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCondition, setFilterCondition] = useState('all');
@@ -37,7 +108,7 @@ function App() {
   const [filterSpecial, setFilterSpecial] = useState('all'); // Combined token/foil filter
   const [filterRarity, setFilterRarity] = useState('all');
   const [filterSet, setFilterSet] = useState('all');
-  const [sortBy, setSortBy] = useState('name');
+  const [sortBy, setSortBy] = useState(settings.defaultSort);
   const [showAddForm, setShowAddForm] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [autocompleteResults, setAutocompleteResults] = useState([]);
@@ -51,8 +122,8 @@ function App() {
   const [offlineMode, setOfflineMode] = useState(false);
   const [manualEntry, setManualEntry] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 20;
-  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'collection', 'decks', 'wishlist', or 'lifecounter'
+  const pageSize = settings.pageSize;
+  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'collection', 'decks', 'wishlist', 'lifecounter', or 'settings'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
@@ -61,13 +132,15 @@ function App() {
   const [filterTag, setFilterTag] = useState('all');
   const [filterLocation, setFilterLocation] = useState('all');
 
+  // Auth/Admin state
+  const [showAccountSettings, setShowAccountSettings] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+
   // Location management
   const [locations, setLocations] = useState([]);
-  const [showLocationManager, setShowLocationManager] = useState(false);
   const [newLocationName, setNewLocationName] = useState('');
   const [newLocationDesc, setNewLocationDesc] = useState('');
   const [editingLocation, setEditingLocation] = useState(null);
-  const [managerTab, setManagerTab] = useState('locations'); // 'locations' or 'tags'
   const [newTagName, setNewTagName] = useState('');
 
   // Wishlist
@@ -161,7 +234,7 @@ function App() {
     collectorNumber: '',
     rarity: '',
     quantity: 1,
-    condition: 'NM',
+    condition: settings.defaultCondition,
     price: 0,
     colors: [],
     types: [],
@@ -473,7 +546,7 @@ function App() {
       name: '',
       set: '',
       quantity: 1,
-      condition: 'NM',
+      condition: settings.defaultCondition,
       price: 0,
       colors: [],
       types: [],
@@ -1951,6 +2024,14 @@ function App() {
 
   const totalCards = cards.reduce((sum, card) => sum + card.quantity, 0);
 
+  // Format price based on currency settings
+  const formatPrice = useCallback((priceUSD) => {
+    if (priceUSD == null || isNaN(priceUSD)) priceUSD = 0;
+    if (settings.displayCurrency === 'CAD') return `C$${(priceUSD / settings.cadToUsdRate).toFixed(2)}`;
+    if (settings.displayCurrency === 'EUR') return `€${(priceUSD * settings.usdToEurRate).toFixed(2)}`;
+    return `$${priceUSD.toFixed(2)}`;
+  }, [settings.displayCurrency, settings.cadToUsdRate, settings.usdToEurRate]);
+
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedCards.length / pageSize);
   const paginatedCards = useMemo(() => {
@@ -1959,10 +2040,22 @@ function App() {
     return filteredAndSortedCards.slice(startIndex, endIndex);
   }, [filteredAndSortedCards, currentPage, pageSize]);
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters or pageSize change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterCondition, filterColor, filterSet, filterType, filterSpecial, filterRarity, filterTag, filterLocation, searchIncludesOracleText, sortBy]);
+  }, [searchTerm, filterCondition, filterColor, filterSet, filterType, filterSpecial, filterRarity, filterTag, filterLocation, searchIncludesOracleText, sortBy, pageSize]);
+
+  // Redirect to dashboard if current view's feature is disabled
+  useEffect(() => {
+    const viewFeatureMap = {
+      decks: 'deckBuilder',
+      wishlist: 'wishlist',
+    };
+    const feature = viewFeatureMap[currentView];
+    if (feature && settings.features[feature] === false) {
+      setCurrentView('dashboard');
+    }
+  }, [currentView, settings.features]);
 
   // Keyboard shortcuts
   const searchInputRef = useRef(null);
@@ -1987,7 +2080,6 @@ function App() {
       }
       // Close any open modals
       if (showPriceUpdateModal) { setShowPriceUpdateModal(false); return; }
-      if (showLocationManager) { setShowLocationManager(false); return; }
       if (showSimilarCards) { setShowSimilarCards(false); return; }
       if (showSynergies) { setShowSynergies(false); return; }
       if (showCommanderRecs) { setShowCommanderRecs(false); setCommanderFinderMode('collection'); return; }
@@ -2013,7 +2105,7 @@ function App() {
       const cmd = paletteCommandsRef.current.find(c => c.id === commandId);
       if (cmd) cmd.action();
     }
-  }, [keyToCommand, showCommandPalette, showPriceUpdateModal, showLocationManager, showSimilarCards, showSynergies, showCommanderRecs, showSetCompletion, showComboFinder, showImportResults, showPrintPreview, showQRPreview]);
+  }, [keyToCommand, showCommandPalette, showPriceUpdateModal, showSimilarCards, showSynergies, showCommanderRecs, showSetCompletion, showComboFinder, showImportResults, showPrintPreview, showQRPreview]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyboardShortcut);
@@ -2022,13 +2114,15 @@ function App() {
 
   // Command palette commands
   const paletteCommands = useMemo(() => {
-    const cmds = [
+    const ft = settings.features;
+    const allCmds = [
       // Navigation
       { id: 'nav-dashboard', label: 'Go to Dashboard', icon: Home, category: 'Navigation', action: () => setCurrentView('dashboard') },
       { id: 'nav-collection', label: 'Go to Collection', icon: BookOpen, category: 'Navigation', action: () => setCurrentView('collection') },
-      { id: 'nav-decks', label: 'Go to Deck Builder', icon: Layers, category: 'Navigation', action: () => setCurrentView('decks') },
-      { id: 'nav-wishlist', label: 'Go to Wishlist', icon: Heart, category: 'Navigation', action: () => setCurrentView('wishlist') },
+      { id: 'nav-decks', label: 'Go to Deck Builder', icon: Layers, category: 'Navigation', action: () => setCurrentView('decks'), feature: 'deckBuilder' },
+      { id: 'nav-wishlist', label: 'Go to Wishlist', icon: Heart, category: 'Navigation', action: () => setCurrentView('wishlist'), feature: 'wishlist' },
       { id: 'nav-lifecounter', label: 'Go to Life Counter', icon: Users, category: 'Navigation', action: () => setCurrentView('lifecounter') },
+      { id: 'nav-settings', label: 'Go to Settings', icon: Settings, category: 'Navigation', action: () => setCurrentView('settings') },
       // Actions
       { id: 'act-add', label: 'Add New Card', icon: Plus, category: 'Actions', action: () => { setCurrentView('collection'); setShowAddForm(true); } },
       { id: 'act-import', label: 'Import Cards', icon: Upload, category: 'Actions', action: () => fileInputRef.current?.click() },
@@ -2038,16 +2132,521 @@ function App() {
       { id: 'act-text', label: 'Fetch Card Text', icon: RefreshCw, category: 'Actions', action: () => updateAllOracleText() },
       { id: 'act-search', label: 'Focus Search', icon: Search, category: 'Actions', action: () => { setCurrentView('collection'); setTimeout(() => searchInputRef.current?.focus(), 100); } },
       // Tools
-      { id: 'tool-commanders', label: 'Commander Recommendations', icon: Crown, category: 'Tools', action: () => getCommanderRecommendations() },
-      { id: 'tool-sets', label: 'Set Completion Tracker', icon: BarChart3, category: 'Tools', action: () => getSetCompletionData() },
-      { id: 'tool-combos', label: 'Find Combos', icon: Zap, category: 'Tools', action: () => findCombos() },
+      { id: 'tool-commanders', label: 'Commander Recommendations', icon: Crown, category: 'Tools', action: () => getCommanderRecommendations(), feature: 'commanderRecs' },
+      { id: 'tool-sets', label: 'Set Completion Tracker', icon: BarChart3, category: 'Tools', action: () => getSetCompletionData(), feature: 'setCompletion' },
+      { id: 'tool-combos', label: 'Find Combos', icon: Zap, category: 'Tools', action: () => findCombos(), feature: 'comboFinder' },
       { id: 'tool-camera', label: 'Scan Card with Camera', icon: Camera, category: 'Tools', action: () => setShowCameraModal(true) },
-      { id: 'tool-settings', label: 'Locations & Tags Manager', icon: Settings, category: 'Tools', action: () => setShowLocationManager(true) },
-    ].map(cmd => ({ ...cmd, shortcut: shortcuts[cmd.id] || undefined }));
+    ];
+    const cmds = allCmds
+      .filter(cmd => !cmd.feature || ft[cmd.feature] !== false)
+      .map(cmd => ({ ...cmd, shortcut: shortcuts[cmd.id] || undefined }));
     paletteCommandsRef.current = cmds;
     return cmds;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shortcuts]);
+  }, [shortcuts, settings.features]);
+
+  // Settings View Component (inline)
+  const SettingsView = ({
+    settings, updateSettings, resetSettings, formatPrice,
+    locations, availableTags, locationStats,
+    newLocationName, setNewLocationName, newLocationDesc, setNewLocationDesc,
+    editingLocation, handleCreateLocation, handleUpdateLocation, cancelEditLocation,
+    startEditLocation, handleDeleteLocation, handleToggleLocationIgnorePrice,
+    newTagName, setNewTagName, handleCreateTag, handleDeleteTag, handleToggleTagIgnorePrice,
+    generateQR, qrDataUrls, setQrDataUrls, setQRPreviewLocation, setShowQRPreview, setShowPrintLabels
+  }) => {
+    const [settingsTab, setSettingsTab] = React.useState('display');
+    const [clearCollectionConfirm, setClearCollectionConfirm] = React.useState(false);
+    const [clearCacheConfirm, setClearCacheConfirm] = React.useState(false);
+    const [statsData, setStatsData] = React.useState(null);
+
+    // Fetch stats on mount
+    React.useEffect(() => {
+      const fetchStats = async () => {
+        try {
+          const res = await axios.get(`${API_URL}/stats`);
+          setStatsData(res.data);
+        } catch (err) {
+          console.error('Failed to fetch stats:', err);
+        }
+      };
+      fetchStats();
+    }, []);
+
+    const handleClearCollection = async () => {
+      if (!clearCollectionConfirm) {
+        setClearCollectionConfirm(true);
+        return;
+      }
+      try {
+        await axios.delete(`${API_URL}/collection/clear-all`, { data: { confirmation: 'DELETE_ALL_CARDS' } });
+        setClearCollectionConfirm(false);
+        window.location.reload();
+      } catch (err) {
+        alert('Failed to clear collection: ' + err.message);
+      }
+    };
+
+    const handleClearCache = async () => {
+      if (!clearCacheConfirm) {
+        setClearCacheConfirm(true);
+        return;
+      }
+      try {
+        const res = await axios.delete(`${API_URL}/cache/clear`);
+        setClearCacheConfirm(false);
+        alert(`Cleared ${res.data.deletedCount} cached images`);
+        // Refresh stats
+        const statsRes = await axios.get(`${API_URL}/stats`);
+        setStatsData(statsRes.data);
+      } catch (err) {
+        alert('Failed to clear cache: ' + err.message);
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <Settings size={24} /> Settings
+        </h1>
+
+        {/* Tab Navigation */}
+        <div className="flex flex-wrap gap-2 border-b border-white/10 pb-2">
+          {[
+            { id: 'display', label: 'Display' },
+            { id: 'pricing', label: 'Pricing' },
+            { id: 'features', label: 'Features' },
+            { id: 'data', label: 'Data' },
+            { id: 'locations', label: 'Locations' },
+            { id: 'tags', label: 'Tags' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setSettingsTab(tab.id)}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                settingsTab === tab.id
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Display Settings */}
+        {settingsTab === 'display' && (
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Display Settings</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-white/80 text-sm mb-2">Items per page</label>
+                <select
+                  value={settings.pageSize}
+                  onChange={(e) => updateSettings({ pageSize: parseInt(e.target.value) })}
+                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-white/80 text-sm mb-2">Default sort</label>
+                <select
+                  value={settings.defaultSort}
+                  onChange={(e) => updateSettings({ defaultSort: e.target.value })}
+                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white"
+                >
+                  <option value="name">Name</option>
+                  <option value="price">Price</option>
+                  <option value="quantity">Quantity</option>
+                  <option value="totalValue">Total Value</option>
+                  <option value="type">Type</option>
+                  <option value="color">Color</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-white/80 text-sm mb-2">Default condition</label>
+                <select
+                  value={settings.defaultCondition}
+                  onChange={(e) => updateSettings({ defaultCondition: e.target.value })}
+                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white"
+                >
+                  <option value="NM">Near Mint (NM)</option>
+                  <option value="LP">Lightly Played (LP)</option>
+                  <option value="MP">Moderately Played (MP)</option>
+                  <option value="HP">Heavily Played (HP)</option>
+                  <option value="DMG">Damaged (DMG)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Pricing Settings */}
+        {settingsTab === 'pricing' && (
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Pricing Settings</h2>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-white/80 text-sm mb-2">Display Currency</label>
+                <div className="flex gap-2">
+                  {['USD', 'CAD', 'EUR'].map(currency => (
+                    <button
+                      key={currency}
+                      onClick={() => updateSettings({ displayCurrency: currency })}
+                      className={`px-4 py-2 rounded-lg font-medium transition ${
+                        settings.displayCurrency === currency
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-white/20 text-white/70 hover:bg-white/30'
+                      }`}
+                    >
+                      {currency}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-white/80 text-sm mb-2">CAD to USD rate</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={settings.cadToUsdRate}
+                    onChange={(e) => updateSettings({ cadToUsdRate: parseFloat(e.target.value) || 0.73 })}
+                    className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-white/80 text-sm mb-2">USD to EUR rate</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={settings.usdToEurRate}
+                    onChange={(e) => updateSettings({ usdToEurRate: parseFloat(e.target.value) || 0.92 })}
+                    className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-white/80 text-sm mb-2">Condition Price Multipliers</label>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {['NM', 'LP', 'MP', 'HP', 'DMG'].map(cond => (
+                    <div key={cond}>
+                      <label className="block text-white/60 text-xs mb-1">{cond}</label>
+                      <input
+                        type="number"
+                        step="0.05"
+                        min="0"
+                        max="1"
+                        value={settings.conditionMultipliers[cond]}
+                        onChange={(e) => updateSettings({
+                          conditionMultipliers: { [cond]: parseFloat(e.target.value) || 0 }
+                        })}
+                        className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Feature Toggles */}
+        {settingsTab === 'features' && (
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Feature Toggles</h2>
+            <p className="text-white/60 text-sm mb-4">Enable or disable features to customize your experience.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { id: 'deckBuilder', label: 'Deck Builder', icon: Layers },
+                { id: 'wishlist', label: 'Wishlist', icon: Heart },
+                { id: 'commanderRecs', label: 'Commander Recommendations', icon: Crown },
+                { id: 'setCompletion', label: 'Set Completion Tracker', icon: BarChart3 },
+                { id: 'comboFinder', label: 'Combo Finder', icon: Zap },
+              ].map(feature => {
+                const Icon = feature.icon;
+                const enabled = settings.features[feature.id] !== false;
+                return (
+                  <button
+                    key={feature.id}
+                    onClick={() => updateSettings({ features: { [feature.id]: !enabled } })}
+                    className={`flex items-center gap-3 p-4 rounded-lg transition ${
+                      enabled
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-white/10 text-white/50 hover:bg-white/20'
+                    }`}
+                  >
+                    <Icon size={20} />
+                    <span className="font-medium">{feature.label}</span>
+                    {enabled && <span className="ml-auto">✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Data Management */}
+        {settingsTab === 'data' && (
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Data Management</h2>
+            {statsData && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-white/5 rounded-lg p-4">
+                  <div className="text-white/60 text-sm">Total Cards</div>
+                  <div className="text-2xl font-bold text-white">{statsData.totalCards?.toLocaleString() || 0}</div>
+                </div>
+                <div className="bg-white/5 rounded-lg p-4">
+                  <div className="text-white/60 text-sm">Unique Cards</div>
+                  <div className="text-2xl font-bold text-white">{statsData.uniqueCards?.toLocaleString() || 0}</div>
+                </div>
+                <div className="bg-white/5 rounded-lg p-4">
+                  <div className="text-white/60 text-sm">Collection Value</div>
+                  <div className="text-2xl font-bold text-white">{formatPrice(statsData.totalValue || 0)}</div>
+                </div>
+                <div className="bg-white/5 rounded-lg p-4">
+                  <div className="text-white/60 text-sm">Cached Images</div>
+                  <div className="text-2xl font-bold text-white">{statsData.cachedImageCount?.toLocaleString() || 0}</div>
+                </div>
+              </div>
+            )}
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleClearCollection}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  clearCollectionConfirm
+                    ? 'bg-red-700 text-white animate-pulse'
+                    : 'bg-red-600 hover:bg-red-700 text-white'
+                }`}
+              >
+                {clearCollectionConfirm ? 'Click again to confirm' : 'Clear Collection'}
+              </button>
+              <button
+                onClick={handleClearCache}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  clearCacheConfirm
+                    ? 'bg-orange-700 text-white animate-pulse'
+                    : 'bg-orange-600 hover:bg-orange-700 text-white'
+                }`}
+              >
+                {clearCacheConfirm ? 'Click again to confirm' : 'Clear Image Cache'}
+              </button>
+              <button
+                onClick={() => {
+                  resetSettings();
+                  alert('Settings reset to defaults');
+                }}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition"
+              >
+                Reset All Settings
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Locations Tab */}
+        {settingsTab === 'locations' && (
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Storage Locations</h2>
+            {/* Add/Edit Location Form */}
+            <div className="bg-white/5 rounded-lg p-4 mb-6">
+              <h3 className="text-md font-semibold text-white mb-3">
+                {editingLocation ? 'Edit Location' : 'Add New Location'}
+              </h3>
+              <div className="flex flex-col gap-3">
+                <input
+                  type="text"
+                  value={newLocationName}
+                  onChange={(e) => setNewLocationName(e.target.value)}
+                  placeholder="Location name (e.g., Binder A, Box 1)"
+                  className="px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+                <input
+                  type="text"
+                  value={newLocationDesc}
+                  onChange={(e) => setNewLocationDesc(e.target.value)}
+                  placeholder="Description (optional)"
+                  className="px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+                <div className="flex gap-2">
+                  {editingLocation ? (
+                    <>
+                      <button
+                        onClick={handleUpdateLocation}
+                        className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition"
+                      >
+                        Update Location
+                      </button>
+                      <button
+                        onClick={cancelEditLocation}
+                        className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg font-semibold transition"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={handleCreateLocation}
+                      className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition"
+                    >
+                      <Plus size={18} className="inline mr-2" /> Add Location
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Existing Locations */}
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-md font-semibold text-white">Existing Locations ({locations.length})</h3>
+              {locations.length > 0 && (
+                <button
+                  onClick={async () => {
+                    const urls = {};
+                    for (const loc of locations) {
+                      urls[loc.name] = await generateQR(loc.name);
+                    }
+                    setQrDataUrls(urls);
+                    setShowPrintLabels(true);
+                  }}
+                  className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold flex items-center gap-1 transition"
+                >
+                  <Printer size={16} /> Print All Labels
+                </button>
+              )}
+            </div>
+            {locations.length === 0 ? (
+              <p className="text-white/60">No locations created yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {locations.map(location => (
+                  <div key={location._id} className="bg-white/5 rounded-lg p-4 flex items-center justify-between">
+                    <div>
+                      <div className="text-white font-medium flex items-center gap-2">
+                        <MapPin size={16} /> {location.name}
+                        {locationStats[location.name] && (
+                          <span className="text-white/50 text-sm ml-2">
+                            ({locationStats[location.name].cardCount} cards, {formatPrice(locationStats[location.name].totalValue)})
+                          </span>
+                        )}
+                      </div>
+                      {location.description && (
+                        <div className="text-white/60 text-sm mt-1">{location.description}</div>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleToggleLocationIgnorePrice(location._id, location.ignorePrice)}
+                        className={`px-2 py-2 rounded text-xs font-medium transition ${
+                          location.ignorePrice
+                            ? 'bg-orange-600 text-white'
+                            : 'bg-white/10 text-white/60 hover:bg-white/20'
+                        }`}
+                        title={location.ignorePrice ? 'Price is ignored in stats' : 'Click to ignore price in stats'}
+                      >
+                        {location.ignorePrice ? '$ off' : '$'}
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const dataUrl = await generateQR(location.name);
+                          setQrDataUrls(prev => ({ ...prev, [location.name]: dataUrl }));
+                          setQRPreviewLocation(location);
+                          setShowQRPreview(true);
+                        }}
+                        className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded transition"
+                        title="Generate QR Label"
+                      >
+                        <QrCode size={16} />
+                      </button>
+                      <button
+                        onClick={() => startEditLocation(location)}
+                        className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteLocation(location._id)}
+                        className="p-2 bg-red-600 hover:bg-red-700 text-white rounded transition"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tags Tab */}
+        {settingsTab === 'tags' && (
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Tags</h2>
+            {/* Add Tag Form */}
+            <div className="bg-white/5 rounded-lg p-4 mb-6">
+              <h3 className="text-md font-semibold text-white mb-3">Add New Tag</h3>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={newTagName}
+                  onChange={(e) => setNewTagName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreateTag()}
+                  placeholder="Tag name (e.g., commander, trade)"
+                  className="flex-1 px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+                <button
+                  onClick={handleCreateTag}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition"
+                >
+                  <Plus size={18} className="inline mr-1" /> Add
+                </button>
+              </div>
+            </div>
+
+            {/* Existing Tags */}
+            <h3 className="text-md font-semibold text-white mb-3">Existing Tags ({availableTags.length})</h3>
+            {availableTags.length === 0 ? (
+              <p className="text-white/60">No tags created yet. Tags are created when you add them to cards or create them here.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {availableTags.map(tag => {
+                  const tagName = tag.name || tag;
+                  const ignorePrice = tag.ignorePrice || false;
+                  return (
+                    <div key={tagName} className="bg-white/10 rounded-lg px-3 py-2 flex items-center gap-2 group">
+                      <span className="text-white">{tagName}</span>
+                      <button
+                        onClick={() => handleToggleTagIgnorePrice(tagName, ignorePrice)}
+                        className={`px-1.5 py-0.5 rounded text-xs font-medium transition ${
+                          ignorePrice
+                            ? 'bg-orange-600 text-white'
+                            : 'bg-white/10 text-white/40 hover:bg-white/20'
+                        }`}
+                        title={ignorePrice ? 'Price is ignored in stats' : 'Click to ignore price in stats'}
+                      >
+                        {ignorePrice ? '$ off' : '$'}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTag(tagName)}
+                        className="text-white/40 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
+                        title="Delete tag"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex overflow-hidden">
@@ -2067,12 +2666,18 @@ function App() {
         onCommanders={getCommanderRecommendations}
         onSets={getSetCompletionData}
         onCombos={findCombos}
-        onOpenSettings={() => setShowLocationManager(true)}
+        onOpenSettings={() => setCurrentView('settings')}
         onOpenCamera={() => setShowCameraModal(true)}
         onCommandPalette={() => setShowCommandPalette(true)}
         fileInputRef={fileInputRef}
         isImporting={isImporting}
         loading={loading}
+        featureToggles={settings.features}
+        authUser={authUser}
+        isMultiUserEnabled={isMultiUserEnabled}
+        onAccountSettings={() => setShowAccountSettings(true)}
+        onAdminPanel={() => setShowAdminPanel(true)}
+        onLogout={authLogout}
       />
 
       {/* Hidden file input for import */}
@@ -2105,6 +2710,7 @@ function App() {
                 onUpdatePrices={() => setShowPriceUpdateModal(true)}
                 fileInputRef={fileInputRef}
                 isImporting={isImporting}
+                formatPrice={formatPrice}
               />
             </Suspense>
           )}
@@ -2229,7 +2835,7 @@ function App() {
                 {uniqueLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
               </select>
               <button
-                onClick={() => setShowLocationManager(true)}
+                onClick={() => setCurrentView('settings')}
                 className="p-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition"
                 title="Manage Locations"
               >
@@ -2676,9 +3282,9 @@ function App() {
                           {card.condition}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-white/80">${card.price.toLocaleString()}</td>
+                      <td className="px-6 py-4 text-white/80">{formatPrice(card.price)}</td>
                       <td className="px-6 py-4 text-white font-semibold">
-                        ${(card.price * card.quantity).toLocaleString()}
+                        {formatPrice(card.price * card.quantity)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
@@ -4073,239 +4679,6 @@ function App() {
           </div>
         )}
 
-        {/* Locations & Tags Manager Modal */}
-        {showLocationManager && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col border-2 border-purple-500">
-              <div className="p-6 border-b border-white/10 flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-white">Manage Locations & Tags</h2>
-                <button
-                  onClick={() => { setShowLocationManager(false); cancelEditLocation(); setNewTagName(''); }}
-                  className="text-white/60 hover:text-white transition"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              {/* Tabs */}
-              <div className="flex border-b border-white/10">
-                <button
-                  onClick={() => setManagerTab('locations')}
-                  className={`flex-1 px-4 py-3 font-semibold transition flex items-center justify-center gap-2 ${
-                    managerTab === 'locations'
-                      ? 'text-white bg-white/10 border-b-2 border-purple-500'
-                      : 'text-white/60 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <MapPin size={18} /> Locations
-                </button>
-                <button
-                  onClick={() => setManagerTab('tags')}
-                  className={`flex-1 px-4 py-3 font-semibold transition flex items-center justify-center gap-2 ${
-                    managerTab === 'tags'
-                      ? 'text-white bg-white/10 border-b-2 border-purple-500'
-                      : 'text-white/60 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <span className="text-lg">#</span> Tags
-                </button>
-              </div>
-
-              <div className="p-6 overflow-y-auto flex-1">
-                {/* Locations Tab */}
-                {managerTab === 'locations' && (
-                  <>
-                    {/* Add/Edit Location Form */}
-                    <div className="bg-white/5 rounded-lg p-4 mb-6">
-                      <h3 className="text-lg font-semibold text-white mb-3">
-                        {editingLocation ? 'Edit Location' : 'Add New Location'}
-                      </h3>
-                      <div className="flex flex-col gap-3">
-                        <input
-                          type="text"
-                          value={newLocationName}
-                          onChange={(e) => setNewLocationName(e.target.value)}
-                          placeholder="Location name (e.g., Binder A, Box 1)"
-                          className="px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                        />
-                        <input
-                          type="text"
-                          value={newLocationDesc}
-                          onChange={(e) => setNewLocationDesc(e.target.value)}
-                          placeholder="Description (optional)"
-                          className="px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                        />
-                        <div className="flex gap-2">
-                          {editingLocation ? (
-                            <>
-                              <button
-                                onClick={handleUpdateLocation}
-                                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition"
-                              >
-                                Update Location
-                              </button>
-                              <button
-                                onClick={cancelEditLocation}
-                                className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg font-semibold transition"
-                              >
-                                Cancel
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              onClick={handleCreateLocation}
-                              className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition"
-                            >
-                              <Plus size={18} className="inline mr-2" /> Add Location
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Existing Locations */}
-                    <div className="flex justify-between items-center mb-3">
-                      <h3 className="text-lg font-semibold text-white">Existing Locations ({locations.length})</h3>
-                      {locations.length > 0 && (
-                        <button
-                          onClick={async () => {
-                            const urls = {};
-                            for (const loc of locations) {
-                              urls[loc.name] = await generateQR(loc.name);
-                            }
-                            setQrDataUrls(urls);
-                            setShowPrintLabels(true);
-                          }}
-                          className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold flex items-center gap-1 transition"
-                        >
-                          <Printer size={16} /> Print All Labels
-                        </button>
-                      )}
-                    </div>
-                    {locations.length === 0 ? (
-                      <p className="text-white/60">No locations created yet.</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {locations.map(location => (
-                          <div key={location._id} className="bg-white/5 rounded-lg p-4 flex items-center justify-between">
-                            <div>
-                              <div className="text-white font-medium flex items-center gap-2">
-                                <MapPin size={16} /> {location.name}
-                              </div>
-                              {location.description && (
-                                <div className="text-white/60 text-sm mt-1">{location.description}</div>
-                              )}
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleToggleLocationIgnorePrice(location._id, location.ignorePrice)}
-                                className={`px-2 py-2 rounded text-xs font-medium transition ${
-                                  location.ignorePrice
-                                    ? 'bg-orange-600 text-white'
-                                    : 'bg-white/10 text-white/60 hover:bg-white/20'
-                                }`}
-                                title={location.ignorePrice ? 'Price is ignored in stats' : 'Click to ignore price in stats'}
-                              >
-                                {location.ignorePrice ? '$ off' : '$'}
-                              </button>
-                              <button
-                                onClick={async () => {
-                                  const dataUrl = await generateQR(location.name);
-                                  setQrDataUrls(prev => ({ ...prev, [location.name]: dataUrl }));
-                                  setQRPreviewLocation(location);
-                                  setShowQRPreview(true);
-                                }}
-                                className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded transition"
-                                title="Generate QR Label"
-                              >
-                                <QrCode size={16} />
-                              </button>
-                              <button
-                                onClick={() => startEditLocation(location)}
-                                className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
-                              >
-                                <Edit2 size={16} />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteLocation(location._id)}
-                                className="p-2 bg-red-600 hover:bg-red-700 text-white rounded transition"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Tags Tab */}
-                {managerTab === 'tags' && (
-                  <>
-                    {/* Add Tag Form */}
-                    <div className="bg-white/5 rounded-lg p-4 mb-6">
-                      <h3 className="text-lg font-semibold text-white mb-3">Add New Tag</h3>
-                      <div className="flex gap-3">
-                        <input
-                          type="text"
-                          value={newTagName}
-                          onChange={(e) => setNewTagName(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && handleCreateTag()}
-                          placeholder="Tag name (e.g., commander, trade)"
-                          className="flex-1 px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                        />
-                        <button
-                          onClick={handleCreateTag}
-                          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition"
-                        >
-                          <Plus size={18} className="inline mr-1" /> Add
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Existing Tags */}
-                    <h3 className="text-lg font-semibold text-white mb-3">Existing Tags ({availableTags.length})</h3>
-                    {availableTags.length === 0 ? (
-                      <p className="text-white/60">No tags created yet. Tags are created when you add them to cards or create them here.</p>
-                    ) : (
-                      <div className="flex flex-wrap gap-2">
-                        {availableTags.map(tag => {
-                          const tagName = tag.name || tag;
-                          const ignorePrice = tag.ignorePrice || false;
-                          return (
-                            <div key={tagName} className="bg-white/10 rounded-lg px-3 py-2 flex items-center gap-2 group">
-                              <span className="text-white">{tagName}</span>
-                              <button
-                                onClick={() => handleToggleTagIgnorePrice(tagName, ignorePrice)}
-                                className={`px-1.5 py-0.5 rounded text-xs font-medium transition ${
-                                  ignorePrice
-                                    ? 'bg-orange-600 text-white'
-                                    : 'bg-white/10 text-white/40 hover:bg-white/20'
-                                }`}
-                                title={ignorePrice ? 'Price is ignored in stats' : 'Click to ignore price in stats'}
-                              >
-                                {ignorePrice ? '$ off' : '$'}
-                              </button>
-                              <button
-                                onClick={() => handleDeleteTag(tagName)}
-                                className="text-white/40 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
-                                title="Delete tag"
-                              >
-                                <X size={14} />
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* QR Preview Modal */}
         {showQRPreview && qrPreviewLocation && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
@@ -4322,7 +4695,7 @@ function App() {
                 )}
                 <div className="font-bold text-lg text-black">{qrPreviewLocation.name}</div>
                 <div className="text-gray-600 text-sm">
-                  {locationStats[qrPreviewLocation.name]?.cardCount || 0} cards | ${(locationStats[qrPreviewLocation.name]?.totalValue || 0).toFixed(2)}
+                  {locationStats[qrPreviewLocation.name]?.cardCount || 0} cards | {formatPrice(locationStats[qrPreviewLocation.name]?.totalValue || 0)}
                 </div>
               </div>
               <div className="flex gap-2 mt-4">
@@ -4362,7 +4735,7 @@ function App() {
                       <div className="flex-1 overflow-hidden">
                         <div className="font-bold text-sm truncate text-black">{loc.name}</div>
                         <div className="text-xs text-gray-600">{locationStats[loc.name]?.cardCount || 0} cards</div>
-                        <div className="text-xs text-gray-600">${(locationStats[loc.name]?.totalValue || 0).toFixed(2)}</div>
+                        <div className="text-xs text-gray-600">{formatPrice(locationStats[loc.name]?.totalValue || 0)}</div>
                       </div>
                     </div>
                   ))}
@@ -4475,7 +4848,7 @@ function App() {
               </div>
               {wishlistFormData.set && (
                 <div className="text-white/60 text-sm mb-4">
-                  Set: {wishlistFormData.set} | Current Price: ${wishlistFormData.currentPrice.toFixed(2)}
+                  Set: {wishlistFormData.set} | Current Price: {formatPrice(wishlistFormData.currentPrice)}
                 </div>
               )}
               <div className="flex gap-2">
@@ -4541,10 +4914,10 @@ function App() {
                             </td>
                             <td className="px-6 py-4 text-white/80 text-sm">{item.set || '-'}</td>
                             <td className="px-6 py-4 text-white/80">{item.quantity}</td>
-                            <td className="px-6 py-4 text-white/80">${item.targetPrice.toFixed(2)}</td>
-                            <td className="px-6 py-4 text-white/80">${item.currentPrice.toFixed(2)}</td>
+                            <td className="px-6 py-4 text-white/80">{formatPrice(item.targetPrice)}</td>
+                            <td className="px-6 py-4 text-white/80">{formatPrice(item.currentPrice)}</td>
                             <td className={`px-6 py-4 font-semibold ${diff <= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                              {item.targetPrice > 0 ? (diff <= 0 ? '-' : '+') + '$' + Math.abs(diff).toFixed(2) : '-'}
+                              {item.targetPrice > 0 ? (diff <= 0 ? '' : '+') + formatPrice(diff) : '-'}
                             </td>
                             <td className="px-6 py-4">
                               <span className={`px-2 py-1 rounded text-sm font-semibold ${
@@ -4625,6 +4998,41 @@ function App() {
           </Suspense>
         )}
 
+        {/* Settings View */}
+        {currentView === 'settings' && (
+          <SettingsView
+            settings={settings}
+            updateSettings={updateSettings}
+            resetSettings={resetSettings}
+            formatPrice={formatPrice}
+            locations={locations}
+            availableTags={availableTags}
+            locationStats={locationStats}
+            newLocationName={newLocationName}
+            setNewLocationName={setNewLocationName}
+            newLocationDesc={newLocationDesc}
+            setNewLocationDesc={setNewLocationDesc}
+            editingLocation={editingLocation}
+            handleCreateLocation={handleCreateLocation}
+            handleUpdateLocation={handleUpdateLocation}
+            cancelEditLocation={cancelEditLocation}
+            startEditLocation={startEditLocation}
+            handleDeleteLocation={handleDeleteLocation}
+            handleToggleLocationIgnorePrice={handleToggleLocationIgnorePrice}
+            newTagName={newTagName}
+            setNewTagName={setNewTagName}
+            handleCreateTag={handleCreateTag}
+            handleDeleteTag={handleDeleteTag}
+            handleToggleTagIgnorePrice={handleToggleTagIgnorePrice}
+            generateQR={generateQR}
+            qrDataUrls={qrDataUrls}
+            setQrDataUrls={setQrDataUrls}
+            setQRPreviewLocation={setQRPreviewLocation}
+            setShowQRPreview={setShowQRPreview}
+            setShowPrintLabels={setShowPrintLabels}
+          />
+        )}
+
         {/* Camera OCR Modal */}
         {showCameraModal && (
           <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 text-white/50">Loading camera...</div>}>
@@ -4646,8 +5054,29 @@ function App() {
         onSetShortcut={setShortcut}
         onRemoveShortcut={removeShortcut}
       />
+
+      {/* Account Settings Modal */}
+      {showAccountSettings && (
+        <AccountSettings onClose={() => setShowAccountSettings(false)} />
+      )}
+
+      {/* Admin Panel Modal */}
+      {showAdminPanel && (
+        <AdminPanel onClose={() => setShowAdminPanel(false)} />
+      )}
     </div>
   );
 }
 
-export default App;
+// Wrap App with AuthProvider and AuthGuard
+function AppWithAuth() {
+  return (
+    <AuthProvider>
+      <AuthGuard>
+        <App />
+      </AuthGuard>
+    </AuthProvider>
+  );
+}
+
+export default AppWithAuth;

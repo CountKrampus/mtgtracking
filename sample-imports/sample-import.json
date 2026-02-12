@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Lightning Bolt",
+    "set": "Limited Edition Alpha",
+    "quantity": 4,
+    "condition": "NM",
+    "price": 100.00
+  },
+  {
+    "name": "Black Lotus",
+    "set": "Limited Edition Alpha",
+    "quantity": 1,
+    "condition": "LP",
+    "price": 25000.00
+  },
+  {
+    "name": "Counterspell",
+    "set": "Ice Age",
+    "quantity": 2,
+    "condition": "NM",
+    "price": 2.50
+  },
+  {
+    "name": "Swords to Plowshares",
+    "set": "Limited Edition Beta",
+    "quantity": 1,
+    "condition": "NM",
+    "price": 50.00
+  },
+  {
+    "name": "Dark Ritual",
+    "set": "Limited Edition Alpha",
+    "quantity": 3,
+    "condition": "MP",
+    "price": 15.00
+  }
+]
