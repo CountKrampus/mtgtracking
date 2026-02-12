@@ -225,7 +225,7 @@ if exist "backend" (
         echo To stop the servers: Close the new window or press Ctrl+C in it.
         echo.
         echo Starting servers in new window...
-        start "MTG Tracker Servers" cmd /k "npx concurrently \"npm run start:backend\" \"npm run start:frontend\""
+        start "MTG Tracker Servers" cmd /k "start-both-servers.bat"
     ) else (
         echo Frontend directory not found. Starting backend only...
         echo.
@@ -271,6 +271,7 @@ echo.
 
 echo Stopping servers...
 taskkill /f /im node.exe 2>nul
+taskkill /f /fi "WINDOWTITLE eq MTG Tracker*" 2>nul
 if %errorlevel% equ 0 (
     echo Servers stopped successfully.
 ) else (
