@@ -71,6 +71,11 @@ npm start
 - MongoDB 7.0+ (local) or MongoDB Atlas (cloud)
 - Modern web browser
 
+## Notes
+
+- The `dump/` folder containing database exports is ignored by Git to keep the repository lightweight
+- Database backups should be managed separately from the code repository
+
 ## License
 
 ISC
