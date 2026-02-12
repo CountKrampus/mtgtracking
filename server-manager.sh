@@ -137,42 +137,47 @@ start_server() {
         log_warning "MongoDB not found. Make sure MongoDB is installed and running."
     fi
 
-    # Start backend server
-    if [ -d "backend" ]; then
-        log_step "Starting backend server..."
+    if [ -d "backend" ] && [ -d "frontend" ]; then
+        log_step "Starting both backend and frontend servers..."
+        echo ""
+        echo "Starting servers (press Ctrl+C to stop)..."
+        echo ""
+        echo "Backend: http://localhost:5000"
+        echo "Frontend: http://localhost:3000"
+        echo ""
+        echo "Running both servers in this terminal..."
+        npm start
+        log_success "Servers stopped."
+    elif [ -d "backend" ]; then
+        log_step "Starting backend server only..."
+        echo ""
+        echo "Starting backend server (press Ctrl+C to stop)..."
+        echo "Backend: http://localhost:5000"
+        echo ""
         cd backend
-        npm run dev &
-        BACKEND_PID=$!
+        npm start
         cd ..
-        log_success "Backend server started (PID: $BACKEND_PID)."
-    else
-        log_warning "Backend directory not found. Skipping backend startup."
-    fi
-
-    # Start frontend server
-    if [ -d "frontend" ]; then
-        log_step "Starting frontend server..."
+        log_success "Backend server stopped."
+    elif [ -d "frontend" ]; then
+        log_step "Starting frontend server only..."
+        echo ""
+        echo "Starting frontend server (press Ctrl+C to stop)..."
+        echo "Frontend: http://localhost:3000"
+        echo ""
         cd frontend
-        npm start &
-        FRONTEND_PID=$!
+        npm start
         cd ..
-        log_success "Frontend server started (PID: $FRONTEND_PID)."
+        log_success "Frontend server stopped."
     else
-        log_warning "Frontend directory not found. Skipping frontend startup."
+        log_error "Neither backend nor frontend directories found."
+        read -p "Press Enter to return to menu..."
+        show_menu
     fi
 
     echo ""
-    log_success "Servers started successfully!"
-    echo "Backend: http://localhost:5000"
-    echo "Frontend: http://localhost:3000"
-    echo ""
-    
-    # Set up trap to handle Ctrl+C
-    if [[ -n "$BACKEND_PID" ]] || [[ -n "$FRONTEND_PID" ]]; then
-        trap "stop_processes; show_menu" SIGINT SIGTERM
-        echo "Press Ctrl+C to stop both servers and return to menu"
-        wait $BACKEND_PID $FRONTEND_PID 2>/dev/null
-    fi
+    echo "Press Enter to return to menu..."
+    read
+    show_menu
 }
 
 stop_server() {
@@ -191,29 +196,22 @@ stop_server() {
 }
 
 stop_processes() {
-    # Kill Node processes running on port 5000 (backend)
-    BACKEND_PID=$(lsof -t -i:5000 2>/dev/null)
-    if [ -n "$BACKEND_PID" ]; then
-        log_step "Stopping backend (PID: $BACKEND_PID)..."
-        kill $BACKEND_PID 2>/dev/null
-        log_success "Backend stopped."
+    log_step "Stopping servers..."
+    
+    # Kill all node processes
+    pkill -f "node" 2>/dev/null
+    if [ $? -eq 0 ]; then
+        log_success "Node processes stopped."
     else
-        log_info "Backend not running."
+        log_info "No node processes were running."
     fi
 
-    # Kill Node processes running on port 3000 (frontend)
-    FRONTEND_PID=$(lsof -t -i:3000 2>/dev/null)
-    if [ -n "$FRONTEND_PID" ]; then
-        log_step "Stopping frontend (PID: $FRONTEND_PID)..."
-        kill $FRONTEND_PID 2>/dev/null
-        log_success "Frontend stopped."
-    else
-        log_info "Frontend not running."
-    fi
-
-    # Alternative: Kill by process name if lsof doesn't work
+    # Alternative: Kill by specific patterns if needed
     pkill -f "node.*server.js" 2>/dev/null
     pkill -f "react-scripts start" 2>/dev/null
+    pkill -f "npm start" 2>/dev/null
+    
+    log_success "Servers stopped."
 }
 
 restart_server() {
