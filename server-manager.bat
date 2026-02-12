@@ -212,30 +212,45 @@ if %errorlevel% neq 0 (
     echo Warning: Could not start MongoDB service. Make sure MongoDB is installed and configured.
 )
 
-echo Starting backend server...
-if exist "backend" (
-    cd backend
-    start cmd /k "title MTG Tracker Backend ^& npm start"
-    cd ..
-    echo Backend server started.
-) else (
-    echo Backend directory not found. Skipping backend startup.
-)
-
-echo Starting frontend server...
-if exist "frontend" (
-    cd frontend
-    start cmd /k "title MTG Tracker Frontend ^& npm start"
-    cd ..
-    echo Frontend server started.
-) else (
-    echo Frontend directory not found. Skipping frontend startup.
-)
-
+echo Starting servers in a single terminal...
 echo.
-echo Servers started successfully!
-echo Backend: http://localhost:5000
-echo Frontend: http://localhost:3000
+
+if exist "backend" (
+    if exist "frontend" (
+        echo Both backend and frontend directories found. Starting both servers...
+        echo.
+        echo Starting backend server on port 5000 and frontend server on port 3000...
+        echo NOTE: Both servers will run in this terminal. Press Ctrl+C to stop.
+        echo.
+        echo Starting servers...
+        npm start
+        echo.
+        echo Servers stopped.
+    ) else (
+        echo Frontend directory not found. Starting backend only...
+        echo.
+        echo Starting backend server on port 5000...
+        echo Press Ctrl+C to stop the server.
+        echo.
+        cd backend
+        npm start
+        cd ..
+    )
+) else if exist "frontend" (
+    echo Backend directory not found. Starting frontend only...
+    echo.
+    echo Starting frontend server on port 3000...
+    echo Press Ctrl+C to stop the server.
+    echo.
+    cd frontend
+    npm start
+    cd ..
+) else (
+    echo Error: Neither backend nor frontend directories found.
+    pause
+    goto menu
+)
+
 echo.
 echo Press any key to return to menu...
 pause >nul
@@ -250,8 +265,13 @@ echo =====================================================
 echo.
 
 echo Stopping servers...
-echo Note: This script cannot automatically stop the servers.
-echo Please close the terminal windows manually.
+taskkill /f /im node.exe 2>nul
+if %errorlevel% equ 0 (
+    echo Servers stopped successfully.
+) else (
+    echo No node processes were running or failed to stop.
+)
+
 echo.
 echo If you need to stop MongoDB service:
 echo net stop MongoDB
@@ -269,8 +289,13 @@ echo =====================================================
 echo.
 
 echo Stopping servers...
-echo Note: This script cannot automatically stop the servers.
-echo Please close the terminal windows manually.
+taskkill /f /im node.exe 2>nul
+if %errorlevel% equ 0 (
+    echo Servers stopped successfully.
+) else (
+    echo No node processes were running or failed to stop.
+)
+
 echo.
 echo If you need to stop MongoDB service:
 echo net stop MongoDB
