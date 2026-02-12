@@ -7,6 +7,7 @@ const viewLabels = {
   decks: 'Deck Builder',
   wishlist: 'Wishlist',
   lifecounter: 'Life Counter',
+  settings: 'Settings',
 };
 
 const Breadcrumb = ({ currentView, setCurrentView }) => {

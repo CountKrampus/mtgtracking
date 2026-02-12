@@ -13,9 +13,11 @@ const Dashboard = ({
   onImport,
   onUpdatePrices,
   fileInputRef,
-  isImporting
+  isImporting,
+  formatPrice
 }) => {
-  const avgValue = totalCards > 0 ? (totalValue / totalCards).toFixed(2) : '0.00';
+  const fp = formatPrice || ((v) => `$${v.toFixed(2)}`);
+  const avgValue = totalCards > 0 ? (totalValue / totalCards) : 0;
 
   const recentCards = useMemo(() => {
     return [...cards]
@@ -68,16 +70,16 @@ const Dashboard = ({
         </div>
         <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 shadow-xl">
           <div className="text-sm text-white/60">Collection Value</div>
-          <div className="text-3xl font-bold text-white">${totalValue.toLocaleString()}</div>
+          <div className="text-3xl font-bold text-white">{fp(totalValue)}</div>
           {ignoredValue > 0 && (
             <div className="text-xs text-orange-400 mt-1" title="Value from cards with ignored tags/locations">
-              (${ignoredValue.toLocaleString()} excluded)
+              ({fp(ignoredValue)} excluded)
             </div>
           )}
         </div>
         <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 shadow-xl">
           <div className="text-sm text-white/60">Avg. Card Value</div>
-          <div className="text-3xl font-bold text-white">${avgValue}</div>
+          <div className="text-3xl font-bold text-white">{fp(avgValue)}</div>
         </div>
       </div>
 
@@ -180,10 +182,10 @@ const Dashboard = ({
                   </div>
                   <div className="text-right flex-shrink-0">
                     <div className="text-green-400 font-semibold text-sm">
-                      ${(card.price * card.quantity).toFixed(2)}
+                      {fp(card.price * card.quantity)}
                     </div>
                     {card.quantity > 1 && (
-                      <div className="text-white/40 text-xs">{card.quantity}x ${card.price.toFixed(2)}</div>
+                      <div className="text-white/40 text-xs">{card.quantity}x {fp(card.price)}</div>
                     )}
                   </div>
                 </div>
@@ -213,7 +215,7 @@ const Dashboard = ({
                 <div className="min-w-0">
                   <div className="text-white text-sm font-medium truncate">{card.name}</div>
                   <div className="text-white/50 text-xs truncate">{card.set || 'Unknown Set'}</div>
-                  <div className="text-green-400 text-xs font-medium">${card.price?.toFixed(2) || '0.00'}</div>
+                  <div className="text-green-400 text-xs font-medium">{fp(card.price || 0)}</div>
                 </div>
               </div>
             ))}

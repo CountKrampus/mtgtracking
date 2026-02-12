@@ -9,6 +9,9 @@ const {
   parseMoxfieldURL,
   parseArchidektURL
 } = require('../utils/deckHelpers');
+const { requireAuth, requireEditor } = require('../middleware/auth');
+const { buildUserQuery, getUserId } = require('../middleware/multiUser');
+const { activityLoggers } = require('../middleware/activityLogger');
 
 // Import Card model and getPriceWithFallback from parent scope
 // These will be injected when mounting the router
@@ -21,9 +24,10 @@ function injectDependencies(cardModel, priceFunction) {
 }
 
 // Get all decks
-router.get('/', async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   try {
-    const decks = await Deck.find().sort({ name: 1 });
+    const query = buildUserQuery({}, req);
+    const decks = await Deck.find(query).sort({ name: 1 });
     res.json(decks);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -31,9 +35,10 @@ router.get('/', async (req, res) => {
 });
 
 // Get single deck
-router.get('/:id', async (req, res) => {
+router.get('/:id', requireAuth, async (req, res) => {
   try {
-    const deck = await Deck.findById(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(query);
     if (!deck) return res.status(404).json({ message: 'Deck not found' });
     res.json(deck);
   } catch (error) {
@@ -42,9 +47,12 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create deck
-router.post('/', async (req, res) => {
+router.post('/', requireAuth, requireEditor, activityLoggers.deckCreate, async (req, res) => {
   try {
-    const deck = new Deck(req.body);
+    const userId = getUserId(req);
+    const deckData = { ...req.body };
+    if (userId) deckData.userId = userId;
+    const deck = new Deck(deckData);
     deck.statistics = calculateDeckStatistics(deck);
     await deck.save();
     res.status(201).json(deck);
@@ -54,12 +62,14 @@ router.post('/', async (req, res) => {
 });
 
 // Update deck
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireAuth, requireEditor, activityLoggers.deckUpdate, async (req, res) => {
   try {
-    const deck = await Deck.findById(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(query);
     if (!deck) return res.status(404).json({ message: 'Deck not found' });
 
-    Object.assign(deck, req.body);
+    const { userId: _, ...updateData } = req.body;
+    Object.assign(deck, updateData);
     deck.statistics = calculateDeckStatistics(deck);
     await deck.save();
     res.json(deck);
@@ -69,10 +79,12 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete deck
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAuth, requireEditor, activityLoggers.deckDelete, async (req, res) => {
   try {
-    const deck = await Deck.findByIdAndDelete(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(query);
     if (!deck) return res.status(404).json({ message: 'Deck not found' });
+    await deck.deleteOne();
     res.json({ message: 'Deck deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -80,7 +92,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Import deck from text or URL
-router.post('/import', async (req, res) => {
+router.post('/import', requireAuth, requireEditor, async (req, res) => {
   try {
     const { source, data } = req.body;
 
@@ -187,16 +199,18 @@ router.post('/import', async (req, res) => {
 });
 
 // Check deck ownership against collection
-router.get('/:id/ownership', async (req, res) => {
+router.get('/:id/ownership', requireAuth, async (req, res) => {
   try {
-    const deck = await Deck.findById(req.params.id);
+    const deckQuery = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(deckQuery);
     if (!deck) return res.status(404).json({ message: 'Deck not found' });
 
     if (!Card) {
       return res.status(500).json({ message: 'Card model not available' });
     }
 
-    const collectionCards = await Card.find();
+    const cardQuery = buildUserQuery({}, req);
+    const collectionCards = await Card.find(cardQuery);
     const collectionMap = new Map();
 
     collectionCards.forEach(card => {
@@ -272,9 +286,10 @@ router.get('/:id/ownership', async (req, res) => {
 });
 
 // Validate deck
-router.post('/:id/validate', async (req, res) => {
+router.post('/:id/validate', requireAuth, async (req, res) => {
   try {
-    const deck = await Deck.findById(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(query);
     if (!deck) return res.status(404).json({ message: 'Deck not found' });
 
     const validation = validateDeck(deck);
@@ -285,9 +300,10 @@ router.post('/:id/validate', async (req, res) => {
 });
 
 // Add card from collection to deck
-router.post('/:id/add-card', async (req, res) => {
+router.post('/:id/add-card', requireAuth, requireEditor, async (req, res) => {
   try {
-    const deck = await Deck.findById(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(query);
     if (!deck) return res.status(404).json({ message: 'Deck not found' });
 
     const { scryfallId, name, manaCost, types, colors, imageUrl } = req.body;

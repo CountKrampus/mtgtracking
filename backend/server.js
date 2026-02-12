@@ -4,9 +4,16 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const axios = require('axios');
 const deckRoutes = require('./routes/decks');
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/users');
+const adminRoutes = require('./routes/admin');
 const path = require('path');
 const fs = require('fs');
 const { pipeline } = require('stream/promises');
+const { isMultiUserEnabled, verifyToken, requireAuth, requireEditor, checkMaintenanceMode } = require('./middleware/auth');
+const { buildUserQuery, getUserId } = require('./middleware/multiUser');
+const { activityLoggers } = require('./middleware/activityLogger');
+const SystemSettings = require('./models/SystemSettings');
 
 // Try to load sharp for image hashing (optional dependency)
 let sharp = null;
@@ -57,11 +64,34 @@ app.use('/api/scryfall/', scryfallLimiter);
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mtg-tracker';
 mongoose.connect(MONGODB_URI)
-.then(() => console.log('MongoDB connected successfully'))
+.then(async () => {
+  console.log('MongoDB connected successfully');
+  // Initialize system settings if multi-user mode is enabled
+  if (isMultiUserEnabled()) {
+    await SystemSettings.initializeDefaults();
+    console.log('Multi-user mode enabled - system settings initialized');
+  }
+})
 .catch(err => console.error('MongoDB connection error:', err));
+
+// Auth middleware - verify token for all requests (populates req.user if valid token)
+app.use(verifyToken);
+
+// Mount auth routes (these don't require authentication)
+app.use('/api/auth', authRoutes);
+
+// Mount user routes (require authentication)
+app.use('/api/users', userRoutes);
+
+// Mount admin routes (require admin role)
+app.use('/api/admin', adminRoutes);
+
+// Check maintenance mode for all other routes
+app.use(checkMaintenanceMode);
 
 // Card Schema
 const cardSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
   name: { type: String, required: true },
   set: { type: String, required: false, default: 'Unknown' },
   setCode: { type: String, required: false },
@@ -98,7 +128,8 @@ cardSchema.index({ name: 1, set: 1, condition: 1 }); // Compound index for dupli
 
 // Location Schema
 const locationSchema = new mongoose.Schema({
-  name: { type: String, required: true, unique: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+  name: { type: String, required: true },
   description: { type: String, default: '' },
   ignorePrice: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
@@ -108,7 +139,8 @@ const Location = mongoose.model('Location', locationSchema);
 
 // Tag Schema (for managing tag metadata like ignorePrice)
 const tagSchema = new mongoose.Schema({
-  name: { type: String, required: true, unique: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+  name: { type: String, required: true },
   ignorePrice: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
@@ -117,6 +149,7 @@ const Tag = mongoose.model('Tag', tagSchema);
 
 // Wishlist Item Schema
 const wishlistItemSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
   name: { type: String, required: true },
   set: { type: String, default: '' },
   setCode: { type: String, default: '' },
@@ -150,6 +183,7 @@ const WishlistItem = mongoose.model('WishlistItem', wishlistItemSchema);
 
 // Player Profile Schema (for life counter)
 const playerProfileSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
   name: { type: String, required: true },
   avatarColor: { type: String, default: '#6366f1' },
   backgroundImage: { type: String, default: '' }, // URL or data URL for background
@@ -162,6 +196,7 @@ const PlayerProfile = mongoose.model('PlayerProfile', playerProfileSchema);
 
 // Game Session Schema (for life counter history)
 const gameSessionSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
   startedAt: { type: Date, default: Date.now },
   endedAt: { type: Date },
   players: [{
@@ -343,9 +378,10 @@ async function fetchCardFromScryfall(cardName, setCode, collectorNumber) {
 // Routes
 
 // Get all cards
-app.get('/api/cards', async (req, res) => {
+app.get('/api/cards', requireAuth, async (req, res) => {
   try {
-    const cards = await Card.find().sort({ name: 1 });
+    const query = buildUserQuery({}, req);
+    const cards = await Card.find(query).sort({ name: 1 });
     res.json(cards);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -353,9 +389,10 @@ app.get('/api/cards', async (req, res) => {
 });
 
 // Get single card
-app.get('/api/cards/:id', async (req, res) => {
+app.get('/api/cards/:id', requireAuth, async (req, res) => {
   try {
-    const card = await Card.findById(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
     res.json(card);
   } catch (error) {
@@ -509,10 +546,11 @@ app.get('/api/scryfall/search', async (req, res) => {
 });
 
 // Update prices from Exor Games (with Scryfall backup)
-app.post('/api/cards/:id/update-price', async (req, res) => {
+app.post('/api/cards/:id/update-price', requireAuth, requireEditor, activityLoggers.priceUpdate, async (req, res) => {
   try {
     const { force, fullData } = req.query; // Optional: force update, fullData for complete card info
-    const card = await Card.findById(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
 
     // Skip if card already has price and oracle text (unless force=true or fullData=true)
@@ -580,10 +618,11 @@ app.post('/api/cards/:id/update-price', async (req, res) => {
 });
 
 // Bulk update all prices from Exor Games (with Scryfall backup)
-app.post('/api/cards/update-all-prices', async (req, res) => {
+app.post('/api/cards/update-all-prices', requireAuth, requireEditor, activityLoggers.priceBulkUpdate, async (req, res) => {
   try {
     const { force, fullData } = req.query; // Optional: force update, fullData for complete card info
-    const cards = await Card.find();
+    const cardQuery = buildUserQuery({}, req);
+    const cards = await Card.find(cardQuery);
     let updated = 0;
     let skipped = 0;
 
@@ -664,9 +703,10 @@ app.post('/api/cards/update-all-prices', async (req, res) => {
 });
 
 // Bulk import cards from list (with offline fallback)
-app.post('/api/cards/bulk-import', async (req, res) => {
+app.post('/api/cards/bulk-import', requireAuth, requireEditor, activityLoggers.cardBulkImport, async (req, res) => {
   try {
     const { cardList, offlineMode } = req.body; // Array of strings like "4 Lightning Bolt" or "Lightning Bolt"
+    const userId = getUserId(req);
     const results = {
       added: [],
       failed: [],
@@ -749,7 +789,7 @@ app.post('/api/cards/bulk-import', async (req, res) => {
 
         // Check for existing card with smart duplicate detection
         // Priority: use collector number if available for exact matching
-        let query = {
+        let baseQuery = {
           name: cardInfo.name,
           condition: cardInfo.condition,
           isFoil: cardInfo.isFoil || false
@@ -757,13 +797,14 @@ app.post('/api/cards/bulk-import', async (req, res) => {
 
         // If we have exact collector number data, use it for duplicate detection (more precise)
         if (cardInfo.setCode && cardInfo.collectorNumber) {
-          query.setCode = cardInfo.setCode;
-          query.collectorNumber = cardInfo.collectorNumber;
+          baseQuery.setCode = cardInfo.setCode;
+          baseQuery.collectorNumber = cardInfo.collectorNumber;
         } else {
           // Fall back to set name matching (backward compatible)
-          query.set = cardInfo.set;
+          baseQuery.set = cardInfo.set;
         }
 
+        const query = buildUserQuery(baseQuery, req);
         const existingCard = await Card.findOne(query);
 
         if (existingCard) {
@@ -775,6 +816,7 @@ app.post('/api/cards/bulk-import', async (req, res) => {
             results.merged.push(`${cardInfo.name} (${cardInfo.set}) - merged ${quantity}`);
           }
         } else {
+          if (userId) cardInfo.userId = userId;
           const newCard = new Card(cardInfo);
           await newCard.save();
           if (isOffline) {
@@ -802,9 +844,10 @@ app.post('/api/cards/bulk-import', async (req, res) => {
 });
 
 // Bulk import full card data (for JSON/CSV imports)
-app.post('/api/cards/bulk-import-full', async (req, res) => {
+app.post('/api/cards/bulk-import-full', requireAuth, requireEditor, activityLoggers.cardBulkImport, async (req, res) => {
   try {
     const { cards } = req.body; // Array of card objects with full data
+    const userId = getUserId(req);
     const results = {
       added: [],
       failed: [],
@@ -844,18 +887,20 @@ app.post('/api/cards/bulk-import-full', async (req, res) => {
         };
 
         // Check for existing card (auto-merge by name + set + condition + isFoil)
-        const existingCard = await Card.findOne({
+        const existingQuery = buildUserQuery({
           name: cardInfo.name,
           set: cardInfo.set,
           condition: cardInfo.condition,
           isFoil: cardInfo.isFoil
-        });
+        }, req);
+        const existingCard = await Card.findOne(existingQuery);
 
         if (existingCard) {
           existingCard.quantity += cardInfo.quantity;
           await existingCard.save();
           results.merged.push(`${cardInfo.name} (${cardInfo.set}) - merged ${cardInfo.quantity}`);
         } else {
+          if (userId) cardInfo.userId = userId;
           const newCard = new Card(cardInfo);
           await newCard.save();
           results.added.push(`${cardInfo.name} (${cardInfo.set}) - added ${cardInfo.quantity}`);
@@ -874,9 +919,10 @@ app.post('/api/cards/bulk-import-full', async (req, res) => {
 });
 
 // Offline-only bulk import (no API calls)
-app.post('/api/cards/bulk-import-offline', async (req, res) => {
+app.post('/api/cards/bulk-import-offline', requireAuth, requireEditor, activityLoggers.cardBulkImport, async (req, res) => {
   try {
     const { cardList } = req.body;
+    const userId = getUserId(req);
     const results = {
       added: [],
       failed: [],
@@ -918,19 +964,21 @@ app.post('/api/cards/bulk-import-offline', async (req, res) => {
           tags: []
         };
 
-        // Check for existing card (auto-merge)
-        const existingCard = await Card.findOne({
+        // Check for existing card (auto-merge) scoped to user
+        const existingQuery = buildUserQuery({
           name: cardInfo.name,
           set: cardInfo.set,
           condition: cardInfo.condition,
           isFoil: cardInfo.isFoil
-        });
+        }, req);
+        const existingCard = await Card.findOne(existingQuery);
 
         if (existingCard) {
           existingCard.quantity += quantity;
           await existingCard.save();
           results.merged.push(`${cardInfo.name} - merged ${quantity} (offline)`);
         } else {
+          if (userId) cardInfo.userId = userId;
           const newCard = new Card(cardInfo);
           await newCard.save();
           results.added.push(`${cardInfo.name} - added ${quantity} (offline, no details)`);
@@ -949,12 +997,14 @@ app.post('/api/cards/bulk-import-offline', async (req, res) => {
 });
 
 // Create new card (or merge with existing if duplicate)
-app.post('/api/cards', async (req, res) => {
+app.post('/api/cards', requireAuth, requireEditor, activityLoggers.cardCreate, async (req, res) => {
   try {
     const { name, set, condition, quantity, isFoil } = req.body;
+    const userId = getUserId(req);
 
-    // Check if card with same name, set, condition, and foil status already exists
-    const existingCard = await Card.findOne({ name, set, condition, isFoil: isFoil || false });
+    // Check if card with same name, set, condition, and foil status already exists (for this user)
+    const existingQuery = buildUserQuery({ name, set, condition, isFoil: isFoil || false }, req);
+    const existingCard = await Card.findOne(existingQuery);
 
     if (existingCard) {
       // Card exists - increment quantity instead of creating duplicate
@@ -968,7 +1018,9 @@ app.post('/api/cards', async (req, res) => {
     }
 
     // Card doesn't exist - create new entry
-    const card = new Card(req.body);
+    const cardData = { ...req.body };
+    if (userId) cardData.userId = userId;
+    const card = new Card(cardData);
     const newCard = await card.save();
     res.status(201).json(newCard);
   } catch (error) {
@@ -977,12 +1029,15 @@ app.post('/api/cards', async (req, res) => {
 });
 
 // Update card
-app.put('/api/cards/:id', async (req, res) => {
+app.put('/api/cards/:id', requireAuth, requireEditor, activityLoggers.cardUpdate, async (req, res) => {
   try {
-    const card = await Card.findById(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
-    
-    Object.assign(card, req.body);
+
+    // Don't allow changing userId
+    const { userId: _, ...updateData } = req.body;
+    Object.assign(card, updateData);
     const updatedCard = await card.save();
     res.json(updatedCard);
   } catch (error) {
@@ -990,12 +1045,47 @@ app.put('/api/cards/:id', async (req, res) => {
   }
 });
 
-// Delete card
-app.delete('/api/cards/:id', async (req, res) => {
+// Clear entire collection
+app.delete('/api/collection/clear-all', requireAuth, requireEditor, async (req, res) => {
   try {
-    const card = await Card.findById(req.params.id);
+    const { confirmation } = req.body;
+    if (confirmation !== 'DELETE_ALL_CARDS') {
+      return res.status(400).json({ message: 'Missing confirmation. Send { confirmation: "DELETE_ALL_CARDS" }' });
+    }
+    const query = buildUserQuery({}, req);
+    const result = await Card.deleteMany(query);
+    res.json({ deletedCount: result.deletedCount });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Clear image cache
+app.delete('/api/cache/clear', requireAuth, requireEditor, async (req, res) => {
+  try {
+    let deletedCount = 0;
+    if (fs.existsSync(CACHE_DIR)) {
+      const files = fs.readdirSync(CACHE_DIR);
+      for (const file of files) {
+        if (file.endsWith('.jpg') || file.endsWith('.png')) {
+          fs.unlinkSync(path.join(CACHE_DIR, file));
+          deletedCount++;
+        }
+      }
+    }
+    res.json({ deletedCount });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Delete card
+app.delete('/api/cards/:id', requireAuth, requireEditor, activityLoggers.cardDelete, async (req, res) => {
+  try {
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
-    
+
     await card.deleteOne();
     res.json({ message: 'Card deleted' });
   } catch (error) {
@@ -1004,9 +1094,10 @@ app.delete('/api/cards/:id', async (req, res) => {
 });
 
 // Export collection as JSON
-app.get('/api/export/json', async (req, res) => {
+app.get('/api/export/json', requireAuth, activityLoggers.exportJson, async (req, res) => {
   try {
-    const cards = await Card.find();
+    const query = buildUserQuery({}, req);
+    const cards = await Card.find(query);
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', 'attachment; filename=mtg-collection.json');
     res.json(cards);
@@ -1016,9 +1107,10 @@ app.get('/api/export/json', async (req, res) => {
 });
 
 // Export collection as CSV
-app.get('/api/export/csv', async (req, res) => {
+app.get('/api/export/csv', requireAuth, activityLoggers.exportCsv, async (req, res) => {
   try {
-    const cards = await Card.find();
+    const query = buildUserQuery({}, req);
+    const cards = await Card.find(query);
 
     // Helper to escape CSV fields
     const escapeCSV = (str) => str ? `"${String(str).replace(/"/g, '""')}"` : '""';
@@ -1063,15 +1155,18 @@ app.get('/api/export/csv', async (req, res) => {
 });
 
 // Get collection statistics
-app.get('/api/stats', async (req, res) => {
+app.get('/api/stats', requireAuth, async (req, res) => {
   try {
-    const cards = await Card.find();
+    const cardQuery = buildUserQuery({}, req);
+    const cards = await Card.find(cardQuery);
 
-    // Get locations and tags with ignorePrice set
-    const locations = await Location.find({ ignorePrice: true });
+    // Get locations and tags with ignorePrice set (scoped to user)
+    const locationQuery = buildUserQuery({ ignorePrice: true }, req);
+    const locations = await Location.find(locationQuery);
     const ignoredLocations = new Set(locations.map(l => l.name));
 
-    const tags = await Tag.find({ ignorePrice: true });
+    const tagQuery = buildUserQuery({ ignorePrice: true }, req);
+    const tags = await Tag.find(tagQuery);
     const ignoredTags = new Set(tags.map(t => t.name));
 
     // Helper to check if card should be ignored for price calculation
@@ -1109,13 +1204,25 @@ app.get('/api/stats', async (req, res) => {
       }
     });
 
+    // Count cached images
+    let cachedImageCount = 0;
+    try {
+      if (fs.existsSync(CACHE_DIR)) {
+        const files = fs.readdirSync(CACHE_DIR);
+        cachedImageCount = files.filter(f => f.endsWith('.jpg') || f.endsWith('.png')).length;
+      }
+    } catch {
+      // ignore errors counting cache
+    }
+
     res.json({
       totalCards,
       uniqueCards: cards.length,
       totalValue,
       ignoredValue,
       colorDistribution: colorStats,
-      typeDistribution: typeStats
+      typeDistribution: typeStats,
+      cachedImageCount
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -1125,14 +1232,15 @@ app.get('/api/stats', async (req, res) => {
 // Tag Management Endpoints
 
 // Add tag to a card
-app.post('/api/cards/:id/tags', async (req, res) => {
+app.post('/api/cards/:id/tags', requireAuth, requireEditor, async (req, res) => {
   try {
     const { tag } = req.body;
     if (!tag || typeof tag !== 'string') {
       return res.status(400).json({ message: 'Tag must be a non-empty string' });
     }
 
-    const card = await Card.findById(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
 
     // Prevent duplicates, normalize to lowercase
@@ -1152,9 +1260,10 @@ app.post('/api/cards/:id/tags', async (req, res) => {
 });
 
 // Remove tag from a card
-app.delete('/api/cards/:id/tags/:tag', async (req, res) => {
+app.delete('/api/cards/:id/tags/:tag', requireAuth, requireEditor, async (req, res) => {
   try {
-    const card = await Card.findById(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
 
     if (card.tags) {
@@ -1169,10 +1278,11 @@ app.delete('/api/cards/:id/tags/:tag', async (req, res) => {
 });
 
 // Get all tags (combines tags from cards with Tag model metadata)
-app.get('/api/tags', async (req, res) => {
+app.get('/api/tags', requireAuth, async (req, res) => {
   try {
-    // Get all unique tags from cards
-    const cards = await Card.find();
+    // Get all unique tags from cards (scoped to user)
+    const cardQuery = buildUserQuery({}, req);
+    const cards = await Card.find(cardQuery);
     const cardTags = new Set();
     cards.forEach(card => {
       if (card.tags) {
@@ -1180,8 +1290,9 @@ app.get('/api/tags', async (req, res) => {
       }
     });
 
-    // Get all Tag documents (for metadata like ignorePrice)
-    const tagDocs = await Tag.find();
+    // Get all Tag documents (for metadata like ignorePrice) scoped to user
+    const tagQuery = buildUserQuery({}, req);
+    const tagDocs = await Tag.find(tagQuery);
     const tagDocMap = {};
     tagDocs.forEach(t => {
       tagDocMap[t.name] = t;
@@ -1202,7 +1313,7 @@ app.get('/api/tags', async (req, res) => {
 });
 
 // Create a new tag
-app.post('/api/tags', async (req, res) => {
+app.post('/api/tags', requireAuth, requireEditor, activityLoggers.tagCreate, async (req, res) => {
   try {
     const { name, ignorePrice } = req.body;
     if (!name || !name.trim()) {
@@ -1210,18 +1321,22 @@ app.post('/api/tags', async (req, res) => {
     }
 
     const normalizedTag = name.trim().toLowerCase();
+    const userId = getUserId(req);
 
-    // Check if tag already exists in Tag model
-    const existingTag = await Tag.findOne({ name: normalizedTag });
+    // Check if tag already exists in Tag model (scoped to user)
+    const existingQuery = buildUserQuery({ name: normalizedTag }, req);
+    const existingTag = await Tag.findOne(existingQuery);
     if (existingTag) {
       return res.status(400).json({ message: 'Tag already exists' });
     }
 
     // Create Tag document
-    const tag = new Tag({
+    const tagData = {
       name: normalizedTag,
       ignorePrice: ignorePrice || false
-    });
+    };
+    if (userId) tagData.userId = userId;
+    const tag = new Tag(tagData);
     const newTag = await tag.save();
 
     res.status(201).json(newTag);
@@ -1234,15 +1349,19 @@ app.post('/api/tags', async (req, res) => {
 });
 
 // Update a tag (e.g., toggle ignorePrice)
-app.put('/api/tags/:name', async (req, res) => {
+app.put('/api/tags/:name', requireAuth, requireEditor, activityLoggers.tagUpdate, async (req, res) => {
   try {
     const tagName = decodeURIComponent(req.params.name).toLowerCase();
     const { ignorePrice } = req.body;
+    const userId = getUserId(req);
 
-    // Find or create the tag document
-    let tag = await Tag.findOne({ name: tagName });
+    // Find or create the tag document (scoped to user)
+    const query = buildUserQuery({ name: tagName }, req);
+    let tag = await Tag.findOne(query);
     if (!tag) {
-      tag = new Tag({ name: tagName, ignorePrice: ignorePrice || false });
+      const tagData = { name: tagName, ignorePrice: ignorePrice || false };
+      if (userId) tagData.userId = userId;
+      tag = new Tag(tagData);
     } else {
       if (ignorePrice !== undefined) tag.ignorePrice = ignorePrice;
     }
@@ -1255,18 +1374,20 @@ app.put('/api/tags/:name', async (req, res) => {
 });
 
 // Delete a tag (removes from all cards and deletes Tag document)
-app.delete('/api/tags/:name', async (req, res) => {
+app.delete('/api/tags/:name', requireAuth, requireEditor, activityLoggers.tagDelete, async (req, res) => {
   try {
     const tagName = decodeURIComponent(req.params.name).toLowerCase();
 
-    // Remove tag from all cards that have it
+    // Remove tag from all cards that have it (scoped to user)
+    const cardQuery = buildUserQuery({ tags: tagName }, req);
     const result = await Card.updateMany(
-      { tags: tagName },
+      cardQuery,
       { $pull: { tags: tagName } }
     );
 
-    // Delete the Tag document if it exists
-    await Tag.deleteOne({ name: tagName });
+    // Delete the Tag document if it exists (scoped to user)
+    const tagQuery = buildUserQuery({ name: tagName }, req);
+    await Tag.deleteOne(tagQuery);
 
     res.json({
       message: `Tag "${tagName}" removed from ${result.modifiedCount} card(s)`,
@@ -1278,9 +1399,10 @@ app.delete('/api/tags/:name', async (req, res) => {
 });
 
 // Bulk update oracle text for existing cards (one-time migration/backfill)
-app.post('/api/cards/update-all-oracle-text', async (req, res) => {
+app.post('/api/cards/update-all-oracle-text', requireAuth, requireEditor, async (req, res) => {
   try {
-    const cards = await Card.find();
+    const cardQuery = buildUserQuery({}, req);
+    const cards = await Card.find(cardQuery);
     let updated = 0;
     let failed = 0;
 
@@ -1317,9 +1439,10 @@ app.post('/api/cards/update-all-oracle-text', async (req, res) => {
 });
 
 // Migrate existing cards to use cached images
-app.post('/api/cards/migrate-images-to-cache', async (req, res) => {
+app.post('/api/cards/migrate-images-to-cache', requireAuth, requireEditor, async (req, res) => {
   try {
-    const cards = await Card.find({ scryfallId: { $ne: null } });
+    const query = buildUserQuery({ scryfallId: { $ne: null } }, req);
+    const cards = await Card.find(query);
     let migrated = 0;
     let failed = 0;
 
@@ -1394,9 +1517,10 @@ app.get('/api/images/:scryfallId', (req, res) => {
 // ============================================
 
 // Get all locations
-app.get('/api/locations', async (req, res) => {
+app.get('/api/locations', requireAuth, async (req, res) => {
   try {
-    const locations = await Location.find().sort({ name: 1 });
+    const query = buildUserQuery({}, req);
+    const locations = await Location.find(query).sort({ name: 1 });
     res.json(locations);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -1404,18 +1528,21 @@ app.get('/api/locations', async (req, res) => {
 });
 
 // Create new location
-app.post('/api/locations', async (req, res) => {
+app.post('/api/locations', requireAuth, requireEditor, activityLoggers.locationCreate, async (req, res) => {
   try {
     const { name, description } = req.body;
     if (!name || !name.trim()) {
       return res.status(400).json({ message: 'Location name is required' });
     }
 
-    const location = new Location({
+    const userId = getUserId(req);
+    const locationData = {
       name: name.trim(),
       description: description || ''
-    });
+    };
+    if (userId) locationData.userId = userId;
 
+    const location = new Location(locationData);
     const newLocation = await location.save();
     res.status(201).json(newLocation);
   } catch (error) {
@@ -1427,9 +1554,10 @@ app.post('/api/locations', async (req, res) => {
 });
 
 // Update location
-app.put('/api/locations/:id', async (req, res) => {
+app.put('/api/locations/:id', requireAuth, requireEditor, activityLoggers.locationUpdate, async (req, res) => {
   try {
-    const location = await Location.findById(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const location = await Location.findOne(query);
     if (!location) return res.status(404).json({ message: 'Location not found' });
 
     const { name, description, ignorePrice } = req.body;
@@ -1448,13 +1576,15 @@ app.put('/api/locations/:id', async (req, res) => {
 });
 
 // Delete location (only if no cards are using it)
-app.delete('/api/locations/:id', async (req, res) => {
+app.delete('/api/locations/:id', requireAuth, requireEditor, activityLoggers.locationDelete, async (req, res) => {
   try {
-    const location = await Location.findById(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const location = await Location.findOne(query);
     if (!location) return res.status(404).json({ message: 'Location not found' });
 
-    // Check if any cards are using this location
-    const cardsUsingLocation = await Card.countDocuments({ location: location.name });
+    // Check if any cards are using this location (scoped to user)
+    const cardQuery = buildUserQuery({ location: location.name }, req);
+    const cardsUsingLocation = await Card.countDocuments(cardQuery);
     if (cardsUsingLocation > 0) {
       return res.status(400).json({
         message: `Cannot delete location. ${cardsUsingLocation} card(s) are using it.`,
@@ -1474,9 +1604,10 @@ app.delete('/api/locations/:id', async (req, res) => {
 // ============================================
 
 // Get all wishlist items
-app.get('/api/wishlist', async (req, res) => {
+app.get('/api/wishlist', requireAuth, async (req, res) => {
   try {
-    const items = await WishlistItem.find().sort({ priority: -1, name: 1 });
+    const query = buildUserQuery({}, req);
+    const items = await WishlistItem.find(query).sort({ priority: -1, name: 1 });
     res.json(items);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -1484,9 +1615,12 @@ app.get('/api/wishlist', async (req, res) => {
 });
 
 // Add to wishlist
-app.post('/api/wishlist', async (req, res) => {
+app.post('/api/wishlist', requireAuth, requireEditor, activityLoggers.wishlistAdd, async (req, res) => {
   try {
-    const item = new WishlistItem(req.body);
+    const userId = getUserId(req);
+    const itemData = { ...req.body };
+    if (userId) itemData.userId = userId;
+    const item = new WishlistItem(itemData);
     const newItem = await item.save();
     res.status(201).json(newItem);
   } catch (error) {
@@ -1495,12 +1629,14 @@ app.post('/api/wishlist', async (req, res) => {
 });
 
 // Update wishlist item
-app.put('/api/wishlist/:id', async (req, res) => {
+app.put('/api/wishlist/:id', requireAuth, requireEditor, activityLoggers.wishlistUpdate, async (req, res) => {
   try {
-    const item = await WishlistItem.findById(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const item = await WishlistItem.findOne(query);
     if (!item) return res.status(404).json({ message: 'Wishlist item not found' });
 
-    Object.assign(item, req.body);
+    const { userId: _, ...updateData } = req.body;
+    Object.assign(item, updateData);
     const updatedItem = await item.save();
     res.json(updatedItem);
   } catch (error) {
@@ -1509,9 +1645,10 @@ app.put('/api/wishlist/:id', async (req, res) => {
 });
 
 // Delete wishlist item
-app.delete('/api/wishlist/:id', async (req, res) => {
+app.delete('/api/wishlist/:id', requireAuth, requireEditor, activityLoggers.wishlistDelete, async (req, res) => {
   try {
-    const item = await WishlistItem.findById(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const item = await WishlistItem.findOne(query);
     if (!item) return res.status(404).json({ message: 'Wishlist item not found' });
 
     await item.deleteOne();
@@ -1522,20 +1659,23 @@ app.delete('/api/wishlist/:id', async (req, res) => {
 });
 
 // Acquire wishlist item (move to collection)
-app.post('/api/wishlist/:id/acquire', async (req, res) => {
+app.post('/api/wishlist/:id/acquire', requireAuth, requireEditor, activityLoggers.wishlistAcquire, async (req, res) => {
   try {
-    const item = await WishlistItem.findById(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const item = await WishlistItem.findOne(query);
     if (!item) return res.status(404).json({ message: 'Wishlist item not found' });
 
     const { location } = req.body; // Optional location to store the acquired card
+    const userId = getUserId(req);
 
-    // Check if card already exists in collection
-    const existingCard = await Card.findOne({
+    // Check if card already exists in collection (scoped to user)
+    const cardQuery = buildUserQuery({
       name: item.name,
       set: item.set || 'Unknown',
       condition: item.condition || 'NM',
       isFoil: false
-    });
+    }, req);
+    const existingCard = await Card.findOne(cardQuery);
 
     if (existingCard) {
       // Merge with existing card
@@ -1554,7 +1694,7 @@ app.post('/api/wishlist/:id/acquire', async (req, res) => {
     }
 
     // Create new card in collection
-    const newCard = new Card({
+    const newCardData = {
       name: item.name,
       set: item.set || 'Unknown',
       setCode: item.setCode || '',
@@ -1573,7 +1713,9 @@ app.post('/api/wishlist/:id/acquire', async (req, res) => {
       oracleText: item.oracleText || '',
       tags: [],
       location: location || ''
-    });
+    };
+    if (userId) newCardData.userId = userId;
+    const newCard = new Card(newCardData);
 
     await newCard.save();
 
@@ -1591,9 +1733,10 @@ app.post('/api/wishlist/:id/acquire', async (req, res) => {
 });
 
 // Bulk update wishlist prices
-app.post('/api/wishlist/update-all-prices', async (req, res) => {
+app.post('/api/wishlist/update-all-prices', requireAuth, requireEditor, async (req, res) => {
   try {
-    const items = await WishlistItem.find();
+    const wishlistQuery = buildUserQuery({}, req);
+    const items = await WishlistItem.find(wishlistQuery);
     let updated = 0;
 
     for (const item of items) {
@@ -1625,7 +1768,7 @@ app.post('/api/wishlist/update-all-prices', async (req, res) => {
 // ============================================
 
 // Bulk update multiple cards
-app.post('/api/cards/bulk-update', async (req, res) => {
+app.post('/api/cards/bulk-update', requireAuth, requireEditor, activityLoggers.cardBulkUpdate, async (req, res) => {
   try {
     const { cardIds, updates } = req.body;
 
@@ -1642,7 +1785,8 @@ app.post('/api/cards/bulk-update', async (req, res) => {
 
     for (const cardId of cardIds) {
       try {
-        const card = await Card.findById(cardId);
+        const query = buildUserQuery({ _id: cardId }, req);
+        const card = await Card.findOne(query);
         if (!card) {
           results.push({ id: cardId, status: 'not found' });
           continue;
@@ -1689,7 +1833,7 @@ app.post('/api/cards/bulk-update', async (req, res) => {
 });
 
 // Bulk delete multiple cards
-app.delete('/api/cards/bulk-delete', async (req, res) => {
+app.delete('/api/cards/bulk-delete', requireAuth, requireEditor, activityLoggers.cardBulkDelete, async (req, res) => {
   try {
     const { cardIds } = req.body;
 
@@ -1702,7 +1846,8 @@ app.delete('/api/cards/bulk-delete', async (req, res) => {
 
     for (const cardId of cardIds) {
       try {
-        const card = await Card.findById(cardId);
+        const query = buildUserQuery({ _id: cardId }, req);
+        const card = await Card.findOne(query);
         if (!card) {
           results.push({ id: cardId, status: 'not found' });
           continue;
@@ -1828,7 +1973,7 @@ async function buildHashIndex() {
 }
 
 // Match an image against cached images
-app.post('/api/image-match', express.json({ limit: '10mb' }), async (req, res) => {
+app.post('/api/image-match', requireAuth, express.json({ limit: '10mb' }), async (req, res) => {
   if (!sharp) {
     return res.status(503).json({
       message: 'Image matching not available (sharp not installed)',
@@ -1893,7 +2038,7 @@ app.post('/api/image-match', express.json({ limit: '10mb' }), async (req, res) =
 });
 
 // Build/rebuild the hash index
-app.post('/api/image-match/build-index', async (req, res) => {
+app.post('/api/image-match/build-index', requireAuth, requireEditor, async (req, res) => {
   if (!sharp) {
     return res.status(503).json({ message: 'Sharp not installed' });
   }
@@ -1907,7 +2052,7 @@ app.post('/api/image-match/build-index', async (req, res) => {
 });
 
 // Get index status
-app.get('/api/image-match/status', (req, res) => {
+app.get('/api/image-match/status', requireAuth, (req, res) => {
   res.json({
     available: !!sharp,
     indexedImages: imageHashCache.hashes.size,
@@ -1979,10 +2124,11 @@ async function fetchCommanderSpellbookCombos() {
 }
 
 // Find combos that can be assembled from the user's collection
-app.get('/api/combos/find', async (req, res) => {
+app.get('/api/combos/find', requireAuth, async (req, res) => {
   try {
-    // Get all cards in collection
-    const cards = await Card.find();
+    // Get all cards in collection (scoped to user when multi-user enabled)
+    const query = buildUserQuery({}, req);
+    const cards = await Card.find(query);
 
     // Create a Set of card names (lowercase for case-insensitive matching)
     const collectionNames = new Set(
@@ -2096,7 +2242,7 @@ app.get('/api/combos/find', async (req, res) => {
 });
 
 // Get combo suggestions for a specific card
-app.get('/api/combos/for-card/:cardName', async (req, res) => {
+app.get('/api/combos/for-card/:cardName', requireAuth, async (req, res) => {
   try {
     const cardName = decodeURIComponent(req.params.cardName).toLowerCase().trim();
 
@@ -2159,9 +2305,10 @@ app.get('/api/combos/for-card/:cardName', async (req, res) => {
 // ============================================
 
 // Get all player profiles
-app.get('/api/lifecounter/profiles', async (req, res) => {
+app.get('/api/lifecounter/profiles', requireAuth, async (req, res) => {
   try {
-    const profiles = await PlayerProfile.find().sort({ name: 1 });
+    const query = buildUserQuery({}, req);
+    const profiles = await PlayerProfile.find(query).sort({ name: 1 });
     res.json(profiles);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -2169,7 +2316,7 @@ app.get('/api/lifecounter/profiles', async (req, res) => {
 });
 
 // Create new player profile
-app.post('/api/lifecounter/profiles', async (req, res) => {
+app.post('/api/lifecounter/profiles', requireAuth, requireEditor, async (req, res) => {
   try {
     const { name, avatarColor, backgroundImage, backgroundType, commanderName } = req.body;
     if (!name || !name.trim()) {
@@ -2177,6 +2324,7 @@ app.post('/api/lifecounter/profiles', async (req, res) => {
     }
 
     const profile = new PlayerProfile({
+      userId: getUserId(req),
       name: name.trim(),
       avatarColor: avatarColor || '#6366f1',
       backgroundImage: backgroundImage || '',
@@ -2192,9 +2340,10 @@ app.post('/api/lifecounter/profiles', async (req, res) => {
 });
 
 // Update player profile
-app.put('/api/lifecounter/profiles/:id', async (req, res) => {
+app.put('/api/lifecounter/profiles/:id', requireAuth, requireEditor, async (req, res) => {
   try {
-    const profile = await PlayerProfile.findById(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const profile = await PlayerProfile.findOne(query);
     if (!profile) return res.status(404).json({ message: 'Profile not found' });
 
     const { name, avatarColor, backgroundImage, backgroundType, commanderName } = req.body;
@@ -2212,9 +2361,10 @@ app.put('/api/lifecounter/profiles/:id', async (req, res) => {
 });
 
 // Delete player profile
-app.delete('/api/lifecounter/profiles/:id', async (req, res) => {
+app.delete('/api/lifecounter/profiles/:id', requireAuth, requireEditor, async (req, res) => {
   try {
-    const profile = await PlayerProfile.findById(req.params.id);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const profile = await PlayerProfile.findOne(query);
     if (!profile) return res.status(404).json({ message: 'Profile not found' });
 
     await profile.deleteOne();
@@ -2225,9 +2375,9 @@ app.delete('/api/lifecounter/profiles/:id', async (req, res) => {
 });
 
 // Save completed game
-app.post('/api/lifecounter/games', async (req, res) => {
+app.post('/api/lifecounter/games', requireAuth, async (req, res) => {
   try {
-    const gameSession = new GameSession(req.body);
+    const gameSession = new GameSession({ ...req.body, userId: getUserId(req) });
     const savedSession = await gameSession.save();
     res.status(201).json(savedSession);
   } catch (error) {
@@ -2236,10 +2386,11 @@ app.post('/api/lifecounter/games', async (req, res) => {
 });
 
 // Get game history
-app.get('/api/lifecounter/games', async (req, res) => {
+app.get('/api/lifecounter/games', requireAuth, async (req, res) => {
   try {
     const { limit = 50 } = req.query;
-    const games = await GameSession.find()
+    const query = buildUserQuery({}, req);
+    const games = await GameSession.find(query)
       .sort({ createdAt: -1 })
       .limit(parseInt(limit));
     res.json(games);
@@ -2249,9 +2400,10 @@ app.get('/api/lifecounter/games', async (req, res) => {
 });
 
 // Get game statistics
-app.get('/api/lifecounter/stats', async (req, res) => {
+app.get('/api/lifecounter/stats', requireAuth, async (req, res) => {
   try {
-    const games = await GameSession.find();
+    const query = buildUserQuery({}, req);
+    const games = await GameSession.find(query);
 
     // Calculate statistics
     const totalGames = games.length;
@@ -2312,7 +2464,7 @@ app.get('/api/lifecounter/stats', async (req, res) => {
 });
 
 // Generate share link for current game state
-app.post('/api/lifecounter/share', async (req, res) => {
+app.post('/api/lifecounter/share', requireAuth, async (req, res) => {
   try {
     const { gameState } = req.body;
     if (!gameState) {

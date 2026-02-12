@@ -17,7 +17,10 @@ import {
   Menu,
   X,
   Command,
-  BookOpen
+  BookOpen,
+  LogOut,
+  User,
+  Shield
 } from 'lucide-react';
 
 const Sidebar = ({
@@ -40,15 +43,25 @@ const Sidebar = ({
   onCommandPalette,
   fileInputRef,
   isImporting,
-  loading
+  loading,
+  featureToggles,
+  // Auth props
+  authUser,
+  isMultiUserEnabled,
+  onAccountSettings,
+  onAdminPanel,
+  onLogout
 }) => {
-  const navItems = [
+  const ft = featureToggles || {};
+  const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'collection', label: 'Collection', icon: BookOpen },
-    { id: 'decks', label: 'Deck Builder', icon: Layers },
-    { id: 'wishlist', label: 'Wishlist', icon: Heart },
+    { id: 'decks', label: 'Deck Builder', icon: Layers, feature: 'deckBuilder' },
+    { id: 'wishlist', label: 'Wishlist', icon: Heart, feature: 'wishlist' },
     { id: 'lifecounter', label: 'Life Counter', icon: Users },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ];
+  const navItems = allNavItems.filter(item => !item.feature || ft[item.feature] !== false);
 
   const actionItems = [
     {
@@ -86,18 +99,27 @@ const Sidebar = ({
     },
   ];
 
-  const toolItems = [
-    { label: 'Commanders', icon: Crown, onClick: onCommanders, color: 'text-amber-400' },
-    { label: 'Sets', icon: BarChart3, onClick: onSets, color: 'text-teal-400' },
-    { label: 'Combos', icon: Zap, onClick: onCombos, color: 'text-orange-400' },
+  const allToolItems = [
+    { label: 'Commanders', icon: Crown, onClick: onCommanders, color: 'text-amber-400', feature: 'commanderRecs' },
+    { label: 'Sets', icon: BarChart3, onClick: onSets, color: 'text-teal-400', feature: 'setCompletion' },
+    { label: 'Combos', icon: Zap, onClick: onCombos, color: 'text-orange-400', feature: 'comboFinder' },
     { label: 'Scan Card', icon: Camera, onClick: onOpenCamera, color: 'text-cyan-400' },
-    { label: 'Settings', icon: Settings, onClick: onOpenSettings, color: 'text-white/70' },
   ];
+  const toolItems = allToolItems.filter(item => !item.feature || ft[item.feature] !== false);
 
   const handleNavClick = (viewId) => {
     setCurrentView(viewId);
     // Close mobile sidebar on navigation
     setSidebarOpen(false);
+  };
+
+  const getRoleBadgeColor = (role) => {
+    switch (role) {
+      case 'admin': return 'bg-red-500/20 text-red-300';
+      case 'editor': return 'bg-blue-500/20 text-blue-300';
+      case 'viewer': return 'bg-gray-500/20 text-gray-300';
+      default: return 'bg-gray-500/20 text-gray-300';
+    }
   };
 
   const sidebarContent = (
@@ -120,6 +142,33 @@ const Sidebar = ({
           </button>
         </div>
       </div>
+
+      {/* User Info (when multi-user enabled) */}
+      {isMultiUserEnabled && authUser && (
+        <div className="px-3 py-3 border-b border-white/10">
+          {!sidebarCollapsed ? (
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                {(authUser.displayName || authUser.username || '?')[0].toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">
+                  {authUser.displayName || authUser.username}
+                </p>
+                <span className={`text-xs px-1.5 py-0.5 rounded ${getRoleBadgeColor(authUser.role)}`}>
+                  {authUser.role}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold text-sm" title={authUser.displayName || authUser.username}>
+                {(authUser.displayName || authUser.username || '?')[0].toUpperCase()}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-2">
@@ -196,7 +245,50 @@ const Sidebar = ({
             </button>
           );
         })}
+
+        {/* Admin Section (only for admin users) */}
+        {isMultiUserEnabled && authUser?.role === 'admin' && (
+          <>
+            <div className="mt-4 px-2 mb-1">
+              {!sidebarCollapsed && (
+                <span className="text-xs font-semibold text-white/40 uppercase tracking-wider px-2">
+                  Admin
+                </span>
+              )}
+            </div>
+            <button
+              onClick={onAdminPanel}
+              className="w-full flex items-center gap-3 px-4 py-2 mx-1 rounded-lg transition text-sm text-white/70 hover:bg-white/10 hover:text-white"
+              title={sidebarCollapsed ? 'Admin Panel' : undefined}
+            >
+              <Shield size={18} className="flex-shrink-0 text-red-400" />
+              {!sidebarCollapsed && <span>Admin Panel</span>}
+            </button>
+          </>
+        )}
       </div>
+
+      {/* User Actions (when multi-user enabled) */}
+      {isMultiUserEnabled && authUser && (
+        <div className="border-t border-white/10 px-2 py-2 space-y-1">
+          <button
+            onClick={onAccountSettings}
+            className="w-full flex items-center gap-3 px-4 py-2 rounded-lg transition text-sm text-white/70 hover:bg-white/10 hover:text-white"
+            title={sidebarCollapsed ? 'Account' : undefined}
+          >
+            <User size={18} className="flex-shrink-0" />
+            {!sidebarCollapsed && <span>Account</span>}
+          </button>
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center gap-3 px-4 py-2 rounded-lg transition text-sm text-red-400/70 hover:bg-red-500/10 hover:text-red-400"
+            title={sidebarCollapsed ? 'Sign Out' : undefined}
+          >
+            <LogOut size={18} className="flex-shrink-0" />
+            {!sidebarCollapsed && <span>Sign Out</span>}
+          </button>
+        </div>
+      )}
 
       {/* Command Palette Hint */}
       {!sidebarCollapsed && (
