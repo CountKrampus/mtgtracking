@@ -46,6 +46,14 @@ sessionSchema.statics.invalidateAllForUser = function(userId) {
   );
 };
 
+// Static method to invalidate all sessions for a user (alias for consistency)
+sessionSchema.statics.invalidateAllUserSessions = function(userId) {
+  return this.updateMany(
+    { userId, isValid: true },
+    { isValid: false }
+  );
+};
+
 // Static method to invalidate a specific session
 sessionSchema.statics.invalidateSession = function(refreshToken) {
   return this.findOneAndUpdate(

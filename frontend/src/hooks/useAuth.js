@@ -262,6 +262,56 @@ export function useAuth() {
     return localStorage.getItem(REFRESH_TOKEN_KEY);
   }, []);
 
+  const forgotPassword = useCallback(async (email) => {
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Forgot password request failed');
+      }
+
+      return { success: true };
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  }, []);
+
+  const resetPassword = useCallback(async (token, newPassword) => {
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ token, newPassword })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Password reset failed');
+      }
+
+      return { success: true };
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  }, []);
+
   return {
     user,
     isAuthenticated: !!user,
@@ -277,7 +327,9 @@ export function useAuth() {
     changePassword,
     getAccessToken,
     getRefreshToken,
-    checkSystemStatus
+    checkSystemStatus,
+    forgotPassword,
+    resetPassword
   };
 }
 

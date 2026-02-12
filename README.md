@@ -36,6 +36,16 @@ npm start
 - 📊 Collection statistics and filtering
 - 💾 Export to JSON/CSV
 - 🌐 Works offline with local MongoDB
+- 👥 Multi-user support with roles (admin, editor, viewer)
+- 🔐 Authentication and user management with password reset functionality
+- 👑 Admin panel for system administration
+- 🃏 Deck builder and management
+- ❤️ Life counter for games
+- 🛒 Wishlist functionality
+- 📍 Location tracking for physical cards
+- 📱 QR codes for easy location identification
+- 📷 Camera OCR for quick card addition
+- ⚡ Bulk operations for efficient management
 
 ## Full Installation Guides
 
