@@ -212,7 +212,7 @@ if %errorlevel% neq 0 (
     echo Warning: Could not start MongoDB service. Make sure MongoDB is installed and configured.
 )
 
-echo Starting servers in a single terminal...
+echo Starting servers in the current terminal...
 echo.
 
 if exist "backend" (
@@ -220,17 +220,20 @@ if exist "backend" (
         echo Both backend and frontend directories found. Starting both servers...
         echo.
         echo Starting backend server on port 5000 and frontend server on port 3000...
-        echo NOTE: Both servers will run in this terminal. Press Ctrl+C to stop.
+        echo NOTE: Servers are now running in this terminal.
+        echo.
+        echo To stop the servers: Press Ctrl+C then Y when prompted
+        echo After stopping servers, this window will close. Reopen server-manager.bat to return to menu.
         echo.
         echo Starting servers...
-        npm start
         echo.
-        echo Servers stopped.
+        npm start
     ) else (
         echo Frontend directory not found. Starting backend only...
         echo.
         echo Starting backend server on port 5000...
-        echo Press Ctrl+C to stop the server.
+        echo To stop the server: Press Ctrl+C then Y when prompted
+        echo After stopping server, this window will close. Reopen server-manager.bat to return to menu.
         echo.
         cd backend
         npm start
@@ -240,7 +243,8 @@ if exist "backend" (
     echo Backend directory not found. Starting frontend only...
     echo.
     echo Starting frontend server on port 3000...
-    echo Press Ctrl+C to stop the server.
+    echo To stop the server: Press Ctrl+C then Y when prompted
+    echo After stopping server, this window will close. Reopen server-manager.bat to return to menu.
     echo.
     cd frontend
     npm start
@@ -252,9 +256,9 @@ if exist "backend" (
 )
 
 echo.
-echo Press any key to return to menu...
-pause >nul
-goto menu
+echo Servers stopped. This window will now close.
+pause
+exit
 
 :stop_server
 cls
