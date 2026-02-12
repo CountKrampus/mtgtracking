@@ -225,7 +225,7 @@ if exist "backend" (
         echo To stop the servers: Close the new window or press Ctrl+C in it.
         echo.
         echo Starting servers in new window...
-        start "MTG Tracker Servers" cmd /k "npm start"
+        start "MTG Tracker Servers" cmd /k "npx concurrently \"npm run start:backend\" \"npm run start:frontend\""
     ) else (
         echo Frontend directory not found. Starting backend only...
         echo.
@@ -235,7 +235,7 @@ if exist "backend" (
         echo To stop the server: Close the new window or press Ctrl+C in it.
         echo.
         cd backend
-        start "MTG Tracker Backend" cmd /k "npm start"
+        start "MTG Tracker Backend" cmd /k "npm run dev"
         cd ..
     )
 ) else if exist "frontend" (
