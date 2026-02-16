@@ -226,6 +226,22 @@ export const LogCreators = {
   poison: (playerName, newPoison) => {
     const message = `${playerName} now has ${newPoison} poison counter${newPoison !== 1 ? 's' : ''} (${newPoison}/10)`;
     return createLogEntry('poison', message);
+  },
+
+  // New log creators for counters and mana
+  counterChange: (playerName, counterType, newCount, change) => {
+    const message = `${playerName} ${change} ${counterType} counter${newCount !== 1 ? 's' : ''} (${newCount} total)`;
+    return createLogEntry('mechanic', message);
+  },
+
+  manaChange: (playerName, color, newMana, change) => {
+    const colorName = color === 'W' ? 'white' : 
+                     color === 'U' ? 'blue' : 
+                     color === 'B' ? 'black' : 
+                     color === 'R' ? 'red' : 
+                     color === 'G' ? 'green' : 'colorless';
+    const message = `${playerName} ${change} ${colorName} mana (${newMana} total)`;
+    return createLogEntry('mechanic', message);
   }
 };
 

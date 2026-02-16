@@ -80,6 +80,9 @@ function LifeCounter({ onBack }) {
     changeLife,
     changePoison,
     changeCommanderDamage,
+    changeCounter,
+    changeMana,
+    updatePlayer,
     resetGame,
     setRingProgress,
     setCitysBlessing,
@@ -221,6 +224,101 @@ function LifeCounter({ onBack }) {
       playSound('damage');
     }
   };
+
+  // Handle counters change
+  const handleCountersChange = (playerId, counterType, amount) => {
+    // Special handling for removal (-9999 signals removal)
+    if (amount === -9999) {
+      // For custom counters, we'll just set to 0 for now
+      changeCounter(playerId, counterType, 0);
+      const player = players.find(p => p.id === playerId);
+      if (player) {
+        addLogEntry(LogCreators.counterChange(player.name, counterType, 0, `Counter '${counterType}' removed`));
+      }
+      return;
+    }
+
+    // Normal counter change
+    changeCounter(playerId, counterType, amount);
+    const player = players.find(p => p.id === playerId);
+    if (player) {
+      const currentCount = player.counters?.[counterType] || 0;
+      const newCount = Math.max(0, currentCount + amount); // Prevent negative counters
+      addLogEntry(LogCreators.counterChange(player.name, counterType, newCount, `${amount > 0 ? '+' : ''}${amount}`));
+    }
+    if (settings.soundEnabled) {
+      playSound(amount > 0 ? 'counterAdd' : 'counterRemove');
+    }
+  };
+
+  // Handle mana change
+  const handleManaChange = (playerId, color, amount) => {
+    changeMana(playerId, color, amount);
+    const player = players.find(p => p.id === playerId);
+    if (player) {
+      const currentMana = player.manaPool?.[color] || 0;
+      const newMana = Math.max(0, currentMana + amount); // Prevent negative mana
+      addLogEntry(LogCreators.manaChange(player.name, color, newMana, `${amount > 0 ? '+' : ''}${amount}`));
+    }
+    if (settings.soundEnabled) {
+      playSound(amount > 0 ? 'manaAdd' : 'manaRemove');
+    }
+  };
+
+  // Handle player status change
+  const handleSetPlayerStatus = (playerId, statusType, value) => {
+    const player = players.find(p => p.id === playerId);
+    if (player) {
+      let updateObj = {};
+      
+      switch (statusType) {
+        case 'phyrexianPoison':
+          updateObj = { hasPhyrexianPoison: value };
+          break;
+        case 'transformed':
+          updateObj = { hasTransformed: value };
+          break;
+        case 'daybound':
+          updateObj = { hasDaybound: value };
+          break;
+        case 'nightbound':
+          updateObj = { hasNightbound: value };
+          break;
+        case 'hexproof':
+          updateObj = { hasHexproof: value };
+          break;
+        case 'shroud':
+          updateObj = { hasShroud: value };
+          break;
+        case 'protection':
+          updateObj = { hasProtection: value };
+          break;
+        case 'vigilance':
+          updateObj = { hasVigilance: value };
+          break;
+        case 'doubleStrike':
+          updateObj = { hasDoubleStrike: value };
+          break;
+        case 'trample':
+          updateObj = { hasTrample: value };
+          break;
+        default:
+          return;
+      }
+      
+      updatePlayer(playerId, updateObj);
+      
+      addLogEntry({
+        type: 'mechanic',
+        message: `${player.name} ${value ? 'gained' : 'lost'} ${statusType.replace(/([A-Z])/g, ' $1').trim()} status`,
+        timestamp: Date.now()
+      });
+    }
+    if (settings.soundEnabled) {
+      playSound(value ? 'statusGain' : 'statusLost');
+    }
+  };
+
 
   // Reset game
   const handleReset = () => {
@@ -697,6 +795,7 @@ function LifeCounter({ onBack }) {
           onSetDayNight={setDayNight}
           onSetRingProgress={setRingProgress}
           onSetCitysBlessing={setCitysBlessing}
+          onSetPlayerStatus={handleSetPlayerStatus}
           compact={playerCount > 4}
         />
       )}
@@ -708,9 +807,13 @@ function LifeCounter({ onBack }) {
             key={player.id}
             player={player}
             gameFormat={gameFormat}
+            players={players}
             onLifeChange={(amount) => handleLifeChange(player.id, amount)}
             onPoisonChange={(amount) => handlePoisonChange(player.id, amount)}
             onCommanderDamageClick={() => setCommanderDamageModal(player.id)}
+            onCountersChange={(playerId, counterType, amount) => handleCountersChange(playerId, counterType, amount)}
+            onManaChange={(playerId, color, amount) => handleManaChange(playerId, color, amount)}
+            onCommanderDamageChange={(targetPlayerId, sourcePlayerId, amount) => handleCommanderDamageChange(targetPlayerId, sourcePlayerId, amount)}
             compact={playerCount > 4}
             isCurrentPlayer={index === currentPlayerIndex}
             isMonarch={monarch === player.id}
