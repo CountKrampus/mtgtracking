@@ -53,6 +53,8 @@ npm start
 - **[LINUX_SETUP.md](./LINUX_SETUP.md)** - Detailed Linux-specific walkthrough
 - **[MONGODB_SETUP.md](./MONGODB_SETUP.md)** - Database configuration
 
+- backend/.env.example rename to .env
+
 ## Tech Stack
 
 - **Backend:** Node.js + Express + MongoDB
