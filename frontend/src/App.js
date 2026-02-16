@@ -34,6 +34,11 @@ const PlanechaseMode = React.lazy(() => import('./components/Gameplay/Planechase
 const CustomFormatBuilder = React.lazy(() => import('./components/Gameplay/CustomFormatBuilder'));
 const CubeBuilder = React.lazy(() => import('./components/Gameplay/CubeBuilder'));
 
+// Tools components
+const ReprintTracker = React.lazy(() => import('./components/Tools/ReprintTracker'));
+const SetReleaseCalendar = React.lazy(() => import('./components/Tools/SetReleaseCalendar'));
+const SpoilerSeasonIntegration = React.lazy(() => import('./components/Tools/SpoilerSeasonIntegration'));
+
 const API_URL = 'http://localhost:5000/api';
 
 // Helper to get auth headers for API calls
@@ -5116,6 +5121,21 @@ function App() {
         {currentView === 'cube-builder' && (
           <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
             <CubeBuilder />
+          </Suspense>
+        )}
+        {currentView === 'reprint-tracker' && (
+          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
+            <ReprintTracker />
+          </Suspense>
+        )}
+        {currentView === 'set-release-calendar' && (
+          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
+            <SetReleaseCalendar />
+          </Suspense>
+        )}
+        {currentView === 'spoiler-season' && (
+          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
+            <SpoilerSeasonIntegration />
           </Suspense>
         )}
 

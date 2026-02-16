@@ -24,7 +24,10 @@ import {
   Trophy,
   MapPin,
   Star,
-  Package
+  Package,
+  TrendingDown,
+  Calendar,
+  Eye
 } from 'lucide-react';
 
 const Sidebar = ({
@@ -270,6 +273,31 @@ const Sidebar = ({
               title={sidebarCollapsed ? item.label : undefined}
             >
               <Icon size={18} className={`flex-shrink-0 ${item.color}`} />
+              {!sidebarCollapsed && <span>{item.label}</span>}
+            </button>
+          );
+        })}
+
+        {/* Additional Tools Section */}
+        {[
+          { id: 'reprint-tracker', label: 'Reprint Tracker', icon: TrendingDown },
+          { id: 'set-release-calendar', label: 'Set Release Calendar', icon: Calendar },
+          { id: 'spoiler-season', label: 'Spoiler Season', icon: Eye },
+        ].map((item) => {
+          const Icon = item.icon;
+          const isActive = currentView === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => handleNavClick(item.id)}
+              className={`w-full flex items-center gap-3 px-4 py-2 mx-1 rounded-lg transition text-sm font-medium ${
+                isActive
+                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+              }`}
+              title={sidebarCollapsed ? item.label : undefined}
+            >
+              <Icon size={18} className="flex-shrink-0" />
               {!sidebarCollapsed && <span>{item.label}</span>}
             </button>
           );

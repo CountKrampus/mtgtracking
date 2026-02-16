@@ -3,7 +3,7 @@ import { Plus, Minus, Zap, Star, X, Tag } from 'lucide-react';
 
 function CountersPanel({
   playerId,
-  counters = { energy: 0, experience: 0, custom: {} },
+  counters = { energy: 0, experience: 0, radiation: 0, custom: {} },
   onCounterChange,
   compact = false
 }) {
@@ -39,6 +39,14 @@ function CountersPanel({
           <div className="flex items-center gap-1 px-2 py-1 bg-purple-600/30 rounded-lg">
             <Star size={12} className="text-purple-400" />
             <span className="text-purple-400 text-xs font-bold">{counters.experience}</span>
+          </div>
+        )}
+
+        {/* Radiation */}
+        {counters.radiation > 0 && (
+          <div className="flex items-center gap-1 px-2 py-1 bg-green-600/30 rounded-lg">
+            <Zap size={12} className="text-green-400" />
+            <span className="text-green-400 text-xs font-bold">{counters.radiation}</span>
           </div>
         )}
 
@@ -100,6 +108,30 @@ function CountersPanel({
           <span className="text-purple-400 font-bold w-6 text-center">{counters.experience}</span>
           <button
             onClick={() => onCounterChange(playerId, 'experience', 1)}
+            className="w-6 h-6 flex items-center justify-center bg-green-600/80 hover:bg-green-600 rounded text-white text-sm"
+          >
+            <Plus size={12} />
+          </button>
+        </div>
+      </div>
+
+      {/* Radiation Counter */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Zap size={16} className="text-green-400" />
+          <span className="text-white/80 text-sm">Radiation</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onCounterChange(playerId, 'radiation', -1)}
+            disabled={counters.radiation <= 0}
+            className="w-6 h-6 flex items-center justify-center bg-red-600/80 hover:bg-red-600 rounded text-white text-sm disabled:opacity-30"
+          >
+            <Minus size={12} />
+          </button>
+          <span className="text-green-400 font-bold w-6 text-center">{counters.radiation}</span>
+          <button
+            onClick={() => onCounterChange(playerId, 'radiation', 1)}
             className="w-6 h-6 flex items-center justify-center bg-green-600/80 hover:bg-green-600 rounded text-white text-sm"
           >
             <Plus size={12} />

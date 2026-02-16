@@ -1,5 +1,5 @@
 import React from 'react';
-import { Crown, Sparkles, Sun, Moon, Circle, Building2, X } from 'lucide-react';
+import { Crown, Sparkles, Sun, Moon, Circle, Building2, X, Heart } from 'lucide-react';
 
 // Ring tempts you abilities
 const RING_ABILITIES = [
@@ -8,6 +8,20 @@ const RING_ABILITIES = [
   'Whenever your Ring-bearer becomes blocked by a creature, that creature\'s controller sacrifices it at end of combat.',
   'Whenever your Ring-bearer deals combat damage to a player, each opponent loses 3 life.'
 ];
+
+// Additional game mechanics
+const DAY_NIGHT_ABILITIES = {
+  day: [
+    'Creatures you control get +1/+1',
+    'Lands you control produce 1 extra mana of their type',
+    'Instant and sorcery spells cost 1 less to cast'
+  ],
+  night: [
+    'Creatures you control get deathtouch',
+    'Opponents\' activated abilities cost 1 more to activate',
+    'You may look at the top card of your library any time'
+  ]
+};
 
 function GameMechanics({
   players,
@@ -19,6 +33,7 @@ function GameMechanics({
   onSetDayNight,
   onSetRingProgress,
   onSetCitysBlessing,
+  onSetPlayerStatus,
   compact = false
 }) {
   if (compact) {
@@ -59,6 +74,14 @@ function GameMechanics({
             }`}>
               {dayNight === 'day' ? 'Day' : 'Night'}
             </span>
+          </div>
+        )}
+
+        {/* Additional Status Indicators */}
+        {players.some(p => p.hasPhyrexianPoison) && (
+          <div className="flex items-center gap-1 px-2 py-1 bg-red-600/30 rounded-lg">
+            <Heart size={14} className="text-red-400" />
+            <span className="text-red-400 text-xs font-medium">Phyrexian</span>
           </div>
         )}
       </div>
@@ -152,6 +175,23 @@ function GameMechanics({
               Night
             </button>
           </div>
+          
+          {/* Day/Night Abilities Reference */}
+          {dayNight && (
+            <div className="mt-2 text-white/40 text-xs">
+              <div className="font-medium mb-1">
+                {dayNight === 'day' ? 'Day Abilities:' : 'Night Abilities:'}
+              </div>
+              <div className="space-y-1">
+                {DAY_NIGHT_ABILITIES[dayNight].slice(0, 2).map((ability, idx) => (
+                  <div key={idx} className="flex items-start gap-1">
+                    <span className="text-white/60">•</span>
+                    <span className="truncate">{ability}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* City's Blessing */}
@@ -174,6 +214,45 @@ function GameMechanics({
               >
                 {player.name.substring(0, 6)}
               </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Additional Status Trackers */}
+        <div className="bg-black/20 rounded-lg p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Heart size={18} className="text-red-400" />
+            <span className="text-white/80 text-sm font-medium">Special Status</span>
+          </div>
+          <div className="space-y-2">
+            {players.filter(p => !p.isEliminated).map(player => (
+              <div key={player.id} className="flex items-center justify-between">
+                <span className="text-white/70 text-xs truncate">{player.name}</span>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => onSetPlayerStatus(player.id, 'phyrexianPoison', !player.hasPhyrexianPoison)}
+                    className={`px-2 py-1 rounded text-xs transition ${
+                      player.hasPhyrexianPoison
+                        ? 'bg-red-600 text-white'
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                    title={player.hasPhyrexianPoison ? 'Has Phyrexian Poison' : 'No Phyrexian Poison'}
+                  >
+                    P
+                  </button>
+                  <button
+                    onClick={() => onSetPlayerStatus(player.id, 'transformed', !player.hasTransformed)}
+                    className={`px-2 py-1 rounded text-xs transition ${
+                      player.hasTransformed
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                    title={player.hasTransformed ? 'Transformed' : 'Not Transformed'}
+                  >
+                    T
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         </div>

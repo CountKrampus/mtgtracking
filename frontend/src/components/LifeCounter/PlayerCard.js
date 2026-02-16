@@ -1,18 +1,30 @@
-import React from 'react';
-import { Plus, Minus, Skull, Droplets, Swords, Crown, Building2, Circle } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Plus, Minus, Skull, Droplets, Swords, Crown, Building2, Circle, Zap, Star, Tag, Heart, Activity, Shield, Sword, Settings } from 'lucide-react';
+import CountersPanel from './CountersPanel';
+import ManaPoolTracker from './ManaPoolTracker';
+import PlayerStatusIndicators from './PlayerStatusIndicators';
+import QuickLifeControls from './QuickLifeControls';
+import AnimatedLifeChange from './AnimatedLifeChange';
+import PlayerAdvancedControls from './PlayerAdvancedControls';
 
 function PlayerCard({
   player,
   gameFormat,
+  players = [],
   onLifeChange,
   onPoisonChange,
   onCommanderDamageClick,
+  onCountersChange,
+  onManaChange,
+  onCommanderDamageChange,
   compact = false,
   isCurrentPlayer = false,
   isMonarch = false,
   hasInitiative = false,
   backgroundImage = null
 }) {
+  const playerCardRef = useRef(null);
+  const [showAdvancedControls, setShowAdvancedControls] = useState({ show: false, position: null });
   // Determine visual state based on life and poison
   const getVisualState = () => {
     if (player.isEliminated) return 'eliminated';
@@ -74,7 +86,7 @@ function PlayerCard({
   };
 
   return (
-    <div className={getContainerClasses()}>
+    <div ref={playerCardRef} className={getContainerClasses()}>
       {/* Background Image */}
       {backgroundImage && !player.isEliminated && (
         <div className="absolute inset-0 z-0">
@@ -141,7 +153,7 @@ function PlayerCard({
           onClick={() => !player.isEliminated && onLifeChange(1)}
           style={{ cursor: player.isEliminated ? 'default' : 'pointer' }}
         >
-          {player.life}
+          <AnimatedLifeChange currentLife={player.life} />
         </div>
       </div>
 
@@ -177,61 +189,57 @@ function PlayerCard({
         </button>
       </div>
 
-      {/* Poison Counter */}
-      <div className={`flex items-center justify-center gap-3 relative z-[1] ${compact ? 'mb-2' : 'mb-4'} ${player.isEliminated ? 'opacity-30' : ''}`}>
-        <button
-          onClick={() => onPoisonChange(-1)}
-          disabled={player.isEliminated || player.poison <= 0}
-          className="p-1.5 bg-purple-600/80 hover:bg-purple-600 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Minus size={14} />
-        </button>
-        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
-          player.poison >= 9 ? 'bg-red-600/50' :
-          player.poison >= 7 ? 'bg-yellow-600/50' :
-          'bg-purple-900/50'
-        }`}>
-          <Droplets size={16} className="text-purple-300" />
-          <span className={`font-bold ${
-            player.poison >= 9 ? 'text-red-300' :
-            player.poison >= 7 ? 'text-yellow-300' :
-            'text-purple-300'
-          }`}>
-            {player.poison}
-          </span>
-        </div>
-        <button
-          onClick={() => onPoisonChange(1)}
-          disabled={player.isEliminated}
-          className="p-1.5 bg-purple-600/80 hover:bg-purple-600 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Plus size={14} />
-        </button>
-      </div>
+      {/* Counters Panel */}
+      <CountersPanel
+        playerId={player.id}
+        counters={player.counters}
+        onCounterChange={onCountersChange}
+        compact={compact}
+      />
 
-      {/* Commander Damage Button (Commander format only) */}
-      {gameFormat === 'commander' && (
-        <button
-          onClick={onCommanderDamageClick}
-          disabled={player.isEliminated}
-          className={`w-full py-2 rounded-lg font-semibold transition flex items-center justify-center gap-2 relative z-[1] ${
-            player.isEliminated
-              ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
-              : 'bg-orange-600/80 hover:bg-orange-600 text-white'
-          }`}
-        >
-          <Swords size={16} />
-          <span>Commander Damage</span>
-          {getTotalCommanderDamage() > 0 && (
-            <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
-              getTotalCommanderDamage() >= 18 ? 'bg-red-500' :
-              getTotalCommanderDamage() >= 15 ? 'bg-yellow-500' :
-              'bg-white/20'
-            }`}>
-              {getTotalCommanderDamage()}
-            </span>
-          )}
-        </button>
+      {/* Player Status Indicators */}
+      <PlayerStatusIndicators player={player} />
+
+      {/* Advanced Controls Button */}
+      <button
+        onClick={(e) => {
+          // Get the player card's position using the ref
+          if (playerCardRef.current) {
+            const rect = playerCardRef.current.getBoundingClientRect();
+            setShowAdvancedControls({
+              show: true,
+              position: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+            });
+          } else {
+            // Fallback to button position if ref isn't available
+            const rect = e.currentTarget.getBoundingClientRect();
+            setShowAdvancedControls({
+              show: true,
+              position: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+            });
+          }
+        }}
+        className="w-full mt-2 py-2 bg-purple-600/80 hover:bg-purple-600 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2"
+      >
+        <Settings size={16} />
+        Advanced Controls
+      </button>
+
+      {/* Advanced Controls Modal */}
+      {showAdvancedControls.show && (
+        <PlayerAdvancedControls
+          player={player}
+          gameFormat={gameFormat}
+          players={players}
+          onLifeChange={(amount) => onLifeChange(amount)}
+          onPoisonChange={(amount) => onPoisonChange(amount)}
+          onCountersChange={onCountersChange}
+          onManaChange={onManaChange}
+          onCommanderDamageClick={onCommanderDamageClick}
+          onCommanderDamageChange={onCommanderDamageChange}
+          position={showAdvancedControls.position}
+          onClose={() => setShowAdvancedControls({ show: false, position: null })}
+        />
       )}
     </div>
   );
