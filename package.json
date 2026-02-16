@@ -1,6 +1,6 @@
 {
   "name": "mtg-tracker",
-  "version": "1.0.0",
+  "version": "1.0.7",
   "description": "Magic: The Gathering card collection tracker",
   "scripts": {
     "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
