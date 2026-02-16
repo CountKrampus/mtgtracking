@@ -393,7 +393,7 @@ router.get('/me', verifyToken, requireAuth, async (req, res) => {
 
 /**
  * POST /api/auth/forgot-password
- * Send password reset email to user
+ * Reset user password to a temporary password
  */
 router.post('/forgot-password', async (req, res) => {
   try {
@@ -420,53 +420,71 @@ router.post('/forgot-password', async (req, res) => {
     if (!user) {
       // Still return success to prevent user enumeration
       return res.json({
-        message: 'If an account with that email exists, a password reset link has been sent.'
+        message: 'If an account with that email exists, a temporary password has been set.'
       });
     }
 
     // Check if user is active
     if (!user.isActive) {
       return res.json({
-        message: 'If an account with that email exists, a password reset link has been sent.'
+        message: 'If an account with that email exists, a temporary password has been set.'
       });
     }
 
-    // Create password reset token
-    const resetToken = await PasswordResetToken.createToken(user._id);
+    // Generate a temporary password (12 characters with letters, numbers, and symbols)
+    const tempPassword = generateTemporaryPassword();
+    
+    // Hash the temporary password
+    const tempPasswordHash = await hashPassword(tempPassword);
 
-    // Send password reset email
-    const emailSent = await sendPasswordResetEmail(user, resetToken.token);
+    // Update user's password
+    user.passwordHash = tempPasswordHash;
+    await user.save();
+
+    // Invalidate all sessions for this user for security
+    await Session.invalidateAllUserSessions(user._id);
+
+    // Send temporary password notification email
+    const emailSent = await sendPasswordResetEmail(user, tempPassword);
 
     if (!emailSent) {
-      console.error('Failed to send password reset email for user:', user.email);
+      console.error('Failed to send temporary password email for user:', user.email);
       // Still return success to prevent user enumeration
-      return res.json({
-        message: 'If an account with that email exists, a password reset link has been sent.'
-      });
     }
 
     // Log activity
     await logActivity({
       userId: user._id,
-      action: 'forgot_password_request',
+      action: 'forgot_password_temp_password_set',
       category: 'auth',
       targetType: 'user',
       targetId: user._id,
       targetName: user.username,
       ipAddress: getClientIp(req),
       metadata: {
-        email: user.email
+        email: user.email,
+        tempPasswordSet: true
       }
     });
 
     res.json({
-      message: 'If an account with that email exists, a password reset link has been sent.'
+      message: 'If an account with that email exists, a temporary password has been set and sent to your email.'
     });
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({ message: error.message });
   }
 });
+
+// Helper function to generate a temporary password
+function generateTemporaryPassword(length = 12) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
 
 /**
  * POST /api/auth/reset-password

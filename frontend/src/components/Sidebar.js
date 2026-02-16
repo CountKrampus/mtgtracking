@@ -20,7 +20,11 @@ import {
   BookOpen,
   LogOut,
   User,
-  Shield
+  Shield,
+  Trophy,
+  MapPin,
+  Star,
+  Package
 } from 'lucide-react';
 
 const Sidebar = ({
@@ -107,7 +111,32 @@ const Sidebar = ({
   ];
   const toolItems = allToolItems.filter(item => !item.feature || ft[item.feature] !== false);
 
+  // Learning section items
+  const learningItems = [
+    { id: 'card-rulings', label: 'Card Rulings', icon: BookOpen },
+    { id: 'interaction-checker', label: 'Interaction Checker', icon: Zap },
+    { id: 'new-player-guide', label: 'New Player Guide', icon: User },
+    { id: 'keyword-glossary', label: 'Keyword Glossary', icon: BookOpen },
+    { id: 'combo-tutorials', label: 'Combo Tutorials', icon: Zap },
+    { id: 'format-guides', label: 'Format Guides', icon: Trophy },
+    { id: 'sealed-simulator', label: 'Sealed Simulator', icon: Package },
+  ];
+
   const handleNavClick = (viewId) => {
+    setCurrentView(viewId);
+    // Close mobile sidebar on navigation
+    setSidebarOpen(false);
+  };
+
+  const handleLearningClick = (viewId) => {
+    // For learning components, we'll need to handle navigation differently
+    // For now, we'll just set the current view
+    setCurrentView(viewId);
+    // Close mobile sidebar on navigation
+    setSidebarOpen(false);
+  };
+
+  const handleGameplayClick = (viewId) => {
     setCurrentView(viewId);
     // Close mobile sidebar on navigation
     setSidebarOpen(false);
@@ -241,6 +270,70 @@ const Sidebar = ({
               title={sidebarCollapsed ? item.label : undefined}
             >
               <Icon size={18} className={`flex-shrink-0 ${item.color}`} />
+              {!sidebarCollapsed && <span>{item.label}</span>}
+            </button>
+          );
+        })}
+
+        {/* Learning Section */}
+        <div className="mt-4 px-2 mb-1">
+          {!sidebarCollapsed && (
+            <span className="text-xs font-semibold text-white/40 uppercase tracking-wider px-2">
+              Learn
+            </span>
+          )}
+        </div>
+        {learningItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = currentView === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => handleLearningClick(item.id)}
+              className={`w-full flex items-center gap-3 px-4 py-2 mx-1 rounded-lg transition text-sm font-medium ${
+                isActive
+                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+              }`}
+              title={sidebarCollapsed ? item.label : undefined}
+            >
+              <Icon size={18} className="flex-shrink-0" />
+              {!sidebarCollapsed && <span>{item.label}</span>}
+            </button>
+          );
+        })}
+
+        {/* Gameplay Section */}
+        <div className="mt-4 px-2 mb-1">
+          {!sidebarCollapsed && (
+            <span className="text-xs font-semibold text-white/40 uppercase tracking-wider px-2">
+              Gameplay
+            </span>
+          )}
+        </div>
+        {[
+          { id: 'planechase-mode', label: 'Planechase Mode', icon: MapPin },
+          { id: 'archenemy-mode', label: 'Archenemy Mode', icon: Shield },
+          { id: 'kingdoms-variant', label: 'Kingdoms Variant', icon: Crown },
+          { id: 'star-variant', label: 'Star Variant', icon: Star },
+          { id: 'custom-format-builder', label: 'Custom Format Builder', icon: Settings },
+          { id: 'cube-builder', label: 'Cube Builder', icon: Zap },
+          { id: 'sealed-simulator', label: 'Sealed Simulator', icon: Package },
+        ].map((item) => {
+          const Icon = item.icon;
+          const isActive = currentView === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => handleGameplayClick(item.id)}
+              className={`w-full flex items-center gap-3 px-4 py-2 mx-1 rounded-lg transition text-sm font-medium ${
+                isActive
+                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+              }`}
+              title={sidebarCollapsed ? item.label : undefined}
+            >
+              <Icon size={18} className="flex-shrink-0" />
               {!sidebarCollapsed && <span>{item.label}</span>}
             </button>
           );

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
 import axios from 'axios';
-import { Search, Plus, Trash2, Edit2, Save, X, Download, RefreshCw, DollarSign, Upload, Camera, Settings, Heart, CheckSquare, Square, MapPin, Star, Layers, Zap, Crown, BarChart3, Users, QrCode, Printer, Home, BookOpen } from 'lucide-react';
+import { Search, Plus, Trash2, Edit2, Save, X, Download, RefreshCw, DollarSign, Upload, Camera, Settings, Heart, CheckSquare, Square, MapPin, Star, Layers, Zap, Crown, BarChart3, Users, QrCode, Printer, Home, BookOpen, Trophy, User } from 'lucide-react';
 import QRCode from 'qrcode';
 import './App.css';
 import Sidebar from './components/Sidebar';
@@ -13,10 +13,26 @@ import { AuthGuard } from './components/auth/AuthGuard';
 import { AccountSettings } from './components/auth/AccountSettings';
 import { AdminPanel } from './components/admin/AdminPanel';
 
+// Learning Components
+import CardRulingsBrowser from './components/Learn/CardRulingsBrowser';
+import InteractionChecker from './components/Learn/InteractionChecker';
+import NewPlayerGuide from './components/Learn/NewPlayerGuide';
+import KeywordGlossary from './components/Learn/KeywordGlossary';
+import ComboTutorials from './components/Learn/ComboTutorials';
+import FormatGuides from './components/Learn/FormatGuides';
+import SealedSimulator from './components/Gameplay/SealedSimulator';
+import ArchenemyMode from './components/Gameplay/ArchenemyMode';
+
 const DeckBuilder = React.lazy(() => import('./components/DeckBuilder'));
 const CameraModal = React.lazy(() => import('./components/CameraModal'));
 const LifeCounter = React.lazy(() => import('./components/LifeCounter/LifeCounter'));
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
+
+// Gameplay components
+const StarVariant = React.lazy(() => import('./components/Gameplay/StarVariant'));
+const PlanechaseMode = React.lazy(() => import('./components/Gameplay/PlanechaseMode'));
+const CustomFormatBuilder = React.lazy(() => import('./components/Gameplay/CustomFormatBuilder'));
+const CubeBuilder = React.lazy(() => import('./components/Gameplay/CubeBuilder'));
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -321,6 +337,7 @@ function App() {
       setCurrentView('collection');
     }
   }, []);
+
 
   const fetchCards = async () => {
     try {
@@ -2136,6 +2153,13 @@ function App() {
       { id: 'tool-sets', label: 'Set Completion Tracker', icon: BarChart3, category: 'Tools', action: () => getSetCompletionData(), feature: 'setCompletion' },
       { id: 'tool-combos', label: 'Find Combos', icon: Zap, category: 'Tools', action: () => findCombos(), feature: 'comboFinder' },
       { id: 'tool-camera', label: 'Scan Card with Camera', icon: Camera, category: 'Tools', action: () => setShowCameraModal(true) },
+      // Learning
+      { id: 'learn-rulings', label: 'Card Rulings Browser', icon: BookOpen, category: 'Learning', action: () => setCurrentView('card-rulings') },
+      { id: 'learn-interactions', label: 'Interaction Checker', icon: Zap, category: 'Learning', action: () => setCurrentView('interaction-checker') },
+      { id: 'learn-new-player', label: 'New Player Guide', icon: User, category: 'Learning', action: () => setCurrentView('new-player-guide') },
+      { id: 'learn-keywords', label: 'Keyword Glossary', icon: BookOpen, category: 'Learning', action: () => setCurrentView('keyword-glossary') },
+      { id: 'learn-combos', label: 'Combo Tutorials', icon: Zap, category: 'Learning', action: () => setCurrentView('combo-tutorials') },
+      { id: 'learn-formats', label: 'Format Guides', icon: Trophy, category: 'Learning', action: () => setCurrentView('format-guides') },
     ];
     const cmds = allCmds
       .filter(cmd => !cmd.feature || ft[cmd.feature] !== false)
@@ -5031,6 +5055,68 @@ function App() {
             setShowQRPreview={setShowQRPreview}
             setShowPrintLabels={setShowPrintLabels}
           />
+        )}
+
+        {/* Learning Components */}
+        {currentView === 'card-rulings' && (
+          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
+            <CardRulingsBrowser />
+          </Suspense>
+        )}
+        {currentView === 'interaction-checker' && (
+          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
+            <InteractionChecker />
+          </Suspense>
+        )}
+        {currentView === 'new-player-guide' && (
+          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
+            <NewPlayerGuide />
+          </Suspense>
+        )}
+        {currentView === 'keyword-glossary' && (
+          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
+            <KeywordGlossary />
+          </Suspense>
+        )}
+        {currentView === 'combo-tutorials' && (
+          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
+            <ComboTutorials />
+          </Suspense>
+        )}
+        {currentView === 'format-guides' && (
+          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
+            <FormatGuides />
+          </Suspense>
+        )}
+        {currentView === 'sealed-simulator' && (
+          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
+            <SealedSimulator />
+          </Suspense>
+        )}
+        {currentView === 'archenemy-mode' && (
+          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
+            <ArchenemyMode />
+          </Suspense>
+        )}
+        {currentView === 'star-variant' && (
+          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
+            <StarVariant />
+          </Suspense>
+        )}
+        {currentView === 'planechase-mode' && (
+          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
+            <PlanechaseMode />
+          </Suspense>
+        )}
+        {currentView === 'custom-format-builder' && (
+          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
+            <CustomFormatBuilder />
+          </Suspense>
+        )}
+        {currentView === 'cube-builder' && (
+          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
+            <CubeBuilder />
+          </Suspense>
         )}
 
         {/* Camera OCR Modal */}
