@@ -29,32 +29,31 @@ const createTransporter = () => {
     return null;
   }
 
-  return nodemailer.createTransporter(config);
+  return nodemailer.createTransport(config);
 };
 
-// Send password reset email
-const sendPasswordResetEmail = async (user, resetToken) => {
+// Send password reset email with temporary password
+const sendPasswordResetEmail = async (user, tempPassword) => {
   const transporter = createTransporter();
-  
+
   if (!transporter) {
     console.error('Cannot send password reset email: email not configured');
     return false;
   }
 
   try {
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
-    
     const mailOptions = {
       from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to: user.email,
-      subject: 'Password Reset Request',
+      subject: 'Password Reset - Temporary Password',
       html: `
         <h2>Password Reset Request</h2>
         <p>Hello ${user.displayName || user.username},</p>
-        <p>You have requested to reset your password. Click the link below to reset your password:</p>
-        <p><a href="${resetUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a></p>
-        <p>This link will expire in 1 hour.</p>
-        <p>If you didn't request this, please ignore this email.</p>
+        <p>You have requested to reset your password. Your account has been updated with a temporary password:</p>
+        <p><strong>Temporary Password:</strong> <code>${tempPassword}</code></p>
+        <p>Please log in with this temporary password and change it immediately in your account settings.</p>
+        <p>For security reasons, this temporary password should be changed as soon as possible.</p>
+        <p>If you didn't request this, please contact an administrator immediately.</p>
         <br>
         <p>Best regards,<br>The MTG Tracker Team</p>
       `

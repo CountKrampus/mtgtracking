@@ -2504,6 +2504,68 @@ app.get('/api/lifecounter/share/:code', async (req, res) => {
   }
 });
 
+// Get card rulings from Scryfall
+app.get('/api/scryfall/rulings', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.status(400).json({ message: 'Card name (q) is required' });
+    }
+
+    // First, find the card by name to get its Scryfall ID
+    const cardResponse = await axios.get(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(q)}`);
+    const cardId = cardResponse.data.id;
+
+    // Then fetch the rulings for that card
+    const rulingsResponse = await axios.get(`https://api.scryfall.com/cards/${cardId}/rulings`);
+    const rulings = rulingsResponse.data.data;
+
+    res.json(rulings);
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      res.status(404).json({ message: 'Card not found on Scryfall' });
+    } else {
+      console.error('Error fetching rulings:', error.message);
+      res.status(500).json({ message: error.message });
+    }
+  }
+});
+
+// Check card interactions (placeholder - in a real implementation, this would connect to a rules database)
+app.post('/api/interactions/check', async (req, res) => {
+  try {
+    const { card1, card2 } = req.body;
+    
+    if (!card1 || !card2) {
+      return res.status(400).json({ message: 'Both card1 and card2 are required' });
+    }
+
+    // In a real implementation, this would connect to a rules database or API
+    // For now, we'll return a placeholder response
+    const interactionResult = {
+      card1: card1,
+      card2: card2,
+      how_they_interact: "This interaction has various effects depending on the game state.",
+      sequence_of_events: [
+        `${card1} enters the battlefield`,
+        `${card2}'s ability triggers`,
+        `The interaction resolves based on game state`
+      ],
+      notes: [
+        "Timing matters for this interaction",
+        "Other cards on the battlefield may affect the outcome",
+        "Check the official rules for edge cases"
+      ],
+      timestamp: new Date().toISOString()
+    };
+
+    res.json(interactionResult);
+  } catch (error) {
+    console.error('Error checking interaction:', error.message);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
