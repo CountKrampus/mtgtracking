@@ -21,6 +21,8 @@ function GameSetup({
   const [profiles, setProfiles] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [showColorPicker, setShowColorPicker] = useState(null);
+  const [availableDecks, setAvailableDecks] = useState([]);
+  const [playerDecks, setPlayerDecks] = useState([null, null, null, null, null, null]);
 
   // Initialize player colors if not set
   useEffect(() => {
@@ -32,6 +34,7 @@ function GameSetup({
   // Fetch profiles on mount
   useEffect(() => {
     fetchProfiles();
+    fetchDecks();
   }, []);
 
   const fetchProfiles = async () => {
@@ -44,6 +47,29 @@ function GameSetup({
     } catch (error) {
       console.error('Failed to fetch profiles:', error);
     }
+  };
+
+  const fetchDecks = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await fetch(`${API_URL}/decks`, { headers });
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableDecks(Array.isArray(data) ? data.sort((a, b) => a.name.localeCompare(b.name)) : []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch decks:', error);
+    }
+  };
+
+  const handleDeckChange = (index, deckId) => {
+    const deck = availableDecks.find(d => d._id === deckId) || null;
+    setPlayerDecks(prev => {
+      const next = [...prev];
+      next[index] = deck;
+      return next;
+    });
   };
 
   const handleNameChange = (index, name) => {
@@ -202,6 +228,22 @@ function GameSetup({
                   />
                 </div>
 
+                {/* Deck Selector */}
+                {availableDecks.length > 0 && (
+                  <select
+                    value={playerDecks[i]?._id || ''}
+                    onChange={(e) => handleDeckChange(i, e.target.value)}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">No deck selected</option>
+                    {availableDecks.map(deck => (
+                      <option key={deck._id} value={deck._id} style={{ backgroundColor: '#1f2937' }}>
+                        {deck.commander?.name ? `${deck.commander.name} — ` : ''}{deck.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
                 {/* Quick Profile Select */}
                 {profiles.length > 0 && (
                   <div className="flex gap-1 flex-wrap">
@@ -238,7 +280,7 @@ function GameSetup({
 
         {/* Start Game Button */}
         <button
-          onClick={onStartGame}
+          onClick={() => onStartGame(playerDecks)}
           className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl font-bold text-xl transition flex items-center justify-center gap-3 shadow-lg"
         >
           <Play size={24} /> Start Game

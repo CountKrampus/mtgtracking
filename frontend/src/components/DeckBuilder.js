@@ -13,9 +13,11 @@ function DeckBuilder() {
   const [deckOwnership, setDeckOwnership] = useState(null);
   const [deckValidation, setDeckValidation] = useState(null);
   const [loadingDeck, setLoadingDeck] = useState(false);
+  const [deckPlayCounts, setDeckPlayCounts] = useState({});
 
   useEffect(() => {
     fetchDecks();
+    fetchLifecounterStats();
   }, []);
 
   const fetchDecks = async () => {
@@ -24,6 +26,25 @@ function DeckBuilder() {
       setDecks(response.data);
     } catch (error) {
       console.error('Error fetching decks:', error);
+    }
+  };
+
+  const fetchLifecounterStats = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await fetch(`${API_URL}/lifecounter/stats`, { headers });
+      if (response.ok) {
+        const data = await response.json();
+        // Build deckId -> playData map
+        const playMap = {};
+        (data.mostPlayedDecks || []).forEach(d => {
+          playMap[d.deckId.toString()] = d;
+        });
+        setDeckPlayCounts(playMap);
+      }
+    } catch (error) {
+      console.error('Error fetching lifecounter stats:', error);
     }
   };
 
@@ -68,6 +89,7 @@ function DeckBuilder() {
           }}
           onDeleteDeck={deleteDeck}
           onImportClick={() => setDeckView('import')}
+          deckPlayCounts={deckPlayCounts}
         />
       )}
 

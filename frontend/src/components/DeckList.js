@@ -1,7 +1,7 @@
 import React from 'react';
 import { Upload } from 'lucide-react';
 
-function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick }) {
+function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, deckPlayCounts = {} }) {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -16,19 +16,28 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {decks.map(deck => (
+        {decks.map(deck => {
+          const playData = deckPlayCounts[deck._id];
+          return (
           <div
             key={deck._id}
             className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30 hover:bg-white/15 transition cursor-pointer"
             onClick={() => onViewDeck(deck)}
           >
-            {deck.commander?.imageUrl && (
-              <img
-                src={deck.commander.imageUrl}
-                alt={deck.commander.name}
-                className="w-full rounded-lg mb-3"
-              />
-            )}
+            <div className="relative">
+              {deck.commander?.imageUrl && (
+                <img
+                  src={deck.commander.imageUrl}
+                  alt={deck.commander.name}
+                  className="w-full rounded-lg mb-3"
+                />
+              )}
+              {playData && (
+                <div className="absolute top-2 right-2 bg-black/70 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                  {playData.gamesPlayed} games
+                </div>
+              )}
+            </div>
             <h3 className="text-xl font-bold text-white mb-2">{deck.name}</h3>
             <div className="text-white/80 text-sm mb-2">
               Commander: {deck.commander?.name}
@@ -48,7 +57,8 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick }) {
               Delete
             </button>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {decks.length === 0 && (

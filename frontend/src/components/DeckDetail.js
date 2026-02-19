@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import axios from 'axios';
 import ManaCurveChart from './ManaCurveChart';
 
@@ -56,6 +56,31 @@ const POWER_INDICATORS = {
 function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh }) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [newDeckName, setNewDeckName] = useState(deck.name);
+  const [deckStats, setDeckStats] = useState(null);
+  const [valueHistory, setValueHistory] = useState([]);
+  const [changelog, setChangelog] = useState([]);
+  const [showChangelog, setShowChangelog] = useState(false);
+
+  useEffect(() => {
+    if (!deck._id) return;
+    const token = localStorage.getItem('authToken');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    fetch(`${API_URL}/decks/${deck._id}/stats`, { headers })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setDeckStats(data); })
+      .catch(() => {});
+
+    fetch(`${API_URL}/decks/${deck._id}/value-history`, { headers })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setValueHistory(Array.isArray(data) ? data : []))
+      .catch(() => {});
+
+    fetch(`${API_URL}/decks/${deck._id}/changelog`, { headers })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setChangelog(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, [deck._id]);
 
   // Calculate Salt Score
   const saltScore = useMemo(() => {
@@ -463,6 +488,134 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh })
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Analytics: Performance Stats */}
+          {deckStats !== null && (
+            <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30 mb-6">
+              <h3 className="text-lg font-bold text-white mb-4">Game Performance</h3>
+              {deckStats.gamesPlayed > 0 ? (
+                <>
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-purple-400">{deckStats.gamesPlayed}</div>
+                      <div className="text-white/60 text-sm">Games Played</div>
+                    </div>
+                    <div className="text-center">
+                      <div className={`text-3xl font-bold ${deckStats.winRate >= 50 ? 'text-green-400' : 'text-red-400'}`}>
+                        {deckStats.winRate}%
+                      </div>
+                      <div className="text-white/60 text-sm">Win Rate</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-blue-400">{deckStats.avgPlacement}</div>
+                      <div className="text-white/60 text-sm">Avg. Placement</div>
+                    </div>
+                  </div>
+                  {(deckStats.bestMatchups?.length > 0 || deckStats.worstMatchups?.length > 0) && (
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div>
+                        <div className="text-white/70 text-sm font-semibold mb-2">Best Matchups</div>
+                        <div className="space-y-1">
+                          {deckStats.bestMatchups.map((m, i) => (
+                            <div key={i} className="flex justify-between items-center text-sm bg-green-500/10 rounded px-2 py-1">
+                              <span className="text-white truncate mr-2">{m.commanderName || 'Unknown'}</span>
+                              <span className="text-green-400 font-semibold flex-shrink-0">{m.winRate}% ({m.wins}-{m.losses})</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-white/70 text-sm font-semibold mb-2">Worst Matchups</div>
+                        <div className="space-y-1">
+                          {deckStats.worstMatchups.map((m, i) => (
+                            <div key={i} className="flex justify-between items-center text-sm bg-red-500/10 rounded px-2 py-1">
+                              <span className="text-white truncate mr-2">{m.commanderName || 'Unknown'}</span>
+                              <span className="text-red-400 font-semibold flex-shrink-0">{m.winRate}% ({m.wins}-{m.losses})</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-white/40 text-center text-sm py-4">
+                  Play some games with this deck selected to see stats here.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Analytics: Value History Sparkline */}
+          {valueHistory.length >= 2 && (() => {
+            const vals = valueHistory.map(d => d.value);
+            const minV = Math.min(...vals);
+            const maxV = Math.max(...vals);
+            const range = maxV - minV || 1;
+            const W = 200, H = 50;
+            const points = valueHistory.map((d, i) => ({
+              x: (i / (valueHistory.length - 1)) * W,
+              y: H - ((d.value - minV) / range) * (H - 8) - 4
+            }));
+            const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+            const trend = vals[vals.length - 1] - vals[0];
+            return (
+              <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30 mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-bold text-white">Value History</h3>
+                  <span className={`text-sm font-semibold ${trend >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {trend >= 0 ? '+' : ''}${trend.toFixed(2)}
+                  </span>
+                </div>
+                <svg width={W} height={H} className="w-full" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+                  <polyline
+                    points={points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')}
+                    fill="none"
+                    stroke={trend >= 0 ? '#4ade80' : '#f87171'}
+                    strokeWidth="2"
+                  />
+                </svg>
+                <div className="flex justify-between text-white/40 text-xs mt-1">
+                  <span>${minV.toFixed(2)}</span>
+                  <span>${maxV.toFixed(2)}</span>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Analytics: Evolution Timeline */}
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30 mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-bold text-white">Deck Evolution</h3>
+              <button
+                onClick={() => setShowChangelog(prev => !prev)}
+                className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white/70 rounded text-sm transition"
+              >
+                {showChangelog ? 'Hide History' : 'Show History'}
+              </button>
+            </div>
+            {showChangelog && (
+              changelog.length === 0 ? (
+                <div className="text-white/40 text-sm text-center py-2">No changes recorded yet. Edit this deck to start tracking.</div>
+              ) : (
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {changelog.map((entry, i) => (
+                    <div key={i}>
+                      <div className="text-white/50 text-xs mb-1">{new Date(entry.createdAt).toLocaleDateString()}</div>
+                      <div className="space-y-0.5">
+                        {entry.changes.map((change, j) => (
+                          <div key={j} className={`flex items-center gap-2 text-sm ${change.type === 'add' ? 'text-green-400' : 'text-red-400'}`}>
+                            <span className="font-bold">{change.type === 'add' ? '+' : '−'}</span>
+                            <span>{change.quantity > 1 ? `${change.quantity}x ` : ''}{change.cardName}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
+            )}
           </div>
 
           {/* Missing Cards */}

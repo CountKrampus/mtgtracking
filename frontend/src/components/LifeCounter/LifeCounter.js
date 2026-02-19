@@ -66,6 +66,7 @@ function LifeCounter({ onBack }) {
 
   // Refs
   const gameEndedRef = useRef(false);
+  const playerDecksRef = useRef([]);
 
   // Hooks
   const { isFullscreen, toggleFullscreen, isSupported: fullscreenSupported } = useFullscreen();
@@ -155,7 +156,8 @@ function LifeCounter({ onBack }) {
   }, []);
 
   // Handle starting a new game
-  const handleStartGame = useCallback(() => {
+  const handleStartGame = useCallback((playerDecks = []) => {
+    playerDecksRef.current = playerDecks;
     initializePlayers(playerCount, playerNames, setupGameFormat);
     resetTurnTracking();
     setGameStartTime(Date.now());
@@ -353,12 +355,18 @@ function LifeCounter({ onBack }) {
     const gameData = {
       startedAt: gameStartTime ? new Date(gameStartTime) : new Date(),
       endedAt: new Date(),
-      players: sortedPlayers.map((p, idx) => ({
-        name: p.name,
-        finalLife: p.life,
-        isWinner: winner === p.id,
-        placement: idx + 1
-      })),
+      players: sortedPlayers.map((p, idx) => {
+        const slotIndex = playerNames.findIndex(name => name === p.name);
+        const deckInfo = playerDecksRef.current[slotIndex >= 0 ? slotIndex : idx] || null;
+        return {
+          name: p.name,
+          finalLife: p.life,
+          isWinner: winner === p.id,
+          placement: idx + 1,
+          deckId: deckInfo?._id || null,
+          commanderName: deckInfo?.commander?.name || ''
+        };
+      }),
       format: gameFormat,
       winner: winner ? players.find(p => p.id === winner)?.name : null,
       turns: turnNumber,

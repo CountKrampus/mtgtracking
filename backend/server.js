@@ -100,6 +100,8 @@ const cardSchema = new mongoose.Schema({
   quantity: { type: Number, required: true, default: 1 },
   condition: { type: String, required: true, enum: ['NM', 'LP', 'MP', 'HP', 'DMG'] },
   price: { type: Number, required: true, default: 0 },
+  lastPrice: { type: Number, default: null },
+  purchasePrice: { type: Number, default: null },
   colors: [{ type: String }],
   types: [{ type: String }],
   manaCost: { type: String },
@@ -177,6 +179,53 @@ wishlistItemSchema.pre('save', function(next) {
 
 const WishlistItem = mongoose.model('WishlistItem', wishlistItemSchema);
 
+// Value Snapshot Schema (for collection value over time)
+const valueSnapshotSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+  value: { type: Number, required: true },
+  cardCount: { type: Number, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+valueSnapshotSchema.index({ createdAt: 1 });
+
+const ValueSnapshot = mongoose.model('ValueSnapshot', valueSnapshotSchema);
+
+// Card Price Snapshot Schema (per-card price history)
+const cardPriceSnapshotSchema = new mongoose.Schema({
+  cardId: { type: mongoose.Schema.Types.ObjectId, ref: 'Card', required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+  price: { type: Number, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+cardPriceSnapshotSchema.index({ cardId: 1, createdAt: 1 });
+const CardPriceSnapshot = mongoose.model('CardPriceSnapshot', cardPriceSnapshotSchema);
+
+// Deck Value Snapshot Schema (for value history over time)
+const deckValueSnapshotSchema = new mongoose.Schema({
+  deckId: { type: mongoose.Schema.Types.ObjectId, ref: 'Deck', required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+  value: { type: Number, required: true },
+  cardCount: { type: Number },
+  createdAt: { type: Date, default: Date.now }
+});
+deckValueSnapshotSchema.index({ deckId: 1, createdAt: 1 });
+const DeckValueSnapshot = mongoose.model('DeckValueSnapshot', deckValueSnapshotSchema);
+
+// Deck Change Schema (evolution timeline)
+const deckChangeSchema = new mongoose.Schema({
+  deckId: { type: mongoose.Schema.Types.ObjectId, ref: 'Deck', required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+  changes: [{
+    type: { type: String, enum: ['add', 'remove'] },
+    cardName: { type: String },
+    scryfallId: { type: String },
+    quantity: { type: Number, default: 1 }
+  }],
+  createdAt: { type: Date, default: Date.now }
+});
+deckChangeSchema.index({ deckId: 1, createdAt: -1 });
+const DeckChange = mongoose.model('DeckChange', deckChangeSchema);
+
 // ============================================
 // LIFE COUNTER SCHEMAS
 // ============================================
@@ -204,7 +253,9 @@ const gameSessionSchema = new mongoose.Schema({
     finalLife: Number,
     isWinner: Boolean,
     placement: Number,
-    color: String
+    color: String,
+    deckId: { type: mongoose.Schema.Types.ObjectId, ref: 'Deck', default: null },
+    commanderName: { type: String, default: '' }
   }],
   format: { type: String, default: 'commander' },
   winner: { type: String },
@@ -498,7 +549,7 @@ async function cacheCardImage(scryfallId, imageUrl) {
 }
 
 // Mount deck routes
-deckRoutes.injectDependencies(Card, getPriceWithFallback);
+deckRoutes.injectDependencies(Card, getPriceWithFallback, GameSession);
 app.use('/api/decks', deckRoutes);
 
 // Search Scryfall API for card data with Exor Games pricing
@@ -552,6 +603,9 @@ app.post('/api/cards/:id/update-price', requireAuth, requireEditor, activityLogg
     const query = buildUserQuery({ _id: req.params.id }, req);
     const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
+
+    // Capture price before update for lastPrice tracking
+    const oldPrice = card.price;
 
     // Skip if card already has price and oracle text (unless force=true or fullData=true)
     if (!force && !fullData && card.price > 0 && card.oracleText) {
@@ -609,7 +663,26 @@ app.post('/api/cards/:id/update-price', requireAuth, requireEditor, activityLogg
       }
     }
 
+    // Track price change: store old price in lastPrice if price changed
+    if (oldPrice > 0 && card.price !== oldPrice) {
+      card.lastPrice = oldPrice;
+    }
+
     await card.save();
+
+    // Save daily price snapshot for this card
+    try {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const existingSnap = await CardPriceSnapshot.findOne({ cardId: card._id, createdAt: { $gte: todayStart } });
+      if (!existingSnap) {
+        const snapData = { cardId: card._id, price: card.price };
+        if (req.userId) snapData.userId = req.userId;
+        await CardPriceSnapshot.create(snapData);
+      }
+    } catch {
+      // Non-critical: don't fail if snapshot fails
+    }
 
     res.json(card);
   } catch (error) {
@@ -628,6 +701,9 @@ app.post('/api/cards/update-all-prices', requireAuth, requireEditor, activityLog
 
     for (const card of cards) {
       try {
+        // Capture price before update for lastPrice tracking
+        const oldPrice = card.price;
+
         // Skip if card already has price and oracle text (unless force=true or fullData=true)
         if (!force && !fullData && card.price > 0 && card.oracleText) {
           console.log(`Skipping ${card.name} - already has price and data`);
@@ -682,8 +758,28 @@ app.post('/api/cards/update-all-prices', requireAuth, requireEditor, activityLog
           }
         }
 
+        // Track price change: store old price in lastPrice if price changed
+        if (oldPrice > 0 && card.price !== oldPrice) {
+          card.lastPrice = oldPrice;
+        }
+
         await card.save();
         updated++;
+
+        // Save daily price snapshot for this card
+        try {
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          const existingSnap = await CardPriceSnapshot.findOne({ cardId: card._id, createdAt: { $gte: todayStart } });
+          if (!existingSnap) {
+            const snapData = { cardId: card._id, price: card.price };
+            if (req.userId) snapData.userId = req.userId;
+            await CardPriceSnapshot.create(snapData);
+          }
+        } catch {
+          // Non-critical
+        }
+
         // Rate limiting - be respectful to servers
         await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
@@ -1215,6 +1311,27 @@ app.get('/api/stats', requireAuth, async (req, res) => {
       // ignore errors counting cache
     }
 
+    // Save daily value snapshot (once per day per user)
+    try {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const existingSnap = await ValueSnapshot.findOne(buildUserQuery({ createdAt: { $gte: todayStart } }, req));
+      if (!existingSnap) {
+        await ValueSnapshot.create({ ...buildUserQuery({}, req), value: totalValue, cardCount: totalCards });
+      }
+    } catch {
+      // Non-critical: don't fail the stats response if snapshot fails
+    }
+
+    // Portfolio P&L (only for cards with purchasePrice set)
+    let portfolioGain = 0, portfolioCost = 0;
+    cards.forEach(card => {
+      if (card.purchasePrice != null && card.purchasePrice > 0) {
+        portfolioCost += card.purchasePrice * card.quantity;
+        portfolioGain += (card.price - card.purchasePrice) * card.quantity;
+      }
+    });
+
     res.json({
       totalCards,
       uniqueCards: cards.length,
@@ -1222,8 +1339,91 @@ app.get('/api/stats', requireAuth, async (req, res) => {
       ignoredValue,
       colorDistribution: colorStats,
       typeDistribution: typeStats,
-      cachedImageCount
+      cachedImageCount,
+      portfolioGain,
+      portfolioCost
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get collection value history (last 90 days)
+app.get('/api/stats/value-history', requireAuth, async (req, res) => {
+  try {
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    const snapshots = await ValueSnapshot.find(
+      buildUserQuery({ createdAt: { $gte: ninetyDaysAgo } }, req)
+    ).sort({ createdAt: 1 });
+    res.json(snapshots);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get price history for a specific card (last 90 days)
+app.get('/api/cards/:id/price-history', requireAuth, async (req, res) => {
+  try {
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const card = await Card.findOne(query);
+    if (!card) return res.status(404).json({ message: 'Card not found' });
+
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    const snapshots = await CardPriceSnapshot.find({
+      cardId: card._id,
+      createdAt: { $gte: ninetyDaysAgo }
+    }).sort({ createdAt: 1 });
+
+    res.json(snapshots);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get top price gainers and losers over last 30 days
+app.get('/api/stats/price-changes', requireAuth, async (req, res) => {
+  try {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const cardQuery = buildUserQuery({}, req);
+    const cards = await Card.find(cardQuery).select('_id name scryfallId price');
+
+    const results = [];
+    for (const card of cards) {
+      // Get earliest and latest snapshot in last 30 days
+      const snapshots = await CardPriceSnapshot.find({
+        cardId: card._id,
+        createdAt: { $gte: thirtyDaysAgo }
+      }).sort({ createdAt: 1 });
+
+      if (snapshots.length < 2) continue;
+
+      const oldPrice = snapshots[0].price;
+      const newPrice = snapshots[snapshots.length - 1].price;
+      if (oldPrice <= 0) continue;
+
+      const changeAbs = newPrice - oldPrice;
+      const changePct = (changeAbs / oldPrice) * 100;
+
+      results.push({
+        cardId: card._id,
+        name: card.name,
+        scryfallId: card.scryfallId,
+        oldPrice,
+        newPrice,
+        changeAbs,
+        changePct
+      });
+    }
+
+    results.sort((a, b) => b.changePct - a.changePct);
+    const gainers = results.filter(r => r.changePct > 0).slice(0, 5);
+    const losers = results.filter(r => r.changePct < 0).slice(-5).reverse();
+
+    res.json({ gainers, losers });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -2450,13 +2650,36 @@ app.get('/api/lifecounter/stats', requireAuth, async (req, res) => {
       };
     });
 
+    // Most played decks (by deckId)
+    const deckPlayCounts = {};
+    games.forEach(game => {
+      game.players.forEach(p => {
+        if (p.deckId) {
+          const key = p.deckId.toString();
+          if (!deckPlayCounts[key]) {
+            deckPlayCounts[key] = { deckId: p.deckId, commanderName: p.commanderName || '', gamesPlayed: 0, wins: 0 };
+          }
+          deckPlayCounts[key].gamesPlayed++;
+          if (p.isWinner) deckPlayCounts[key].wins++;
+        }
+      });
+    });
+    const mostPlayedDecks = Object.values(deckPlayCounts)
+      .sort((a, b) => b.gamesPlayed - a.gamesPlayed)
+      .slice(0, 5)
+      .map(d => ({
+        ...d,
+        winRate: d.gamesPlayed > 0 ? Math.round((d.wins / d.gamesPlayed) * 100) : 0
+      }));
+
     res.json({
       totalGames,
       winsByPlayer,
       winRates,
       gamesByFormat,
       averageTurns: gamesWithTurns > 0 ? Math.round(totalTurns / gamesWithTurns) : 0,
-      averageDuration: gamesWithDuration > 0 ? Math.round(totalDuration / gamesWithDuration) : 0
+      averageDuration: gamesWithDuration > 0 ? Math.round(totalDuration / gamesWithDuration) : 0,
+      mostPlayedDecks
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
