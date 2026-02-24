@@ -310,26 +310,11 @@ router.get('/:id/ownership', requireAuth, async (req, res) => {
         });
         ownedValue += owned[0].price;
       } else {
-        // Fetch current price if getPriceWithFallback is available
-        let price = 0;
-        if (getPriceWithFallback) {
-          try {
-            const priceData = await getPriceWithFallback(deckCard.name);
-            price = priceData.usd;
-          } catch (error) {
-            console.error(`Error fetching price for ${deckCard.name}:`, error.message);
-          }
-        }
-
         missingCards.push({
           ...deckCard.toObject ? deckCard.toObject() : deckCard,
-          price
+          price: 0
         });
-        missingValue += price;
       }
-
-      // Add small delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     res.json({
@@ -339,8 +324,6 @@ router.get('/:id/ownership', requireAuth, async (req, res) => {
         ownedCount: ownedCards.length,
         missingCount: missingCards.length,
         ownedValue: Math.round(ownedValue * 100) / 100,
-        missingValue: Math.round(missingValue * 100) / 100,
-        totalValue: Math.round((ownedValue + missingValue) * 100) / 100,
         completionPercentage: Math.round((ownedCards.length / allDeckCards.length) * 100)
       }
     });

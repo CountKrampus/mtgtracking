@@ -45,6 +45,8 @@ const deckSchema = new mongoose.Schema({
   },
   totalValue: { type: Number, default: 0 },
   description: { type: String, default: '' },
+  tags: [{ type: String }],
+  folder: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
