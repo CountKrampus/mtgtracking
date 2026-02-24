@@ -3,13 +3,14 @@ import axios from 'axios';
 import DeckList from './DeckList';
 import DeckDetail from './DeckDetail';
 import DeckImport from './DeckImport';
+import DeckEditor from './DeckEditor';
 
 const API_URL = 'http://localhost:5000/api';
 
 function DeckBuilder() {
   const [decks, setDecks] = useState([]);
   const [currentDeck, setCurrentDeck] = useState(null);
-  const [deckView, setDeckView] = useState('list'); // 'list', 'detail', 'import'
+  const [deckView, setDeckView] = useState('list'); // 'list', 'detail', 'import', 'edit'
   const [deckOwnership, setDeckOwnership] = useState(null);
   const [deckValidation, setDeckValidation] = useState(null);
   const [loadingDeck, setLoadingDeck] = useState(false);
@@ -105,6 +106,19 @@ function DeckBuilder() {
             setDeckOwnership(null);
           }}
           onRefresh={() => fetchDeckDetails(currentDeck._id)}
+          onEdit={() => setDeckView('edit')}
+        />
+      )}
+
+      {deckView === 'edit' && currentDeck && (
+        <DeckEditor
+          deck={currentDeck}
+          onSave={(updatedDeck) => {
+            setCurrentDeck(updatedDeck);
+            fetchDeckDetails(updatedDeck._id);
+            setDeckView('detail');
+          }}
+          onCancel={() => setDeckView('detail')}
         />
       )}
 
