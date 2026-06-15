@@ -48,7 +48,12 @@ const userSchema = new mongoose.Schema({
     type: Date
   },
   privacy: {
-    showForum: { type: Boolean, default: false }
+    isPublic: { type: Boolean, default: false },
+    showCollection: { type: Boolean, default: false },
+    showDecks: { type: Boolean, default: true },
+    showWishlist: { type: Boolean, default: false },
+    showForum: { type: Boolean, default: false },
+    bio: { type: String, default: '' }
   }
 });
 

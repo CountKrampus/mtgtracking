@@ -17,7 +17,7 @@ describe('User Forum Privacy Settings', () => {
     await User.deleteMany({});
   });
 
-  test('User.privacy.showForum defaults to false', async () => {
+  test('User.privacy defaults are set correctly', async () => {
     const user = new User({
       email: 'test@example.com',
       username: 'testuser',
@@ -28,22 +28,37 @@ describe('User Forum Privacy Settings', () => {
 
     const savedUser = await User.findById(user._id);
     expect(savedUser.privacy).toBeDefined();
+    expect(savedUser.privacy.isPublic).toBe(false);
+    expect(savedUser.privacy.showCollection).toBe(false);
+    expect(savedUser.privacy.showDecks).toBe(true);
+    expect(savedUser.privacy.showWishlist).toBe(false);
     expect(savedUser.privacy.showForum).toBe(false);
+    expect(savedUser.privacy.bio).toBe('');
   });
 
-  test('User.privacy.showForum can be set to true', async () => {
+  test('User.privacy fields can be customized', async () => {
     const user = new User({
       email: 'test2@example.com',
       username: 'testuser2',
       passwordHash: 'hashedpass123',
       privacy: {
-        showForum: true
+        isPublic: true,
+        showCollection: true,
+        showDecks: false,
+        showWishlist: true,
+        showForum: true,
+        bio: 'This is my bio'
       }
     });
 
     await user.save();
 
     const savedUser = await User.findById(user._id);
+    expect(savedUser.privacy.isPublic).toBe(true);
+    expect(savedUser.privacy.showCollection).toBe(true);
+    expect(savedUser.privacy.showDecks).toBe(false);
+    expect(savedUser.privacy.showWishlist).toBe(true);
     expect(savedUser.privacy.showForum).toBe(true);
+    expect(savedUser.privacy.bio).toBe('This is my bio');
   });
 });
