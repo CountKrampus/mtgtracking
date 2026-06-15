@@ -418,8 +418,12 @@ router.get('/users/:username/activity', async (req, res) => {
     }));
 
     // Top 5 posts by upvotes
-    const topPostDocs = await ForumPost.find(postQuery)
-      .sort({ 'upvotes': -1 }).limit(5).lean();
+    const topPostDocs = await ForumPost.aggregate([
+      { $match: postQuery },
+      { $addFields: { upvoteCount: { $size: '$upvotes' } } },
+      { $sort: { upvoteCount: -1 } },
+      { $limit: 5 }
+    ]);
 
     const topThreadIds = [...new Set(topPostDocs.map(p => p.threadId?.toString()).filter(Boolean))];
     const topThreadDocs = await ForumThread.find({ _id: { $in: topThreadIds } }).select('title').lean();
@@ -427,7 +431,7 @@ router.get('/users/:username/activity', async (req, res) => {
 
     res.json({
       reputation: user.reputation || 0,
-      badges: user.badges || [],
+      badges: (user.badges || []).map(b => ({ name: b.name, earnedAt: b.earnedAt })),
       stats: {
         postCount,
         threadCount,
@@ -440,7 +444,7 @@ router.get('/users/:username/activity', async (req, res) => {
         body: p.body.slice(0, 200),
         threadId: p.threadId,
         threadTitle: topThreadMap[p.threadId?.toString()] || 'Unknown thread',
-        upvoteCount: p.upvotes.length,
+        upvoteCount: p.upvoteCount,
         createdAt: p.createdAt
       }))
     });

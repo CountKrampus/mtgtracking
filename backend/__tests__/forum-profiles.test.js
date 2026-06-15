@@ -148,4 +148,30 @@ describe('User Forum Privacy Settings', () => {
     expect(res.body.recentPosts).toHaveLength(1);
     expect(res.body.recentPosts[0].body).toContain('Visible post');
   });
+
+  test('GET /api/forum/users/:username/activity excludes shadow-hidden posts', async () => {
+    const author = await User.create({
+      email: 'sh@t.com', username: 'shadownuser', passwordHash: 'hash',
+      privacy: { isPublic: true, showForum: true }
+    });
+    const cat = await ForumCategory.create({ name: 'ShadowTest', slug: 'shadowtest' });
+    const thread = await ForumThread.create({
+      categoryId: cat._id, authorId: author._id,
+      authorUsername: 'shadownuser', title: 'T', body: 'B'
+    });
+    await ForumPost.create({
+      threadId: thread._id, authorId: author._id,
+      authorUsername: 'shadownuser', body: 'Shadow hidden post', isShadowHidden: true
+    });
+    await ForumPost.create({
+      threadId: thread._id, authorId: author._id,
+      authorUsername: 'shadownuser', body: 'Visible post'
+    });
+
+    const app = buildApp();
+    const res = await request(app).get('/api/forum/users/shadownuser/activity');
+    expect(res.status).toBe(200);
+    expect(res.body.recentPosts).toHaveLength(1);
+    expect(res.body.recentPosts[0].body).toContain('Visible post');
+  });
 });
