@@ -11,6 +11,7 @@ export default function ForumCategoriesTab() {
   const [editingId, setEditingId] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState({});
   const [draggedCategory, setDraggedCategory] = useState(null);
+  const [reordering, setReordering] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -81,6 +82,56 @@ export default function ForumCategoriesTab() {
     }));
   };
 
+  const handleDragStart = (e, category) => {
+    setDraggedCategory(category);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e, targetCategory) => {
+    e.preventDefault();
+
+    if (!draggedCategory || draggedCategory._id === targetCategory._id) {
+      setDraggedCategory(null);
+      return;
+    }
+
+    const currentIndex = categories.findIndex((c) => c._id === draggedCategory._id);
+    const targetIndex = categories.findIndex((c) => c._id === targetCategory._id);
+
+    if (currentIndex === -1 || targetIndex === -1) {
+      setDraggedCategory(null);
+      return;
+    }
+
+    const newCategories = [...categories];
+    const [moved] = newCategories.splice(currentIndex, 1);
+    newCategories.splice(targetIndex, 0, moved);
+
+    setCategories(newCategories);
+
+    // Send reorder request to backend
+    setReordering(true);
+    try {
+      const categoryOrders = newCategories.map((cat, idx) => ({
+        id: cat._id,
+        displayOrder: idx,
+      }));
+
+      await axios.put(`${API_URL}/admin/categories/reorder`, { categoryOrders });
+    } catch (error) {
+      alert('Failed to reorder categories');
+      fetchCategories();
+    } finally {
+      setReordering(false);
+      setDraggedCategory(null);
+    }
+  };
+
   if (loading) {
     return <div className="text-white/60">Loading categories...</div>;
   }
@@ -141,7 +192,17 @@ export default function ForumCategoriesTab() {
           categories.map((category) => (
             <div key={category._id}>
               {/* Parent Category */}
-              <div className="flex items-center gap-2 p-3 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition group">
+              <div
+                draggable
+                onDragStart={(e) => handleDragStart(e, category)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, category)}
+                className={`flex items-center gap-2 p-3 rounded-lg border transition group cursor-move ${
+                  draggedCategory?._id === category._id
+                    ? 'bg-purple-600/30 border-purple-400'
+                    : 'bg-white/5 hover:bg-white/10 border-white/10'
+                }`}
+              >
                 <GripVertical size={16} className="text-white/40 flex-shrink-0" />
 
                 {category.children?.length > 0 && (
@@ -282,7 +343,7 @@ export default function ForumCategoriesTab() {
         )}
       </div>
 
-      <p className="text-white/50 text-xs">Drag to reorder categories (coming soon)</p>
+      <p className="text-white/50 text-xs">💡 Drag categories to reorder them {reordering && '(saving...)'}</p>
     </div>
   );
 }
