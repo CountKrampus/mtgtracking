@@ -524,4 +524,114 @@ router.put('/admin/categories/reorder', verifyToken, requireAuth, requireAdmin, 
   }
 });
 
+// ─────────────────────────────────────────────────────────────
+// THREAD MANAGEMENT ROUTES
+// ─────────────────────────────────────────────────────────────
+
+// PUT /api/forum/threads/:id/rename - Rename thread (author or admin only)
+router.put('/threads/:id/rename', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { title } = req.body;
+
+    if (!title || !title.trim()) {
+      return res.status(400).json({ message: 'Title is required' });
+    }
+
+    const thread = await ForumThread.findById(req.params.id);
+
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+
+    // Only author or admin can rename
+    if (thread.authorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Only the author or admin can rename this thread' });
+    }
+
+    thread.title = title.trim();
+    await thread.save();
+
+    res.json(thread);
+  } catch (error) {
+    console.error('Rename thread error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /api/forum/threads/:id/move - Move thread to different category (admin only)
+router.put('/threads/:id/move', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { categoryId } = req.body;
+
+    if (!categoryId) {
+      return res.status(400).json({ message: 'Category ID is required' });
+    }
+
+    const thread = await ForumThread.findById(req.params.id);
+
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+
+    // Verify new category exists
+    const newCategory = await ForumCategory.findById(categoryId);
+
+    if (!newCategory) {
+      return res.status(404).json({ message: 'Target category not found' });
+    }
+
+    // Update counts for old and new categories
+    const oldCategoryId = thread.categoryId;
+
+    await ForumCategory.findByIdAndUpdate(oldCategoryId, { $inc: { threadCount: -1 } });
+    await ForumCategory.findByIdAndUpdate(categoryId, { $inc: { threadCount: 1 } });
+
+    thread.categoryId = categoryId;
+    await thread.save();
+
+    res.json(thread);
+  } catch (error) {
+    console.error('Move thread error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /api/forum/threads/:id/lock - Lock/unlock thread (admin only)
+router.put('/threads/:id/lock', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const thread = await ForumThread.findById(req.params.id);
+
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+
+    thread.isLocked = !thread.isLocked;
+    await thread.save();
+
+    res.json({ thread, message: thread.isLocked ? 'Thread locked' : 'Thread unlocked' });
+  } catch (error) {
+    console.error('Lock thread error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /api/forum/threads/:id/pin - Pin/unpin thread (admin only)
+router.put('/threads/:id/pin', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const thread = await ForumThread.findById(req.params.id);
+
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+
+    thread.isPinned = !thread.isPinned;
+    await thread.save();
+
+    res.json({ thread, message: thread.isPinned ? 'Thread pinned' : 'Thread unpinned' });
+  } catch (error) {
+    console.error('Pin thread error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;
