@@ -377,6 +377,76 @@ router.get('/user-level', async (req, res) => {
   }
 });
 
+// GET /api/forum/users/:username/activity — public profile forum activity
+router.get('/users/:username/activity', async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.params.username })
+      .select('privacy reputation badges createdAt').lean();
+
+    if (!user || !user.privacy?.isPublic || !user.privacy?.showForum) {
+      return res.status(404).json({ message: 'Forum activity not available' });
+    }
+
+    const postQuery = {
+      authorId: user._id,
+      isFlagHidden: { $ne: true },
+      isShadowHidden: { $ne: true }
+    };
+
+    const [recentPostDocs, threadCount, upvotesResult, postCount] = await Promise.all([
+      ForumPost.find(postQuery).sort({ createdAt: -1 }).limit(10).lean(),
+      ForumThread.countDocuments({ authorId: user._id }),
+      ForumPost.aggregate([
+        { $match: { authorId: user._id, isFlagHidden: { $ne: true }, isShadowHidden: { $ne: true } } },
+        { $project: { upvoteCount: { $size: '$upvotes' } } },
+        { $group: { _id: null, total: { $sum: '$upvoteCount' } } }
+      ]),
+      ForumPost.countDocuments(postQuery)
+    ]);
+
+    // Populate thread titles for recent posts
+    const threadIds = [...new Set(recentPostDocs.map(p => p.threadId?.toString()).filter(Boolean))];
+    const recentThreads = await ForumThread.find({ _id: { $in: threadIds } }).select('title').lean();
+    const recentThreadMap = Object.fromEntries(recentThreads.map(t => [t._id.toString(), t.title]));
+
+    const recentPosts = recentPostDocs.map(p => ({
+      _id: p._id,
+      body: p.body.slice(0, 200),
+      threadId: p.threadId,
+      threadTitle: recentThreadMap[p.threadId?.toString()] || 'Unknown thread',
+      createdAt: p.createdAt
+    }));
+
+    // Top 5 posts by upvotes
+    const topPostDocs = await ForumPost.find(postQuery)
+      .sort({ 'upvotes': -1 }).limit(5).lean();
+
+    const topThreadIds = [...new Set(topPostDocs.map(p => p.threadId?.toString()).filter(Boolean))];
+    const topThreadDocs = await ForumThread.find({ _id: { $in: topThreadIds } }).select('title').lean();
+    const topThreadMap = Object.fromEntries(topThreadDocs.map(t => [t._id.toString(), t.title]));
+
+    res.json({
+      reputation: user.reputation || 0,
+      badges: user.badges || [],
+      stats: {
+        postCount,
+        threadCount,
+        upvotesReceived: upvotesResult[0]?.total || 0,
+        memberSince: user.createdAt
+      },
+      recentPosts,
+      topPosts: topPostDocs.map(p => ({
+        _id: p._id,
+        body: p.body.slice(0, 200),
+        threadId: p.threadId,
+        threadTitle: topThreadMap[p.threadId?.toString()] || 'Unknown thread',
+        upvoteCount: p.upvotes.length,
+        createdAt: p.createdAt
+      }))
+    });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
 // POST /api/forum/shop/purchase
 router.post('/shop/purchase', verifyToken, requireAuth, async (req, res) => {
   try {

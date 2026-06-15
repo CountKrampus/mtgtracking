@@ -11,6 +11,10 @@ const postSchema = new mongoose.Schema({
     ref: 'User',
     required: [true, 'Author ID is required']
   },
+  authorUsername: {
+    type: String,
+    default: ''
+  },
   body: {
     type: String,
     required: [true, 'Post body is required']
@@ -46,6 +50,18 @@ const postSchema = new mongoose.Schema({
     default: false
   },
   hiddenReason: String,
+  isFlagHidden: {
+    type: Boolean,
+    default: false
+  },
+  isShadowHidden: {
+    type: Boolean,
+    default: false
+  },
+  upvotes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   likes: {
     type: Number,
     default: 0

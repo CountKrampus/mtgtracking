@@ -54,7 +54,16 @@ const userSchema = new mongoose.Schema({
     showWishlist: { type: Boolean, default: false },
     showForum: { type: Boolean, default: false },
     bio: { type: String, default: '' }
-  }
+  },
+  reputation: {
+    type: Number,
+    default: 0
+  },
+  badges: [{
+    name: { type: String, required: true },
+    description: { type: String, default: '' },
+    earnedAt: { type: Date, default: Date.now }
+  }]
 });
 
 // Indexes (email and username already indexed via unique: true)
