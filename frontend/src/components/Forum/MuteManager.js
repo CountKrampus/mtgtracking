@@ -11,10 +11,12 @@ export default function MuteManager({ apiUrl = 'http://localhost:5000/api', isOp
     const fetchMutes = async () => {
       try {
         const response = await fetch(`${apiUrl}/admin/mutes`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
-        setMutes(data);
+        setMutes(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error fetching mutes:', error);
+        setMutes([]);
       }
     };
     fetchMutes();
@@ -31,19 +33,21 @@ export default function MuteManager({ apiUrl = 'http://localhost:5000/api', isOp
       setUserId('');
       setReason('');
       const response = await fetch(`${apiUrl}/admin/mutes`);
-      setMutes(await response.json());
+      const data = await response.json();
+      setMutes(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error creating mute:', error);
     }
   };
 
-  const handleRevokeMute = async (userId) => {
+  const handleRevokeMute = async (muteUserId) => {
     try {
-      await fetch(`${apiUrl}/admin/mute/${userId}`, {
+      await fetch(`${apiUrl}/admin/mute/${muteUserId}`, {
         method: 'DELETE'
       });
       const response = await fetch(`${apiUrl}/admin/mutes`);
-      setMutes(await response.json());
+      const data = await response.json();
+      setMutes(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error revoking mute:', error);
     }
@@ -91,7 +95,7 @@ export default function MuteManager({ apiUrl = 'http://localhost:5000/api', isOp
       <div className="border-t border-slate-700 pt-4">
         <h3 className="font-semibold text-white mb-3">Active Mutes</h3>
         <div className="space-y-2 max-h-96 overflow-y-auto">
-          {mutes.length === 0 ? (
+          {!Array.isArray(mutes) || mutes.length === 0 ? (
             <div className="text-slate-400">No active mutes</div>
           ) : (
             mutes.map(mute => (
