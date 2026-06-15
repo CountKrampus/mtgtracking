@@ -34,3 +34,4 @@ Thumbs.db
 # Large generated cache files
 backend/combo-cache.json
 combo-cache.json
+docs/*.json
