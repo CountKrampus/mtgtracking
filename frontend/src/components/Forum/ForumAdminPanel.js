@@ -8,7 +8,7 @@ const API_URL = 'http://localhost:5000/api';
 
 export default function ForumAdminPanel({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('categories');
-  const [loadedTabs, setLoadedTabs] = useState({ categories: false });
+  const [loadedTabs, setLoadedTabs] = useState({ categories: true }); // Load categories immediately
 
   useEffect(() => {
     if (isOpen && !loadedTabs[activeTab]) {

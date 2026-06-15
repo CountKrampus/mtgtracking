@@ -126,7 +126,17 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
           {loading ? (
             <div className="text-center py-12 text-white/60">Loading categories...</div>
           ) : parentCategories.length === 0 ? (
-            <div className="text-center py-12 text-white/60">No categories found</div>
+            <div className="text-center py-12">
+              <p className="text-white/60 mb-4">No categories found</p>
+              {authUser?.role === 'admin' && (
+                <button
+                  onClick={() => setShowAdminPanel(true)}
+                  className="inline-block px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold transition"
+                >
+                  Create Categories
+                </button>
+              )}
+            </div>
           ) : (
             <div className="space-y-8">
               {parentCategories.map((category) => (
