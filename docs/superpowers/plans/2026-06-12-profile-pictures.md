@@ -8,6 +8,8 @@
 
 **Tech Stack:** Node.js + Express + Mongoose, multer (already in project), React + Tailwind CSS, react-image-crop (new dependency)
 
+Include the profile creation, along with a forum profile
+
 ---
 
 ## File Map

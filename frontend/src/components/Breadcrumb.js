@@ -6,6 +6,7 @@ const viewLabels = {
   collection: 'Collection',
   decks: 'Deck Builder',
   wishlist: 'Wishlist',
+  forum: 'Forum',
   lifecounter: 'Life Counter',
   settings: 'Settings',
 };

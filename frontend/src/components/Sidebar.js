@@ -27,7 +27,8 @@ import {
   Package,
   TrendingDown,
   Calendar,
-  Eye
+  Eye,
+  MessageSquare
 } from 'lucide-react';
 
 const Sidebar = ({
@@ -65,6 +66,7 @@ const Sidebar = ({
     { id: 'collection', label: 'Collection', icon: BookOpen },
     { id: 'decks', label: 'Deck Builder', icon: Layers, feature: 'deckBuilder' },
     { id: 'wishlist', label: 'Wishlist', icon: Heart, feature: 'wishlist' },
+    { id: 'forum', label: 'Forum', icon: MessageSquare },
     { id: 'lifecounter', label: 'Life Counter', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];

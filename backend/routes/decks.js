@@ -312,8 +312,9 @@ router.get('/:id/ownership', requireAuth, async (req, res) => {
       } else {
         missingCards.push({
           ...deckCard.toObject ? deckCard.toObject() : deckCard,
-          price: 0
+          price: deckCard.price || 0
         });
+        missingValue += deckCard.price || 0;
       }
     }
 
@@ -324,6 +325,8 @@ router.get('/:id/ownership', requireAuth, async (req, res) => {
         ownedCount: ownedCards.length,
         missingCount: missingCards.length,
         ownedValue: Math.round(ownedValue * 100) / 100,
+        missingValue: Math.round(missingValue * 100) / 100,
+        totalValue: Math.round((ownedValue + missingValue) * 100) / 100,
         completionPercentage: Math.round((ownedCards.length / allDeckCards.length) * 100)
       }
     });
