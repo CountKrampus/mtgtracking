@@ -5235,7 +5235,11 @@ function App() {
 
       {/* Admin Panel Modal */}
       {showAdminPanel && (
-        <AdminPanel onClose={() => setShowAdminPanel(false)} />
+        <AdminPanel
+          onClose={() => setShowAdminPanel(false)}
+          onOpenSpamFilter={() => setShowSpamFilterAdmin(true)}
+          onOpenMuteManager={() => setShowMuteManager(true)}
+        />
       )}
 
       {/* Forum Admin Modals */}
