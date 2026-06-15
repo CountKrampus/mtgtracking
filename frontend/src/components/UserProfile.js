@@ -25,7 +25,7 @@ function ForumActivitySection({ activity }) {
       <div className="flex items-center gap-4 mb-4 pb-4 border-b border-white/10">
         {activity.reputation > 0 && (
           <div className="text-center">
-            <div className="text-3xl font-bold text-amber-400">⚡ {activity.reputation.toLocaleString()}</div>
+            <div className="text-3xl font-bold text-amber-400">⚡ {activity.reputation}</div>
             <div className="text-[10px] text-white/40 uppercase mt-1">Reputation</div>
           </div>
         )}
@@ -68,7 +68,7 @@ function ForumActivitySection({ activity }) {
               <div key={post._id} className="flex justify-between items-start gap-3">
                 <div className="min-w-0">
                   <a
-                    href={`/forum/threads/${post.threadId}`}
+                    href={`/forum/thread/${post.threadId}`}
                     className="text-purple-400 hover:text-purple-300 text-sm truncate block transition"
                   >
                     {post.body.slice(0, 100)}{post.body.length > 100 ? '…' : ''}
@@ -93,7 +93,7 @@ function ForumActivitySection({ activity }) {
               <div key={post._id} className="flex justify-between items-start gap-3">
                 <div className="min-w-0">
                   <a
-                    href={`/forum/threads/${post.threadId}`}
+                    href={`/forum/thread/${post.threadId}`}
                     className="text-purple-400 hover:text-purple-300 text-sm truncate block transition"
                   >
                     {post.body.slice(0, 100)}{post.body.length > 100 ? '…' : ''}
@@ -216,7 +216,9 @@ export default function UserProfile({ username }) {
         </div>
 
         {/* Forum Activity Section */}
-        {forumActivity && <ForumActivitySection activity={forumActivity} />}
+        {profile.privacy?.showForum && forumActivity && (
+          <ForumActivitySection activity={forumActivity} />
+        )}
 
         {/* No forum activity shown */}
         {!forumActivity && profile.privacy?.showForum === false && (
