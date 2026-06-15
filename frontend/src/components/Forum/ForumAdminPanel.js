@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import ForumCategoriesTab from './ForumCategoriesTab';
 import SpamFilterAdmin from './SpamFilterAdmin';
@@ -8,6 +8,13 @@ const API_URL = 'http://localhost:5000/api';
 
 export default function ForumAdminPanel({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('categories');
+  const [loadedTabs, setLoadedTabs] = useState({ categories: false });
+
+  useEffect(() => {
+    if (isOpen && !loadedTabs[activeTab]) {
+      setLoadedTabs(prev => ({ ...prev, [activeTab]: true }));
+    }
+  }, [isOpen, activeTab, loadedTabs]);
 
   if (!isOpen) return null;
 
@@ -61,9 +68,15 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {activeTab === 'categories' && <ForumCategoriesTab />}
-          {activeTab === 'moderation' && <MuteManager apiUrl={API_URL} />}
-          {activeTab === 'spam' && <SpamFilterAdmin />}
+          {activeTab === 'categories' && (
+            loadedTabs.categories ? <ForumCategoriesTab /> : <div className="text-slate-400">Loading...</div>
+          )}
+          {activeTab === 'moderation' && (
+            loadedTabs.moderation ? <MuteManager apiUrl={API_URL} /> : <div className="text-slate-400">Loading...</div>
+          )}
+          {activeTab === 'spam' && (
+            loadedTabs.spam ? <SpamFilterAdmin /> : <div className="text-slate-400">Loading...</div>
+          )}
         </div>
       </div>
     </div>
