@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const ForumCategory = require('../models/ForumCategory');
 const ForumThread = require('../models/ForumThread');
 const ForumPost = require('../models/ForumPost');
-const { verifyToken, requireAuth } = require('../middleware/auth');
+const { verifyToken, requireAuth, requireAdmin } = require('../middleware/auth');
 const { checkMute } = require('../middleware/muteEnforcer');
 const { checkSpam } = require('../utils/spamFilter');
 const Ban = require('../models/Ban');
@@ -397,6 +397,129 @@ router.post('/shop/purchase', verifyToken, requireAuth, async (req, res) => {
 
     res.json({ message: 'Purchased', updatedLevel: userLevel });
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// ADMIN CATEGORY MANAGEMENT ROUTES
+// ─────────────────────────────────────────────────────────────
+
+// POST /api/forum/admin/categories - Create new category
+router.post('/admin/categories', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { name, description, parentCategoryId } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ message: 'Category name is required' });
+    }
+
+    // Generate slug from name
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+    // Check if slug already exists
+    const existing = await ForumCategory.findOne({ slug });
+    if (existing) {
+      return res.status(400).json({ message: 'A category with this name already exists' });
+    }
+
+    const category = await ForumCategory.create({
+      name,
+      slug,
+      description: description || '',
+      parentCategoryId: parentCategoryId || null
+    });
+
+    res.status(201).json(category);
+  } catch (error) {
+    console.error('Create category error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /api/forum/admin/categories/:id - Update category
+router.put('/admin/categories/:id', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { name, description, displayOrder, isActive } = req.body;
+    const updates = {};
+
+    if (name) {
+      updates.name = name;
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+      // Check if slug already exists (excluding current category)
+      const existing = await ForumCategory.findOne({ slug, _id: { $ne: req.params.id } });
+      if (existing) {
+        return res.status(400).json({ message: 'A category with this name already exists' });
+      }
+      updates.slug = slug;
+    }
+
+    if (description !== undefined) updates.description = description;
+    if (displayOrder !== undefined) updates.displayOrder = displayOrder;
+    if (isActive !== undefined) updates.isActive = isActive;
+
+    const category = await ForumCategory.findByIdAndUpdate(req.params.id, updates, { new: true });
+
+    if (!category) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+
+    res.json(category);
+  } catch (error) {
+    console.error('Update category error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// DELETE /api/forum/admin/categories/:id - Delete category
+router.delete('/admin/categories/:id', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const category = await ForumCategory.findById(req.params.id);
+
+    if (!category) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+
+    // Check if category has subcategories
+    const children = await ForumCategory.countDocuments({ parentCategoryId: category._id });
+    if (children > 0) {
+      return res.status(400).json({ message: 'Cannot delete category with subcategories' });
+    }
+
+    // Check if category has threads
+    const threads = await ForumThread.countDocuments({ categoryId: category._id });
+    if (threads > 0) {
+      return res.status(400).json({ message: 'Cannot delete category with threads' });
+    }
+
+    await ForumCategory.deleteOne({ _id: req.params.id });
+    res.json({ message: 'Category deleted' });
+  } catch (error) {
+    console.error('Delete category error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /api/forum/admin/categories/reorder - Reorder categories (drag-drop)
+router.put('/admin/categories/reorder', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { categoryOrders } = req.body; // Array of { id, displayOrder }
+
+    if (!Array.isArray(categoryOrders)) {
+      return res.status(400).json({ message: 'categoryOrders must be an array' });
+    }
+
+    // Update all categories in parallel
+    await Promise.all(
+      categoryOrders.map(({ id, displayOrder }) =>
+        ForumCategory.updateOne({ _id: id }, { displayOrder })
+      )
+    );
+
+    res.json({ message: 'Categories reordered' });
+  } catch (error) {
+    console.error('Reorder categories error:', error);
     res.status(500).json({ message: error.message });
   }
 });
