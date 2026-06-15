@@ -1,0 +1,40 @@
+<h2>How is a shadow ban applied?</h2>
+<p class="subtitle">Shadow-banned users see their own posts normally — no one else does. It isolates them without alerting them.</p>
+
+<div class="options">
+  <div class="option" data-choice="manual-only" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Manual only — admin applies it</h3>
+      <p>Only an admin can shadow ban a user from the admin panel. It's a deliberate moderation decision, never automatic.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>No accidental shadow bans</li><li>Simple — one input, one action</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Requires admin to manually review and act</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="auto-threshold" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Auto-trigger after repeated flags</h3>
+      <p>If a user has <strong>3+ pieces of content flagged and confirmed bad</strong> by a mod, they're automatically shadow banned.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Scales without constant admin action</li><li>Repeat offenders caught automatically</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Risk of false positives from brigading</li><li>More complex logic</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="manual-plus-suggest" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Manual, but system suggests it</h3>
+      <p>Admin applies it manually, but the flag queue highlights users with multiple confirmed violations and suggests shadow banning them.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Admin stays in control</li><li>Pattern-based nudge speeds up decisions</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Slightly more UI work</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

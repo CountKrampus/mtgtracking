@@ -1,0 +1,40 @@
+<h2>What happens when content gets flagged?</h2>
+<p class="subtitle">A user taps "Flag" on a forum post or chat message. What should the system do next?</p>
+
+<div class="options">
+  <div class="option" data-choice="manual-only" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Always manual review</h3>
+      <p>Flag goes to the mod queue. Content stays visible until a moderator hides or removes it. Nothing automatic.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>No false positives from coordinated flag brigading</li><li>Mods stay in control</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Harmful content stays live until a mod checks the queue</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="auto-hide" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Auto-hide after threshold</h3>
+      <p>After <strong>3 unique flags</strong> from different users, content is automatically hidden pending review. Mods can restore or remove it.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Bad content disappears fast without mod intervention</li><li>Community self-polices to a degree</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Coordinated users could abuse the threshold</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="auto-hide-admin" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Auto-hide + notify admin</h3>
+      <p>Same as B, but reaching the threshold also sends an in-app notification to all admins/editors so the queue gets reviewed quickly.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Fast response loop</li><li>Mods always know when something needs attention</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Notification spam if flagging is abused</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

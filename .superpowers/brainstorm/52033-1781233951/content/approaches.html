@@ -1,0 +1,40 @@
+<h2>3 Approaches to Flagging + Shadow Ban</h2>
+<p class="subtitle">Same decisions, different architectural trade-offs. Pick the one that fits best.</p>
+
+<div class="options">
+  <div class="option" data-choice="unified" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Unified ContentFlag model (Recommended)</h3>
+      <p>One <code>ContentFlag</code> schema covers forum threads, forum posts, and chat messages via a <code>targetType / targetId</code> pair — the same pattern the app already uses in the Comment model. Shadow ban is a single <code>isShadowBanned: Boolean</code> field on User.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>One flag queue, one review UI</li><li>Follows existing app patterns exactly</li><li>Shadow ban is a single fast field check</li><li>Least new code</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>targetType enum grows if more content types are added later</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="separate-models" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Separate flag models per content type</h3>
+      <p><code>ForumFlag</code> and <code>ChatFlag</code> are distinct schemas. Shadow ban is a separate <code>ShadowBan</code> model (mirrors the existing <code>UserBan</code> pattern).</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Each model is type-safe with no nullable fields</li><li>Mirrors UserBan design</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Two models, two routes, two admin tabs — duplicated logic</li><li>ShadowBan model adds complexity vs a simple boolean</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="extend-ban" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Extend UserBan with a shadow type</h3>
+      <p>Add <code>shadow</code> to the existing <code>banType</code> enum in <code>UserBan</code>. Flagging still uses a new <code>ContentFlag</code> model, but shadow ban reuses the ban infrastructure entirely.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Shadow ban appears in existing ban history / appeals flow</li><li>No new model needed for shadow ban</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Shadow ban semantics differ from real bans — sharing a model creates confusion</li><li>Existing ban UI would show shadow bans to the user (breaking the silent isolation)</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

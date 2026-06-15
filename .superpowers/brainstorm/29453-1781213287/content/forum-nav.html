@@ -1,0 +1,54 @@
+<h2>Where does the forum live in the app?</h2>
+<p class="subtitle">The sidebar already has Navigation, Gameplay, Social, and other groups. Pick the approach that fits best.</p>
+
+<div class="options">
+  <div class="option" data-choice="sidebar" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Sidebar entry — own full page</h3>
+      <p>A "Forum" link in the sidebar (under Community or its own group). Clicking it replaces the main view with the full forum — categories, threads, and posts.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="tab" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Tab inside Playgroups</h3>
+      <p>The forum lives inside a playgroup — each playgroup gets its own forum. More focused but scoped to your group only, not the whole community.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="both" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Both — global + per-playgroup</h3>
+      <p>A global community forum in the sidebar AND a forum tab inside each playgroup. Global for the whole community; playgroup forum for your local crew.</p>
+    </div>
+  </div>
+</div>
+
+<div class="split" style="margin-top:20px;">
+  <div class="mockup">
+    <div class="mockup-header">Option A — Sidebar entry</div>
+    <div class="mockup-body" style="padding:10px;font-size:12px;">
+      <div style="color:#9ca3af;font-size:10px;text-transform:uppercase;margin-bottom:4px;">Community</div>
+      <div style="padding:5px 8px;border-radius:4px;background:rgba(255,255,255,0.05);margin-bottom:3px;">💬 Chat</div>
+      <div style="padding:5px 8px;border-radius:4px;background:rgba(124,58,237,0.2);color:#a78bfa;margin-bottom:3px;border:1px solid rgba(124,58,237,0.4);">📋 Forum ◀ new</div>
+      <div style="padding:5px 8px;border-radius:4px;background:rgba(255,255,255,0.05);margin-bottom:3px;">👥 Playgroups</div>
+      <div style="padding:5px 8px;border-radius:4px;background:rgba(255,255,255,0.05);">✉️ Messages</div>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header">Option C — Global + per-playgroup</div>
+    <div class="mockup-body" style="padding:10px;font-size:12px;">
+      <div style="color:#9ca3af;font-size:10px;text-transform:uppercase;margin-bottom:4px;">Community</div>
+      <div style="padding:5px 8px;border-radius:4px;background:rgba(124,58,237,0.2);color:#a78bfa;margin-bottom:3px;border:1px solid rgba(124,58,237,0.4);">📋 Forum ◀ global</div>
+      <div style="padding:5px 8px;border-radius:4px;background:rgba(255,255,255,0.05);margin-bottom:8px;">👥 Playgroups</div>
+      <div style="color:#9ca3af;font-size:10px;margin-bottom:4px;">Inside a Playgroup:</div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:4px;padding:6px 8px;font-size:11px;">
+        <div style="display:flex;gap:8px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:4px;margin-bottom:4px;">
+          <span>Overview</span><span>Members</span><span style="color:#a78bfa;border-bottom:2px solid #7c3aed;padding-bottom:2px;">Forum</span><span>Schedule</span>
+        </div>
+        <div style="color:#9ca3af;font-size:11px;">Playgroup-scoped threads here</div>
+      </div>
+    </div>
+  </div>
+</div>

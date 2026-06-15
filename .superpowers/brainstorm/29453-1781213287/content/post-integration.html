@@ -1,0 +1,48 @@
+<h2>Should posts integrate with app features?</h2>
+<p class="subtitle">The app already has decks, cards, playgroups, and wishlists. Posts could reference these directly.</p>
+
+<div class="options">
+  <div class="option" data-choice="none" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Plain posts only</h3>
+      <p>Text and maybe images. No special app integrations. Simple and fast to build.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="decks" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Deck links</h3>
+      <p>Attach a deck from your collection to a post — shows commander, format, and a link to the shared deck view. Perfect for "rate my deck" threads.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="full" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Full integration</h3>
+      <p>Link decks, reference individual cards (with hover preview), tag playgroups. Rich app-native posts.</p>
+    </div>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:20px;">
+  <div class="mockup-header">Example: Option C post in a "Deck Help" thread</div>
+  <div class="mockup-body" style="padding:14px;font-size:13px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <div style="width:32px;height:32px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:13px;">K</div>
+      <div>
+        <strong>KingSlayer99</strong> <span style="color:#9ca3af;font-size:11px;">3h ago · ↑ 12</span>
+      </div>
+    </div>
+    <p style="color:#d1d5db;margin:0 0 10px;">Here's my current Atraxa build, looking for cut suggestions around the 4-drop slot:</p>
+    <div style="background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.3);border-radius:6px;padding:10px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
+      <div style="font-size:20px;">🃏</div>
+      <div>
+        <div style="font-weight:bold;color:#a78bfa;">Atraxa Superfriends</div>
+        <div style="font-size:11px;color:#9ca3af;">EDH · Commander: Atraxa · 98 cards · $420</div>
+      </div>
+      <div style="margin-left:auto;background:rgba(124,58,237,0.3);color:#c4b5fd;border-radius:4px;padding:3px 8px;font-size:11px;">View Deck →</div>
+    </div>
+    <p style="color:#d1d5db;margin:0;">Specifically unsure about <span style="color:#60a5fa;text-decoration:underline;cursor:pointer;">Deepglow Skate</span> vs <span style="color:#60a5fa;text-decoration:underline;cursor:pointer;">Vorinclex, Monstrous Raider</span> — thoughts?</p>
+  </div>
+</div>

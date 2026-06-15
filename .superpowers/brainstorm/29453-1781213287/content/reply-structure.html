@@ -1,0 +1,73 @@
+<h2>How should replies work inside a thread?</h2>
+<p class="subtitle">Two common patterns — each feels very different to use</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">A — Flat (linear)</div>
+    <div class="mockup-body" style="padding:12px;font-size:13px;">
+      <div style="border-left:3px solid #7c3aed;padding:8px 10px;margin-bottom:8px;background:rgba(124,58,237,0.08);border-radius:4px;">
+        <strong>OriginalPoster</strong> <span style="color:#9ca3af;font-size:11px;">2h ago</span>
+        <p style="margin:4px 0 0;color:#d1d5db;">What's the best removal for my Atraxa deck?</p>
+      </div>
+      <div style="padding:8px 10px;margin-bottom:8px;background:rgba(255,255,255,0.04);border-radius:4px;">
+        <strong>Reply1</strong> <span style="color:#9ca3af;font-size:11px;">1h ago</span>
+        <p style="margin:4px 0 0;color:#d1d5db;">Cyclonic Rift is a must-have</p>
+      </div>
+      <div style="padding:8px 10px;margin-bottom:8px;background:rgba(255,255,255,0.04);border-radius:4px;">
+        <strong>Reply2</strong> <span style="color:#9ca3af;font-size:11px;">45m ago</span>
+        <p style="margin:4px 0 0;color:#d1d5db;">Agreed, also consider Swords to Plowshares</p>
+      </div>
+      <div style="padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:4px;">
+        <strong>Reply3</strong> <span style="color:#9ca3af;font-size:11px;">10m ago</span>
+        <p style="margin:4px 0 0;color:#d1d5db;">What's your budget? That changes things</p>
+      </div>
+      <p style="color:#9ca3af;font-size:11px;margin-top:8px;">Simple. All replies at same level. Good for focused threads.</p>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">B — Threaded (nested)</div>
+    <div class="mockup-body" style="padding:12px;font-size:13px;">
+      <div style="border-left:3px solid #7c3aed;padding:8px 10px;margin-bottom:8px;background:rgba(124,58,237,0.08);border-radius:4px;">
+        <strong>OriginalPoster</strong> <span style="color:#9ca3af;font-size:11px;">2h ago</span>
+        <p style="margin:4px 0 0;color:#d1d5db;">What's the best removal for my Atraxa deck?</p>
+      </div>
+      <div style="padding:8px 10px;margin-bottom:6px;background:rgba(255,255,255,0.04);border-radius:4px;">
+        <strong>Reply1</strong> <span style="color:#9ca3af;font-size:11px;">1h ago</span>
+        <p style="margin:4px 0 0;color:#d1d5db;">Cyclonic Rift is a must-have</p>
+        <div style="margin-left:16px;margin-top:6px;border-left:2px solid #374151;padding-left:8px;">
+          <div style="padding:6px 8px;background:rgba(255,255,255,0.04);border-radius:4px;margin-bottom:4px;">
+            <strong>OP</strong> <span style="color:#9ca3af;font-size:11px;">55m ago</span>
+            <p style="margin:4px 0 0;color:#d1d5db;">Already have it! What else?</p>
+          </div>
+          <div style="padding:6px 8px;background:rgba(255,255,255,0.04);border-radius:4px;">
+            <strong>Reply1</strong> <span style="color:#9ca3af;font-size:11px;">40m ago</span>
+            <p style="margin:4px 0 0;color:#d1d5db;">Then Toxic Deluge for mass removal</p>
+          </div>
+        </div>
+      </div>
+      <div style="padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:4px;">
+        <strong>Reply2</strong> <span style="color:#9ca3af;font-size:11px;">30m ago</span>
+        <p style="margin:4px 0 0;color:#d1d5db;">Swords to Plowshares is classic</p>
+      </div>
+      <p style="color:#9ca3af;font-size:11px;margin-top:8px;">Replies can reply to each other. Good for branching conversations.</p>
+    </div>
+  </div>
+</div>
+
+<div class="options" style="margin-top:20px;">
+  <div class="option" data-choice="flat" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Flat / Linear</h3>
+      <p>All replies at the same level — simpler, easier to follow start-to-finish</p>
+    </div>
+  </div>
+  <div class="option" data-choice="threaded" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Threaded / Nested</h3>
+      <p>Reply directly to specific posts — better for branching discussions, feels more like Reddit</p>
+    </div>
+  </div>
+</div>

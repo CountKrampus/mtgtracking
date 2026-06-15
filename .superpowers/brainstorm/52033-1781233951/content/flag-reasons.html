@@ -1,0 +1,34 @@
+<h2>Should users pick a reason when flagging?</h2>
+<p class="subtitle">Helps mods triage faster — but adds friction to the reporting flow.</p>
+
+<div class="options">
+  <div class="option" data-choice="no-reason" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>One-tap flag — no reason</h3>
+      <p>Tap the flag icon, done. The post goes into the mod queue as-is. Low friction, fastest path.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="reason-required" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Required category</h3>
+      <p>User must pick one before submitting:</p>
+      <ul style="margin-top:8px;color:#9ca3af;font-size:13px;">
+        <li>🚫 Spam or self-promotion</li>
+        <li>⚠️ Harassment or abuse</li>
+        <li>🔞 Inappropriate content</li>
+        <li>💬 Off-topic</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="option" data-choice="reason-optional" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Optional note</h3>
+      <p>Flag submits immediately, but a small textarea lets the user add context if they want. Not required.</p>
+    </div>
+  </div>
+</div>

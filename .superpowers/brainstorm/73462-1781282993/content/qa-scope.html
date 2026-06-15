@@ -1,0 +1,40 @@
+<h2>Q&amp;A Format — which threads can be Q&amp;A?</h2>
+<p class="subtitle">The Q&A format adds a "mark best answer" button and sorts by votes. Where should it apply?</p>
+
+<div class="options">
+  <div class="option" data-choice="category" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Category-level — specific categories are Q&amp;A only</h3>
+      <p>Admins mark certain forum categories as "Q&amp;A" type. All threads in that category automatically get the Q&amp;A format. Clean, predictable — a "Help &amp; Questions" category is always Q&amp;A.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>No per-thread decision needed</li><li>Users know what to expect per category</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Can't have a Q&amp;A thread in a Discussion category</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="thread" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Thread-level — author chooses when creating</h3>
+      <p>A toggle when composing a new thread: "This is a question — mark best answer when resolved." Works in any category.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Flexible — questions can appear anywhere</li><li>Author intent is explicit</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Relies on users remembering to toggle it</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="both" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Both — category default + per-thread override (Recommended)</h3>
+      <p>Categories can be set to Q&amp;A mode (all threads default to Q&amp;A), but any thread can override it either way. Most flexible.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Best of both worlds</li><li>Help category auto-enables Q&amp;A; edge cases still work</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Slightly more schema work</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,165 @@
+<h2>Deck Folder System — Full Design</h2>
+<p class="subtitle">Here's how the whole thing fits together. Review each area, then let me know in the terminal.</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px;">
+
+  <!-- Left: DeckList toolbar + dropdown open -->
+  <div>
+    <div class="label" style="margin-bottom:8px;">DECK LIST — TOOLBAR + FOLDER DROPDOWN</div>
+    <div style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px;font-size:11px;">
+
+      <!-- Toolbar -->
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+        <div style="background:rgba(139,92,246,0.25);border:1px solid rgba(139,92,246,0.5);border-radius:6px;padding:4px 12px;color:#c4b5fd;cursor:pointer;position:relative;">
+          📁 Commander ▾
+        </div>
+        <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 12px;color:rgba(255,255,255,0.3);">Search decks…</div>
+        <div style="background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.4);border-radius:6px;padding:4px 10px;color:#86efac;">+ New Deck</div>
+      </div>
+
+      <!-- Dropdown tree (open) -->
+      <div style="background:rgba(15,15,25,0.95);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px;margin-bottom:10px;">
+        <!-- All Decks -->
+        <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;color:rgba(255,255,255,0.6);cursor:pointer;margin-bottom:2px;" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='transparent'">
+          <span>🗂</span><span>All Decks</span><span style="margin-left:auto;color:rgba(255,255,255,0.3);font-size:10px;">14</span>
+        </div>
+        <div style="height:1px;background:rgba(255,255,255,0.08);margin:4px 0;"></div>
+        <!-- Commander folder (active) -->
+        <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;background:rgba(139,92,246,0.25);color:#c4b5fd;cursor:pointer;margin-bottom:2px;">
+          <span>▾</span><span>📁 Commander</span><span style="margin-left:auto;color:#a78bfa;font-size:10px;">7</span>
+        </div>
+        <!-- Commander children -->
+        <div style="margin-left:16px;">
+          <div style="display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:4px;color:rgba(255,255,255,0.6);cursor:pointer;margin-bottom:1px;" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='transparent'">
+            <span>▸</span><span>📁 Competitive</span><span style="margin-left:auto;color:rgba(255,255,255,0.3);font-size:10px;">3</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:4px;color:rgba(255,255,255,0.6);cursor:pointer;margin-bottom:1px;" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='transparent'">
+            <span>▸</span><span>📁 Casual</span><span style="margin-left:auto;color:rgba(255,255,255,0.3);font-size:10px;">4</span>
+          </div>
+        </div>
+        <!-- Modern folder -->
+        <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;color:rgba(255,255,255,0.6);cursor:pointer;margin-bottom:2px;" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='transparent'">
+          <span>▸</span><span>📁 Modern</span><span style="margin-left:auto;color:rgba(255,255,255,0.3);font-size:10px;">2</span>
+        </div>
+        <!-- Brews folder -->
+        <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;color:rgba(255,255,255,0.6);cursor:pointer;margin-bottom:4px;" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='transparent'">
+          <span>▸</span><span>📁 Brews</span><span style="margin-left:auto;color:rgba(255,255,255,0.3);font-size:10px;">2</span>
+        </div>
+        <!-- New folder inline input -->
+        <div style="display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:4px;border:1px dashed rgba(255,255,255,0.2);">
+          <span style="color:rgba(255,255,255,0.3);">📁</span>
+          <input placeholder="New folder name…" style="background:transparent;border:none;outline:none;color:white;font-size:11px;flex:1;" />
+          <span style="color:rgba(255,255,255,0.3);cursor:pointer;">+ add</span>
+        </div>
+      </div>
+
+      <!-- Deck cards (filtered to Commander folder) -->
+      <div style="color:rgba(255,255,255,0.4);font-size:10px;margin-bottom:6px;">COMMANDER · 7 decks</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div style="background:rgba(255,255,255,0.06);border-radius:6px;padding:8px;border:1px solid rgba(255,255,255,0.08);">
+          <div style="color:white;font-size:11px;font-weight:600;">Atraxa, Praetors'…</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:10px;">Commander · $142</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border-radius:6px;padding:8px;border:1px solid rgba(255,255,255,0.08);">
+          <div style="color:white;font-size:11px;font-weight:600;">Ur-Dragon</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:10px;">Commander · $87</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: context menu + settings tab -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
+
+    <!-- Context menu on deck -->
+    <div>
+      <div class="label" style="margin-bottom:8px;">RIGHT-CLICK CONTEXT MENU ON A DECK</div>
+      <div style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px;font-size:11px;">
+        <div style="background:rgba(255,255,255,0.06);border-radius:6px;padding:8px;border:1px solid rgba(255,255,255,0.12);margin-bottom:8px;opacity:0.5;">
+          <div style="color:white;font-weight:600;">Atraxa, Praetors' Voice</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:10px;">Commander · $142</div>
+        </div>
+        <!-- Context menu -->
+        <div style="background:rgba(20,20,35,0.98);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px;width:160px;">
+          <div style="padding:6px 10px;color:white;border-radius:4px;cursor:pointer;" onmouseover="this.style.background='rgba(139,92,246,0.3)'" onmouseout="this.style.background='transparent'">📂 Move to folder…</div>
+          <div style="padding:6px 10px;color:rgba(255,255,255,0.6);border-radius:4px;cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='transparent'">✏️ Rename deck</div>
+          <div style="height:1px;background:rgba(255,255,255,0.08);margin:2px 4px;"></div>
+          <div style="padding:6px 10px;color:rgba(255,100,100,0.8);border-radius:4px;cursor:pointer;" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'">🗑 Delete deck</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Move to folder modal -->
+    <div>
+      <div class="label" style="margin-bottom:8px;">"MOVE TO FOLDER" PICKER</div>
+      <div style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px;font-size:11px;">
+        <div style="color:rgba(255,255,255,0.5);margin-bottom:8px;">Moving: <span style="color:white">Atraxa</span></div>
+        <div style="background:rgba(15,15,25,0.95);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px;max-height:110px;overflow:auto;">
+          <div style="padding:4px 6px;border-radius:3px;color:rgba(255,255,255,0.5);cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='transparent'">⬜ (root — no folder)</div>
+          <div style="padding:4px 6px;border-radius:3px;background:rgba(139,92,246,0.25);color:#c4b5fd;cursor:pointer;">📁 Commander ✓ current</div>
+          <div style="padding:4px 16px;border-radius:3px;color:rgba(255,255,255,0.5);cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='transparent'">📁 Competitive</div>
+          <div style="padding:4px 16px;border-radius:3px;color:rgba(255,255,255,0.5);cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='transparent'">📁 Casual</div>
+          <div style="padding:4px 6px;border-radius:3px;color:rgba(255,255,255,0.5);cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='transparent'">📁 Modern</div>
+          <div style="padding:4px 6px;border-radius:3px;color:rgba(255,255,255,0.5);cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='transparent'">📁 Brews</div>
+        </div>
+        <button style="margin-top:8px;width:100%;padding:5px;background:rgba(139,92,246,0.5);border:none;border-radius:5px;color:white;cursor:pointer;">Move Here</button>
+      </div>
+    </div>
+
+    <!-- Settings tab -->
+    <div>
+      <div class="label" style="margin-bottom:8px;">SETTINGS MODAL — "DECK FOLDERS" TAB</div>
+      <div style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px;font-size:11px;">
+        <div style="display:flex;gap:6px;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:6px;flex-wrap:wrap;">
+          <div style="padding:3px 8px;color:rgba(255,255,255,0.4);cursor:pointer;">Profile</div>
+          <div style="padding:3px 8px;color:rgba(255,255,255,0.4);cursor:pointer;">Privacy</div>
+          <div style="padding:3px 8px;color:rgba(255,255,255,0.4);cursor:pointer;">Pricing</div>
+          <div style="padding:3px 8px;background:rgba(139,92,246,0.3);border-radius:4px;color:#c4b5fd;cursor:pointer;">Deck Folders</div>
+          <div style="padding:3px 8px;color:rgba(255,255,255,0.4);cursor:pointer;">Portfolio</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px;">
+          <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:rgba(255,255,255,0.05);border-radius:4px;">
+            <span>▸ 📁 Commander</span>
+            <span style="margin-left:auto;display:flex;gap:4px;">
+              <span style="color:rgba(255,255,255,0.4);cursor:pointer;">✏️</span>
+              <span style="color:rgba(255,100,100,0.6);cursor:pointer;">🗑</span>
+            </span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;padding:5px 8px 5px 22px;background:rgba(255,255,255,0.03);border-radius:4px;">
+            <span>📁 Competitive</span>
+            <span style="margin-left:auto;display:flex;gap:4px;">
+              <span style="color:rgba(255,255,255,0.4);cursor:pointer;">✏️</span>
+              <span style="color:rgba(255,100,100,0.6);cursor:pointer;">🗑</span>
+            </span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;padding:5px 8px 5px 22px;background:rgba(255,255,255,0.03);border-radius:4px;">
+            <span>📁 Casual</span>
+            <span style="margin-left:auto;display:flex;gap:4px;">
+              <span style="color:rgba(255,255,255,0.4);cursor:pointer;">✏️</span>
+              <span style="color:rgba(255,100,100,0.6);cursor:pointer;">🗑</span>
+            </span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:rgba(255,255,255,0.05);border-radius:4px;">
+            <span>▸ 📁 Modern</span>
+            <span style="margin-left:auto;display:flex;gap:4px;">
+              <span style="color:rgba(255,255,255,0.4);cursor:pointer;">✏️</span>
+              <span style="color:rgba(255,100,100,0.6);cursor:pointer;">🗑</span>
+            </span>
+          </div>
+          <button style="margin-top:4px;padding:5px;background:rgba(255,255,255,0.08);border:1px dashed rgba(255,255,255,0.2);border-radius:5px;color:rgba(255,255,255,0.5);cursor:pointer;width:100%;">+ New Folder</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div style="margin-top:16px;padding:12px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);border-radius:8px;font-size:12px;">
+  <strong style="color:#c4b5fd;">Key behaviors:</strong>
+  <ul style="color:rgba(255,255,255,0.7);margin:6px 0 0 16px;line-height:1.8;">
+    <li>Deleting a folder moves its decks to root (not deleted)</li>
+    <li>Deleting a parent folder also deletes child folders (decks moved to root)</li>
+    <li>Deck count badge on each folder row shows only direct children</li>
+    <li>Selecting a folder in dropdown filters to that folder only (not subfolders)</li>
+  </ul>
+</div>

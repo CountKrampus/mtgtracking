@@ -1,0 +1,80 @@
+<h2>Deck Folder Layout</h2>
+<p class="subtitle">Where should the folder tree live in the Deck Builder?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="display:flex;height:180px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;font-size:11px;">
+        <div style="width:38%;background:rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.1);padding:8px;flex-shrink:0;">
+          <div style="color:#a78bfa;font-weight:600;margin-bottom:6px;font-size:10px;letter-spacing:0.05em;">FOLDERS</div>
+          <div style="color:white;padding:2px 4px;background:rgba(139,92,246,0.3);border-radius:3px;margin-bottom:2px;">📁 All Decks</div>
+          <div style="color:rgba(255,255,255,0.7);padding:2px 4px 2px 16px;margin-bottom:2px;">📂 Commander</div>
+          <div style="color:rgba(255,255,255,0.5);padding:2px 4px 2px 28px;margin-bottom:2px;">📄 Atraxa</div>
+          <div style="color:rgba(255,255,255,0.5);padding:2px 4px 2px 28px;margin-bottom:2px;">📄 Ur-Dragon</div>
+          <div style="color:rgba(255,255,255,0.7);padding:2px 4px 2px 16px;margin-bottom:2px;">📂 Competitive</div>
+          <div style="color:rgba(255,255,255,0.7);padding:2px 4px 2px 16px;">📂 Casual</div>
+        </div>
+        <div style="flex:1;padding:8px;">
+          <div style="color:rgba(255,255,255,0.4);font-size:10px;margin-bottom:6px;">COMMANDER · 3 decks</div>
+          <div style="background:rgba(255,255,255,0.05);border-radius:4px;padding:6px;margin-bottom:4px;">Atraxa, Praetors' Voice</div>
+          <div style="background:rgba(255,255,255,0.05);border-radius:4px;padding:6px;margin-bottom:4px;">Ur-Dragon</div>
+          <div style="background:rgba(255,255,255,0.05);border-radius:4px;padding:6px;">Teysa Karlov</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Left Sidebar</h3>
+      <p>Folder tree on the left, deck list on the right. Classic VS Code / file explorer feel. Always visible, easy to navigate.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="height:180px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;padding:8px;font-size:11px;">
+        <div style="color:rgba(255,255,255,0.4);font-size:10px;margin-bottom:6px;">ALL DECKS &gt; COMMANDER &gt; COMPETITIVE</div>
+        <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+          <div style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.4);border-radius:6px;padding:4px 10px;color:#a78bfa;">📁 Competitive</div>
+          <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 10px;color:rgba(255,255,255,0.6);">📁 Casual</div>
+          <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 10px;color:rgba(255,255,255,0.6);">📁 Brews</div>
+          <div style="background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.15);border-radius:6px;padding:4px 10px;color:rgba(255,255,255,0.3);">+ New folder</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div style="background:rgba(255,255,255,0.05);border-radius:4px;padding:8px;">Atraxa, Praetors'…</div>
+          <div style="background:rgba(255,255,255,0.05);border-radius:4px;padding:8px;">Tymna & Thrasios</div>
+          <div style="background:rgba(255,255,255,0.05);border-radius:4px;padding:8px;">Kinnan, Bonder…</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Inline Breadcrumb</h3>
+      <p>Breadcrumb path at top, subfolders shown as clickable tiles above decks. Drill into folders like a file browser. More deck space.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="height:180px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;padding:8px;font-size:11px;">
+        <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">
+          <div style="background:rgba(255,255,255,0.08);border-radius:6px;padding:4px 12px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);">📁 Folders ▾</div>
+          <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 12px;color:rgba(255,255,255,0.3);">Search decks…</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;margin-bottom:8px;">
+          <div style="margin-bottom:4px;">📁 Commander</div>
+          <div style="padding-left:14px;margin-bottom:2px;color:rgba(255,255,255,0.7);">📂 Competitive</div>
+          <div style="padding-left:14px;color:rgba(255,255,255,0.7);">📂 Casual</div>
+          <div style="margin-top:4px;">📁 Modern</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <div style="background:rgba(139,92,246,0.2);border-radius:4px;padding:3px 8px;color:#c4b5fd;font-size:10px;">Commander/Competitive</div>
+          <div style="background:rgba(255,255,255,0.05);border-radius:4px;padding:3px 8px;color:rgba(255,255,255,0.5);font-size:10px;">x</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Dropdown Filter</h3>
+      <p>Folder button in the toolbar opens a dropdown tree. Select a folder to filter the deck list. Minimal space, folder tree is on-demand.</p>
+    </div>
+  </div>
+
+</div>

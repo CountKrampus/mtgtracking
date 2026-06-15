@@ -1,0 +1,40 @@
+<h2>Who can mark a Best Answer?</h2>
+<p class="subtitle">When a Q&A thread gets a reply that fully answers the question, who gets to mark it as resolved?</p>
+
+<div class="options">
+  <div class="option" data-choice="op" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Original poster only</h3>
+      <p>Only the person who asked the question can mark the best answer. Their thread, their call.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Simple, no disputes</li><li>Answerer earns rep only when asker agrees</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Thread stays unresolved if OP goes inactive</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="op-mods" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>OP + moderators (Recommended)</h3>
+      <p>The asker marks their own answer. If they're inactive, a mod can step in and mark it resolved to keep the thread useful.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Threads don't go stale</li><li>Mods can curate quality answers</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Mods must occasionally review threads</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="anyone" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Anyone (community-voted)</h3>
+      <p>Like Stack Overflow — the highest-upvoted answer automatically gets the "accepted" highlight, no manual marking needed.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Fully automated, scales well</li><li>No inactive-OP problem</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Popular ≠ correct; first good answer may not win</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

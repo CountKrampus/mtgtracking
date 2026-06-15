@@ -1,0 +1,196 @@
+<h2>Forum — Frontend Layout</h2>
+<p class="subtitle">5 new components. Each screen below shows the view at that level of navigation.</p>
+
+<div class="section">
+  <h3>Screen 1 — Forum home (category list)</h3>
+  <div class="mockup">
+    <div class="mockup-header">Forum.js — /forum</div>
+    <div class="mockup-body" style="padding:14px;font-size:13px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-size:16px;font-weight:bold;color:#e5e7eb;">Community Forum</div>
+        <button class="mock-button" style="font-size:11px;">+ New Thread</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.25);border-radius:8px;padding:12px;">
+          <div style="font-size:18px;margin-bottom:4px;">🃏</div>
+          <div style="font-weight:bold;color:#a78bfa;">Deck Help</div>
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:6px;">Share builds, get feedback, discuss strategy</div>
+          <div style="font-size:11px;color:#6b7280;">142 threads · Last: Rate my Atraxa...</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;">
+          <div style="font-size:18px;margin-bottom:4px;">💱</div>
+          <div style="font-weight:bold;color:#d1d5db;">Trading</div>
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:6px;">Buy, sell, trade cards and sealed product</div>
+          <div style="font-size:11px;color:#6b7280;">89 threads · Last: WTT Dual Lands...</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;">
+          <div style="font-size:18px;margin-bottom:4px;">💬</div>
+          <div style="font-weight:bold;color:#d1d5db;">General Discussion</div>
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:6px;">MTG news, meta talk, lore, and off-topic</div>
+          <div style="font-size:11px;color:#6b7280;">203 threads · Last: New set spoilers!</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;">
+          <div style="font-size:18px;margin-bottom:4px;">📢</div>
+          <div style="font-weight:bold;color:#d1d5db;">Community</div>
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:6px;">Events, playgroup finding, announcements</div>
+          <div style="font-size:11px;color:#6b7280;">57 threads · Last: FNM results week...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Screen 2 — Thread list (inside a category)</h3>
+  <div class="mockup">
+    <div class="mockup-header">ForumCategoryView.js — /forum/deck-help</div>
+    <div class="mockup-body" style="padding:14px;font-size:13px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="color:#9ca3af;cursor:pointer;">Forum</span>
+          <span style="color:#6b7280;">›</span>
+          <span style="color:#a78bfa;">🃏 Deck Help</span>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <select class="mock-input" style="font-size:11px;padding:3px 6px;width:auto;">
+            <option>Latest Reply</option>
+            <option>Hot</option>
+            <option>New</option>
+          </select>
+          <button class="mock-button" style="font-size:11px;">+ New Thread</button>
+        </div>
+      </div>
+      <div style="border:1px solid rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;">
+        <div style="display:grid;grid-template-columns:1fr 60px 60px 100px;padding:6px 10px;background:rgba(255,255,255,0.04);font-size:10px;color:#6b7280;text-transform:uppercase;">
+          <span>Thread</span><span>Replies</span><span>Upvotes</span><span>Last Reply</span>
+        </div>
+        <div style="padding:10px;border-top:1px solid rgba(255,255,255,0.06);display:grid;grid-template-columns:1fr 60px 60px 100px;align-items:center;">
+          <div>
+            <div style="display:flex;gap:5px;align-items:center;">
+              <span style="background:#7c3aed;color:#e9d5ff;font-size:9px;padding:1px 5px;border-radius:3px;">📌 PINNED</span>
+              <span style="color:#e5e7eb;font-weight:500;">Rate my Atraxa Superfriends build</span>
+            </div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px;">by KingSlayer99 · 🃏 Deck attached</div>
+          </div>
+          <span style="color:#9ca3af;font-size:12px;text-align:center;">24</span>
+          <span style="color:#9ca3af;font-size:12px;text-align:center;">↑ 18</span>
+          <span style="color:#6b7280;font-size:11px;">2h ago</span>
+        </div>
+        <div style="padding:10px;border-top:1px solid rgba(255,255,255,0.06);display:grid;grid-template-columns:1fr 60px 60px 100px;align-items:center;">
+          <div>
+            <span style="color:#d1d5db;">Best budget removal for EDH?</span>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px;">by Spellslinger42</div>
+          </div>
+          <span style="color:#9ca3af;font-size:12px;text-align:center;">11</span>
+          <span style="color:#9ca3af;font-size:12px;text-align:center;">↑ 7</span>
+          <span style="color:#6b7280;font-size:11px;">5h ago</span>
+        </div>
+        <div style="padding:10px;border-top:1px solid rgba(255,255,255,0.06);display:grid;grid-template-columns:1fr 60px 60px 100px;align-items:center;">
+          <div>
+            <div style="display:flex;gap:5px;align-items:center;">
+              <span style="background:#374151;color:#9ca3af;font-size:9px;padding:1px 5px;border-radius:3px;">🔒 LOCKED</span>
+              <span style="color:#6b7280;">Banned card list discussion</span>
+            </div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px;">by Mod_Benny</div>
+          </div>
+          <span style="color:#9ca3af;font-size:12px;text-align:center;">67</span>
+          <span style="color:#9ca3af;font-size:12px;text-align:center;">↑ 31</span>
+          <span style="color:#6b7280;font-size:11px;">3d ago</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Screen 3 — Thread view with nested replies</h3>
+  <div class="mockup">
+    <div class="mockup-header">ForumThreadView.js — /forum/threads/:id</div>
+    <div class="mockup-body" style="padding:14px;font-size:13px;">
+      <div style="margin-bottom:10px;font-size:11px;color:#9ca3af;">Forum › 🃏 Deck Help › <span style="color:#d1d5db;">Rate my Atraxa build</span></div>
+      <div style="border:1px solid rgba(124,58,237,0.3);border-radius:8px;padding:12px;margin-bottom:10px;background:rgba(124,58,237,0.06);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold;">K</div>
+            <div><strong>KingSlayer99</strong> <span style="color:#9ca3af;font-size:11px;">3h ago</span></div>
+          </div>
+          <span style="color:#a78bfa;font-size:12px;cursor:pointer;">↑ 18 upvote</span>
+        </div>
+        <p style="color:#d1d5db;margin:0 0 8px;">Looking for cut suggestions around the 4-drop slot. Running a superfriends shell.</p>
+        <div style="background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);border-radius:6px;padding:8px;display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span>🃏</span>
+          <div><div style="font-weight:bold;color:#a78bfa;font-size:12px;">Atraxa Superfriends</div><div style="font-size:10px;color:#9ca3af;">EDH · 98 cards · $420</div></div>
+          <span style="margin-left:auto;color:#7c3aed;font-size:11px;cursor:pointer;">View →</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="mock-button" style="font-size:11px;">↩ Reply</button>
+        </div>
+      </div>
+
+      <div style="margin-left:0;margin-bottom:6px;">
+        <div style="border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:10px;background:rgba(255,255,255,0.03);">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:22px;height:22px;border-radius:50%;background:#1d4ed8;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;">R</div>
+              <strong style="font-size:12px;">Reply1</strong> <span style="color:#9ca3af;font-size:10px;">2h ago</span>
+            </div>
+            <span style="color:#9ca3af;font-size:11px;cursor:pointer;">↑ 9</span>
+          </div>
+          <p style="color:#d1d5db;margin:0 0 6px;font-size:12px;">Cut <span style="color:#60a5fa;text-decoration:underline;">Deepglow Skate</span> — Vorinclex does the same job faster</p>
+          <button class="mock-button" style="font-size:10px;">↩ Reply</button>
+
+          <div style="margin-left:16px;margin-top:8px;border-left:2px solid #374151;padding-left:10px;">
+            <div style="border:1px solid rgba(255,255,255,0.06);border-radius:5px;padding:8px;background:rgba(255,255,255,0.02);">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div style="width:18px;height:18px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;color:white;font-size:9px;">K</div>
+                  <strong style="font-size:11px;">KingSlayer99</strong> <span style="color:#9ca3af;font-size:10px;">1h ago · OP</span>
+                </div>
+                <span style="color:#9ca3af;font-size:11px;">↑ 4</span>
+              </div>
+              <p style="color:#d1d5db;margin:0;font-size:11px;">Good point, swapping it out now!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;">
+        <input class="mock-input" placeholder="Write a reply... (supports [[Card Name]] for card references)" style="width:100%;margin-bottom:6px;">
+        <div style="display:flex;gap:6px;">
+          <button class="mock-button" style="font-size:11px;">📎 Attach Deck</button>
+          <button class="mock-button" style="font-size:11px;margin-left:auto;">Post Reply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>New components summary</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+    <div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:10px;">
+      <div style="color:#a78bfa;font-weight:bold;margin-bottom:4px;">Forum.js</div>
+      <div style="color:#9ca3af;">Router — renders category list, thread list, or thread view based on URL</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:10px;">
+      <div style="color:#a78bfa;font-weight:bold;margin-bottom:4px;">ForumCategoryList.js</div>
+      <div style="color:#9ca3af;">2×2 grid of category cards with thread counts</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:10px;">
+      <div style="color:#a78bfa;font-weight:bold;margin-bottom:4px;">ForumCategoryView.js</div>
+      <div style="color:#9ca3af;">Paginated thread list with sort, pinned + locked badges</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:10px;">
+      <div style="color:#a78bfa;font-weight:bold;margin-bottom:4px;">ForumThreadView.js</div>
+      <div style="color:#9ca3af;">Thread + nested posts + reply composer + upvotes</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:10px;">
+      <div style="color:#a78bfa;font-weight:bold;margin-bottom:4px;">ForumPostComposer.js</div>
+      <div style="color:#9ca3af;">Shared composer for threads and replies — [[Card]] syntax, deck attach button</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:10px;">
+      <div style="color:#a78bfa;font-weight:bold;margin-bottom:4px;">Admin: ForumModerationTab.js</div>
+      <div style="color:#9ca3af;">Mute/unmute users, view mute history — lives in Admin → Community</div>
+    </div>
+  </div>
+</div>

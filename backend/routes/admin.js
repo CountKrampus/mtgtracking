@@ -596,4 +596,177 @@ router.post('/init', async (req, res) => {
   }
 });
 
+// Mute Management Endpoints
+const Ban = require('../models/Ban');
+const SpamFilterConfig = require('../models/SpamFilterConfig');
+const { checkSpam } = require('../utils/spamFilter');
+
+const MUTE_DURATIONS = {
+  1: 3600000,    // 1 hour
+  2: 86400000,   // 1 day
+  3: 604800000   // 1 week
+};
+
+/**
+ * POST /api/admin/mute/:userId - Create or escalate mute
+ */
+router.post('/mute/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { reason, autoEscalate = true } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const activeMute = await Ban.findOne({
+      userId,
+      type: 'mute',
+      isActive: true,
+      expiresAt: { $gt: new Date() }
+    });
+
+    let muteLevel = 1;
+    let previousMutes = [];
+
+    if (activeMute && autoEscalate) {
+      muteLevel = Math.min(activeMute.muteLevel + 1, 3);
+      previousMutes = activeMute.previousMutes;
+      previousMutes.push({
+        muteLevel: activeMute.muteLevel,
+        startedAt: activeMute.createdAt,
+        endedAt: new Date(),
+        reason: activeMute.reason
+      });
+      activeMute.isActive = false;
+      await activeMute.save();
+    }
+
+    const newMute = new Ban({
+      userId,
+      type: 'mute',
+      reason,
+      muteLevel,
+      durationMs: MUTE_DURATIONS[muteLevel],
+      expiresAt: new Date(Date.now() + MUTE_DURATIONS[muteLevel]),
+      autoEscalate,
+      previousMutes,
+      createdBy: req.user._id
+    });
+
+    await newMute.save();
+
+    res.json({
+      message: `User muted at level ${muteLevel}`,
+      mute: newMute,
+      expiresAt: newMute.expiresAt
+    });
+  } catch (error) {
+    console.error('Create mute error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * DELETE /api/admin/mute/:userId - Revoke mute
+ */
+router.delete('/mute/:userId', async (req, res) => {
+  try {
+    const result = await Ban.findOneAndUpdate(
+      { userId: req.params.userId, type: 'mute', isActive: true },
+      { isActive: false },
+      { new: true }
+    );
+
+    if (!result) {
+      return res.status(404).json({ message: 'No active mute found' });
+    }
+
+    res.json({ message: 'Mute revoked', mute: result });
+  } catch (error) {
+    console.error('Revoke mute error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/mutes - List active mutes
+ */
+router.get('/mutes', async (req, res) => {
+  try {
+    const mutes = await Ban.find({
+      type: 'mute',
+      isActive: true,
+      expiresAt: { $gt: new Date() }
+    })
+      .populate('userId', 'username displayName')
+      .populate('createdBy', 'username displayName')
+      .sort({ expiresAt: 1 });
+
+    res.json(mutes.map(m => ({
+      ...m.toObject(),
+      expiresIn: m.expiresAt - new Date()
+    })));
+  } catch (error) {
+    console.error('List mutes error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/spam-config - Get spam filter config
+ */
+router.get('/spam-config', async (req, res) => {
+  try {
+    const config = await SpamFilterConfig.getConfig();
+    res.json(config);
+  } catch (error) {
+    console.error('Get spam config error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * PUT /api/admin/spam-config - Update spam config
+ */
+router.put('/spam-config', async (req, res) => {
+  try {
+    const { sensitivity, bannedWords, minReputationToAutoFlag, maxPostsPerHourPerUser } = req.body;
+
+    const config = await SpamFilterConfig.getConfig();
+    if (sensitivity) config.sensitivity = sensitivity;
+    if (bannedWords) config.bannedWords = bannedWords;
+    if (minReputationToAutoFlag !== undefined) config.minReputationToAutoFlag = minReputationToAutoFlag;
+    if (maxPostsPerHourPerUser !== undefined) config.maxPostsPerHourPerUser = maxPostsPerHourPerUser;
+
+    await config.save();
+    res.json(config);
+  } catch (error) {
+    console.error('Update spam config error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/spam-config/test - Test spam filter
+ */
+router.post('/spam-config/test', async (req, res) => {
+  try {
+    const { text } = req.body;
+    const user = await User.findById(req.user._id);
+
+    const { flagged, reasons } = await checkSpam(
+      req.user._id,
+      text,
+      user.reputation || 0
+    );
+
+    res.json({ flagged, reasons });
+  } catch (error) {
+    console.error('Test spam filter error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

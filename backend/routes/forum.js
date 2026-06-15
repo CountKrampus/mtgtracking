@@ -5,6 +5,10 @@ const ForumCategory = require('../models/ForumCategory');
 const ForumThread = require('../models/ForumThread');
 const ForumPost = require('../models/ForumPost');
 const { verifyToken, requireAuth } = require('../middleware/auth');
+const { checkMute } = require('../middleware/muteEnforcer');
+const { checkSpam } = require('../utils/spamFilter');
+const Ban = require('../models/Ban');
+const User = require('../models/User');
 
 // GET /api/forum/categories - List all categories with subcategories
 router.get('/categories', async (req, res) => {
@@ -140,7 +144,7 @@ router.post('/threads', verifyToken, requireAuth, async (req, res) => {
 });
 
 // POST /api/forum/posts - Create new post (requires auth)
-router.post('/posts', verifyToken, requireAuth, async (req, res) => {
+router.post('/posts', verifyToken, requireAuth, checkMute, async (req, res) => {
   try {
     const { threadId, body, bodyFormat = 'markdown' } = req.body;
 
@@ -155,6 +159,17 @@ router.post('/posts', verifyToken, requireAuth, async (req, res) => {
 
     if (thread.isLocked) {
       return res.status(403).json({ message: 'Thread is locked' });
+    }
+
+    // Check spam
+    const user = await User.findById(req.user._id);
+    const { flagged, reasons } = await checkSpam(req.user._id, body, user.reputation || 0);
+
+    if (flagged) {
+      return res.status(400).json({
+        message: 'Your post was flagged as spam',
+        reasons
+      });
     }
 
     const post = new ForumPost({

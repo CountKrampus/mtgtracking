@@ -1,0 +1,191 @@
+<h2>Flagging + Shadow Ban — Full Design</h2>
+<p class="subtitle">Four sections. Read through and let me know in the terminal if anything needs changing.</p>
+
+<div class="section">
+  <h3>1 — Data Models</h3>
+
+  <p><strong>New: <code>ContentFlag</code></strong></p>
+  <div class="mockup">
+    <div class="mockup-header">backend/models/ContentFlag.js</div>
+    <div class="mockup-body" style="font-size:13px;padding:12px;font-family:monospace;color:#d1d5db;">
+      targetType: &nbsp;&nbsp;'forum_thread' | 'forum_post' | 'chat_message'<br>
+      targetId: &nbsp;&nbsp;&nbsp;ObjectId (indexed)<br>
+      reportedBy: &nbsp;ObjectId → User<br>
+      reason: &nbsp;&nbsp;&nbsp;&nbsp;'spam' | 'harassment' | 'inappropriate' | 'off_topic'<br>
+      status: &nbsp;&nbsp;&nbsp;&nbsp;'pending' | 'approved' | 'dismissed' &nbsp;(default pending)<br>
+      reviewedBy: &nbsp;ObjectId → User (null until reviewed)<br>
+      reviewNotes: String (optional, max 500 chars)<br>
+      createdAt: &nbsp;&nbsp;Date (indexed)<br>
+      resolvedAt: &nbsp;Date (null until reviewed)<br>
+      <br>
+      <span style="color:#9ca3af;">// Unique: one flag per user per item</span><br>
+      <span style="color:#a78bfa;">index: { targetType, targetId, reportedBy }, unique</span>
+    </div>
+  </div>
+
+  <p style="margin-top:16px;"><strong>Existing models — fields added:</strong></p>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <tr style="color:#9ca3af;border-bottom:1px solid rgba(255,255,255,0.08);">
+      <th style="text-align:left;padding:6px 8px;">Model</th>
+      <th style="text-align:left;padding:6px 8px;">New fields</th>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+      <td style="padding:6px 8px;color:#a78bfa;">User</td>
+      <td style="padding:6px 8px;color:#d1d5db;font-family:monospace;">isShadowBanned: Boolean (default false)</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+      <td style="padding:6px 8px;color:#a78bfa;">ForumThread</td>
+      <td style="padding:6px 8px;color:#d1d5db;font-family:monospace;">isFlagHidden: Boolean &nbsp;isShadowHidden: Boolean</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+      <td style="padding:6px 8px;color:#a78bfa;">ForumPost</td>
+      <td style="padding:6px 8px;color:#d1d5db;font-family:monospace;">isFlagHidden: Boolean &nbsp;isShadowHidden: Boolean</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 8px;color:#a78bfa;">Message (chat)</td>
+      <td style="padding:6px 8px;color:#d1d5db;font-family:monospace;">isFlagHidden: Boolean &nbsp;isShadowHidden: Boolean</td>
+    </tr>
+  </table>
+  <p style="color:#9ca3af;font-size:12px;margin-top:8px;"><code>isFlagHidden</code> = hidden pending mod review (auto at 3 flags). &nbsp;<code>isShadowHidden</code> = hidden because author is shadow banned. &nbsp;Shadow-banned users always see their own content.</p>
+</div>
+
+<div class="section">
+  <h3>2 — API Routes</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <tr style="color:#9ca3af;border-bottom:1px solid rgba(255,255,255,0.08);">
+      <th style="text-align:left;padding:6px 8px;">Method</th>
+      <th style="text-align:left;padding:6px 8px;">Path</th>
+      <th style="text-align:left;padding:6px 8px;">Description</th>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+      <td style="padding:6px 8px;color:#34d399;">POST</td>
+      <td style="padding:6px 8px;font-family:monospace;color:#d1d5db;">/api/forum/threads/:id/flag</td>
+      <td style="padding:6px 8px;color:#9ca3af;">Flag a thread (requireAuth)</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+      <td style="padding:6px 8px;color:#34d399;">POST</td>
+      <td style="padding:6px 8px;font-family:monospace;color:#d1d5db;">/api/forum/posts/:id/flag</td>
+      <td style="padding:6px 8px;color:#9ca3af;">Flag a reply (requireAuth)</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+      <td style="padding:6px 8px;color:#34d399;">POST</td>
+      <td style="padding:6px 8px;font-family:monospace;color:#d1d5db;">/api/messages/:id/flag</td>
+      <td style="padding:6px 8px;color:#9ca3af;">Flag a chat message (requireAuth)</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+      <td style="padding:6px 8px;color:#60a5fa;">GET</td>
+      <td style="padding:6px 8px;font-family:monospace;color:#d1d5db;">/api/admin/flags</td>
+      <td style="padding:6px 8px;color:#9ca3af;">Flag queue — ?status=pending&page=1 (requireAdmin)</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+      <td style="padding:6px 8px;color:#fbbf24;">PUT</td>
+      <td style="padding:6px 8px;font-family:monospace;color:#d1d5db;">/api/admin/flags/:id/review</td>
+      <td style="padding:6px 8px;color:#9ca3af;">Approve or dismiss a flag (requireAdmin)</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+      <td style="padding:6px 8px;color:#34d399;">POST</td>
+      <td style="padding:6px 8px;font-family:monospace;color:#d1d5db;">/api/admin/users/:id/shadow-ban</td>
+      <td style="padding:6px 8px;color:#9ca3af;">Apply shadow ban (requireAdmin)</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 8px;color:#f87171;">DELETE</td>
+      <td style="padding:6px 8px;font-family:monospace;color:#d1d5db;">/api/admin/users/:id/shadow-ban</td>
+      <td style="padding:6px 8px;color:#9ca3af;">Lift shadow ban (requireAdmin)</td>
+    </tr>
+  </table>
+
+  <p style="color:#9ca3af;font-size:12px;margin-top:10px;"><strong>Auto-hide logic</strong> inside the flag POST handlers: count pending flags for this content — if ≥ 3, set <code>isFlagHidden: true</code> and create an in-app notification for each admin/editor user.</p>
+  <p style="color:#9ca3af;font-size:12px;margin-top:6px;"><strong>Shadow ban apply</strong>: sets <code>User.isShadowBanned = true</code>, bulk-sets <code>isShadowHidden: true</code> on all their existing forum threads, posts, and messages. Lift reverses it. New posts from a shadow-banned user automatically get <code>isShadowHidden: true</code> in the POST handler.</p>
+</div>
+
+<div class="section">
+  <h3>3 — User-Facing UI</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">Flag button on forum post</div>
+      <div class="mockup-body" style="padding:12px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="width:24px;height:24px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:bold;">K</div>
+            <strong style="font-size:12px;">KingSlayer99</strong>
+            <span style="color:#9ca3af;font-size:10px;">2h ago</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="color:#9ca3af;font-size:11px;cursor:pointer;">↑ 4</span>
+            <span style="color:#9ca3af;font-size:11px;cursor:pointer;">↩ Reply</span>
+            <span style="color:#6b7280;font-size:11px;cursor:pointer;" title="Flag this post">🚩</span>
+          </div>
+        </div>
+        <p style="color:#d1d5db;font-size:12px;margin:0;">Cut Deepglow Skate — Vorinclex does the same job faster</p>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">Flag reason picker (modal)</div>
+      <div class="mockup-body" style="padding:12px;font-size:12px;">
+        <p style="color:#d1d5db;margin:0 0 10px;font-weight:500;">Why are you flagging this?</p>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="padding:7px 10px;border:1px solid rgba(255,255,255,0.1);border-radius:6px;cursor:pointer;color:#d1d5db;">🚫 Spam or self-promotion</div>
+          <div style="padding:7px 10px;border:1px solid rgba(239,68,68,0.4);border-radius:6px;cursor:pointer;color:#fca5a5;background:rgba(239,68,68,0.08);">⚠️ Harassment or abuse</div>
+          <div style="padding:7px 10px;border:1px solid rgba(255,255,255,0.1);border-radius:6px;cursor:pointer;color:#d1d5db;">🔞 Inappropriate content</div>
+          <div style="padding:7px 10px;border:1px solid rgba(255,255,255,0.1);border-radius:6px;cursor:pointer;color:#d1d5db;">💬 Off-topic</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="mock-button" style="flex:1;font-size:11px;background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.4);color:#fca5a5;">Submit Report</button>
+          <button class="mock-button" style="font-size:11px;">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup" style="margin-top:12px;">
+    <div class="mockup-header">Hidden content placeholder (auto-hidden at 3 flags)</div>
+    <div class="mockup-body" style="padding:10px;font-size:12px;">
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:8px 12px;color:#6b7280;font-style:italic;display:flex;align-items:center;gap:8px;">
+        🚩 <span>This content has been hidden pending moderator review.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>4 — Admin: Flag Queue Tab</h3>
+  <div class="mockup">
+    <div class="mockup-header">Admin Panel → Moderation → Flag Queue (new tab)</div>
+    <div class="mockup-body" style="padding:12px;font-size:12px;">
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button class="mock-button" style="font-size:11px;background:rgba(124,58,237,0.3);border-color:rgba(124,58,237,0.5);">Pending (4)</button>
+        <button class="mock-button" style="font-size:11px;">Reviewed</button>
+        <input class="mock-input" placeholder="Search by user or content…" style="margin-left:auto;font-size:11px;width:180px;">
+      </div>
+      <div style="border:1px solid rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;">
+        <div style="display:grid;grid-template-columns:80px 1fr 100px 80px 90px;padding:6px 10px;background:rgba(255,255,255,0.04);font-size:10px;color:#6b7280;text-transform:uppercase;">
+          <span>Type</span><span>Content</span><span>Author</span><span>Reason</span><span>Actions</span>
+        </div>
+        <div style="padding:8px 10px;border-top:1px solid rgba(255,255,255,0.06);display:grid;grid-template-columns:80px 1fr 100px 80px 90px;align-items:center;gap:4px;">
+          <span style="background:rgba(124,58,237,0.2);color:#a78bfa;font-size:10px;padding:2px 6px;border-radius:3px;text-align:center;">Forum Post</span>
+          <span style="color:#d1d5db;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">"Cut Deepglow Skate — Vorinclex..."</span>
+          <span style="color:#9ca3af;font-size:11px;">KingSlayer99</span>
+          <span style="color:#fbbf24;font-size:10px;">Harassment</span>
+          <div style="display:flex;gap:4px;">
+            <button class="mock-button" style="font-size:10px;padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border-color:rgba(239,68,68,0.4);">Remove</button>
+            <button class="mock-button" style="font-size:10px;padding:2px 6px;">Dismiss</button>
+          </div>
+        </div>
+        <div style="padding:8px 10px;border-top:1px solid rgba(255,255,255,0.06);display:grid;grid-template-columns:80px 1fr 100px 80px 90px;align-items:center;gap:4px;background:rgba(239,68,68,0.04);">
+          <span style="background:rgba(59,130,246,0.2);color:#93c5fd;font-size:10px;padding:2px 6px;border-radius:3px;text-align:center;">Chat</span>
+          <span style="color:#d1d5db;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">"Buy my cards at discount prices!"</span>
+          <span style="color:#fca5a5;font-size:11px;">SpamUser99 ⚠️ 3 flags</span>
+          <span style="color:#9ca3af;font-size:10px;">Spam</span>
+          <div style="display:flex;gap:4px;">
+            <button class="mock-button" style="font-size:10px;padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border-color:rgba(239,68,68,0.4);">Remove</button>
+            <button class="mock-button" style="font-size:10px;padding:2px 6px;">Dismiss</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:6px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="color:#fca5a5;font-size:12px;">⚠️ <strong>SpamUser99</strong> has 3 confirmed violations — consider a shadow ban</span>
+        <button class="mock-button" style="font-size:11px;background:rgba(239,68,68,0.2);color:#fca5a5;border-color:rgba(239,68,68,0.4);">Shadow Ban</button>
+      </div>
+    </div>
+  </div>
+</div>

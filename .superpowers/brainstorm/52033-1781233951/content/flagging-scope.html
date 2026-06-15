@@ -1,0 +1,40 @@
+<h2>What should users be able to flag?</h2>
+<p class="subtitle">Flagging lets users report bad content for moderator review. Where should it apply?</p>
+
+<div class="options">
+  <div class="option" data-choice="forum-only" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Forum only</h3>
+      <p>Threads and replies in the forum. Chat messages and card comments are already handled by the existing Content Moderation admin tab.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Focused scope, less complexity</li><li>Forum is the main public space</li><li>Faster to build</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Chat / comments have no user-driven reporting</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="all-content" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>All user content</h3>
+      <p>Forum threads, forum replies, chat messages, and card discussion comments — one unified flag queue in the admin panel.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Complete coverage</li><li>Single review workflow for mods</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>More complex — chat messages are ephemeral</li><li>Larger build</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="forum-plus-chat" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Forum + Chat</h3>
+      <p>Forum threads/replies and chat messages. Card comments are lower-volume and already moderated by admins directly.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Covers the two highest-traffic areas</li><li>Balanced scope</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Slightly more work than forum-only</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

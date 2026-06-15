@@ -1,0 +1,115 @@
+<h2>Full Design — Gamification, Q&A, Profiles</h2>
+<p class="subtitle">Three features, all decisions locked in. Review and let me know if anything needs changing.</p>
+
+<div class="section">
+  <h3>1 — Reputation & Badges</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">How rep is earned</div>
+      <div class="mockup-body" style="font-size:13px;padding:12px;">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr style="color:#9ca3af;border-bottom:1px solid rgba(255,255,255,0.08);"><th style="text-align:left;padding:4px 6px;">Action</th><th style="text-align:right;padding:4px 6px;">Points</th></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05);"><td style="padding:5px 6px;color:#d1d5db;">Post a reply</td><td style="text-align:right;color:#34d399;">+1</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05);"><td style="padding:5px 6px;color:#d1d5db;">Create a thread</td><td style="text-align:right;color:#34d399;">+2</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05);"><td style="padding:5px 6px;color:#d1d5db;">Share a deck</td><td style="text-align:right;color:#34d399;">+3</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05);"><td style="padding:5px 6px;color:#d1d5db;">Receive upvote on post</td><td style="text-align:right;color:#fbbf24;">+5</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05);"><td style="padding:5px 6px;color:#d1d5db;">Receive upvote on thread</td><td style="text-align:right;color:#fbbf24;">+10</td></tr>
+          <tr><td style="padding:5px 6px;color:#d1d5db;">Top answer in Q&A thread</td><td style="text-align:right;color:#a78bfa;">+15</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">Auto-awarded milestone badges</div>
+      <div class="mockup-body" style="padding:12px;display:flex;flex-direction:column;gap:6px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#d1d5db;">📝 First Post</span><span style="color:#6b7280;">1 post</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#d1d5db;">💬 Century</span><span style="color:#6b7280;">100 posts</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#d1d5db;">🧵 Thread Starter</span><span style="color:#6b7280;">First thread</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#d1d5db;">🃏 Deck Builder</span><span style="color:#6b7280;">First deck shared</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#d1d5db;">📦 Collector</span><span style="color:#6b7280;">500 cards added</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#d1d5db;">🗓️ Veteran</span><span style="color:#6b7280;">1-year member</span></div>
+        <div style="margin-top:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08);color:#9ca3af;font-style:italic;">+ Admin-granted custom badges (existing Badge model)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup" style="margin-top:12px;">
+    <div class="mockup-header">Inline on forum posts</div>
+    <div class="mockup-body" style="padding:12px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:26px;height:26px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:bold;">K</div>
+        <span style="color:#d1d5db;font-size:13px;font-weight:500;">KingSlayer99</span>
+        <span style="color:#fbbf24;font-size:12px;font-weight:600;">⚡ 342</span>
+        <span style="font-size:13px;" title="First Post">📝</span>
+        <span style="font-size:13px;" title="Century — 100 posts">💬</span>
+        <span style="font-size:13px;" title="Tournament Winner">🏆</span>
+        <span style="color:#9ca3af;font-size:11px;margin-left:4px;">2h ago</span>
+      </div>
+      <p style="color:#d1d5db;font-size:12px;margin:8px 0 0;">Cut Deepglow Skate — Vorinclex does the same job faster.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>2 — Q&A Format</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">Thread list — status badges</div>
+      <div class="mockup-body" style="padding:12px;font-size:12px;display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3);padding:2px 6px;border-radius:4px;font-size:10px;white-space:nowrap;">✅ Answered</span>
+          <span style="color:#d1d5db;">Best budget commander for tokens?</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);padding:2px 6px;border-radius:4px;font-size:10px;white-space:nowrap;">❓ Unanswered</span>
+          <span style="color:#d1d5db;">Why does Rhystic Study always draw hate?</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="background:rgba(107,114,128,0.2);color:#9ca3af;border:1px solid rgba(107,114,128,0.3);padding:2px 6px;border-radius:4px;font-size:10px;white-space:nowrap;">💬 Discussion</span>
+          <span style="color:#d1d5db;">cEDH meta after new banlist</span>
+        </div>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">Best answer — auto-highlighted</div>
+      <div class="mockup-body" style="padding:12px;font-size:12px;">
+        <div style="border:1px solid rgba(52,211,153,0.3);background:rgba(52,211,153,0.05);border-radius:6px;padding:8px 10px;">
+          <div style="color:#34d399;font-size:10px;font-weight:600;margin-bottom:6px;">✅ BEST ANSWER — 12 upvotes</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <span style="color:#d1d5db;font-weight:500;font-size:12px;">DraftQueen</span>
+            <span style="color:#fbbf24;font-size:11px;">⚡ 987</span>
+          </div>
+          <p style="color:#d1d5db;margin:0;">Aesi, Tyrant of Gyre Strait — landfall triggers draw plus extra lands...</p>
+        </div>
+        <p style="color:#6b7280;font-size:11px;margin:8px 0 0;">Top-upvoted reply in a Q&A thread auto-promotes to Best Answer. Author gets +15 rep bonus.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>3 — Forum Profile Page (<code>/u/:username</code>)</h3>
+  <div class="mockup">
+    <div class="mockup-header">New "Forum Activity" section added to existing profile</div>
+    <div class="mockup-body" style="padding:12px;">
+      <div style="display:flex;align-items:center;gap:20px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.08);">
+        <div style="text-align:center;"><div style="font-size:26px;font-weight:700;color:#fbbf24;">⚡ 1,204</div><div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Reputation</div></div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;">
+          <span style="background:rgba(124,58,237,0.2);border:1px solid rgba(124,58,237,0.3);color:#a78bfa;padding:2px 8px;border-radius:12px;font-size:11px;">📝 First Post</span>
+          <span style="background:rgba(124,58,237,0.2);border:1px solid rgba(124,58,237,0.3);color:#a78bfa;padding:2px 8px;border-radius:12px;font-size:11px;">💬 Century</span>
+          <span style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);color:#34d399;padding:2px 8px;border-radius:12px;font-size:11px;">🏆 Tournament Winner</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:12px;">
+        <div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:6px 8px;text-align:center;"><div style="font-size:16px;font-weight:700;color:#d1d5db;">347</div><div style="font-size:10px;color:#6b7280;">Posts</div></div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:6px 8px;text-align:center;"><div style="font-size:16px;font-weight:700;color:#d1d5db;">42</div><div style="font-size:10px;color:#6b7280;">Threads</div></div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:6px 8px;text-align:center;"><div style="font-size:16px;font-weight:700;color:#fbbf24;">1,108</div><div style="font-size:10px;color:#6b7280;">Upvotes</div></div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:6px 8px;text-align:center;"><div style="font-size:14px;font-weight:700;color:#d1d5db;">Jan '25</div><div style="font-size:10px;color:#6b7280;">Member since</div></div>
+      </div>
+      <div style="font-size:11px;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">Recent Posts</div>
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;"><a style="color:#a78bfa;">Cut Deepglow Skate — Vorinclex does the same...</a><span style="color:#6b7280;">2h ago</span></div>
+        <div style="display:flex;justify-content:space-between;"><a style="color:#a78bfa;">Best budget commander for tokens?</a><span style="color:#6b7280;">1d ago</span></div>
+      </div>
+    </div>
+  </div>
+</div>

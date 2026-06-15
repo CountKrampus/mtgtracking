@@ -1,0 +1,82 @@
+<h2>Game Room Layout</h2>
+<p class="subtitle">How should video tiles and the life counter share the screen?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:12px;background:rgba(0,0,0,0.3);">
+      <!-- Layout A: video strip on top, life counter below -->
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:10px;">
+        <div style="display:flex;gap:4px;height:48px;">
+          <div style="flex:1;background:rgba(139,92,246,0.3);border:1px solid rgba(139,92,246,0.4);border-radius:4px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);">📷 P1</div>
+          <div style="flex:1;background:rgba(139,92,246,0.3);border:1px solid rgba(139,92,246,0.4);border-radius:4px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);">📷 P2</div>
+          <div style="flex:1;background:rgba(139,92,246,0.3);border:1px solid rgba(139,92,246,0.4);border-radius:4px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);">📷 P3</div>
+          <div style="flex:1;background:rgba(139,92,246,0.3);border:1px solid rgba(139,92,246,0.4);border-radius:4px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);">📷 P4</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;flex:1;">
+          <div style="background:rgba(255,255,255,0.07);border-radius:4px;padding:6px;text-align:center;color:white;"><div style="font-size:16px;font-weight:bold;">40</div><div style="color:rgba(255,255,255,0.4);">Player 1</div></div>
+          <div style="background:rgba(255,255,255,0.07);border-radius:4px;padding:6px;text-align:center;color:white;"><div style="font-size:16px;font-weight:bold;">38</div><div style="color:rgba(255,255,255,0.4);">Player 2</div></div>
+          <div style="background:rgba(255,255,255,0.07);border-radius:4px;padding:6px;text-align:center;color:white;"><div style="font-size:16px;font-weight:bold;">33</div><div style="color:rgba(255,255,255,0.4);">Player 3</div></div>
+          <div style="background:rgba(255,255,255,0.07);border-radius:4px;padding:6px;text-align:center;color:white;"><div style="font-size:16px;font-weight:bold;">29</div><div style="color:rgba(255,255,255,0.4);">Player 4</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Video Strip on Top</h3>
+      <p>Camera row across the top, life counter tiles below. Clean separation. Works well on wide screens.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:12px;background:rgba(0,0,0,0.3);">
+      <!-- Layout B: video sidebar right, life counter main -->
+      <div style="display:flex;gap:6px;font-size:10px;height:110px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;flex:1;">
+          <div style="background:rgba(255,255,255,0.07);border-radius:4px;padding:6px;text-align:center;color:white;"><div style="font-size:18px;font-weight:bold;">40</div><div style="color:rgba(255,255,255,0.4);">Player 1</div></div>
+          <div style="background:rgba(255,255,255,0.07);border-radius:4px;padding:6px;text-align:center;color:white;"><div style="font-size:18px;font-weight:bold;">38</div><div style="color:rgba(255,255,255,0.4);">Player 2</div></div>
+          <div style="background:rgba(255,255,255,0.07);border-radius:4px;padding:6px;text-align:center;color:white;"><div style="font-size:18px;font-weight:bold;">33</div><div style="color:rgba(255,255,255,0.4);">Player 3</div></div>
+          <div style="background:rgba(255,255,255,0.07);border-radius:4px;padding:6px;text-align:center;color:white;"><div style="font-size:18px;font-weight:bold;">29</div><div style="color:rgba(255,255,255,0.4);">Player 4</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;width:52px;">
+          <div style="flex:1;background:rgba(139,92,246,0.3);border:1px solid rgba(139,92,246,0.4);border-radius:4px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);">📷</div>
+          <div style="flex:1;background:rgba(139,92,246,0.3);border:1px solid rgba(139,92,246,0.4);border-radius:4px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);">📷</div>
+          <div style="flex:1;background:rgba(139,92,246,0.3);border:1px solid rgba(139,92,246,0.4);border-radius:4px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);">📷</div>
+          <div style="flex:1;background:rgba(139,92,246,0.3);border:1px solid rgba(139,92,246,0.4);border-radius:4px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);">📷</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Video Sidebar</h3>
+      <p>Life counter takes the main area, camera column on the right. Life totals are big and easy to read. Good for tablets.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:12px;background:rgba(0,0,0,0.3);">
+      <!-- Layout C: each player gets a combined tile (video + life total in one card) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px;">
+        <div style="background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,0.12);">
+          <div style="background:rgba(139,92,246,0.3);height:32px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);">📷 Player 1</div>
+          <div style="padding:4px;text-align:center;color:white;font-size:16px;font-weight:bold;">40</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,0.12);">
+          <div style="background:rgba(139,92,246,0.3);height:32px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);">📷 Player 2</div>
+          <div style="padding:4px;text-align:center;color:white;font-size:16px;font-weight:bold;">38</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,0.12);">
+          <div style="background:rgba(139,92,246,0.3);height:32px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);">📷 Player 3</div>
+          <div style="padding:4px;text-align:center;color:white;font-size:16px;font-weight:bold;">33</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,0.12);">
+          <div style="background:rgba(139,92,246,0.3);height:32px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);">📷 Player 4</div>
+          <div style="padding:4px;text-align:center;color:white;font-size:16px;font-weight:bold;">29</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Combined Player Tiles</h3>
+      <p>Each player gets one card: their camera feed on top, life total below. Everything per-player in one place. Most like SpellTable.</p>
+    </div>
+  </div>
+
+</div>

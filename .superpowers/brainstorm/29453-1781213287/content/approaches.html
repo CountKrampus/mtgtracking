@@ -1,0 +1,67 @@
+<h2>3 Approaches to the Forum</h2>
+<p class="subtitle">Same features, different navigation models. Pick the one that feels right.</p>
+
+<div class="options">
+  <div class="option" data-choice="classic" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Classic Forum (Recommended)</h3>
+      <p>Categories → Thread list → Thread view. Familiar to anyone who's used MTGSalvation or Commander forums. Clear hierarchy, easy to navigate.</p>
+      <div class="pros-cons" style="margin-top:8px;">
+        <div class="pros"><h4>Pros</h4><ul><li>Familiar to MTG players</li><li>Clear organization</li><li>Easy to find specific topics</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>3 clicks to read a post</li><li>Active threads can get buried</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="feed" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Tagged Feed (Reddit-style)</h3>
+      <p>Single scrollable feed of all posts. Filter by tag (Deck Help, Trading, etc.). Sorted by hot/new/top. No categories page — just the feed.</p>
+      <div class="pros-cons" style="margin-top:8px;">
+        <div class="pros"><h4>Pros</h4><ul><li>Fast — content immediately visible</li><li>Active posts always surface</li><li>Modern, familiar feel</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Can feel chaotic without moderation</li><li>Tags need discipline to work well</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="hybrid" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Hybrid (Feed + Categories)</h3>
+      <p>Homepage is a "recent/hot" feed. Left sidebar shows categories to filter. Best of both: discovery up front, structure available when needed.</p>
+      <div class="pros-cons" style="margin-top:8px;">
+        <div class="pros"><h4>Pros</h4><ul><li>Newcomers see activity immediately</li><li>Power users use category nav</li><li>Most flexible long-term</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Most complex to build</li><li>Two navigation patterns to maintain</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:20px;">
+  <h3>Layout preview — Option A (Classic)</h3>
+  <div class="mockup">
+    <div class="mockup-header">Forum Home → Category → Thread</div>
+    <div class="mockup-body" style="display:flex;gap:0;padding:0;overflow:hidden;border-radius:4px;">
+      <div style="width:33%;border-right:1px solid rgba(255,255,255,0.08);padding:10px;font-size:12px;">
+        <div style="color:#a78bfa;font-size:10px;text-transform:uppercase;margin-bottom:6px;">Categories</div>
+        <div style="padding:5px 6px;background:rgba(124,58,237,0.15);border-radius:3px;margin-bottom:3px;color:#a78bfa;">🃏 Deck Help</div>
+        <div style="padding:5px 6px;border-radius:3px;margin-bottom:3px;color:#d1d5db;">💱 Trading</div>
+        <div style="padding:5px 6px;border-radius:3px;margin-bottom:3px;color:#d1d5db;">💬 General</div>
+        <div style="padding:5px 6px;border-radius:3px;color:#d1d5db;">📢 Community</div>
+      </div>
+      <div style="width:33%;border-right:1px solid rgba(255,255,255,0.08);padding:10px;font-size:12px;">
+        <div style="color:#a78bfa;font-size:10px;text-transform:uppercase;margin-bottom:6px;">Deck Help threads</div>
+        <div style="padding:5px 6px;background:rgba(124,58,237,0.15);border-radius:3px;margin-bottom:3px;color:#a78bfa;">Rate my Atraxa build</div>
+        <div style="padding:5px 6px;border-radius:3px;margin-bottom:3px;color:#d1d5db;font-size:11px;">Best budget removal?</div>
+        <div style="padding:5px 6px;border-radius:3px;margin-bottom:3px;color:#d1d5db;font-size:11px;">Mana base help EDH</div>
+        <div style="padding:5px 6px;border-radius:3px;color:#d1d5db;font-size:11px;">Combo lines in Kinnan</div>
+      </div>
+      <div style="width:34%;padding:10px;font-size:12px;">
+        <div style="color:#a78bfa;font-size:10px;text-transform:uppercase;margin-bottom:6px;">Rate my Atraxa build</div>
+        <div style="border-left:2px solid #7c3aed;padding:5px 7px;margin-bottom:5px;font-size:11px;color:#d1d5db;">OP: Here's my list 🃏 [Deck]<br><span style="color:#9ca3af;">↑ 8</span></div>
+        <div style="margin-left:10px;border-left:2px solid #374151;padding:4px 6px;margin-bottom:3px;font-size:11px;color:#d1d5db;">Reply1: Cut the 4-drops<br><span style="color:#9ca3af;">↑ 5</span></div>
+        <div style="margin-left:20px;border-left:2px solid #1f2937;padding:4px 6px;font-size:11px;color:#d1d5db;">OP: which ones?<br><span style="color:#9ca3af;">↑ 2</span></div>
+      </div>
+    </div>
+  </div>
+</div>

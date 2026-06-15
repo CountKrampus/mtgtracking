@@ -1,0 +1,55 @@
+<h2>Where does reputation & badges show up?</h2>
+<p class="subtitle">Pick where you want rep/badges visible across the app.</p>
+
+<div class="options" data-multiselect>
+  <div class="option" data-choice="posts" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Next to username on every forum post</h3>
+      <p>Rep score and up to 3 badge icons appear inline beside the author name on every post and thread.</p>
+      <div style="margin-top:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <div style="width:26px;height:26px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:bold;">K</div>
+          <span style="color:#d1d5db;font-size:13px;font-weight:500;">KingSlayer99</span>
+          <span style="color:#fbbf24;font-size:11px;font-weight:600;">⚡ 342</span>
+          <span style="font-size:13px;" title="First Post">📝</span>
+          <span style="font-size:13px;" title="100 Posts">💬</span>
+          <span style="color:#9ca3af;font-size:11px;">2h ago</span>
+        </div>
+        <p style="color:#d1d5db;font-size:12px;margin:0;">Cut Deepglow Skate — Vorinclex does the same job faster.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="profile" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Forum profile page only</h3>
+      <p>Rep and badges live on <code>/u/:username</code> — posts stay clean, no inline clutter.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="leaderboard" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Top Contributors leaderboard</h3>
+      <p>A ranked list of highest-rep users, visible in the Forum sidebar or as a dedicated tab. Resets monthly or all-time.</p>
+      <div style="margin-top:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px;font-size:12px;">
+        <div style="color:#9ca3af;margin-bottom:6px;text-transform:uppercase;font-size:10px;letter-spacing:.05em;">Top Contributors — June</div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div style="display:flex;justify-content:space-between;"><span>🥇 KingSlayer99</span><span style="color:#fbbf24;">⚡ 1,204</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>🥈 DraftQueen</span><span style="color:#9ca3af;">⚡ 987</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>🥉 VorincAbuser</span><span style="color:#9ca3af;">⚡ 831</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="hover" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content">
+      <h3>Hover card on username</h3>
+      <p>Hovering a username in posts shows a mini-profile popup: rep, badges, post count, join date. Keeps posts clean but surfaces the data on demand.</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,46 @@
+<h2>How should reputation be earned?</h2>
+<p class="subtitle">The current <code>User.reputation</code> field (0–5 rating) would be replaced with a point-accumulation system.</p>
+
+<div class="options">
+  <div class="option" data-choice="activity" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Activity only</h3>
+      <p>Points for actions you take — posting, replying, sharing a deck, adding cards. Community validation not required.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Easy to earn, good for new users</li><li>Simple to implement</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Doesn't reward quality — spam farms rep</li><li>High posters ≠ valuable contributors</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="upvotes" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Upvotes only</h3>
+      <p>Points purely from community upvotes on your threads and posts. Quality-first.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Rep = community trust, not just activity</li><li>Discourages low-effort posts</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Slow for new users with no history</li><li>Lurkers can't earn without posting first</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="both" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Both — activity + upvotes (Recommended)</h3>
+      <p>Small points for activity, larger points for upvotes received. Gives new users a path in while still rewarding quality.</p>
+      <div style="margin-top:10px;font-size:13px;color:#9ca3af;">
+        <strong style="color:#d1d5db;">Example point values:</strong><br>
+        +1 · Post a reply &nbsp;|&nbsp; +2 · Create a thread &nbsp;|&nbsp; +3 · Share a deck<br>
+        +5 · Receive an upvote on a post &nbsp;|&nbsp; +10 · Receive an upvote on a thread<br>
+        +15 · Best answer selected (Q&amp;A format)
+      </div>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul><li>Balanced — newcomers can participate</li><li>Quality still matters most</li><li>Ties into Q&amp;A feature naturally</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>More moving parts to implement</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
