@@ -23,6 +23,15 @@ import FormatGuides from './components/Learn/FormatGuides';
 import SealedSimulator from './components/Gameplay/SealedSimulator';
 import ArchenemyMode from './components/Gameplay/ArchenemyMode';
 
+// Forum Components
+import ForumNav from './components/Forum/ForumNav';
+import CategoryView from './components/Forum/CategoryView';
+import ThreadView from './components/Forum/ThreadView';
+import SpamFilterAdmin from './components/Forum/SpamFilterAdmin';
+import MuteManager from './components/Forum/MuteManager';
+import ForumLevelWidget from './components/Forum/ForumLevelWidget';
+import ForumShop from './components/Forum/ForumShop';
+
 const DeckBuilder = React.lazy(() => import('./components/DeckBuilder'));
 const CameraModal = React.lazy(() => import('./components/CameraModal'));
 const LifeCounter = React.lazy(() => import('./components/LifeCounter/LifeCounter'));
@@ -156,6 +165,15 @@ function App() {
   // Auth/Admin state
   const [showAccountSettings, setShowAccountSettings] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+
+  // Forum state
+  const [forumCategories, setForumCategories] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [selectedThreadId, setSelectedThreadId] = useState(null);
+  const [loadingForumCategories, setLoadingForumCategories] = useState(false);
+  const [showSpamFilterAdmin, setShowSpamFilterAdmin] = useState(false);
+  const [showMuteManager, setShowMuteManager] = useState(false);
+  const [showForumShop, setShowForumShop] = useState(false);
 
   // Location management
   const [locations, setLocations] = useState([]);
@@ -343,6 +361,24 @@ function App() {
     }
   }, []);
 
+  // Load forum categories when forum view is active
+  useEffect(() => {
+    if (currentView === 'forum') {
+      fetchForumCategories();
+    }
+  }, [currentView]);
+
+  const fetchForumCategories = async () => {
+    setLoadingForumCategories(true);
+    try {
+      const response = await axios.get(`${API_URL}/forum/categories`);
+      setForumCategories(response.data);
+    } catch (error) {
+      console.error('Error fetching forum categories:', error);
+    } finally {
+      setLoadingForumCategories(false);
+    }
+  };
 
   const fetchCards = async () => {
     try {
@@ -5139,6 +5175,36 @@ function App() {
           </Suspense>
         )}
 
+        {/* Forum View */}
+        {currentView === 'forum' && (
+          <div className="flex h-full">
+            <ForumNav
+              categories={forumCategories}
+              onCategorySelect={setSelectedCategoryId}
+              selectedCategory={selectedCategoryId}
+            />
+            {selectedThreadId ? (
+              <ThreadView
+                threadId={selectedThreadId}
+                apiUrl={API_URL}
+                user={authUser}
+                onBack={() => setSelectedThreadId(null)}
+              />
+            ) : selectedCategoryId ? (
+              <CategoryView
+                categoryId={selectedCategoryId}
+                apiUrl={API_URL}
+                onThreadSelect={setSelectedThreadId}
+                user={authUser}
+              />
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-slate-400">
+                Select a category to get started
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Camera OCR Modal */}
         {showCameraModal && (
           <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 text-white/50">Loading camera...</div>}>
@@ -5169,6 +5235,39 @@ function App() {
       {/* Admin Panel Modal */}
       {showAdminPanel && (
         <AdminPanel onClose={() => setShowAdminPanel(false)} />
+      )}
+
+      {/* Forum Admin Modals */}
+      {showSpamFilterAdmin && (
+        <SpamFilterAdmin
+          apiUrl={API_URL}
+          isOpen={showSpamFilterAdmin}
+          onClose={() => setShowSpamFilterAdmin(false)}
+        />
+      )}
+
+      {showMuteManager && (
+        <MuteManager
+          apiUrl={API_URL}
+          isOpen={showMuteManager}
+          onClose={() => setShowMuteManager(false)}
+        />
+      )}
+
+      {showForumShop && (
+        <ForumShop
+          apiUrl={API_URL}
+          user={authUser}
+          isOpen={showForumShop}
+          onClose={() => setShowForumShop(false)}
+        />
+      )}
+
+      {/* Forum Level Widget - Shown when in forum view */}
+      {currentView === 'forum' && authUser && (
+        <div className="fixed bottom-6 right-6 w-80 z-40">
+          <ForumLevelWidget apiUrl={API_URL} user={authUser} />
+        </div>
       )}
     </div>
   );
