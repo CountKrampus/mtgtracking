@@ -154,7 +154,9 @@ function App() {
   const [manualEntry, setManualEntry] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = settings.pageSize;
-  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'collection', 'decks', 'wishlist', 'lifecounter', or 'settings'
+  const [currentView, setCurrentView] = useState(() => {
+    return localStorage.getItem('currentView') || 'dashboard';
+  }); // 'dashboard', 'collection', 'decks', 'wishlist', 'forum', 'lifecounter', or 'settings'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
@@ -362,10 +364,20 @@ function App() {
     }
   }, []);
 
-  // Load forum categories when forum view is active
+  // Save current view to localStorage
+  useEffect(() => {
+    localStorage.setItem('currentView', currentView);
+  }, [currentView]);
+
+  // Load forum categories when forum view is active and restore saved state
   useEffect(() => {
     if (currentView === 'forum') {
       fetchForumCategories();
+      // Restore forum navigation state from localStorage
+      const savedCategory = localStorage.getItem('forumSelectedCategory');
+      const savedThread = localStorage.getItem('forumSelectedThread');
+      if (savedThread) setSelectedThreadId(savedThread);
+      else if (savedCategory) setSelectedCategoryId(savedCategory);
     }
   }, [currentView]);
 
