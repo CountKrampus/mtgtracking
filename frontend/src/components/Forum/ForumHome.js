@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:5000/api';
 
-export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, onOpenProfile }) {
+export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, authUser }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,18 +52,22 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={onOpenProfile}
-            className="text-white/70 hover:text-white text-sm transition"
-          >
-            My Profile
-          </button>
-          <button
-            onClick={onOpenAdmin}
-            className="flex items-center gap-1.5 text-white/70 hover:text-white transition text-sm"
-          >
-            <span>⚙️</span> Admin
-          </button>
+          {authUser && (
+            <button
+              onClick={() => window.location.href = `/u/${authUser.username}`}
+              className="text-white/70 hover:text-white text-sm transition"
+            >
+              My Profile
+            </button>
+          )}
+          {authUser?.role === 'admin' && (
+            <button
+              onClick={onOpenAdmin}
+              className="flex items-center gap-1.5 text-white/70 hover:text-white transition text-sm"
+            >
+              <span>⚙️</span> Admin
+            </button>
+          )}
         </div>
       </div>
 

@@ -5225,10 +5225,11 @@ function App() {
                 onNewThread={() => {
                   // TODO: Open new thread modal
                 }}
-                onOpenAdmin={() => setShowAdminPanel(true)}
-                onOpenProfile={() => {
-                  // TODO: Open user profile modal or navigate to profile
+                onOpenAdmin={() => {
+                  // Show forum-specific admin features (spam filter, mutes)
+                  setShowSpamFilterAdmin(true);
                 }}
+                authUser={authUser}
               />
             )}
           </div>
