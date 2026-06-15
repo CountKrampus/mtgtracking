@@ -46,6 +46,9 @@ const userSchema = new mongoose.Schema({
   },
   lastLoginAt: {
     type: Date
+  },
+  privacy: {
+    showForum: { type: Boolean, default: false }
   }
 });
 
