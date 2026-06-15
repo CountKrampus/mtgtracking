@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Lock } from 'lucide-react';
+import { Plus, Lock, ArrowLeft } from 'lucide-react';
 
-export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user }) {
+export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user, onBack }) {
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -36,7 +36,18 @@ export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user 
   return (
     <div className="flex-1 p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Threads</h2>
+        <div className="flex items-center gap-3">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="p-2 hover:bg-white/10 rounded transition text-white/60 hover:text-white"
+              title="Back to forum"
+            >
+              <ArrowLeft size={18} />
+            </button>
+          )}
+          <h2 className="text-2xl font-bold text-white">Threads</h2>
+        </div>
         {user && (
           <button className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded flex items-center gap-2">
             <Plus size={18} />

@@ -24,6 +24,7 @@ import SealedSimulator from './components/Gameplay/SealedSimulator';
 import ArchenemyMode from './components/Gameplay/ArchenemyMode';
 
 // Forum Components
+import ForumHome from './components/Forum/ForumHome';
 import ForumNav from './components/Forum/ForumNav';
 import CategoryView from './components/Forum/CategoryView';
 import ThreadView from './components/Forum/ThreadView';
@@ -5179,29 +5180,40 @@ function App() {
         {/* Forum View */}
         {currentView === 'forum' && (
           <div className="flex h-full">
-            <ForumNav
-              categories={forumCategories}
-              onCategorySelect={setSelectedCategoryId}
-              selectedCategory={selectedCategoryId}
-            />
             {selectedThreadId ? (
               <ThreadView
                 threadId={selectedThreadId}
                 apiUrl={API_URL}
                 user={authUser}
-                onBack={() => setSelectedThreadId(null)}
+                onBack={() => {
+                  setSelectedThreadId(null);
+                  localStorage.removeItem('forumSelectedThread');
+                }}
               />
             ) : selectedCategoryId ? (
               <CategoryView
                 categoryId={selectedCategoryId}
                 apiUrl={API_URL}
-                onThreadSelect={setSelectedThreadId}
+                onThreadSelect={(threadId) => {
+                  setSelectedThreadId(threadId);
+                  localStorage.setItem('forumSelectedThread', threadId);
+                }}
+                onBack={() => {
+                  setSelectedCategoryId(null);
+                  localStorage.removeItem('forumSelectedCategory');
+                }}
                 user={authUser}
               />
             ) : (
-              <div className="flex-1 flex items-center justify-center text-slate-400">
-                Select a category to get started
-              </div>
+              <ForumHome
+                onSelectCategory={(catId) => {
+                  setSelectedCategoryId(catId);
+                  localStorage.setItem('forumSelectedCategory', catId);
+                }}
+                onNewThread={() => {
+                  // TODO: Open new thread modal
+                }}
+              />
             )}
           </div>
         )}
