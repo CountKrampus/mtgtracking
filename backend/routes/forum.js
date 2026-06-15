@@ -259,4 +259,146 @@ router.get('/posts/:postId/edits', async (req, res) => {
   }
 });
 
+// Advanced Features: Duplicates, Merges, Deck Import
+
+const { findDuplicateThreads } = require('../utils/threadDuplicateDetector');
+const ForumLevel = require('../models/ForumLevel');
+
+// POST /api/forum/threads/check-duplicates
+router.post('/threads/check-duplicates', async (req, res) => {
+  try {
+    const { title, categoryId } = req.body;
+    if (!title || !categoryId) {
+      return res.status(400).json({ message: 'Title and categoryId required' });
+    }
+
+    const duplicates = await findDuplicateThreads(title, categoryId);
+    res.json(duplicates);
+  } catch (error) {
+    console.error('Check duplicates error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /api/forum/threads/:threadId/merge-request
+router.put('/threads/:threadId/merge-request', async (req, res) => {
+  try {
+    const { threadId } = req.params;
+    const { status, reviewedBy } = req.body;
+
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const thread = await ForumThread.findByIdAndUpdate(
+      threadId,
+      {
+        'mergeRequest.status': status,
+        'mergeRequest.reviewedBy': reviewedBy,
+        'mergeRequest.reviewedAt': new Date()
+      },
+      { new: true }
+    );
+
+    if (status === 'approved' && thread.mergeRequest.suggestedThreadId) {
+      await ForumPost.updateMany(
+        { threadId },
+        { threadId: thread.mergeRequest.suggestedThreadId }
+      );
+
+      const postCount = await ForumPost.countDocuments({
+        threadId: thread.mergeRequest.suggestedThreadId
+      });
+
+      await ForumThread.findByIdAndUpdate(
+        thread.mergeRequest.suggestedThreadId,
+        { postCount }
+      );
+
+      thread.postCount = 0;
+      await thread.save();
+    }
+
+    res.json(thread);
+  } catch (error) {
+    console.error('Merge threads error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST /api/forum/threads/:threadId/import-deck
+router.post('/threads/:threadId/import-deck', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { deckId } = req.body;
+    if (!deckId) {
+      return res.status(400).json({ message: 'deckId required' });
+    }
+
+    const Deck = mongoose.model('Deck');
+    const originalDeck = await Deck.findById(deckId);
+
+    if (!originalDeck) {
+      return res.status(404).json({ message: 'Deck not found' });
+    }
+
+    const newDeck = new Deck({
+      ...originalDeck.toObject(),
+      _id: undefined,
+      userId: req.user._id,
+      name: `${originalDeck.name} (from forum)`,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    await newDeck.save();
+
+    res.json({
+      message: 'Deck imported',
+      deckId: newDeck._id
+    });
+  } catch (error) {
+    console.error('Import deck error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Forum Economy Endpoints
+
+// GET /api/forum/user-level
+router.get('/user-level', async (req, res) => {
+  try {
+    let level = await ForumLevel.findOne({ userId: req.user?._id });
+    if (!level && req.user) {
+      level = await ForumLevel.create({ userId: req.user._id });
+    }
+    res.json(level);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST /api/forum/shop/purchase
+router.post('/shop/purchase', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { itemId } = req.body;
+    const PRICES = {
+      'avatar_frame_1': 500,
+      'username_color_1': 300,
+      'badge_vip': 1000,
+      'thread_bump': 100
+    };
+
+    if (!PRICES[itemId]) {
+      return res.status(400).json({ message: 'Invalid item' });
+    }
+
+    const userLevel = await ForumLevel.findOne({ userId: req.user._id });
+    await userLevel.spendCoins(PRICES[itemId]);
+
+    res.json({ message: 'Purchased', updatedLevel: userLevel });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;
