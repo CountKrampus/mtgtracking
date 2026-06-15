@@ -30,3 +30,7 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Large generated cache files
+backend/combo-cache.json
+combo-cache.json
