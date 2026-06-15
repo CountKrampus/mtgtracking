@@ -5225,6 +5225,10 @@ function App() {
                 onNewThread={() => {
                   // TODO: Open new thread modal
                 }}
+                onOpenAdmin={() => setShowAdminPanel(true)}
+                onOpenProfile={() => {
+                  // TODO: Open user profile modal or navigate to profile
+                }}
               />
             )}
           </div>
