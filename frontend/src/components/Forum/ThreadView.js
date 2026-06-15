@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Trash2, History } from 'lucide-react';
+import { Edit2, Trash2, History, Lock, Unlock, RefreshCw, X } from 'lucide-react';
 import PostComposer from './PostComposer';
 import PostEditHistory from './PostEditHistory';
 
-export default function ThreadView({ threadId, apiUrl, user, onBack }) {
+export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpdated }) {
   const [thread, setThread] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -12,6 +12,11 @@ export default function ThreadView({ threadId, apiUrl, user, onBack }) {
   const [editingPostId, setEditingPostId] = useState(null);
   const [editBody, setEditBody] = useState('');
   const [historyPostId, setHistoryPostId] = useState(null);
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [showMoveModal, setShowMoveModal] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
 
   useEffect(() => {
     if (!threadId) return;
@@ -35,6 +40,97 @@ export default function ThreadView({ threadId, apiUrl, user, onBack }) {
 
     fetchThread();
   }, [threadId, page, apiUrl]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${apiUrl}/forum/categories`);
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, [apiUrl]);
+
+  const handleRenameThread = async () => {
+    if (!newTitle.trim()) return;
+
+    try {
+      const response = await fetch(`${apiUrl}/forum/threads/${threadId}/rename`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newTitle })
+      });
+
+      if (response.ok) {
+        const updated = await response.json();
+        setThread(updated);
+        setShowRenameModal(false);
+        setNewTitle('');
+        onThreadUpdated?.();
+      }
+    } catch (error) {
+      alert('Failed to rename thread');
+    }
+  };
+
+  const handleMoveThread = async () => {
+    if (!selectedCategoryId) return;
+
+    try {
+      const response = await fetch(`${apiUrl}/forum/threads/${threadId}/move`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoryId: selectedCategoryId })
+      });
+
+      if (response.ok) {
+        const updated = await response.json();
+        setThread(updated);
+        setShowMoveModal(false);
+        onThreadUpdated?.();
+      }
+    } catch (error) {
+      alert('Failed to move thread');
+    }
+  };
+
+  const handleToggleLock = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/forum/threads/${threadId}/lock`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setThread(data.thread);
+      }
+    } catch (error) {
+      alert('Failed to lock/unlock thread');
+    }
+  };
+
+  const handleTogglePin = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/forum/threads/${threadId}/pin`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setThread(data.thread);
+      }
+    } catch (error) {
+      alert('Failed to pin/unpin thread');
+    }
+  };
 
   const handlePostCreated = (newPost) => {
     setPosts([...posts, newPost]);
@@ -87,11 +183,114 @@ export default function ThreadView({ threadId, apiUrl, user, onBack }) {
       {thread && (
         <>
           <div className="mb-6 pb-6 border-b border-slate-700">
-            <h1 className="text-3xl font-bold text-white mb-2">{thread.title}</h1>
+            <div className="flex items-start justify-between mb-2">
+              <h1 className="text-3xl font-bold text-white">{thread.title}</h1>
+              {user?.role === 'admin' && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setNewTitle(thread.title);
+                      setShowRenameModal(true);
+                    }}
+                    className="p-2 hover:bg-slate-700 rounded text-blue-400"
+                    title="Rename thread"
+                  >
+                    <Edit2 size={18} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedCategoryId(thread.categoryId);
+                      setShowMoveModal(true);
+                    }}
+                    className="p-2 hover:bg-slate-700 rounded text-purple-400"
+                    title="Move to category"
+                  >
+                    <RefreshCw size={18} />
+                  </button>
+                  <button
+                    onClick={handleToggleLock}
+                    className={`p-2 hover:bg-slate-700 rounded ${thread.isLocked ? 'text-red-400' : 'text-slate-400'}`}
+                    title={thread.isLocked ? 'Unlock thread' : 'Lock thread'}
+                  >
+                    {thread.isLocked ? <Lock size={18} /> : <Unlock size={18} />}
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="text-slate-400 text-sm">
               By {thread.authorId?.displayName} • {thread.views} views • {thread.postCount} posts
+              {thread.isLocked && <span className="ml-2 text-red-400">🔒 Locked</span>}
+              {thread.isPinned && <span className="ml-2 text-yellow-400">📌 Pinned</span>}
             </div>
           </div>
+
+          {/* Rename Modal */}
+          {showRenameModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-slate-800 rounded-lg p-6 max-w-md w-full">
+                <h3 className="text-lg font-bold text-white mb-4">Rename Thread</h3>
+                <input
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  className="w-full p-2 bg-slate-900 border border-slate-600 rounded text-white mb-4"
+                />
+                <div className="flex gap-2 justify-end">
+                  <button
+                    onClick={() => setShowRenameModal(false)}
+                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleRenameThread}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white"
+                  >
+                    Rename
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Move Modal */}
+          {showMoveModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-slate-800 rounded-lg p-6 max-w-md w-full">
+                <h3 className="text-lg font-bold text-white mb-4">Move Thread to Category</h3>
+                <select
+                  value={selectedCategoryId}
+                  onChange={(e) => setSelectedCategoryId(e.target.value)}
+                  className="w-full p-2 bg-slate-900 border border-slate-600 rounded text-white mb-4"
+                >
+                  <option value="">Select category...</option>
+                  {categories.map((cat) => (
+                    <optgroup key={cat._id} label={cat.name}>
+                      {cat.children?.map((child) => (
+                        <option key={child._id} value={child._id}>
+                          {cat.name} → {child.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+                <div className="flex gap-2 justify-end">
+                  <button
+                    onClick={() => setShowMoveModal(false)}
+                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleMoveThread}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded text-white"
+                  >
+                    Move
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-4 mb-6">
             {posts.map(post => (
