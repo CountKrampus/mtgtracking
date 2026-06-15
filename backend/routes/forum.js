@@ -451,6 +451,32 @@ router.get('/users/:username/activity', async (req, res) => {
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
+// GET /api/forum/users/:username/profile — public user profile info
+router.get('/users/:username/profile', async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.params.username })
+      .select('username displayName createdAt privacy reputation badges').lean();
+
+    if (!user || !user.privacy?.isPublic) {
+      return res.status(404).json({ message: 'Profile not found' });
+    }
+
+    res.json({
+      username: user.username,
+      displayName: user.displayName || user.username,
+      createdAt: user.createdAt,
+      reputation: user.reputation || 0,
+      badges: (user.badges || []).map(b => ({ name: b.name, description: b.description, earnedAt: b.earnedAt })),
+      privacy: {
+        showCollection: user.privacy.showCollection,
+        showDecks: user.privacy.showDecks,
+        showWishlist: user.privacy.showWishlist,
+        showForum: user.privacy.showForum
+      }
+    });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
 // POST /api/forum/shop/purchase
 router.post('/shop/purchase', verifyToken, requireAuth, async (req, res) => {
   try {
