@@ -431,7 +431,7 @@ router.get('/users/:username/activity', async (req, res) => {
 
     res.json({
       reputation: user.reputation || 0,
-      badges: (user.badges || []).map(b => ({ name: b.name, earnedAt: b.earnedAt })),
+      badges: (user.badges || []).map(b => ({ name: b.name, description: b.description, earnedAt: b.earnedAt })),
       stats: {
         postCount,
         threadCount,
