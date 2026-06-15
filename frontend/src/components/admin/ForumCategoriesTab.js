@@ -65,6 +65,7 @@ export default function ForumCategoriesTab() {
   };
 
   const handleDeleteCategory = async (id) => {
+    // eslint-disable-next-line no-restricted-globals
     if (!confirm('Are you sure you want to delete this category?')) return;
 
     try {
