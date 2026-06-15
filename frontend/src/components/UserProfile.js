@@ -13,8 +13,9 @@ const BADGE_EMOJI = {
 };
 
 function ForumActivitySection({ activity }) {
-  const memberSince = activity.stats.memberSince
-    ? new Date(activity.stats.memberSince).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+  const stats = activity.stats || {};
+  const memberSince = stats.memberSince
+    ? new Date(stats.memberSince).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     : '—';
 
   return (
@@ -47,9 +48,9 @@ function ForumActivitySection({ activity }) {
       {/* Stats grid */}
       <div className="grid grid-cols-4 gap-3 mb-5">
         {[
-          { label: 'Posts', value: activity.stats.postCount, color: 'text-white' },
-          { label: 'Threads', value: activity.stats.threadCount, color: 'text-white' },
-          { label: 'Upvotes', value: activity.stats.upvotesReceived, color: 'text-amber-400' },
+          { label: 'Posts', value: stats.postCount, color: 'text-white' },
+          { label: 'Threads', value: stats.threadCount, color: 'text-white' },
+          { label: 'Upvotes', value: stats.upvotesReceived, color: 'text-amber-400' },
           { label: 'Member since', value: memberSince, color: 'text-white', small: true }
         ].map(({ label, value, color, small }) => (
           <div key={label} className="bg-white/5 rounded-lg p-3 text-center">
