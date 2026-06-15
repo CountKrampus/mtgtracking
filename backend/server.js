@@ -7,6 +7,7 @@ const deckRoutes = require('./routes/decks');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const adminRoutes = require('./routes/admin');
+const forumRouter = require('./routes/forum');
 const path = require('path');
 const fs = require('fs');
 const { pipeline } = require('stream/promises');
@@ -85,6 +86,9 @@ app.use('/api/users', userRoutes);
 
 // Mount admin routes (require admin role)
 app.use('/api/admin', adminRoutes);
+
+// Mount forum routes
+app.use('/api/forum', forumRouter);
 
 // Check maintenance mode for all other routes
 app.use(checkMaintenanceMode);
