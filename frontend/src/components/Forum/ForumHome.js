@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Zap } from 'lucide-react';
 import axios from 'axios';
+import ThreadComposer from './ThreadComposer';
 
 const API_URL = 'http://localhost:5000/api';
 
 export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, authUser }) {
+  const [showThreadComposer, setShowThreadComposer] = useState(false);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -109,7 +111,7 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
                 <Zap size={18} /> Leaderboard
               </button>
               <button
-                onClick={onNewThread}
+                onClick={() => setShowThreadComposer(true)}
                 className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold transition"
               >
                 <Plus size={18} /> New Thread
@@ -175,6 +177,19 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
           )}
         </div>
       </div>
+
+      {/* Thread Composer Modal */}
+      <ThreadComposer
+        isOpen={showThreadComposer}
+        onClose={() => setShowThreadComposer(false)}
+        apiUrl={API_URL}
+        user={authUser}
+        onThreadCreated={() => {
+          setShowThreadComposer(false);
+          // Refresh categories to show updated thread count
+          axios.get(`${API_URL}/forum/categories`).then((res) => setCategories(res.data));
+        }}
+      />
     </div>
   );
 }
