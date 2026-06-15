@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
-import { X, Users, Activity, Server, Database, MessageSquare } from 'lucide-react';
+import { X, Users, Activity, Server, Database } from 'lucide-react';
 import UserManagement from './UserManagement';
 import ActivityLogViewer from './ActivityLogViewer';
 import SystemHealth from './SystemHealth';
 import MigrationPanel from './MigrationPanel';
-import ForumAdminTab from './ForumAdminTab';
 
-export function AdminPanel({ onClose, onOpenSpamFilter, onOpenMuteManager }) {
+export function AdminPanel({ onClose }) {
   const [activeTab, setActiveTab] = useState('users');
 
   const tabs = [
     { id: 'users', label: 'Users', icon: Users },
     { id: 'activity', label: 'Activity Log', icon: Activity },
-    { id: 'forum', label: 'Forum', icon: MessageSquare },
     { id: 'health', label: 'System Health', icon: Server },
     { id: 'migration', label: 'Data Migration', icon: Database }
   ];
@@ -50,7 +48,6 @@ export function AdminPanel({ onClose, onOpenSpamFilter, onOpenMuteManager }) {
         <div className="flex-1 overflow-y-auto p-6">
           {activeTab === 'users' && <UserManagement />}
           {activeTab === 'activity' && <ActivityLogViewer />}
-          {activeTab === 'forum' && <ForumAdminTab onOpenSpamFilter={onOpenSpamFilter} onOpenMuteManager={onOpenMuteManager} />}
           {activeTab === 'health' && <SystemHealth />}
           {activeTab === 'migration' && <MigrationPanel />}
         </div>

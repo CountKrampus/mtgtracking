@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Zap } from 'lucide-react';
+import { Search, Plus, Zap, Settings } from 'lucide-react';
 import axios from 'axios';
 import ThreadComposer from './ThreadComposer';
+import ForumAdminPanel from './ForumAdminPanel';
 
 const API_URL = 'http://localhost:5000/api';
 
 export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, authUser }) {
   const [showThreadComposer, setShowThreadComposer] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -64,10 +66,11 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
           )}
           {authUser?.role === 'admin' && (
             <button
-              onClick={onOpenAdmin}
-              className="flex items-center gap-1.5 text-white/70 hover:text-white transition text-sm"
+              onClick={() => setShowAdminPanel(true)}
+              className="p-1.5 hover:bg-white/10 rounded text-white/70 hover:text-white transition"
+              title="Forum Admin"
             >
-              <span>⚙️</span> Admin
+              <Settings size={18} />
             </button>
           )}
         </div>
@@ -187,6 +190,16 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
         onThreadCreated={() => {
           setShowThreadComposer(false);
           // Refresh categories to show updated thread count
+          axios.get(`${API_URL}/forum/categories`).then((res) => setCategories(res.data));
+        }}
+      />
+
+      {/* Forum Admin Panel */}
+      <ForumAdminPanel
+        isOpen={showAdminPanel}
+        onClose={() => {
+          setShowAdminPanel(false);
+          // Refresh categories after admin changes
           axios.get(`${API_URL}/forum/categories`).then((res) => setCategories(res.data));
         }}
       />
