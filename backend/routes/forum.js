@@ -398,7 +398,7 @@ router.get('/users/:username/activity', async (req, res) => {
       ForumThread.countDocuments({ authorId: user._id }),
       ForumPost.aggregate([
         { $match: { authorId: user._id, isFlagHidden: { $ne: true }, isShadowHidden: { $ne: true } } },
-        { $project: { upvoteCount: { $size: '$upvotes' } } },
+        { $project: { upvoteCount: { $size: { $ifNull: ['$upvotes', []] } } } },
         { $group: { _id: null, total: { $sum: '$upvoteCount' } } }
       ]),
       ForumPost.countDocuments(postQuery)
@@ -420,7 +420,7 @@ router.get('/users/:username/activity', async (req, res) => {
     // Top 5 posts by upvotes
     const topPostDocs = await ForumPost.aggregate([
       { $match: postQuery },
-      { $addFields: { upvoteCount: { $size: '$upvotes' } } },
+      { $addFields: { upvoteCount: { $size: { $ifNull: ['$upvotes', []] } } } },
       { $sort: { upvoteCount: -1 } },
       { $limit: 5 }
     ]);
