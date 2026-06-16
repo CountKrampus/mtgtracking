@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import ForumCategoriesTab from './ForumCategoriesTab';
 import SpamFilterAdmin from './SpamFilterAdmin';
 import MuteManager from './MuteManager';
+import ModmailAdmin from '../admin/ModmailAdmin';
 import { API_URL } from '../../config';
 
 export default function ForumAdminPanel({ isOpen, onClose }) {
@@ -63,6 +64,16 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
           >
             Spam Filter
           </button>
+          <button
+            onClick={() => setActiveTab('modmail')}
+            className={`flex-1 px-6 py-3 font-semibold transition ${
+              activeTab === 'modmail'
+                ? 'bg-purple-600 text-white'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Modmail
+          </button>
         </div>
 
         {/* Content */}
@@ -75,6 +86,9 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
           )}
           {activeTab === 'spam' && (
             loadedTabs.spam ? <SpamFilterAdmin /> : <div className="text-slate-400">Loading...</div>
+          )}
+          {activeTab === 'modmail' && (
+            loadedTabs.modmail ? <ModmailAdmin apiUrl={API_URL} /> : <div className="text-slate-400">Loading...</div>
           )}
         </div>
       </div>

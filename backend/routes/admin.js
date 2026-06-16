@@ -769,4 +769,76 @@ router.post('/spam-config/test', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/admin/modmail - Send modmail to all users
+ */
+router.post('/modmail', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { subject, message } = req.body;
+
+    if (!subject?.trim() || !message?.trim()) {
+      return res.status(400).json({ message: 'Subject and message are required' });
+    }
+
+    // Get or create modmail user
+    let modmailUser = await User.findOne({ username: 'modmail' });
+    if (!modmailUser) {
+      modmailUser = await User.create({
+        username: 'modmail',
+        email: 'modmail@system.local',
+        displayName: 'Modmail',
+        passwordHash: 'system-account',
+        role: 'admin',
+        isActive: true
+      });
+    }
+
+    // Get all active users
+    const users = await User.find({ isActive: true, _id: { $ne: modmailUser._id } }).select('_id');
+
+    let notificationCount = 0;
+    let dmCount = 0;
+
+    // Create notifications and DMs for each user
+    for (const user of users) {
+      try {
+        // Create notification
+        const Notification = mongoose.model('Notification');
+        await Notification.create({
+          userId: user._id,
+          type: 'dm',
+          fromUserId: modmailUser._id,
+          messageId: null,
+          content: message.substring(0, 200),
+          isRead: false
+        });
+        notificationCount++;
+
+        // Create DM
+        const DirectMessage = mongoose.model('DirectMessage');
+        await DirectMessage.create({
+          fromUserId: modmailUser._id,
+          toUserId: user._id,
+          content: `**[${subject}]**\n\n${message}`,
+          isRead: false
+        });
+        dmCount++;
+      } catch (err) {
+        console.error(`Error sending modmail to user ${user._id}:`, err);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Modmail sent',
+      notificationCount,
+      dmCount,
+      totalUsers: users.length
+    });
+  } catch (error) {
+    console.error('Send modmail error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;
