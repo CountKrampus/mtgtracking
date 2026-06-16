@@ -749,7 +749,10 @@ router.get('/user-level', async (req, res) => {
     if (!level && req.user) {
       level = await ForumLevel.create({ userId: req.user._id });
     }
-    res.json(level);
+    if (!level) return res.json(null);
+    const data = level.toObject();
+    data.experienceToNextLevel = level.level * 500;
+    res.json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

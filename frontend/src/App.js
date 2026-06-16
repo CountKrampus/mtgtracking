@@ -5515,7 +5515,12 @@ function App() {
       {/* Forum Level Widget - Shown when in forum view */}
       {currentView === 'forum' && authUser && (
         <div className="fixed bottom-6 right-6 w-80 z-40">
-          <ForumLevelWidget apiUrl={API_URL} user={authUser} />
+          <ForumLevelWidget
+            apiUrl={API_URL}
+            user={authUser}
+            onViewShop={() => setShowForumShop(true)}
+            onViewProfile={() => setCurrentView('my-profile')}
+          />
         </div>
       )}
       </div>
