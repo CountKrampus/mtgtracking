@@ -14,6 +14,7 @@ const {
   createReplyNotification,
   createUpvoteNotification
 } = require('../utils/notifications');
+const { generateDiff, recordEdit } = require('../utils/postEditHistory');
 const Ban = require('../models/Ban');
 const User = require('../models/User');
 
@@ -321,17 +322,12 @@ router.put('/posts/:postId', verifyToken, requireAuth, async (req, res) => {
       return res.status(403).json({ message: 'You can only edit your own posts' });
     }
 
-    // Add to edit history
-    post.editHistory.push({
-      originalBody: post.body,
-      editedBy: req.user._id,
-      reason
-    });
+    const oldBody = post.body;
+
+    // Record edit history using utility (also sets isEdited, lastEditedAt, lastEditedBy)
+    recordEdit(post, oldBody, req.user._id, reason);
 
     post.body = body;
-    post.isEdited = true;
-    post.lastEditedAt = new Date();
-    post.lastEditedBy = req.user._id;
 
     await post.save();
     await post.populate('authorId', 'username displayName');
