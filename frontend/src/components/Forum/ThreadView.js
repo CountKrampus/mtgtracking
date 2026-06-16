@@ -354,24 +354,30 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
                       {post.isEdited && ' (edited)'}
                     </div>
                   </div>
-                  {user && user._id === post.authorId._id && (
+                  {user && (user._id === post.authorId._id || user.role === 'admin') && (
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          setEditingPostId(post._id);
-                          setEditBody(post.body);
-                        }}
-                        className="p-1 hover:bg-slate-700 rounded"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => setHistoryPostId(post._id)}
-                        className="p-1 hover:bg-slate-700 rounded text-blue-400"
-                      >
-                        <History size={16} />
-                      </button>
-                      <button className="p-1 hover:bg-slate-700 rounded text-red-500">
+                      {user._id === post.authorId._id && (
+                        <button
+                          onClick={() => {
+                            setEditingPostId(post._id);
+                            setEditBody(post.body);
+                          }}
+                          className="p-1 hover:bg-slate-700 rounded"
+                          title="Edit post"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                      )}
+                      {post.isEdited && (
+                        <button
+                          onClick={() => setHistoryPostId(post._id)}
+                          className="p-1 hover:bg-slate-700 rounded text-blue-400"
+                          title="View edit history"
+                        >
+                          <History size={16} />
+                        </button>
+                      )}
+                      <button className="p-1 hover:bg-slate-700 rounded text-red-500" title="Delete post">
                         <Trash2 size={16} />
                       </button>
                     </div>
