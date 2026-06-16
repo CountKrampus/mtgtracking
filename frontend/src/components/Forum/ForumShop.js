@@ -64,7 +64,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose }) {
 
   const fetchUserLevel = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('mtg_access_token');
       const response = await fetch(`${apiUrl}/forum/user-level`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -88,7 +88,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose }) {
     if (loadingId) return;
     setLoadingId(item.id);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('mtg_access_token');
       const response = await fetch(`${apiUrl}/forum/level/cosmetics/purchase`, {
         method: 'POST',
         headers: {
@@ -116,7 +116,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose }) {
     if (loadingId) return;
     setLoadingId(item.id);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('mtg_access_token');
       const response = await fetch(`${apiUrl}/forum/level/cosmetics/equip`, {
         method: 'POST',
         headers: {
