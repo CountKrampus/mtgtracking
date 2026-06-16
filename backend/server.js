@@ -77,16 +77,7 @@ mongoose.connect(MONGODB_URI)
 })
 .catch(err => console.error('MongoDB connection error:', err));
 
-// Auth middleware - verify token for all requests (populates req.user if valid token)
-app.use(verifyToken);
-
-// Mount auth routes (these don't require authentication)
-app.use('/api/auth', authRoutes);
-
-// Mount user routes (require authentication)
-app.use('/api/users', userRoutes);
-
-// Serve user avatars
+// Serve user avatars (public endpoint - must be before auth middleware)
 const AVATAR_DIR = path.join(__dirname, 'user-avatars');
 app.get('/api/users/avatar/:filename', (req, res) => {
   try {
@@ -101,6 +92,15 @@ app.get('/api/users/avatar/:filename', (req, res) => {
     res.status(404).json({ message: 'Avatar not found' });
   }
 });
+
+// Auth middleware - verify token for all requests (populates req.user if valid token)
+app.use(verifyToken);
+
+// Mount auth routes (these don't require authentication)
+app.use('/api/auth', authRoutes);
+
+// Mount user routes (require authentication)
+app.use('/api/users', userRoutes);
 
 // Mount admin routes (require admin role)
 app.use('/api/admin', adminRoutes);
