@@ -93,7 +93,7 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck
 
   // Decks to display based on active folder
   const visibleDecks = useMemo(() => {
-    if (!activeFolderId) return decks;
+    if (!activeFolderId) return decks.filter(d => !d.folderId);
     return decks.filter(d => String(d.folderId) === String(activeFolderId));
   }, [decks, activeFolderId]);
 
@@ -206,11 +206,11 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck
                   : 'bg-white/10 border border-white/20 text-white/70 hover:bg-white/20'
               }`}
             >
-              📁 {activeFolderId ? (folderPath[folderPath.length - 1]?.name || 'Folder') : 'All Decks'} ▾
+              📁 {activeFolderId ? (folderPath[folderPath.length - 1]?.name || 'Folder') : 'Uncategorised decks'} ▾
             </button>
             {folderDropdownOpen && (
               <div className="absolute top-full left-0 mt-1 z-50 bg-gray-900 border border-white/20 rounded-lg shadow-2xl w-64 py-1 max-h-80 overflow-y-auto">
-                {/* All Decks row */}
+                {/* Uncategorised decks row */}
                 <div
                   className={`flex items-center gap-2 px-3 py-2 cursor-pointer text-sm select-none ${
                     !activeFolderId ? 'text-purple-300 bg-purple-600/20' : 'text-white/70 hover:bg-white/10'
@@ -218,8 +218,8 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck
                   onClick={() => handleFolderSelect(null)}
                 >
                   <span>🗂</span>
-                  <span>All Decks</span>
-                  <span className="ml-auto text-white/30 text-xs">{decks.length}</span>
+                  <span>Uncategorised decks</span>
+                  <span className="ml-auto text-white/30 text-xs">{decks.filter(d => !d.folderId).length}</span>
                 </div>
                 {rootFolderTree.length > 0 && <div className="border-t border-white/10 my-1" />}
                 {/* Recursive folder tree */}
@@ -270,7 +270,7 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck
           <button
             onClick={() => setActiveFolderId(null)}
             className="hover:text-white transition"
-          >All Decks</button>
+          >Uncategorised decks</button>
           {folderPath.map((folder, i) => (
             <React.Fragment key={folder._id}>
               <span className="text-white/30">›</span>
@@ -314,7 +314,7 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck
         <div className="text-center py-12 text-white/60">
           {activeFolderId
             ? 'No decks in this folder. Right-click a deck to move it here.'
-            : 'No decks yet. Create or import your first deck to get started!'}
+            : 'No uncategorised decks. All your decks are in folders, or create a new one!'}
         </div>
       )}
 
