@@ -86,6 +86,23 @@ app.use('/api/auth', authRoutes);
 // Mount user routes (require authentication)
 app.use('/api/users', userRoutes);
 
+// Serve user avatars
+const path = require('path');
+const AVATAR_DIR = path.join(__dirname, 'user-avatars');
+app.get('/api/users/avatar/:filename', (req, res) => {
+  try {
+    const filename = req.params.filename;
+    // Prevent directory traversal
+    if (filename.includes('..') || filename.includes('/')) {
+      return res.status(400).json({ message: 'Invalid filename' });
+    }
+    const filepath = path.join(AVATAR_DIR, filename);
+    res.sendFile(filepath);
+  } catch (error) {
+    res.status(404).json({ message: 'Avatar not found' });
+  }
+});
+
 // Mount admin routes (require admin role)
 app.use('/api/admin', adminRoutes);
 

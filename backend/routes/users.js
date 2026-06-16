@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 
 const User = require('../models/User');
 const Session = require('../models/Session');
@@ -7,6 +10,8 @@ const ActivityLog = require('../models/ActivityLog');
 const { hashPassword, verifyPassword, validatePasswordStrength } = require('../utils/passwords');
 const { verifyToken, requireAuth, isMultiUserEnabled } = require('../middleware/auth');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
+
+const AVATAR_DIR = path.join(__dirname, '../user-avatars');
 
 // All user routes require authentication
 router.use(verifyToken);
@@ -49,7 +54,7 @@ router.put('/me', async (req, res) => {
       });
     }
 
-    const { displayName, email, privacy } = req.body;
+    const { displayName, email, privacy, avatarUrl } = req.body;
 
     // Update display name if provided
     if (displayName !== undefined) {
@@ -74,6 +79,17 @@ router.put('/me', async (req, res) => {
       }
 
       user.email = normalizedEmail;
+    }
+
+    // Update avatarUrl if provided (for preset avatars)
+    if (avatarUrl !== undefined) {
+      if (avatarUrl === '' || avatarUrl.startsWith('preset:')) {
+        user.avatarUrl = avatarUrl;
+      } else {
+        return res.status(400).json({
+          message: 'Invalid avatarUrl. Must be empty string or start with "preset:"'
+        });
+      }
     }
 
     // Update privacy sub-fields if provided (merge, don't replace)
@@ -432,6 +448,121 @@ router.get('/me/activity', async (req, res) => {
     res.json(activityLog);
   } catch (error) {
     console.error('Get activity log error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * POST /api/users/me/avatar
+ * Upload a new avatar (base64 image or preset)
+ */
+router.post('/me/avatar', async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const { imageData, preset } = req.body;
+
+    // If preset is provided, just set it
+    if (preset) {
+      if (!preset.startsWith('preset:')) {
+        return res.status(400).json({ message: 'Invalid preset format' });
+      }
+      user.avatarUrl = preset;
+      await user.save();
+      return res.json({ avatarUrl: preset });
+    }
+
+    // If image data is provided, save the file
+    if (!imageData) {
+      return res.status(400).json({ message: 'Either imageData or preset is required' });
+    }
+
+    // Parse base64 data
+    let buffer;
+    try {
+      const matches = imageData.match(/^data:image\/(jpeg|jpg|png);base64,(.+)$/);
+      if (!matches) {
+        return res.status(400).json({ message: 'Invalid image format. Must be base64 JPEG or PNG' });
+      }
+
+      const format = matches[1];
+      const base64Data = matches[2];
+
+      // Validate format
+      if (!['jpeg', 'jpg', 'png'].includes(format)) {
+        return res.status(400).json({ message: 'Only JPEG and PNG formats are allowed' });
+      }
+
+      buffer = Buffer.from(base64Data, 'base64');
+
+      // Validate size (max 5MB)
+      if (buffer.length > 5 * 1024 * 1024) {
+        return res.status(400).json({ message: 'Image must be smaller than 5MB' });
+      }
+    } catch (error) {
+      return res.status(400).json({ message: 'Invalid image data' });
+    }
+
+    // Generate filename
+    const filename = `${uuidv4()}.jpg`;
+    const filepath = path.join(AVATAR_DIR, filename);
+
+    // Ensure directory exists
+    if (!fs.existsSync(AVATAR_DIR)) {
+      fs.mkdirSync(AVATAR_DIR, { recursive: true });
+    }
+
+    // Delete old avatar if it exists and is a file (not a preset)
+    if (user.avatarUrl && !user.avatarUrl.startsWith('preset:')) {
+      const oldPath = path.join(AVATAR_DIR, path.basename(user.avatarUrl));
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    }
+
+    // Save new avatar
+    fs.writeFileSync(filepath, buffer);
+
+    // Update user
+    user.avatarUrl = `/api/users/avatar/${filename}`;
+    await user.save();
+
+    res.json({ avatarUrl: user.avatarUrl });
+  } catch (error) {
+    console.error('Upload avatar error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * DELETE /api/users/me/avatar
+ * Delete current user's avatar
+ */
+router.delete('/me/avatar', async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Delete file if avatar is a file (not a preset)
+    if (user.avatarUrl && !user.avatarUrl.startsWith('preset:')) {
+      const filepath = path.join(AVATAR_DIR, path.basename(user.avatarUrl));
+      if (fs.existsSync(filepath)) {
+        fs.unlinkSync(filepath);
+      }
+    }
+
+    // Clear avatar
+    user.avatarUrl = '';
+    await user.save();
+
+    res.json({ message: 'Avatar deleted' });
+  } catch (error) {
+    console.error('Delete avatar error:', error);
     res.status(500).json({ message: error.message });
   }
 });

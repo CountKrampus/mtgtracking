@@ -183,7 +183,9 @@ router.post('/posts', verifyToken, requireAuth, checkMute, async (req, res) => {
       threadId,
       body,
       bodyFormat,
-      authorId: req.user._id
+      authorId: req.user._id,
+      authorUsername: user.username,
+      authorAvatarUrl: user.avatarUrl || ''
     });
 
     await post.save();
@@ -541,7 +543,7 @@ router.get('/users/:username/activity', async (req, res) => {
     const recentPosts = await ForumPost.find({ authorId: user._id })
       .sort({ createdAt: -1 })
       .limit(10)
-      .select('body createdAt threadId upvotes')
+      .select('body createdAt threadId upvotes authorAvatarUrl')
       .populate('threadId', 'title')
       .lean();
 
@@ -549,7 +551,7 @@ router.get('/users/:username/activity', async (req, res) => {
     const topPosts = await ForumPost.find({ authorId: user._id })
       .sort({ createdAt: -1 })
       .limit(5)
-      .select('body createdAt threadId upvotes')
+      .select('body createdAt threadId upvotes authorAvatarUrl')
       .populate('threadId', 'title')
       .lean()
       .then(posts =>
