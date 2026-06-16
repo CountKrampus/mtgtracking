@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { API_URL } from '../config';
+import UserAvatar from './avatars/UserAvatar';
 
 const BADGE_EMOJI = {
   'First Post': '📝',
@@ -179,9 +180,7 @@ export default function UserProfile({ username }) {
         {/* Profile Header */}
         <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6">
           <div className="flex items-center gap-5">
-            <div className="w-16 h-16 rounded-full bg-purple-700 flex items-center justify-center text-3xl font-bold text-white select-none">
-              {(profile.displayName || profile.username).charAt(0).toUpperCase()}
-            </div>
+            <UserAvatar avatarUrl={profile.avatarUrl} username={profile.username} size="xl" />
             <div>
               <h1 className="text-2xl font-bold text-white">{profile.displayName || profile.username}</h1>
               <div className="text-white/50 text-sm">@{profile.username}</div>

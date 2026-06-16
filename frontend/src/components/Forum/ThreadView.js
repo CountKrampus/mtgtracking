@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Edit2, Trash2, History, Lock, Unlock, RefreshCw, X } from 'lucide-react';
 import PostComposer from './PostComposer';
 import PostEditHistory from './PostEditHistory';
+import UserAvatar from '../avatars/UserAvatar';
 
 export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpdated }) {
   const [thread, setThread] = useState(null);

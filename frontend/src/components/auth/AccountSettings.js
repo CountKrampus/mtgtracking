@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { User, Mail, Lock, Save, AlertCircle, CheckCircle, LogOut, Trash2, Shield } from 'lucide-react';
+import { User, Mail, Lock, Save, AlertCircle, CheckCircle, LogOut, Trash2, Shield, Camera } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { SessionManager } from './SessionManager';
 import { API_URL } from '../../config';
+import AvatarPicker from '../avatars/AvatarPicker';
+import UserAvatar from '../avatars/UserAvatar';
 
 export function AccountSettings({ onClose }) {
   const { user, updateProfile, changePassword, logout, authFetch } = useAuthContext();
@@ -36,6 +38,18 @@ export function AccountSettings({ onClose }) {
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Avatar state
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState(user?.avatarUrl || '');
+
+  const handleAvatarSave = (avatarUrl) => {
+    setCurrentAvatarUrl(avatarUrl);
+    // Update user context if available
+    if (user) {
+      user.avatarUrl = avatarUrl;
+    }
+  };
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
@@ -181,6 +195,21 @@ export function AccountSettings({ onClose }) {
                   className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-400 cursor-not-allowed"
                 />
                 <p className="mt-1 text-xs text-gray-500">Username cannot be changed</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Avatar</label>
+                <div className="flex items-center gap-4">
+                  <UserAvatar avatarUrl={currentAvatarUrl} username={user?.username} size="lg" />
+                  <button
+                    type="button"
+                    onClick={() => setShowAvatarPicker(true)}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 text-sm"
+                  >
+                    <Camera size={16} />
+                    Change Avatar
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -454,6 +483,15 @@ export function AccountSettings({ onClose }) {
           )}
         </div>
       </div>
+
+      {/* Avatar Picker Modal */}
+      <AvatarPicker
+        isOpen={showAvatarPicker}
+        onClose={() => setShowAvatarPicker(false)}
+        currentAvatarUrl={currentAvatarUrl}
+        onSave={handleAvatarSave}
+        apiUrl={API_URL}
+      />
     </div>
   );
 }
