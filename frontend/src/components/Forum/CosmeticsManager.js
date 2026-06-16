@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_URL } from '../../config';
 
 export default function CosmeticsManager() {
   const [cosmetics, setCosmetics] = useState([]);
