@@ -223,7 +223,10 @@ router.post('/threads', verifyToken, requireAuth, checkMute, async (req, res) =>
 
     await thread.populate('authorId', 'username displayName');
 
-    res.status(201).json(thread);
+    // Check for duplicate threads using Jaccard similarity
+    const suggestedDuplicates = await findDuplicates(title, categoryId, 0.6);
+
+    res.status(201).json({ thread, suggestedDuplicates });
   } catch (error) {
     console.error('Create thread error:', error);
     res.status(500).json({ message: error.message });
@@ -567,6 +570,7 @@ router.delete('/posts/:postId', verifyToken, requireAuth, async (req, res) => {
 // Advanced Features: Duplicates, Merges, Deck Import
 
 const { findDuplicateThreads } = require('../utils/threadDuplicateDetector');
+const { findDuplicateThreads: findDuplicates } = require('../utils/duplicateDetector');
 const ForumLevel = require('../models/ForumLevel');
 
 // POST /api/forum/threads/check-duplicates
@@ -581,6 +585,21 @@ router.post('/threads/check-duplicates', async (req, res) => {
     res.json(duplicates);
   } catch (error) {
     console.error('Check duplicates error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// GET /api/forum/threads/:threadId/duplicates
+router.get('/threads/:threadId/duplicates', async (req, res) => {
+  try {
+    const thread = await ForumThread.findById(req.params.threadId).select('title categoryId').lean();
+    if (!thread) return res.status(404).json({ message: 'Thread not found' });
+
+    const duplicates = await findDuplicates(thread.title, thread.categoryId, 0.6);
+
+    res.json({ duplicates: duplicates.filter(d => d.threadId.toString() !== req.params.threadId) });
+  } catch (error) {
+    console.error('Get thread duplicates error:', error);
     res.status(500).json({ message: error.message });
   }
 });
