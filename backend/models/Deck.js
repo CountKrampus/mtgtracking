@@ -47,6 +47,7 @@ const deckSchema = new mongoose.Schema({
   description: { type: String, default: '' },
   tags: [{ type: String }],
   folder: { type: String, default: '' },
+  folderId: { type: mongoose.Schema.Types.ObjectId, ref: 'DeckFolder', default: null },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
