@@ -1,68 +1,136 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Notification = require('../models/Notification');
-const { requireAuth } = require('../middleware/auth');
-const { getUserId } = require('../middleware/multiUser');
+const { verifyToken, requireAuth } = require('../middleware/auth');
 
-// Exported helper for creating notifications from other route files
-async function createNotification(userId, type, title, body, link) {
+// GET /api/notifications - Get user's notifications
+router.get('/', verifyToken, requireAuth, async (req, res) => {
   try {
-    await Notification.create({ userId, type, title, body: body || '', link: link || '' });
-  } catch (err) {
-    console.error('createNotification error:', err.message);
-  }
-}
+    const userId = req.user._id;
+    const { unreadOnly = false } = req.query;
 
-// GET /api/notifications — most recent 20 for current user
-router.get('/', requireAuth, async (req, res) => {
-  try {
-    const userId = getUserId(req);
+    // Build query
     const query = { userId };
-    if (req.query.unreadOnly === 'true') query.read = false;
+    if (unreadOnly === 'true') {
+      query.isRead = false;
+    }
 
+    // Fetch notifications sorted by isRead (unread first) then by createdAt
     const notifications = await Notification.find(query)
-      .sort({ createdAt: -1 })
-      .limit(20)
-      .lean();
+      .sort({ isRead: 1, createdAt: -1 })
+      .populate('fromUserId', 'username displayName')
+      .populate('threadId', 'title')
+      .populate('postId', 'body')
+      .populate('messageId', 'content');
 
-    res.json(notifications);
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch notifications' });
+    // Count unread notifications
+    const unreadCount = await Notification.countDocuments({
+      userId,
+      isRead: false
+    });
+
+    res.json({
+      unreadCount,
+      notifications
+    });
+  } catch (error) {
+    console.error('Get notifications error:', error);
+    res.status(500).json({ message: error.message });
   }
 });
 
-// GET /api/notifications/unread-count
-router.get('/unread-count', requireAuth, async (req, res) => {
+// POST /api/notifications/:id/read - Mark single notification as read
+router.post('/:id/read', verifyToken, requireAuth, async (req, res) => {
   try {
-    const count = await Notification.countDocuments({ userId: getUserId(req), read: false });
-    res.json({ count });
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch unread count' });
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    // Validate ID format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid notification ID' });
+    }
+
+    // Find notification and verify ownership
+    const notification = await Notification.findById(id);
+    if (!notification) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+
+    if (notification.userId.toString() !== userId.toString()) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    // Mark as read
+    notification.isRead = true;
+    notification.readAt = new Date();
+    await notification.save();
+
+    // Populate references for response
+    await notification.populate('fromUserId', 'username displayName');
+    await notification.populate('threadId', 'title');
+    await notification.populate('postId', 'body');
+    await notification.populate('messageId', 'content');
+
+    res.json(notification);
+  } catch (error) {
+    console.error('Mark notification as read error:', error);
+    res.status(500).json({ message: error.message });
   }
 });
 
-// PUT /api/notifications/:id/read — mark one as read
-router.put('/:id/read', requireAuth, async (req, res) => {
+// DELETE /api/notifications/:id - Delete notification
+router.delete('/:id', verifyToken, requireAuth, async (req, res) => {
   try {
-    await Notification.updateOne(
-      { _id: req.params.id, userId: getUserId(req) },
-      { $set: { read: true } }
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    // Validate ID format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid notification ID' });
+    }
+
+    // Find notification and verify ownership
+    const notification = await Notification.findById(id);
+    if (!notification) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+
+    if (notification.userId.toString() !== userId.toString()) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    // Delete notification
+    await Notification.findByIdAndDelete(id);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete notification error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST /api/notifications/mark-all-read - Mark all user's notifications as read
+router.post('/mark-all-read', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Update all unread notifications for this user
+    const result = await Notification.updateMany(
+      { userId, isRead: false },
+      {
+        $set: {
+          isRead: true,
+          readAt: new Date()
+        }
+      }
     );
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to mark as read' });
-  }
-});
 
-// PUT /api/notifications/read-all — mark all as read
-router.put('/read-all', requireAuth, async (req, res) => {
-  try {
-    await Notification.updateMany({ userId: getUserId(req), read: false }, { $set: { read: true } });
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to mark all as read' });
+    res.json({ markedCount: result.modifiedCount });
+  } catch (error) {
+    console.error('Mark all notifications as read error:', error);
+    res.status(500).json({ message: error.message });
   }
 });
 
 module.exports = router;
-module.exports.createNotification = createNotification;

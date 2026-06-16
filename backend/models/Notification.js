@@ -4,26 +4,66 @@ const notificationSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true,
+    required: [true, 'User ID is required'],
+    index: true
   },
   type: {
     type: String,
-    enum: [
-      'price_alert', 'borrow_request', 'playgroup_invite',
-      'game_night', 'game_room', 'direct_message', 'modmail',
-    ],
-    required: true,
+    enum: ['mention', 'reply', 'upvote', 'dm'],
+    required: [true, 'Notification type is required']
   },
-  title: { type: String, required: true, maxlength: 100 },
-  body: { type: String, default: '', maxlength: 300 },
-  link: { type: String, default: '' },
-  read: { type: Boolean, default: false, index: true },
-  createdAt: { type: Date, default: Date.now, index: true },
+  fromUserId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'From User ID is required']
+  },
+  threadId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ForumThread'
+  },
+  postId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ForumPost'
+  },
+  messageId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'DirectMessage'
+  },
+  content: {
+    type: String,
+    maxlength: [200, 'Content cannot exceed 200 characters']
+  },
+  isRead: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  readAt: {
+    type: Date,
+    default: null
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    required: true,
+    index: true
+  }
 });
 
-notificationSchema.index({ userId: 1, read: 1, createdAt: -1 });
-// Auto-delete after 30 days
-notificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 2592000 });
+// Compound indexes for common queries
+notificationSchema.index({ userId: 1, isRead: 1 });
+notificationSchema.index({ userId: 1, createdAt: -1 });
+
+// Pre-save middleware: update readAt when isRead changes
+notificationSchema.pre('save', function(next) {
+  if (this.isModified('isRead')) {
+    if (this.isRead && !this.readAt) {
+      this.readAt = new Date();
+    } else if (!this.isRead) {
+      this.readAt = null;
+    }
+  }
+  next();
+});
 
 module.exports = mongoose.model('Notification', notificationSchema);
