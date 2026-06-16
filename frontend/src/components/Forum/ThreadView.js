@@ -3,6 +3,7 @@ import { Edit2, Trash2, History, Lock, Unlock, RefreshCw, X } from 'lucide-react
 import PostComposer from './PostComposer';
 import PostEditHistory from './PostEditHistory';
 import UserAvatar from '../avatars/UserAvatar';
+import DeckImportButton from './DeckImportButton';
 
 export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpdated, onViewProfile }) {
   const [thread, setThread] = useState(null);
@@ -245,6 +246,9 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
                   </button>
                 </div>
               )}
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <DeckImportButton threadId={threadId} user={user} />
             </div>
             <div className="text-slate-400 text-sm">
               By{' '}

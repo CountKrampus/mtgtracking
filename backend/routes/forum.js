@@ -686,6 +686,31 @@ router.post('/threads/:threadId/import-deck', verifyToken, requireAuth, async (r
   }
 });
 
+// POST /api/forum/threads/:threadId/extract-deck
+router.post('/threads/:threadId/extract-deck', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { threadId } = req.params;
+    const { extractDeckFromText } = require('../utils/deckExtractor');
+
+    const thread = await ForumThread.findById(threadId).select('content title').lean();
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+
+    const result = extractDeckFromText(thread.content || '');
+
+    res.json({
+      cards: result.cards,
+      total: result.total,
+      format: 'detected',
+      threadTitle: thread.title
+    });
+  } catch (error) {
+    console.error('Extract deck error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // DELETE /api/forum/threads/:threadId
 router.delete('/threads/:threadId', verifyToken, requireAuth, requireAdmin, async (req, res) => {
   try {
