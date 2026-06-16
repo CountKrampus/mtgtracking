@@ -5,7 +5,7 @@ const ForumCategory = require('../models/ForumCategory');
 const ForumThread = require('../models/ForumThread');
 const ForumPost = require('../models/ForumPost');
 const Notification = require('../models/Notification');
-const { verifyToken, requireAuth } = require('../middleware/auth');
+const { verifyToken, requireAuth, requireAdmin } = require('../middleware/auth');
 const { checkMute } = require('../middleware/muteEnforcer');
 const { checkSpam } = require('../utils/spamFilter');
 const {
@@ -500,6 +500,78 @@ router.post('/shop/purchase', verifyToken, requireAuth, async (req, res) => {
 
     res.json({ message: 'Purchased', updatedLevel: userLevel });
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// GET /api/forum/users/:username/activity - Public forum profile activity
+router.get('/users/:username/activity', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check privacy toggle
+    if (!user.privacy?.showForum) {
+      return res.status(403).json({ message: 'Forum profile is private' });
+    }
+
+    // Get post count
+    const postCount = await ForumPost.countDocuments({ authorId: user._id });
+
+    // Get thread count
+    const threadCount = await ForumThread.countDocuments({ authorId: user._id });
+
+    // Get total upvotes received
+    const upvoteAgg = await ForumPost.aggregate([
+      { $match: { authorId: user._id } },
+      {
+        $group: {
+          _id: null,
+          totalUpvotes: { $sum: { $size: '$upvotes' } }
+        }
+      }
+    ]);
+    const totalUpvotes = upvoteAgg[0]?.totalUpvotes || 0;
+
+    // Get recent posts (10 most recent)
+    const recentPosts = await ForumPost.find({ authorId: user._id })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select('body createdAt threadId upvotes')
+      .populate('threadId', 'title')
+      .lean();
+
+    // Get top posts (5 highest upvoted)
+    const topPosts = await ForumPost.find({ authorId: user._id })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('body createdAt threadId upvotes')
+      .populate('threadId', 'title')
+      .lean()
+      .then(posts =>
+        posts.sort((a, b) => b.upvotes.length - a.upvotes.length).slice(0, 5)
+      );
+
+    res.json({
+      username: user.username,
+      displayName: user.displayName || user.username,
+      reputation: user.reputation || 0,
+      badges: user.badges || [],
+      stats: {
+        posts: postCount,
+        threads: threadCount,
+        upvotes: totalUpvotes,
+        memberSince: user.createdAt
+      },
+      recentPosts,
+      topPosts
+    });
+  } catch (error) {
+    console.error('Get forum profile activity error:', error);
     res.status(500).json({ message: error.message });
   }
 });
