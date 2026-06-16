@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Upload, Plus } from 'lucide-react';
+import { Upload, Plus, X } from 'lucide-react';
 
 // Helper: build a nested folder tree from a flat array
 function buildFolderTree(folders, parentId = null) {
@@ -148,6 +148,7 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck
       <div
         className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30 hover:bg-white/15 transition cursor-pointer"
         onClick={() => onViewDeck(deck)}
+        onContextMenu={e => { e.preventDefault(); setContextMenu({ deck, x: e.clientX, y: e.clientY }); }}
       >
         <div className="relative">
           {deck.commander?.imageUrl && (
@@ -314,6 +315,91 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck
           {activeFolderId
             ? 'No decks in this folder. Right-click a deck to move it here.'
             : 'No decks yet. Create or import your first deck to get started!'}
+        </div>
+      )}
+
+      {/* Right-click context menu */}
+      {contextMenu && (
+        <div
+          className="fixed z-[60] bg-gray-900 border border-white/20 rounded-lg shadow-2xl py-1 w-48"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={e => e.stopPropagation()}
+        >
+          <button
+            className="w-full text-left px-4 py-2 text-white/80 hover:bg-purple-600/30 hover:text-white text-sm flex items-center gap-2 transition"
+            onClick={() => { setMovingDeck(contextMenu.deck); setMoveTarget(contextMenu.deck.folderId || null); setContextMenu(null); }}
+          >
+            📂 Move to folder…
+          </button>
+          <div className="border-t border-white/10 my-1" />
+          <button
+            className="w-full text-left px-4 py-2 text-red-400/80 hover:bg-red-600/20 hover:text-red-300 text-sm flex items-center gap-2 transition"
+            onClick={() => { onDeleteDeck(contextMenu.deck._id); setContextMenu(null); }}
+          >
+            🗑 Delete deck
+          </button>
+        </div>
+      )}
+
+      {/* Move to folder modal */}
+      {movingDeck && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-white/20 rounded-xl p-6 w-full max-w-sm shadow-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-white font-bold text-lg">Move to Folder</h3>
+              <button onClick={() => { setMovingDeck(null); setMoveTarget(undefined); }} className="text-white/40 hover:text-white transition">
+                <X size={18} />
+              </button>
+            </div>
+            <p className="text-white/60 text-sm mb-4">
+              Moving: <span className="text-white font-medium">{movingDeck.name}</span>
+            </p>
+            <div className="space-y-0.5 max-h-60 overflow-y-auto mb-4 border border-white/10 rounded-lg p-1">
+              {/* Root / no folder option */}
+              <button
+                onClick={() => setMoveTarget(null)}
+                className={`w-full text-left px-3 py-2 rounded text-sm flex items-center gap-2 transition ${
+                  moveTarget === null ? 'bg-purple-600/30 text-purple-300' : 'text-white/60 hover:bg-white/10'
+                }`}
+              >
+                ⬜ (root — no folder)
+                {!movingDeck.folderId && <span className="ml-auto text-xs text-white/30">current</span>}
+              </button>
+              {/* All folders, flat with indent */}
+              {flatFolderList.map(({ folder, depth }) => (
+                <button
+                  key={folder._id}
+                  onClick={() => setMoveTarget(folder._id)}
+                  style={{ paddingLeft: `${12 + depth * 16}px` }}
+                  className={`w-full text-left pr-3 py-2 rounded text-sm flex items-center gap-2 transition ${
+                    String(moveTarget) === String(folder._id)
+                      ? 'bg-purple-600/30 text-purple-300'
+                      : 'text-white/70 hover:bg-white/10'
+                  }`}
+                >
+                  📁 {folder.name}
+                  {String(movingDeck.folderId) === String(folder._id) && (
+                    <span className="ml-auto text-xs text-white/30">current</span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setMovingDeck(null); setMoveTarget(undefined); }}
+                className="flex-1 py-2 bg-white/10 text-white rounded-lg text-sm hover:bg-white/20 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleMoveToFolder}
+                disabled={moveTarget === undefined}
+                className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white rounded-lg text-sm font-medium transition"
+              >
+                Move Here
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
