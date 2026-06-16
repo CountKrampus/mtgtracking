@@ -527,10 +527,13 @@ router.post('/me/avatar', async (req, res) => {
     fs.writeFileSync(filepath, buffer);
 
     // Update user
-    user.avatarUrl = `/api/users/avatar/${filename}`;
+    const avatarUrl = `/api/users/avatar/${filename}`;
+    user.avatarUrl = avatarUrl;
     await user.save();
 
-    res.json({ avatarUrl: user.avatarUrl });
+    // Return full URL for frontend
+    const fullUrl = `${req.protocol}://${req.get('host')}${avatarUrl}`;
+    res.json({ avatarUrl: fullUrl });
   } catch (error) {
     console.error('Upload avatar error:', error);
     res.status(500).json({ message: error.message });

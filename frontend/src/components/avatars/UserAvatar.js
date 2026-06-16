@@ -1,5 +1,6 @@
 import React from 'react';
 import { AVATAR_PRESETS } from './presets';
+import { API_URL } from '../../config';
 
 export default function UserAvatar({ avatarUrl, username, size = 'md' }) {
   const sizeClass = {
@@ -27,9 +28,11 @@ export default function UserAvatar({ avatarUrl, username, size = 'md' }) {
 
   // Handle uploaded avatars
   if (avatarUrl && !avatarUrl.startsWith('preset:')) {
+    // Construct full URL if relative URL
+    const fullUrl = avatarUrl.startsWith('http') ? avatarUrl : `${API_URL.replace('/api', '')}${avatarUrl}`;
     return (
       <img
-        src={avatarUrl}
+        src={fullUrl}
         alt={username || 'Avatar'}
         className={`${sizeClass} rounded-full object-cover flex-shrink-0`}
       />
