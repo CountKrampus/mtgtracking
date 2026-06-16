@@ -1,25 +1,149 @@
-import React, { useMemo, useState } from 'react';
-import { Upload } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Upload, Plus } from 'lucide-react';
 
-function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, deckPlayCounts = {} }) {
-  const [groupByFolder, setGroupByFolder] = useState(false);
+// Helper: build a nested folder tree from a flat array
+function buildFolderTree(folders, parentId = null) {
+  return folders
+    .filter(f => String(f.parentId || null) === String(parentId))
+    .map(f => ({ ...f, children: buildFolderTree(folders, f._id) }));
+}
 
-  // Group decks by folder when enabled
-  const grouped = useMemo(() => {
-    if (!groupByFolder) return { '': decks };
-    const groups = {};
-    decks.forEach(deck => {
-      const folder = deck.folder || '';
-      if (!groups[folder]) groups[folder] = [];
-      groups[folder].push(deck);
+// Helper: return ordered path from root to a given folder
+function getFolderPath(folders, folderId) {
+  const path = [];
+  let current = folders.find(f => String(f._id) === String(folderId));
+  while (current) {
+    path.unshift(current);
+    current = folders.find(f => String(f._id) === String(current.parentId));
+  }
+  return path;
+}
+
+// Recursive folder tree node used inside the dropdown
+function FolderTreeNode({ folder, depth, activeFolderId, onSelect, deckCountByFolder }) {
+  const [open, setOpen] = React.useState(depth < 2);
+  const hasChildren = folder.children && folder.children.length > 0;
+  const isActive = String(activeFolderId) === String(folder._id);
+
+  return (
+    <div>
+      <div
+        className={`flex items-center gap-1.5 py-1.5 rounded cursor-pointer text-sm select-none ${
+          isActive ? 'bg-purple-600/30 text-purple-300' : 'text-white/70 hover:bg-white/10'
+        }`}
+        style={{ paddingLeft: `${8 + depth * 14}px`, paddingRight: '8px' }}
+        onClick={() => onSelect(folder._id)}
+      >
+        <span
+          className="w-3 text-white/40 flex-shrink-0 text-xs"
+          onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
+        >
+          {hasChildren ? (open ? '▾' : '▸') : ''}
+        </span>
+        <span>📁</span>
+        <span className="flex-1 truncate">{folder.name}</span>
+        <span className="text-white/30 text-xs">{deckCountByFolder[String(folder._id)] || 0}</span>
+      </div>
+      {open && hasChildren && folder.children.map(child => (
+        <FolderTreeNode
+          key={child._id}
+          folder={child}
+          depth={depth + 1}
+          activeFolderId={activeFolderId}
+          onSelect={onSelect}
+          deckCountByFolder={deckCountByFolder}
+        />
+      ))}
+    </div>
+  );
+}
+
+function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck, folders = [], onFolderCreate, onDeckMoveToFolder }) {
+  const [showSleeveCalc, setShowSleeveCalc] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Folder state
+  const [activeFolderId, setActiveFolderId] = useState(null);
+  const [folderDropdownOpen, setFolderDropdownOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [contextMenu, setContextMenu] = useState(null); // { deck, x, y }
+  const [movingDeck, setMovingDeck] = useState(null);
+  const [moveTarget, setMoveTarget] = useState(undefined);
+
+  // Deck count per folder (direct children only)
+  const deckCountByFolder = useMemo(() => {
+    const map = {};
+    decks.forEach(d => {
+      if (d.folderId) map[String(d.folderId)] = (map[String(d.folderId)] || 0) + 1;
     });
-    return groups;
-  }, [decks, groupByFolder]);
+    return map;
+  }, [decks]);
 
-  const hasFolders = decks.some(d => d.folder);
+  // Build folder tree for dropdown
+  const rootFolderTree = useMemo(() => buildFolderTree(folders), [folders]);
+
+  // Folder path for breadcrumb
+  const folderPath = useMemo(() => getFolderPath(folders, activeFolderId), [folders, activeFolderId]);
+
+  // Immediate subfolders of active folder (for subfolder rows in deck grid)
+  const activeSubfolders = useMemo(() => {
+    if (!activeFolderId) return [];
+    return folders.filter(f => String(f.parentId || null) === String(activeFolderId));
+  }, [folders, activeFolderId]);
+
+  // Decks to display based on active folder
+  const visibleDecks = useMemo(() => {
+    if (!activeFolderId) return decks;
+    return decks.filter(d => String(d.folderId) === String(activeFolderId));
+  }, [decks, activeFolderId]);
+
+  // Flat folder list for move picker (depth-first traversal)
+  const flatFolderList = useMemo(() => {
+    const result = [];
+    function walk(parentId, depth) {
+      folders
+        .filter(f => String(f.parentId || null) === String(parentId || null))
+        .forEach(f => { result.push({ folder: f, depth }); walk(f._id, depth + 1); });
+    }
+    walk(null, 0);
+    return result;
+  }, [folders]);
+
+  // Close folder dropdown on outside click
+  useEffect(() => {
+    if (!folderDropdownOpen) return;
+    const handler = () => setFolderDropdownOpen(false);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [folderDropdownOpen]);
+
+  // Close context menu on any click
+  useEffect(() => {
+    if (!contextMenu) return;
+    const handler = () => setContextMenu(null);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [contextMenu]);
+
+  const handleFolderSelect = (folderId) => {
+    setActiveFolderId(folderId);
+    setFolderDropdownOpen(false);
+  };
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
+    await onFolderCreate(newFolderName.trim(), null);
+    setNewFolderName('');
+  };
+
+  const handleMoveToFolder = async () => {
+    if (moveTarget === undefined) return;
+    await onDeckMoveToFolder(movingDeck._id, moveTarget);
+    setMovingDeck(null);
+    setMoveTarget(undefined);
+  };
 
   const DeckCard = ({ deck }) => {
-    const playData = deckPlayCounts[deck._id];
     return (
       <div
         className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30 hover:bg-white/15 transition cursor-pointer"
@@ -32,11 +156,6 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, deckPlayCoun
               alt={deck.commander.name}
               className="w-full rounded-lg mb-3"
             />
-          )}
-          {playData && (
-            <div className="absolute top-2 right-2 bg-black/70 text-white text-xs font-semibold px-2 py-1 rounded-full">
-              {playData.gamesPlayed} games
-            </div>
           )}
         </div>
         <h3 className="text-xl font-bold text-white mb-2">{deck.name}</h3>
@@ -72,55 +191,129 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, deckPlayCoun
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      {/* Toolbar */}
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-white">My Commander Decks</h2>
-          {hasFolders && (
+          <h2 className="text-2xl font-bold text-white">My Decks</h2>
+          {/* Folder dropdown button */}
+          <div className="relative" onMouseDown={e => e.stopPropagation()}>
             <button
-              onClick={() => setGroupByFolder(f => !f)}
-              className={`px-3 py-1 rounded text-sm transition ${
-                groupByFolder ? 'bg-purple-600 text-white' : 'bg-white/10 text-white/60 hover:bg-white/20'
+              onClick={() => setFolderDropdownOpen(o => !o)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition ${
+                activeFolderId
+                  ? 'bg-purple-600/40 border border-purple-500/50 text-purple-200'
+                  : 'bg-white/10 border border-white/20 text-white/70 hover:bg-white/20'
               }`}
             >
-              {groupByFolder ? 'Ungrouped' : 'Group by Folder'}
+              📁 {activeFolderId ? (folderPath[folderPath.length - 1]?.name || 'Folder') : 'All Decks'} ▾
             </button>
-          )}
+            {folderDropdownOpen && (
+              <div className="absolute top-full left-0 mt-1 z-50 bg-gray-900 border border-white/20 rounded-lg shadow-2xl w-64 py-1 max-h-80 overflow-y-auto">
+                {/* All Decks row */}
+                <div
+                  className={`flex items-center gap-2 px-3 py-2 cursor-pointer text-sm select-none ${
+                    !activeFolderId ? 'text-purple-300 bg-purple-600/20' : 'text-white/70 hover:bg-white/10'
+                  }`}
+                  onClick={() => handleFolderSelect(null)}
+                >
+                  <span>🗂</span>
+                  <span>All Decks</span>
+                  <span className="ml-auto text-white/30 text-xs">{decks.length}</span>
+                </div>
+                {rootFolderTree.length > 0 && <div className="border-t border-white/10 my-1" />}
+                {/* Recursive folder tree */}
+                {rootFolderTree.map(folder => (
+                  <FolderTreeNode
+                    key={folder._id}
+                    folder={folder}
+                    depth={0}
+                    activeFolderId={activeFolderId}
+                    onSelect={handleFolderSelect}
+                    deckCountByFolder={deckCountByFolder}
+                  />
+                ))}
+                {/* Inline new folder */}
+                <div className="border-t border-white/10 mt-1 pt-1 px-3 pb-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-white/30 text-xs">📁</span>
+                    <input
+                      value={newFolderName}
+                      onChange={e => setNewFolderName(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleCreateFolder(); e.stopPropagation(); }}
+                      placeholder="New folder…"
+                      className="flex-1 bg-transparent text-white text-xs outline-none placeholder-white/25 py-1"
+                      onClick={e => e.stopPropagation()}
+                    />
+                    {newFolderName.trim() && (
+                      <button
+                        onMouseDown={e => { e.preventDefault(); handleCreateFolder(); }}
+                        className="text-purple-400 text-xs hover:text-purple-300 font-medium"
+                      >Add</button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-        <button
-          onClick={onImportClick}
-          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold flex items-center gap-2 transition"
-        >
-          <Upload size={20} />
-          Add Deck
-        </button>
+        <div className="flex gap-2 flex-wrap">
+          <button onClick={() => setShowSleeveCalc(true)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center gap-2 transition">Calculate Sleeves</button>
+          <button onClick={() => setShowCreateModal(true)} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold flex items-center gap-2 transition"><Plus size={20} />New Deck</button>
+          <button onClick={onImportClick} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold flex items-center gap-2 transition"><Upload size={20} />Import Deck</button>
+        </div>
       </div>
 
-      {groupByFolder ? (
-        <div className="space-y-6">
-          {Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([folder, folderDecks]) => (
-            <div key={folder}>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-white/60 text-sm font-semibold uppercase tracking-wide">
-                  {folder || 'Unsorted'}
-                </span>
-                <div className="flex-1 h-px bg-white/20" />
-                <span className="text-white/40 text-xs">{folderDecks.length}</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {folderDecks.map(deck => <DeckCard key={deck._id} deck={deck} />)}
+      {/* Breadcrumb navigation */}
+      {activeFolderId && (
+        <div className="flex items-center gap-1 text-sm text-white/60 mb-4 flex-wrap">
+          <button
+            onClick={() => setActiveFolderId(null)}
+            className="hover:text-white transition"
+          >All Decks</button>
+          {folderPath.map((folder, i) => (
+            <React.Fragment key={folder._id}>
+              <span className="text-white/30">›</span>
+              <button
+                onClick={() => setActiveFolderId(folder._id)}
+                className={`hover:text-white transition ${i === folderPath.length - 1 ? 'text-white font-semibold' : ''}`}
+              >
+                {folder.name}
+              </button>
+            </React.Fragment>
+          ))}
+        </div>
+      )}
+
+      {/* Subfolder rows when inside a folder */}
+      {activeSubfolders.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          {activeSubfolders.map(folder => (
+            <div
+              key={folder._id}
+              onClick={() => setActiveFolderId(folder._id)}
+              className="bg-white/5 backdrop-blur-md rounded-lg p-4 border border-white/20 hover:bg-white/10 transition cursor-pointer flex items-center gap-3"
+            >
+              <span className="text-3xl">📁</span>
+              <div>
+                <div className="text-white font-semibold">{folder.name}</div>
+                <div className="text-white/40 text-sm">{deckCountByFolder[String(folder._id)] || 0} decks</div>
               </div>
             </div>
           ))}
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {decks.map(deck => <DeckCard key={deck._id} deck={deck} />)}
-        </div>
       )}
 
-      {decks.length === 0 && (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {visibleDecks.map(deck => (
+          <DeckCard key={deck._id} deck={deck} />
+        ))}
+      </div>
+
+      {visibleDecks.length === 0 && activeSubfolders.length === 0 && (
         <div className="text-center py-12 text-white/60">
-          No decks yet. Import your first Commander deck to get started!
+          {activeFolderId
+            ? 'No decks in this folder. Right-click a deck to move it here.'
+            : 'No decks yet. Create or import your first deck to get started!'}
         </div>
       )}
     </div>

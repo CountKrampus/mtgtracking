@@ -102,7 +102,7 @@ export default function AvatarPicker({ isOpen, onClose, currentAvatarUrl, onSave
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete your avatar?')) return;
+    if (!window.confirm('Are you sure you want to delete your avatar?')) return;
 
     setLoading(true);
     setError(null);
