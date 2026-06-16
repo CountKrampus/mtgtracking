@@ -528,6 +528,33 @@ router.put('/threads/:threadId/lock', verifyToken, requireAuth, requireAdmin, as
   }
 });
 
+// PUT /api/forum/threads/:threadId/move - Move thread to different category (admin only)
+router.put('/threads/:threadId/move', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { threadId } = req.params;
+    const { categoryId } = req.body;
+
+    if (!categoryId) {
+      return res.status(400).json({ message: 'categoryId required' });
+    }
+
+    const thread = await ForumThread.findByIdAndUpdate(
+      threadId,
+      { categoryId },
+      { new: true }
+    ).populate('categoryId');
+
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+
+    res.json(thread);
+  } catch (error) {
+    console.error('Move thread error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // POST /api/forum/threads/:threadId/posts - Create post in thread (authenticated)
 router.post('/threads/:threadId/posts', verifyToken, requireAuth, checkMute, async (req, res) => {
   try {

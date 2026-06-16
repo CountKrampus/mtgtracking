@@ -61,7 +61,7 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
     if (!newTitle.trim()) return;
 
     try {
-      const response = await fetch(`${apiUrl}/forum/threads/${threadId}/rename`, {
+      const response = await fetch(`${apiUrl}/forum/threads/${threadId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: newTitle })
@@ -152,6 +152,31 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
       }
     } catch (error) {
       alert('Failed to pin/unpin thread');
+    }
+  };
+
+  const handleDeletePost = async (postId) => {
+    if (!window.confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+    try {
+      const response = await fetch(`${apiUrl}/forum/posts/${postId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (response.ok) {
+        setPosts(posts.filter(p => p._id !== postId));
+        setThread(prev => ({
+          ...prev,
+          postCount: prev.postCount - 1
+        }));
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to delete post');
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      alert('Failed to delete post');
     }
   };
 
@@ -381,7 +406,11 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
                           <History size={16} />
                         </button>
                       )}
-                      <button className="p-1 hover:bg-slate-700 rounded text-red-500" title="Delete post">
+                      <button
+                        onClick={() => handleDeletePost(post._id)}
+                        className="p-1 hover:bg-slate-700 rounded text-red-500"
+                        title="Delete post"
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>
