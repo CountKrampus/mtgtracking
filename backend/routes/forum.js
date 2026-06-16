@@ -506,76 +506,74 @@ router.post('/shop/purchase', verifyToken, requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/forum/users/:username/activity - Public forum profile activity
+// GET /api/forum/users/:username/activity — public profile forum activity
 router.get('/users/:username/activity', async (req, res) => {
   try {
-    const { username } = req.params;
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ username: req.params.username })
+      .select('privacy reputation badges createdAt').lean();
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (!user || !user.privacy?.isPublic || !user.privacy?.showForum) {
+      return res.status(404).json({ message: 'Forum activity not available' });
     }
 
-    // Check privacy toggle
-    if (!user.privacy?.showForum) {
-      return res.status(403).json({ message: 'Forum profile is private' });
-    }
+    const postQuery = {
+      authorId: user._id,
+      isFlagHidden: { $ne: true },
+      isShadowHidden: { $ne: true }
+    };
 
-    // Get post count
-    const postCount = await ForumPost.countDocuments({ authorId: user._id });
-
-    // Get thread count
-    const threadCount = await ForumThread.countDocuments({ authorId: user._id });
-
-    // Get total upvotes received
-    const upvoteAgg = await ForumPost.aggregate([
-      { $match: { authorId: user._id } },
-      {
-        $group: {
-          _id: null,
-          totalUpvotes: { $sum: { $size: '$upvotes' } }
-        }
-      }
+    const [recentPostDocs, threadCount, upvotesResult, postCount] = await Promise.all([
+      ForumPost.find(postQuery).sort({ createdAt: -1 }).limit(10).lean(),
+      ForumThread.countDocuments({ authorId: user._id }),
+      ForumPost.aggregate([
+        { $match: { authorId: user._id, isFlagHidden: { $ne: true }, isShadowHidden: { $ne: true } } },
+        { $project: { upvoteCount: { $size: '$upvotes' } } },
+        { $group: { _id: null, total: { $sum: '$upvoteCount' } } }
+      ]),
+      ForumPost.countDocuments(postQuery)
     ]);
-    const totalUpvotes = upvoteAgg[0]?.totalUpvotes || 0;
 
-    // Get recent posts (10 most recent)
-    const recentPosts = await ForumPost.find({ authorId: user._id })
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .select('body createdAt threadId upvotes authorAvatarUrl')
-      .populate('threadId', 'title')
-      .lean();
+    // Populate thread titles for recent posts
+    const threadIds = [...new Set(recentPostDocs.map(p => p.threadId?.toString()).filter(Boolean))];
+    const recentThreads = await ForumThread.find({ _id: { $in: threadIds } }).select('title').lean();
+    const recentThreadMap = Object.fromEntries(recentThreads.map(t => [t._id.toString(), t.title]));
 
-    // Get top posts (5 highest upvoted)
-    const topPosts = await ForumPost.find({ authorId: user._id })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .select('body createdAt threadId upvotes authorAvatarUrl')
-      .populate('threadId', 'title')
-      .lean()
-      .then(posts =>
-        posts.sort((a, b) => b.upvotes.length - a.upvotes.length).slice(0, 5)
-      );
+    const recentPosts = recentPostDocs.map(p => ({
+      _id: p._id,
+      body: p.body.slice(0, 200),
+      threadId: p.threadId,
+      threadTitle: recentThreadMap[p.threadId?.toString()] || 'Unknown thread',
+      createdAt: p.createdAt
+    }));
+
+    // Top 5 posts by upvotes
+    const topPostDocs = await ForumPost.find(postQuery)
+      .sort({ 'upvotes': -1 }).limit(5).lean();
+
+    const topThreadIds = [...new Set(topPostDocs.map(p => p.threadId?.toString()).filter(Boolean))];
+    const topThreadDocs = await ForumThread.find({ _id: { $in: topThreadIds } }).select('title').lean();
+    const topThreadMap = Object.fromEntries(topThreadDocs.map(t => [t._id.toString(), t.title]));
 
     res.json({
-      username: user.username,
-      displayName: user.displayName || user.username,
       reputation: user.reputation || 0,
       badges: user.badges || [],
       stats: {
-        posts: postCount,
-        threads: threadCount,
-        upvotes: totalUpvotes,
+        postCount,
+        threadCount,
+        upvotesReceived: upvotesResult[0]?.total || 0,
         memberSince: user.createdAt
       },
       recentPosts,
-      topPosts
+      topPosts: topPostDocs.map(p => ({
+        _id: p._id,
+        body: p.body.slice(0, 200),
+        threadId: p.threadId,
+        threadTitle: topThreadMap[p.threadId?.toString()] || 'Unknown thread',
+        upvoteCount: p.upvotes.length,
+        createdAt: p.createdAt
+      }))
     });
-  } catch (error) {
-    console.error('Get forum profile activity error:', error);
-    res.status(500).json({ message: error.message });
-  }
+  } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
 module.exports = router;
