@@ -4,9 +4,16 @@ const mongoose = require('mongoose');
 const ForumCategory = require('../models/ForumCategory');
 const ForumThread = require('../models/ForumThread');
 const ForumPost = require('../models/ForumPost');
-const { verifyToken, requireAuth, requireAdmin } = require('../middleware/auth');
+const Notification = require('../models/Notification');
+const { verifyToken, requireAuth } = require('../middleware/auth');
 const { checkMute } = require('../middleware/muteEnforcer');
 const { checkSpam } = require('../utils/spamFilter');
+const {
+  extractMentions,
+  createMentionNotifications,
+  createReplyNotification,
+  createUpvoteNotification
+} = require('../utils/notifications');
 const Ban = require('../models/Ban');
 const User = require('../models/User');
 
@@ -189,6 +196,28 @@ router.post('/posts', verifyToken, requireAuth, checkMute, async (req, res) => {
 
     await post.populate('authorId', 'username displayName');
 
+    // Handle notifications asynchronously (don't block response)
+    setImmediate(async () => {
+      try {
+        // Extract mentions and create mention notifications
+        const mentionedUsernames = extractMentions(body);
+        if (mentionedUsernames.length > 0) {
+          const contentPreview = body.substring(0, 100);
+          await createMentionNotifications(req.user._id, 'mention', body, {
+            threadId,
+            postId: post._id,
+            content: `Mentioned you in a post: "${contentPreview}"`
+          });
+        }
+
+        // If this is a reply to another post (check for parentPostId in future enhancement)
+        // For now, notifications will be created via explicit reply mechanism
+      } catch (notifError) {
+        console.error('Error creating post notifications:', notifError);
+        // Don't fail the request if notification creation fails
+      }
+    });
+
     res.status(201).json(post);
   } catch (error) {
     console.error('Create post error:', error);
@@ -255,6 +284,51 @@ router.get('/posts/:postId/edits', async (req, res) => {
     });
   } catch (error) {
     console.error('Get edit history error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST /api/forum/posts/:postId/upvote - Upvote a post (requires auth)
+router.post('/posts/:postId/upvote', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const userId = req.user._id;
+
+    const post = await ForumPost.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Check if user already upvoted
+    const hasUpvoted = post.upvotes.some(id => id.toString() === userId.toString());
+
+    if (hasUpvoted) {
+      // Remove upvote
+      post.upvotes = post.upvotes.filter(id => id.toString() !== userId.toString());
+      await post.save();
+      await post.populate('authorId', 'username displayName');
+      return res.json({ post, action: 'removed' });
+    }
+
+    // Add upvote
+    post.upvotes.push(userId);
+    await post.save();
+
+    // Create upvote notification asynchronously
+    setImmediate(async () => {
+      try {
+        const contentPreview = post.body.substring(0, 50);
+        await createUpvoteNotification(post.authorId, userId, post._id, contentPreview);
+      } catch (notifError) {
+        console.error('Error creating upvote notification:', notifError);
+      }
+    });
+
+    await post.populate('authorId', 'username displayName');
+
+    res.json({ post, action: 'added' });
+  } catch (error) {
+    console.error('Upvote post error:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -377,106 +451,6 @@ router.get('/user-level', async (req, res) => {
   }
 });
 
-// GET /api/forum/users/:username/activity — public profile forum activity
-router.get('/users/:username/activity', async (req, res) => {
-  try {
-    const user = await User.findOne({ username: req.params.username })
-      .select('privacy reputation badges createdAt').lean();
-
-    if (!user || !user.privacy?.isPublic || !user.privacy?.showForum) {
-      return res.status(404).json({ message: 'Forum activity not available' });
-    }
-
-    const postQuery = {
-      authorId: user._id,
-      isFlagHidden: { $ne: true },
-      isShadowHidden: { $ne: true }
-    };
-
-    const [recentPostDocs, threadCount, upvotesResult, postCount] = await Promise.all([
-      ForumPost.find(postQuery).sort({ createdAt: -1 }).limit(10).lean(),
-      ForumThread.countDocuments({ authorId: user._id }),
-      ForumPost.aggregate([
-        { $match: { authorId: user._id, isFlagHidden: { $ne: true }, isShadowHidden: { $ne: true } } },
-        { $project: { upvoteCount: { $size: { $ifNull: ['$upvotes', []] } } } },
-        { $group: { _id: null, total: { $sum: '$upvoteCount' } } }
-      ]),
-      ForumPost.countDocuments(postQuery)
-    ]);
-
-    // Populate thread titles for recent posts
-    const threadIds = [...new Set(recentPostDocs.map(p => p.threadId?.toString()).filter(Boolean))];
-    const recentThreads = await ForumThread.find({ _id: { $in: threadIds } }).select('title').lean();
-    const recentThreadMap = Object.fromEntries(recentThreads.map(t => [t._id.toString(), t.title]));
-
-    const recentPosts = recentPostDocs.map(p => ({
-      _id: p._id,
-      body: p.body.slice(0, 200),
-      threadId: p.threadId,
-      threadTitle: recentThreadMap[p.threadId?.toString()] || 'Unknown thread',
-      createdAt: p.createdAt
-    }));
-
-    // Top 5 posts by upvotes
-    const topPostDocs = await ForumPost.aggregate([
-      { $match: postQuery },
-      { $addFields: { upvoteCount: { $size: { $ifNull: ['$upvotes', []] } } } },
-      { $sort: { upvoteCount: -1 } },
-      { $limit: 5 }
-    ]);
-
-    const topThreadIds = [...new Set(topPostDocs.map(p => p.threadId?.toString()).filter(Boolean))];
-    const topThreadDocs = await ForumThread.find({ _id: { $in: topThreadIds } }).select('title').lean();
-    const topThreadMap = Object.fromEntries(topThreadDocs.map(t => [t._id.toString(), t.title]));
-
-    res.json({
-      reputation: user.reputation || 0,
-      badges: (user.badges || []).map(b => ({ name: b.name, description: b.description, earnedAt: b.earnedAt })),
-      stats: {
-        postCount,
-        threadCount,
-        upvotesReceived: upvotesResult[0]?.total || 0,
-        memberSince: user.createdAt
-      },
-      recentPosts,
-      topPosts: topPostDocs.map(p => ({
-        _id: p._id,
-        body: p.body.slice(0, 200),
-        threadId: p.threadId,
-        threadTitle: topThreadMap[p.threadId?.toString()] || 'Unknown thread',
-        upvoteCount: p.upvoteCount,
-        createdAt: p.createdAt
-      }))
-    });
-  } catch (e) { res.status(500).json({ message: e.message }); }
-});
-
-// GET /api/forum/users/:username/profile — public user profile info
-router.get('/users/:username/profile', async (req, res) => {
-  try {
-    const user = await User.findOne({ username: req.params.username })
-      .select('username displayName createdAt privacy reputation badges').lean();
-
-    if (!user || !user.privacy?.isPublic) {
-      return res.status(404).json({ message: 'Profile not found' });
-    }
-
-    res.json({
-      username: user.username,
-      displayName: user.displayName || user.username,
-      createdAt: user.createdAt,
-      reputation: user.reputation || 0,
-      badges: (user.badges || []).map(b => ({ name: b.name, description: b.description, earnedAt: b.earnedAt })),
-      privacy: {
-        showCollection: user.privacy.showCollection,
-        showDecks: user.privacy.showDecks,
-        showWishlist: user.privacy.showWishlist,
-        showForum: user.privacy.showForum
-      }
-    });
-  } catch (e) { res.status(500).json({ message: e.message }); }
-});
-
 // POST /api/forum/shop/purchase
 router.post('/shop/purchase', verifyToken, requireAuth, async (req, res) => {
   try {
@@ -497,321 +471,6 @@ router.post('/shop/purchase', verifyToken, requireAuth, async (req, res) => {
 
     res.json({ message: 'Purchased', updatedLevel: userLevel });
   } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// ─────────────────────────────────────────────────────────────
-// ADMIN CATEGORY MANAGEMENT ROUTES
-// ─────────────────────────────────────────────────────────────
-
-// POST /api/forum/admin/categories - Create new category
-router.post('/admin/categories', verifyToken, requireAuth, requireAdmin, async (req, res) => {
-  try {
-    const { name, description, parentCategoryId } = req.body;
-
-    if (!name) {
-      return res.status(400).json({ message: 'Category name is required' });
-    }
-
-    // Generate slug from name
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-
-    // Check if slug already exists
-    const existing = await ForumCategory.findOne({ slug });
-    if (existing) {
-      return res.status(400).json({ message: 'A category with this name already exists' });
-    }
-
-    const category = await ForumCategory.create({
-      name,
-      slug,
-      description: description || '',
-      parentCategoryId: parentCategoryId || null
-    });
-
-    res.status(201).json(category);
-  } catch (error) {
-    console.error('Create category error:', error);
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// PUT /api/forum/admin/categories/:id - Update category
-router.put('/admin/categories/:id', verifyToken, requireAuth, requireAdmin, async (req, res) => {
-  try {
-    const { name, description, displayOrder, isActive } = req.body;
-    const updates = {};
-
-    if (name) {
-      updates.name = name;
-      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-
-      // Check if slug already exists (excluding current category)
-      const existing = await ForumCategory.findOne({ slug, _id: { $ne: req.params.id } });
-      if (existing) {
-        return res.status(400).json({ message: 'A category with this name already exists' });
-      }
-      updates.slug = slug;
-    }
-
-    if (description !== undefined) updates.description = description;
-    if (displayOrder !== undefined) updates.displayOrder = displayOrder;
-    if (isActive !== undefined) updates.isActive = isActive;
-
-    const category = await ForumCategory.findByIdAndUpdate(req.params.id, updates, { new: true });
-
-    if (!category) {
-      return res.status(404).json({ message: 'Category not found' });
-    }
-
-    res.json(category);
-  } catch (error) {
-    console.error('Update category error:', error);
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// DELETE /api/forum/admin/categories/:id - Delete category
-router.delete('/admin/categories/:id', verifyToken, requireAuth, requireAdmin, async (req, res) => {
-  try {
-    const category = await ForumCategory.findById(req.params.id);
-
-    if (!category) {
-      return res.status(404).json({ message: 'Category not found' });
-    }
-
-    // Check if category has subcategories
-    const children = await ForumCategory.countDocuments({ parentCategoryId: category._id });
-    if (children > 0) {
-      return res.status(400).json({ message: 'Cannot delete category with subcategories' });
-    }
-
-    // Check if category has threads
-    const threads = await ForumThread.countDocuments({ categoryId: category._id });
-    if (threads > 0) {
-      return res.status(400).json({ message: 'Cannot delete category with threads' });
-    }
-
-    await ForumCategory.deleteOne({ _id: req.params.id });
-    res.json({ message: 'Category deleted' });
-  } catch (error) {
-    console.error('Delete category error:', error);
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// PUT /api/forum/admin/categories/reorder - Reorder categories (drag-drop)
-router.put('/admin/categories/reorder', verifyToken, requireAuth, requireAdmin, async (req, res) => {
-  try {
-    const { categoryOrders } = req.body; // Array of { id, displayOrder }
-
-    if (!Array.isArray(categoryOrders)) {
-      return res.status(400).json({ message: 'categoryOrders must be an array' });
-    }
-
-    // Update all categories in parallel
-    await Promise.all(
-      categoryOrders.map(({ id, displayOrder }) =>
-        ForumCategory.updateOne({ _id: id }, { displayOrder })
-      )
-    );
-
-    res.json({ message: 'Categories reordered' });
-  } catch (error) {
-    console.error('Reorder categories error:', error);
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// ─────────────────────────────────────────────────────────────
-// THREAD MANAGEMENT ROUTES
-// ─────────────────────────────────────────────────────────────
-
-// PUT /api/forum/threads/:id/rename - Rename thread (author or admin only)
-router.put('/threads/:id/rename', verifyToken, requireAuth, async (req, res) => {
-  try {
-    const { title } = req.body;
-
-    if (!title || !title.trim()) {
-      return res.status(400).json({ message: 'Title is required' });
-    }
-
-    const thread = await ForumThread.findById(req.params.id);
-
-    if (!thread) {
-      return res.status(404).json({ message: 'Thread not found' });
-    }
-
-    // Only author or admin can rename
-    if (thread.authorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Only the author or admin can rename this thread' });
-    }
-
-    thread.title = title.trim();
-    await thread.save();
-
-    res.json(thread);
-  } catch (error) {
-    console.error('Rename thread error:', error);
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// PUT /api/forum/threads/:id/move - Move thread to different category (admin only)
-router.put('/threads/:id/move', verifyToken, requireAuth, requireAdmin, async (req, res) => {
-  try {
-    const { categoryId } = req.body;
-
-    if (!categoryId) {
-      return res.status(400).json({ message: 'Category ID is required' });
-    }
-
-    const thread = await ForumThread.findById(req.params.id);
-
-    if (!thread) {
-      return res.status(404).json({ message: 'Thread not found' });
-    }
-
-    // Verify new category exists
-    const newCategory = await ForumCategory.findById(categoryId);
-
-    if (!newCategory) {
-      return res.status(404).json({ message: 'Target category not found' });
-    }
-
-    // Update counts for old and new categories
-    const oldCategoryId = thread.categoryId;
-
-    await ForumCategory.findByIdAndUpdate(oldCategoryId, { $inc: { threadCount: -1 } });
-    await ForumCategory.findByIdAndUpdate(categoryId, { $inc: { threadCount: 1 } });
-
-    thread.categoryId = categoryId;
-    await thread.save();
-
-    res.json(thread);
-  } catch (error) {
-    console.error('Move thread error:', error);
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// PUT /api/forum/threads/:id/lock - Lock/unlock thread (admin only)
-router.put('/threads/:id/lock', verifyToken, requireAuth, requireAdmin, async (req, res) => {
-  try {
-    const thread = await ForumThread.findById(req.params.id);
-
-    if (!thread) {
-      return res.status(404).json({ message: 'Thread not found' });
-    }
-
-    thread.isLocked = !thread.isLocked;
-    await thread.save();
-
-    res.json({ thread, message: thread.isLocked ? 'Thread locked' : 'Thread unlocked' });
-  } catch (error) {
-    console.error('Lock thread error:', error);
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// PUT /api/forum/threads/:id/pin - Pin/unpin thread (admin only)
-router.put('/threads/:id/pin', verifyToken, requireAuth, requireAdmin, async (req, res) => {
-  try {
-    const thread = await ForumThread.findById(req.params.id);
-
-    if (!thread) {
-      return res.status(404).json({ message: 'Thread not found' });
-    }
-
-    thread.isPinned = !thread.isPinned;
-    await thread.save();
-
-    res.json({ thread, message: thread.isPinned ? 'Thread pinned' : 'Thread unpinned' });
-  } catch (error) {
-    console.error('Pin thread error:', error);
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// ─────────────────────────────────────────────────────────────
-// ACTIVITY FEED
-// ─────────────────────────────────────────────────────────────
-
-// GET /api/forum/feed - Get activity feed (recent threads and posts)
-router.get('/feed', async (req, res) => {
-  try {
-    const { limit = 50, offset = 0 } = req.query;
-    const limitNum = Math.min(parseInt(limit) || 50, 100);
-    const offsetNum = parseInt(offset) || 0;
-
-    // Fetch recent threads
-    const threads = await ForumThread.find({ isLocked: false })
-      .select('_id title categoryId authorId createdAt postCount content')
-      .populate('authorId', 'username displayName')
-      .populate('categoryId', 'name')
-      .lean()
-      .sort({ createdAt: -1 })
-      .limit(limitNum);
-
-    // Fetch recent posts
-    const posts = await ForumPost.find({ isHidden: false, isFlagHidden: false, isShadowHidden: false })
-      .select('_id threadId body authorId createdAt')
-      .populate('authorId', 'username displayName')
-      .lean()
-      .sort({ createdAt: -1 })
-      .limit(limitNum);
-
-    // Get thread titles for posts
-    const threadIds = [...new Set(posts.map(p => p.threadId?.toString()).filter(Boolean))];
-    const threadTitleMap = {};
-    if (threadIds.length > 0) {
-      const threadTitles = await ForumThread.find({ _id: { $in: threadIds } })
-        .select('_id title')
-        .lean();
-      threadTitles.forEach(t => {
-        threadTitleMap[t._id.toString()] = t.title;
-      });
-    }
-
-    // Combine and transform threads
-    const feedThreads = threads.map(thread => ({
-      type: 'thread',
-      id: thread._id,
-      title: thread.title,
-      authorId: thread.authorId,
-      categoryId: thread.categoryId,
-      snippet: (thread.content || '').substring(0, 150),
-      createdAt: thread.createdAt,
-      postCount: thread.postCount
-    }));
-
-    // Transform posts
-    const feedPosts = posts.map(post => ({
-      type: 'post',
-      id: post._id,
-      threadId: post.threadId,
-      threadTitle: threadTitleMap[post.threadId?.toString()] || 'Unknown thread',
-      authorId: post.authorId,
-      snippet: (post.body || '').substring(0, 150),
-      createdAt: post.createdAt
-    }));
-
-    // Combine and sort by createdAt descending
-    const combined = [...feedThreads, ...feedPosts];
-    combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-    // Apply pagination
-    const paginated = combined.slice(offsetNum, offsetNum + limitNum);
-
-    res.json({
-      items: paginated,
-      total: combined.length,
-      limit: limitNum,
-      offset: offsetNum
-    });
-  } catch (error) {
-    console.error('Get feed error:', error);
     res.status(500).json({ message: error.message });
   }
 });
