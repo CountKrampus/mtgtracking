@@ -18,6 +18,7 @@ const { generateDiff, recordEdit } = require('../utils/postEditHistory');
 const Ban = require('../models/Ban');
 const User = require('../models/User');
 const { extractDeckFromText } = require('../utils/deckExtractor');
+const ForumLevel = require('../models/ForumLevel');
 
 // POST /api/forum/categories - Create category (admin only)
 router.post('/categories', verifyToken, requireAuth, requireAdmin, async (req, res) => {
@@ -419,13 +420,15 @@ router.post('/posts/:postId/upvote', verifyToken, requireAuth, async (req, res) 
 
     // Add upvote
     post.upvotes.push(userId);
+    // Capture authorId as ObjectId before any populate() mutates it
+    const postAuthorId = post.authorId;
     await post.save();
 
     // Create upvote notification asynchronously
     setImmediate(async () => {
       try {
         const contentPreview = post.body.substring(0, 50);
-        await createUpvoteNotification(post.authorId, userId, post._id, contentPreview);
+        await createUpvoteNotification(postAuthorId, userId, post._id, contentPreview);
       } catch (notifError) {
         console.error('Error creating upvote notification:', notifError);
       }
@@ -434,9 +437,8 @@ router.post('/posts/:postId/upvote', verifyToken, requireAuth, async (req, res) 
     // Award XP and coins to post author for receiving an upvote (async, non-blocking)
     setImmediate(async () => {
       try {
-        const authorId = post.authorId;
-        let level = await ForumLevel.findOne({ userId: authorId });
-        if (!level) level = await ForumLevel.create({ userId: authorId });
+        let level = await ForumLevel.findOne({ userId: postAuthorId });
+        if (!level) level = await ForumLevel.create({ userId: postAuthorId });
         level.addExperience(10);
         level.addCoins(2);
         await level.save();
@@ -571,6 +573,19 @@ router.post('/threads/:threadId/posts', verifyToken, requireAuth, checkMute, asy
 
     await post.populate('authorId', 'username displayName');
 
+    // Award XP and coins for creating a post (async, non-blocking)
+    setImmediate(async () => {
+      try {
+        let level = await ForumLevel.findOne({ userId: req.user._id });
+        if (!level) level = await ForumLevel.create({ userId: req.user._id });
+        level.addExperience(25);
+        level.addCoins(5);
+        await level.save();
+      } catch (xpErr) {
+        console.error('XP/coin award error (nested post creation):', xpErr);
+      }
+    });
+
     res.status(201).json(post);
   } catch (error) {
     console.error('Create post (nested) error:', error);
@@ -612,7 +627,6 @@ router.delete('/posts/:postId', verifyToken, requireAuth, async (req, res) => {
 
 const { findDuplicateThreads } = require('../utils/threadDuplicateDetector');
 const { findDuplicateThreads: findDuplicates } = require('../utils/duplicateDetector');
-const ForumLevel = require('../models/ForumLevel');
 
 // POST /api/forum/threads/check-duplicates
 router.post('/threads/check-duplicates', async (req, res) => {
@@ -791,7 +805,7 @@ router.get('/user-level', async (req, res) => {
     }
     if (!level) return res.json(null);
     const data = level.toObject();
-    data.experienceToNextLevel = level.level * 500;
+    data.experienceToNextLevel = level.nextLevelExperience;
     res.json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -1001,13 +1015,18 @@ router.get('/leaderboard', async (req, res) => {
   try {
     const { page = 1, limit = 100 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    const entries = await ForumLevel.find()
+
+    // Only include users who have opted into public forum visibility
+    const publicUserIds = await User.find({ 'privacy.showForum': true }).select('_id').lean();
+    const publicUserIdSet = publicUserIds.map(u => u._id);
+
+    const entries = await ForumLevel.find({ userId: { $in: publicUserIdSet } })
       .sort({ level: -1, coins: -1 })
       .skip(skip)
       .limit(parseInt(limit))
       .populate('userId', 'username displayName')
       .lean();
-    const total = await ForumLevel.countDocuments();
+    const total = await ForumLevel.countDocuments({ userId: { $in: publicUserIdSet } });
     res.json({
       leaderboard: entries,
       pagination: {
