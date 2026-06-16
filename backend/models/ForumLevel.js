@@ -88,4 +88,9 @@ forumLevelSchema.methods.addCoins = function(amount) {
   this.coinsEarned += amount;
 };
 
+forumLevelSchema.methods.spendCoins = function(amount) {
+  if (this.coins < amount) throw new Error('Not enough coins');
+  this.coins -= amount;
+};
+
 module.exports = mongoose.model('ForumLevel', forumLevelSchema);

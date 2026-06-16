@@ -849,4 +849,72 @@ router.get('/users/:username/activity', async (req, res) => {
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
+// Cosmetics catalog (hardcoded)
+const COSMETICS_CATALOG = [
+  { id: 'titleColor_gold', name: 'Gold Title Color', category: 'titleColor', cost: 500, color: '#FFD700', description: 'Golden color for your forum title', rarity: 'uncommon' },
+  { id: 'titleColor_purple', name: 'Purple Title Color', category: 'titleColor', cost: 300, color: '#9B59B6', description: 'Purple color for your forum title', rarity: 'common' },
+  { id: 'titleColor_red', name: 'Crimson Title Color', category: 'titleColor', cost: 400, color: '#E74C3C', description: 'Crimson color for your forum title', rarity: 'common' },
+  { id: 'titleColor_teal', name: 'Teal Title Color', category: 'titleColor', cost: 350, color: '#1ABC9C', description: 'Teal color for your forum title', rarity: 'common' },
+  { id: 'titleColor_rainbow', name: 'Rainbow Title', category: 'titleColor', cost: 2000, color: 'rainbow', description: 'Animated rainbow color for your title', rarity: 'legendary' },
+  { id: 'avatarBorder_gold', name: 'Gold Avatar Border', category: 'avatarBorder', cost: 600, color: '#FFD700', description: 'Gold border around your avatar', rarity: 'uncommon' },
+  { id: 'avatarBorder_silver', name: 'Silver Avatar Border', category: 'avatarBorder', cost: 400, color: '#C0C0C0', description: 'Silver border around your avatar', rarity: 'common' },
+  { id: 'avatarBorder_diamond', name: 'Diamond Avatar Border', category: 'avatarBorder', cost: 2500, color: '#B9F2FF', description: 'Sparkling diamond border', rarity: 'legendary' },
+  { id: 'avatarBorder_fire', name: 'Flame Avatar Border', category: 'avatarBorder', cost: 1500, color: '#FF6B35', description: 'Animated flame border', rarity: 'rare' },
+  { id: 'profileBorderColor_gold', name: 'Gold Profile Border', category: 'profileBorderColor', cost: 700, color: '#FFD700', description: 'Gold border for your profile', rarity: 'uncommon' },
+  { id: 'profileBorderColor_neon', name: 'Neon Profile Border', category: 'profileBorderColor', cost: 1000, color: '#39FF14', description: 'Neon green profile border', rarity: 'rare' },
+  { id: 'profileBorderColor_royal', name: 'Royal Blue Profile Border', category: 'profileBorderColor', cost: 800, color: '#4169E1', description: 'Royal blue profile border', rarity: 'uncommon' },
+];
+
+const COSMETICS_PRICES = Object.fromEntries(COSMETICS_CATALOG.map(c => [c.id, c.cost]));
+
+// GET /api/forum/cosmetics - list available cosmetics with user's purchased/equipped state
+router.get('/cosmetics', verifyToken, async (req, res) => {
+  if (!req.user) return res.json({ cosmetics: COSMETICS_CATALOG, purchased: [], equipped: {} });
+  try {
+    const level = await ForumLevel.findOne({ userId: req.user._id });
+    res.json({
+      cosmetics: COSMETICS_CATALOG,
+      purchased: level?.cosmetics?.purchased || [],
+      equipped: level?.cosmetics?.equipped || {}
+    });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// POST /api/forum/level/cosmetics/purchase
+router.post('/level/cosmetics/purchase', verifyToken, requireAuth, async (req, res) => {
+  const { cosmeticId } = req.body;
+  const cost = COSMETICS_PRICES[cosmeticId];
+  if (!cost) return res.status(400).json({ message: 'Invalid cosmetic' });
+  try {
+    const level = await ForumLevel.findOne({ userId: req.user._id });
+    if (!level) return res.status(404).json({ message: 'Level not found' });
+    if (level.cosmetics.purchased.includes(cosmeticId))
+      return res.status(400).json({ message: 'Already owned' });
+    if (level.coins < cost)
+      return res.status(400).json({ message: 'Not enough coins' });
+    level.coins -= cost;
+    level.cosmetics.purchased.push(cosmeticId);
+    await level.save();
+    res.json({ success: true, newCoins: level.coins, message: 'Purchased!' });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// POST /api/forum/level/cosmetics/equip
+router.post('/level/cosmetics/equip', verifyToken, requireAuth, async (req, res) => {
+  const { cosmeticId, category } = req.body;
+  const VALID_CATEGORIES = ['titleColor', 'profileBorderColor', 'avatarBorder'];
+  if (!VALID_CATEGORIES.includes(category))
+    return res.status(400).json({ message: 'Invalid category' });
+  try {
+    const level = await ForumLevel.findOne({ userId: req.user._id });
+    if (!level) return res.status(404).json({ message: 'Level not found' });
+    if (!level.cosmetics.purchased.includes(cosmeticId))
+      return res.status(403).json({ message: 'You do not own this cosmetic' });
+    level.cosmetics.equipped[category] = cosmeticId;
+    level.markModified('cosmetics.equipped');
+    await level.save();
+    res.json({ success: true, newEquipped: level.cosmetics.equipped });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
 module.exports = router;
