@@ -1252,4 +1252,94 @@ router.post('/level/coins/earn', verifyToken, requireAuth, requireAdmin, async (
   }
 });
 
+// ============ COSMETICS MANAGEMENT (ADMIN) ============
+
+// GET /api/forum/admin/cosmetics - list all cosmetics for admin
+router.get('/admin/cosmetics', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const Cosmetic = require('../models/Cosmetic');
+    const cosmetics = await Cosmetic.find({}).sort({ category: 1, rarity: 1 }).lean();
+    res.json({ cosmetics });
+  } catch (error) {
+    console.error('Fetch cosmetics error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST /api/forum/admin/cosmetics - create new cosmetic
+router.post('/admin/cosmetics', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const Cosmetic = require('../models/Cosmetic');
+    const { name, category, cost, description, rarity, color, icon } = req.body;
+
+    if (!name || !category || cost === undefined) {
+      return res.status(400).json({ message: 'Missing required fields: name, category, cost' });
+    }
+
+    const cosmetic = await Cosmetic.create({
+      name,
+      category,
+      cost: parseInt(cost),
+      description,
+      rarity,
+      color,
+      icon
+    });
+
+    res.status(201).json({ cosmetic });
+  } catch (error) {
+    console.error('Create cosmetic error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /api/forum/admin/cosmetics/:cosmeticId - update cosmetic
+router.put('/admin/cosmetics/:cosmeticId', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const Cosmetic = require('../models/Cosmetic');
+    const { name, category, cost, description, rarity, color, icon, isActive } = req.body;
+
+    const cosmetic = await Cosmetic.findByIdAndUpdate(
+      req.params.cosmeticId,
+      {
+        name,
+        category,
+        cost: cost !== undefined ? parseInt(cost) : undefined,
+        description,
+        rarity,
+        color,
+        icon,
+        isActive: isActive !== undefined ? isActive : undefined
+      },
+      { new: true }
+    );
+
+    if (!cosmetic) {
+      return res.status(404).json({ message: 'Cosmetic not found' });
+    }
+
+    res.json({ cosmetic });
+  } catch (error) {
+    console.error('Update cosmetic error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// DELETE /api/forum/admin/cosmetics/:cosmeticId - delete cosmetic
+router.delete('/admin/cosmetics/:cosmeticId', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const Cosmetic = require('../models/Cosmetic');
+    const cosmetic = await Cosmetic.findByIdAndDelete(req.params.cosmeticId);
+
+    if (!cosmetic) {
+      return res.status(404).json({ message: 'Cosmetic not found' });
+    }
+
+    res.json({ success: true, message: 'Cosmetic deleted' });
+  } catch (error) {
+    console.error('Delete cosmetic error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

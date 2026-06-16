@@ -5,6 +5,7 @@ import SpamFilterAdmin from './SpamFilterAdmin';
 import MuteManager from './MuteManager';
 import ModmailAdmin from '../admin/ModmailAdmin';
 import MergeRequestAdmin from './MergeRequestAdmin';
+import CosmeticsManager from './CosmeticsManager';
 import { API_URL } from '../../config';
 
 export default function ForumAdminPanel({ isOpen, onClose }) {
@@ -85,6 +86,16 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
           >
             Merge Requests
           </button>
+          <button
+            onClick={() => setActiveTab('cosmetics')}
+            className={`flex-1 px-6 py-3 font-semibold transition ${
+              activeTab === 'cosmetics'
+                ? 'bg-purple-600 text-white'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Shop
+          </button>
         </div>
 
         {/* Content */}
@@ -103,6 +114,9 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
           )}
           {activeTab === 'mergeRequests' && (
             loadedTabs.mergeRequests ? <MergeRequestAdmin /> : <div className="text-slate-400">Loading...</div>
+          )}
+          {activeTab === 'cosmetics' && (
+            loadedTabs.cosmetics ? <CosmeticsManager /> : <div className="text-slate-400">Loading...</div>
           )}
         </div>
       </div>
