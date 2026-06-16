@@ -14,9 +14,11 @@ function DeckBuilder() {
   const [deckValidation, setDeckValidation] = useState(null);
   const [loadingDeck, setLoadingDeck] = useState(false);
   const [deckPlayCounts, setDeckPlayCounts] = useState({});
+  const [folders, setFolders] = useState([]);
 
   useEffect(() => {
     fetchDecks();
+    fetchFolders();
     fetchLifecounterStats();
   }, []);
 
@@ -27,6 +29,25 @@ function DeckBuilder() {
     } catch (error) {
       console.error('Error fetching decks:', error);
     }
+  };
+
+  const fetchFolders = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/deck-folders`);
+      setFolders(res.data);
+    } catch (err) {
+      console.error('Error fetching deck folders:', err);
+    }
+  };
+
+  const createFolder = async (name, parentId = null) => {
+    await axios.post(`${API_URL}/deck-folders`, { name, parentId: parentId || null });
+    await fetchFolders();
+  };
+
+  const moveDeckToFolder = async (deckId, folderId) => {
+    await axios.put(`${API_URL}/decks/${deckId}/folder`, { folderId: folderId || null });
+    await fetchDecks();
   };
 
   const fetchLifecounterStats = async () => {
@@ -90,6 +111,9 @@ function DeckBuilder() {
           onDeleteDeck={deleteDeck}
           onImportClick={() => setDeckView('import')}
           deckPlayCounts={deckPlayCounts}
+          folders={folders}
+          onFolderCreate={createFolder}
+          onDeckMoveToFolder={moveDeckToFolder}
         />
       )}
 
