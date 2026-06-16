@@ -17,6 +17,85 @@ const {
 const Ban = require('../models/Ban');
 const User = require('../models/User');
 
+// POST /api/forum/categories - Create category (admin only)
+router.post('/categories', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { name, description, parentCategoryId, displayOrder = 0 } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ message: 'Category name is required' });
+    }
+
+    const category = new ForumCategory({
+      name,
+      description,
+      parentCategoryId: parentCategoryId || null,
+      displayOrder
+    });
+
+    await category.save();
+    res.status(201).json(category);
+  } catch (error) {
+    console.error('Create category error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /api/forum/categories/:id - Update category (admin only)
+router.put('/categories/:id', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, parentCategoryId, displayOrder, isActive } = req.body;
+
+    const category = await ForumCategory.findByIdAndUpdate(
+      id,
+      { name, description, parentCategoryId, displayOrder, isActive },
+      { new: true, runValidators: true }
+    );
+
+    if (!category) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+
+    res.json(category);
+  } catch (error) {
+    console.error('Update category error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// DELETE /api/forum/categories/:id - Delete category (admin only, cascade)
+router.delete('/categories/:id', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const category = await ForumCategory.findById(id);
+    if (!category) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+
+    // Cascade: find all threads in this category and subcategories
+    const subcategories = await ForumCategory.find({ parentCategoryId: id });
+    const categoryIds = [id, ...subcategories.map(s => s._id.toString())];
+
+    for (const catId of categoryIds) {
+      const threads = await ForumThread.find({ categoryId: catId });
+      for (const thread of threads) {
+        await ForumPost.deleteMany({ threadId: thread._id });
+      }
+      await ForumThread.deleteMany({ categoryId: catId });
+    }
+
+    await ForumCategory.deleteMany({ parentCategoryId: id });
+    await ForumCategory.findByIdAndDelete(id);
+
+    res.json({ success: true, message: 'Category and all contents deleted' });
+  } catch (error) {
+    console.error('Delete category error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // GET /api/forum/categories - List all categories with subcategories
 router.get('/categories', async (req, res) => {
   try {
@@ -331,6 +410,160 @@ router.post('/posts/:postId/upvote', verifyToken, requireAuth, async (req, res) 
     res.json({ post, action: 'added' });
   } catch (error) {
     console.error('Upvote post error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /api/forum/threads/:threadId - Update thread (author or admin)
+router.put('/threads/:threadId', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { threadId } = req.params;
+    const { title, content, tags } = req.body;
+
+    const thread = await ForumThread.findById(threadId);
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+
+    const isAuthor = thread.authorId.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin' || req.user.isAdmin;
+
+    if (!isAuthor && !isAdmin) {
+      return res.status(403).json({ message: 'Not authorized to edit this thread' });
+    }
+
+    if (title !== undefined) thread.title = title;
+    if (content !== undefined) thread.content = content;
+    if (tags !== undefined) thread.tags = tags;
+
+    await thread.save();
+    await thread.populate('authorId', 'username displayName');
+
+    res.json(thread);
+  } catch (error) {
+    console.error('Update thread error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /api/forum/threads/:threadId/pin - Pin/unpin thread (admin only)
+router.put('/threads/:threadId/pin', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { threadId } = req.params;
+
+    const thread = await ForumThread.findById(threadId);
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+
+    thread.isPinned = !thread.isPinned;
+    await thread.save();
+
+    res.json({ thread, pinned: thread.isPinned });
+  } catch (error) {
+    console.error('Pin thread error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /api/forum/threads/:threadId/lock - Lock/unlock thread (admin only)
+router.put('/threads/:threadId/lock', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { threadId } = req.params;
+
+    const thread = await ForumThread.findById(threadId);
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+
+    thread.isLocked = !thread.isLocked;
+    await thread.save();
+
+    res.json({ thread, locked: thread.isLocked });
+  } catch (error) {
+    console.error('Lock thread error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST /api/forum/threads/:threadId/posts - Create post in thread (authenticated)
+router.post('/threads/:threadId/posts', verifyToken, requireAuth, checkMute, async (req, res) => {
+  try {
+    const { threadId } = req.params;
+    const { body, bodyFormat = 'markdown' } = req.body;
+
+    if (!body) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    const thread = await ForumThread.findById(threadId);
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+
+    if (thread.isLocked) {
+      return res.status(403).json({ message: 'Thread is locked' });
+    }
+
+    const user = await User.findById(req.user._id);
+    const { flagged, reasons } = await checkSpam(req.user._id, body, user.reputation || 0);
+
+    if (flagged) {
+      return res.status(400).json({ message: 'Your post was flagged as spam', reasons });
+    }
+
+    const post = new ForumPost({
+      threadId,
+      body,
+      bodyFormat,
+      authorId: req.user._id,
+      authorUsername: user.username,
+      authorAvatarUrl: user.avatarUrl || ''
+    });
+
+    await post.save();
+
+    await ForumThread.findByIdAndUpdate(threadId, {
+      $inc: { postCount: 1 },
+      lastPostAt: new Date(),
+      lastPostAuthorId: req.user._id
+    });
+
+    await post.populate('authorId', 'username displayName');
+
+    res.status(201).json(post);
+  } catch (error) {
+    console.error('Create post (nested) error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// DELETE /api/forum/posts/:postId - Delete post (author or admin)
+router.delete('/posts/:postId', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    const post = await ForumPost.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    const isAuthor = post.authorId.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin' || req.user.isAdmin;
+
+    if (!isAuthor && !isAdmin) {
+      return res.status(403).json({ message: 'Not authorized to delete this post' });
+    }
+
+    await ForumPost.findByIdAndDelete(postId);
+
+    await ForumThread.findByIdAndUpdate(post.threadId, {
+      $inc: { postCount: -1 }
+    });
+
+    res.json({ success: true, message: 'Post deleted' });
+  } catch (error) {
+    console.error('Delete post error:', error);
     res.status(500).json({ message: error.message });
   }
 });
