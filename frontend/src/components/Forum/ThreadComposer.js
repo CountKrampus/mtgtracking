@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Loader } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../../config';
+import DuplicateDetectionModal from './DuplicateDetectionModal';
 
 export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl, user, onThreadCreated }) {
   const [title, setTitle] = useState('');
@@ -11,6 +12,10 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl, us
   const [error, setError] = useState('');
   const [categories, setCategories] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState(categoryId);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [suggestedDuplicates, setSuggestedDuplicates] = useState([]);
+  const [newThreadId, setNewThreadId] = useState(null);
+  const [createdThread, setCreatedThread] = useState(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -49,11 +54,22 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl, us
         contentFormat: 'markdown'
       });
 
-      onThreadCreated?.(response.data);
-      setTitle('');
-      setContent('');
-      setTags('');
-      onClose();
+      const threadData = response.data;
+      const duplicates = threadData.suggestedDuplicates;
+
+      if (duplicates && duplicates.length > 0) {
+        const threadId = threadData._id || threadData.thread?._id;
+        setCreatedThread(threadData);
+        setNewThreadId(threadId);
+        setSuggestedDuplicates(duplicates);
+        setShowDuplicateModal(true);
+      } else {
+        onThreadCreated?.(threadData);
+        setTitle('');
+        setContent('');
+        setTags('');
+        onClose();
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create thread');
     } finally {
@@ -61,9 +77,28 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl, us
     }
   };
 
+  const handleDuplicateModalClose = () => {
+    setShowDuplicateModal(false);
+    onThreadCreated?.(createdThread);
+    setTitle('');
+    setContent('');
+    setTags('');
+    onClose();
+  };
+
+  const handleMergeRequest = () => {
+    setShowDuplicateModal(false);
+    onThreadCreated?.(createdThread);
+    setTitle('');
+    setContent('');
+    setTags('');
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   return (
+    <>
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-slate-900 rounded-lg border border-slate-700 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 flex items-center justify-between p-6 border-b border-slate-700 bg-slate-900">
@@ -172,5 +207,13 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl, us
         </div>
       </div>
     </div>
+    <DuplicateDetectionModal
+      isOpen={showDuplicateModal}
+      onClose={handleDuplicateModalClose}
+      suggestedDuplicates={suggestedDuplicates}
+      newThreadId={newThreadId}
+      onMergeRequest={handleMergeRequest}
+    />
+    </>
   );
 }

@@ -4,6 +4,7 @@ import ForumCategoriesTab from './ForumCategoriesTab';
 import SpamFilterAdmin from './SpamFilterAdmin';
 import MuteManager from './MuteManager';
 import ModmailAdmin from '../admin/ModmailAdmin';
+import MergeRequestAdmin from './MergeRequestAdmin';
 import { API_URL } from '../../config';
 
 export default function ForumAdminPanel({ isOpen, onClose }) {
@@ -74,6 +75,16 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
           >
             Modmail
           </button>
+          <button
+            onClick={() => setActiveTab('mergeRequests')}
+            className={`flex-1 px-6 py-3 font-semibold transition ${
+              activeTab === 'mergeRequests'
+                ? 'bg-purple-600 text-white'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Merge Requests
+          </button>
         </div>
 
         {/* Content */}
@@ -89,6 +100,9 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
           )}
           {activeTab === 'modmail' && (
             loadedTabs.modmail ? <ModmailAdmin apiUrl={API_URL} /> : <div className="text-slate-400">Loading...</div>
+          )}
+          {activeTab === 'mergeRequests' && (
+            loadedTabs.mergeRequests ? <MergeRequestAdmin /> : <div className="text-slate-400">Loading...</div>
           )}
         </div>
       </div>
