@@ -193,7 +193,7 @@ router.get('/threads/:threadId', async (req, res) => {
 });
 
 // POST /api/forum/threads - Create new thread (requires auth)
-router.post('/threads', verifyToken, requireAuth, async (req, res) => {
+router.post('/threads', verifyToken, requireAuth, checkMute, async (req, res) => {
   try {
     const { categoryId, title, content, contentFormat = 'markdown', tags = [] } = req.body;
 
@@ -308,7 +308,7 @@ router.post('/posts', verifyToken, requireAuth, checkMute, async (req, res) => {
 });
 
 // PUT /api/forum/posts/:postId - Edit post (requires auth, author only)
-router.put('/posts/:postId', verifyToken, requireAuth, async (req, res) => {
+router.put('/posts/:postId', verifyToken, requireAuth, checkMute, async (req, res) => {
   try {
     const { postId } = req.params;
     const { body, reason = '' } = req.body;

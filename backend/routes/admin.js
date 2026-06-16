@@ -604,7 +604,9 @@ const { checkSpam } = require('../utils/spamFilter');
 const MUTE_DURATIONS = {
   1: 3600000,    // 1 hour
   2: 86400000,   // 1 day
-  3: 604800000   // 1 week
+  3: 604800000,  // 1 week
+  4: 2592000000, // 30 days
+  5: null        // permanent
 };
 
 /**
@@ -613,54 +615,51 @@ const MUTE_DURATIONS = {
 router.post('/mute/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const { reason, autoEscalate = true } = req.body;
+    const { reason, level, mutedUntil } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({ message: 'reason is required' });
+    }
 
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const activeMute = await Ban.findOne({
-      userId,
-      type: 'mute',
-      isActive: true,
-      expiresAt: { $gt: new Date() }
-    });
+    // Deactivate any existing active mute
+    await Ban.updateMany(
+      { userId, type: 'mute', isActive: true },
+      { isActive: false }
+    );
 
-    let muteLevel = 1;
-    let previousMutes = [];
+    // Determine mute level (1-5) and expiry
+    const muteLevel = Math.min(Math.max(parseInt(level) || 1, 1), 5);
+    let expiresAt = null;
 
-    if (activeMute && autoEscalate) {
-      muteLevel = Math.min(activeMute.muteLevel + 1, 3);
-      previousMutes = activeMute.previousMutes;
-      previousMutes.push({
-        muteLevel: activeMute.muteLevel,
-        startedAt: activeMute.createdAt,
-        endedAt: new Date(),
-        reason: activeMute.reason
-      });
-      activeMute.isActive = false;
-      await activeMute.save();
+    if (mutedUntil) {
+      expiresAt = new Date(mutedUntil);
+    } else {
+      const durationMs = MUTE_DURATIONS[muteLevel];
+      expiresAt = durationMs ? new Date(Date.now() + durationMs) : null;
     }
 
     const newMute = new Ban({
       userId,
       type: 'mute',
       reason,
-      muteLevel,
-      durationMs: MUTE_DURATIONS[muteLevel],
-      expiresAt: new Date(Date.now() + MUTE_DURATIONS[muteLevel]),
-      autoEscalate,
-      previousMutes,
-      createdBy: req.user._id
+      level: muteLevel,
+      mutedUntil: expiresAt,
+      isActive: true
     });
 
     await newMute.save();
 
     res.json({
-      message: `User muted at level ${muteLevel}`,
-      mute: newMute,
-      expiresAt: newMute.expiresAt
+      success: true,
+      message: expiresAt
+        ? `User muted until ${expiresAt.toISOString()}`
+        : 'User permanently muted',
+      ban: newMute
     });
   } catch (error) {
     console.error('Create mute error:', error);
@@ -669,7 +668,29 @@ router.post('/mute/:userId', async (req, res) => {
 });
 
 /**
- * DELETE /api/admin/mute/:userId - Revoke mute
+ * POST /api/admin/unmute/:userId - Deactivate mute
+ */
+router.post('/unmute/:userId', async (req, res) => {
+  try {
+    const result = await Ban.findOneAndUpdate(
+      { userId: req.params.userId, type: 'mute', isActive: true },
+      { isActive: false },
+      { new: true }
+    );
+
+    if (!result) {
+      return res.status(404).json({ message: 'No active mute found' });
+    }
+
+    res.json({ success: true, message: 'Mute removed', ban: result });
+  } catch (error) {
+    console.error('Unmute error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * DELETE /api/admin/mute/:userId - Revoke mute (alias for backwards compatibility)
  */
 router.delete('/mute/:userId', async (req, res) => {
   try {
@@ -683,7 +704,7 @@ router.delete('/mute/:userId', async (req, res) => {
       return res.status(404).json({ message: 'No active mute found' });
     }
 
-    res.json({ message: 'Mute revoked', mute: result });
+    res.json({ success: true, message: 'Mute revoked', ban: result });
   } catch (error) {
     console.error('Revoke mute error:', error);
     res.status(500).json({ message: error.message });
@@ -691,25 +712,197 @@ router.delete('/mute/:userId', async (req, res) => {
 });
 
 /**
- * GET /api/admin/mutes - List active mutes
+ * GET /api/admin/mutes - List active mutes (paginated)
  */
 router.get('/mutes', async (req, res) => {
   try {
-    const mutes = await Ban.find({
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const now = new Date();
+    const query = {
       type: 'mute',
       isActive: true,
-      expiresAt: { $gt: new Date() }
-    })
-      .populate('userId', 'username displayName')
-      .populate('createdBy', 'username displayName')
-      .sort({ expiresAt: 1 });
+      $or: [
+        { mutedUntil: { $gt: now } },
+        { mutedUntil: null }
+      ]
+    };
 
-    res.json(mutes.map(m => ({
-      ...m.toObject(),
-      expiresIn: m.expiresAt - new Date()
-    })));
+    const [mutes, total] = await Promise.all([
+      Ban.find(query)
+        .populate('userId', 'username displayName')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Ban.countDocuments(query)
+    ]);
+
+    res.json({
+      mutes,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
   } catch (error) {
     console.error('List mutes error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/mutes/:userId - Get mute details and history for a specific user
+ */
+router.get('/mutes/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId).select('username displayName');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Active mute
+    const now = new Date();
+    const ban = await Ban.findOne({
+      userId,
+      type: 'mute',
+      isActive: true,
+      $or: [
+        { mutedUntil: { $gt: now } },
+        { mutedUntil: null }
+      ]
+    }).lean();
+
+    // Full history (all mutes, active or not)
+    const history = await Ban.find({ userId, type: 'mute' })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({ user, ban, history });
+  } catch (error) {
+    console.error('Get user mute error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/appeals - List pending ban/mute appeals (paginated)
+ */
+router.get('/appeals', async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const query = {
+      appealedAt: { $exists: true, $ne: null },
+      appealStatus: 'pending'
+    };
+
+    const [appeals, total] = await Promise.all([
+      Ban.find(query)
+        .populate('userId', 'username displayName')
+        .sort({ appealedAt: 1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Ban.countDocuments(query)
+    ]);
+
+    res.json({
+      appeals,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('List appeals error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/appeals/:banId/approve - Approve a ban/mute appeal
+ */
+router.post('/appeals/:banId/approve', async (req, res) => {
+  try {
+    const { banId } = req.params;
+    const { message } = req.body;
+
+    const ban = await Ban.findById(banId);
+    if (!ban) {
+      return res.status(404).json({ message: 'Ban/mute record not found' });
+    }
+
+    if (!ban.appealedAt) {
+      return res.status(400).json({ message: 'No appeal has been submitted for this record' });
+    }
+
+    if (ban.appealStatus !== 'pending') {
+      return res.status(400).json({ message: `Appeal already ${ban.appealStatus}` });
+    }
+
+    ban.appealStatus = 'approved';
+    ban.appealReviewedBy = req.user._id;
+    ban.appealReviewedAt = new Date();
+    ban.isActive = false; // Lift the ban/mute on approval
+
+    await ban.save();
+
+    res.json({
+      success: true,
+      message: message || 'Appeal approved. Ban/mute has been lifted.',
+      ban
+    });
+  } catch (error) {
+    console.error('Approve appeal error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/appeals/:banId/reject - Reject a ban/mute appeal
+ */
+router.post('/appeals/:banId/reject', async (req, res) => {
+  try {
+    const { banId } = req.params;
+    const { reason } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({ message: 'reason is required when rejecting an appeal' });
+    }
+
+    const ban = await Ban.findById(banId);
+    if (!ban) {
+      return res.status(404).json({ message: 'Ban/mute record not found' });
+    }
+
+    if (!ban.appealedAt) {
+      return res.status(400).json({ message: 'No appeal has been submitted for this record' });
+    }
+
+    if (ban.appealStatus !== 'pending') {
+      return res.status(400).json({ message: `Appeal already ${ban.appealStatus}` });
+    }
+
+    ban.appealStatus = 'rejected';
+    ban.appealReviewedBy = req.user._id;
+    ban.appealReviewedAt = new Date();
+
+    await ban.save();
+
+    res.json({
+      success: true,
+      message: `Appeal rejected: ${reason}`,
+      ban
+    });
+  } catch (error) {
+    console.error('Reject appeal error:', error);
     res.status(500).json({ message: error.message });
   }
 });
