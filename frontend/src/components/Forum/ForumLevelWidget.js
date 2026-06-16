@@ -3,6 +3,7 @@ import { Trophy, Coins, ShoppingBag, User } from 'lucide-react';
 
 export default function ForumLevelWidget({ apiUrl, user, onViewShop, onViewProfile }) {
   const [userLevel, setUserLevel] = useState(null);
+  const [error, setError] = useState(null);
 
   const fetchLevel = useCallback(async () => {
     if (!user) return;
@@ -11,10 +12,13 @@ export default function ForumLevelWidget({ apiUrl, user, onViewShop, onViewProfi
       const response = await fetch(`${apiUrl}/forum/user-level`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setUserLevel(data);
+      setError(null);
     } catch (error) {
       console.error('Error fetching user level:', error);
+      setError(error.message);
     }
   }, [user, apiUrl]);
 
@@ -25,7 +29,11 @@ export default function ForumLevelWidget({ apiUrl, user, onViewShop, onViewProfi
   }, [fetchLevel]);
 
   if (!user) return null;
-  if (!userLevel) return <div className="text-slate-400 text-sm">Loading...</div>;
+  if (!userLevel) return (
+    <div className="text-slate-400 text-sm">
+      {error ? <span className="text-red-400">Failed to load level data: {error}</span> : 'Loading...'}
+    </div>
+  );
 
   const progressPercent = userLevel.experienceToNextLevel > 0
     ? Math.min((userLevel.experience / userLevel.experienceToNextLevel) * 100, 100)
@@ -69,7 +77,7 @@ export default function ForumLevelWidget({ apiUrl, user, onViewShop, onViewProfi
         <div className="flex items-center gap-1 mb-3">
           <span className="text-xs text-slate-400 mr-1">Recent:</span>
           {recentAchievements.map((ach, i) => (
-            <span key={i} title={ach.name || ach.description || 'Achievement'} className="text-base">
+            <span key={ach.name || ach.earnedAt || i} title={ach.name || ach.description || 'Achievement'} className="text-base">
               🏅
             </span>
           ))}
@@ -93,7 +101,7 @@ export default function ForumLevelWidget({ apiUrl, user, onViewShop, onViewProfi
             className="flex items-center gap-1 text-xs px-2 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded transition-colors"
           >
             <User size={12} />
-            Profile
+            View Profile
           </button>
         )}
       </div>
