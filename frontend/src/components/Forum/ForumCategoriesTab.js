@@ -40,7 +40,7 @@ export default function ForumCategoriesTab() {
     }
 
     try {
-      await axios.post(`${API_URL}/forum/admin/categories`, formData);
+      await axios.post(`${API_URL}/forum/categories`, formData);
       fetchCategories();
       setFormData({ name: '', description: '', parentCategoryId: null });
       setShowNewForm(false);
@@ -51,7 +51,7 @@ export default function ForumCategoriesTab() {
 
   const handleUpdateCategory = async (id) => {
     try {
-      await axios.put(`${API_URL}/forum/admin/categories/${id}`, {
+      await axios.put(`${API_URL}/forum/categories/${id}`, {
         name: formData.name,
         description: formData.description,
       });
@@ -68,7 +68,7 @@ export default function ForumCategoriesTab() {
     if (!confirm('Are you sure you want to delete this category?')) return;
 
     try {
-      await axios.delete(`${API_URL}/forum/admin/categories/${id}`);
+      await axios.delete(`${API_URL}/forum/categories/${id}`);
       fetchCategories();
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to delete category');
