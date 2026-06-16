@@ -734,4 +734,86 @@ router.put('/threads/:id/pin', verifyToken, requireAuth, requireAdmin, async (re
   }
 });
 
+// ─────────────────────────────────────────────────────────────
+// ACTIVITY FEED
+// ─────────────────────────────────────────────────────────────
+
+// GET /api/forum/feed - Get activity feed (recent threads and posts)
+router.get('/feed', async (req, res) => {
+  try {
+    const { limit = 50, offset = 0 } = req.query;
+    const limitNum = Math.min(parseInt(limit) || 50, 100);
+    const offsetNum = parseInt(offset) || 0;
+
+    // Fetch recent threads
+    const threads = await ForumThread.find({ isLocked: false })
+      .select('_id title categoryId authorId createdAt postCount content')
+      .populate('authorId', 'username displayName')
+      .populate('categoryId', 'name')
+      .lean()
+      .sort({ createdAt: -1 })
+      .limit(limitNum);
+
+    // Fetch recent posts
+    const posts = await ForumPost.find({ isHidden: false, isFlagHidden: false, isShadowHidden: false })
+      .select('_id threadId body authorId createdAt')
+      .populate('authorId', 'username displayName')
+      .lean()
+      .sort({ createdAt: -1 })
+      .limit(limitNum);
+
+    // Get thread titles for posts
+    const threadIds = [...new Set(posts.map(p => p.threadId?.toString()).filter(Boolean))];
+    const threadTitleMap = {};
+    if (threadIds.length > 0) {
+      const threadTitles = await ForumThread.find({ _id: { $in: threadIds } })
+        .select('_id title')
+        .lean();
+      threadTitles.forEach(t => {
+        threadTitleMap[t._id.toString()] = t.title;
+      });
+    }
+
+    // Combine and transform threads
+    const feedThreads = threads.map(thread => ({
+      type: 'thread',
+      id: thread._id,
+      title: thread.title,
+      authorId: thread.authorId,
+      categoryId: thread.categoryId,
+      snippet: (thread.content || '').substring(0, 150),
+      createdAt: thread.createdAt,
+      postCount: thread.postCount
+    }));
+
+    // Transform posts
+    const feedPosts = posts.map(post => ({
+      type: 'post',
+      id: post._id,
+      threadId: post.threadId,
+      threadTitle: threadTitleMap[post.threadId?.toString()] || 'Unknown thread',
+      authorId: post.authorId,
+      snippet: (post.body || '').substring(0, 150),
+      createdAt: post.createdAt
+    }));
+
+    // Combine and sort by createdAt descending
+    const combined = [...feedThreads, ...feedPosts];
+    combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // Apply pagination
+    const paginated = combined.slice(offsetNum, offsetNum + limitNum);
+
+    res.json({
+      items: paginated,
+      total: combined.length,
+      limit: limitNum,
+      offset: offsetNum
+    });
+  } catch (error) {
+    console.error('Get feed error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

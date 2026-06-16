@@ -3,6 +3,7 @@ import { Search, Plus, Zap, Settings } from 'lucide-react';
 import axios from 'axios';
 import ThreadComposer from './ThreadComposer';
 import ForumAdminPanel from './ForumAdminPanel';
+import ForumFeed from './ForumFeed';
 import { API_URL } from '../../config';
 
 export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, authUser }) {
@@ -121,71 +122,80 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
             </div>
           </div>
 
-          {/* Categories */}
-          {loading ? (
-            <div className="text-center py-12 text-white/60">Loading categories...</div>
-          ) : parentCategories.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-white/60 mb-4">No categories found</p>
-              {authUser?.role === 'admin' && (
-                <button
-                  onClick={() => setShowAdminPanel(true)}
-                  className="inline-block px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold transition"
-                >
-                  Create Categories
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-8">
-              {parentCategories.map((category) => (
-                <div key={category._id}>
-                  <div className="mb-4 flex items-center gap-3">
-                    <span className="text-2xl">{emojiMap[category.name] || '📌'}</span>
-                    <div>
-                      <h3 className="text-xl font-bold text-white">{category.name}</h3>
-                      <p className="text-white/60 text-sm">{category.description}</p>
-                    </div>
-                  </div>
-
-                  {/* Subcategories Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {category.children && category.children.length > 0 ? (
-                      category.children.map((subcategory) => (
-                        <button
-                          key={subcategory._id}
-                          onClick={() => onSelectCategory(subcategory._id)}
-                          className="text-left p-4 bg-purple-600/20 border border-purple-500/30 rounded-lg hover:bg-purple-600/30 hover:border-purple-400/50 transition group"
-                        >
-                          <div className="flex items-start justify-between gap-2 mb-1">
-                            <h4 className="font-semibold text-white group-hover:text-purple-200 transition">
-                              {subcategory.name}
-                            </h4>
-                          </div>
-                          <p className="text-white/60 text-xs mb-2">{subcategory.description}</p>
-                          <div className="text-xs text-white/50">
-                            📌 {subcategory.threadCount} threads
-                          </div>
-                        </button>
-                      ))
-                    ) : (
-                      <button
-                        onClick={() => onSelectCategory(category._id)}
-                        className="text-left p-4 bg-purple-600/20 border border-purple-500/30 rounded-lg hover:bg-purple-600/30 hover:border-purple-400/50 transition group"
-                      >
-                        <h4 className="font-semibold text-white group-hover:text-purple-200 transition mb-1">
-                          {category.name}
-                        </h4>
-                        <p className="text-white/60 text-xs mb-2">{category.description}</p>
-                        <div className="text-xs text-white/50">
-                          📌 {category.threadCount} threads
-                        </div>
-                      </button>
-                    )}
-                  </div>
+          {/* Categories or Feed based on active tab */}
+          {activeTab === 'categories' ? (
+            <>
+              {loading ? (
+                <div className="text-center py-12 text-white/60">Loading categories...</div>
+              ) : parentCategories.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-white/60 mb-4">No categories found</p>
+                  {authUser?.role === 'admin' && (
+                    <button
+                      onClick={() => setShowAdminPanel(true)}
+                      className="inline-block px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold transition"
+                    >
+                      Create Categories
+                    </button>
+                  )}
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div className="space-y-8">
+                  {parentCategories.map((category) => (
+                    <div key={category._id}>
+                      <div className="mb-4 flex items-center gap-3">
+                        <span className="text-2xl">{emojiMap[category.name] || '📌'}</span>
+                        <div>
+                          <h3 className="text-xl font-bold text-white">{category.name}</h3>
+                          <p className="text-white/60 text-sm">{category.description}</p>
+                        </div>
+                      </div>
+
+                      {/* Subcategories Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {category.children && category.children.length > 0 ? (
+                          category.children.map((subcategory) => (
+                            <button
+                              key={subcategory._id}
+                              onClick={() => onSelectCategory(subcategory._id)}
+                              className="text-left p-4 bg-purple-600/20 border border-purple-500/30 rounded-lg hover:bg-purple-600/30 hover:border-purple-400/50 transition group"
+                            >
+                              <div className="flex items-start justify-between gap-2 mb-1">
+                                <h4 className="font-semibold text-white group-hover:text-purple-200 transition">
+                                  {subcategory.name}
+                                </h4>
+                              </div>
+                              <p className="text-white/60 text-xs mb-2">{subcategory.description}</p>
+                              <div className="text-xs text-white/50">
+                                📌 {subcategory.threadCount} threads
+                              </div>
+                            </button>
+                          ))
+                        ) : (
+                          <button
+                            onClick={() => onSelectCategory(category._id)}
+                            className="text-left p-4 bg-purple-600/20 border border-purple-500/30 rounded-lg hover:bg-purple-600/30 hover:border-purple-400/50 transition group"
+                          >
+                            <h4 className="font-semibold text-white group-hover:text-purple-200 transition mb-1">
+                              {category.name}
+                            </h4>
+                            <p className="text-white/60 text-xs mb-2">{category.description}</p>
+                            <div className="text-xs text-white/50">
+                              📌 {category.threadCount} threads
+                            </div>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <ForumFeed
+              onSelectThread={onSelectCategory}
+              onSelectPost={(threadId) => onSelectCategory(threadId)}
+            />
           )}
         </div>
       </div>
