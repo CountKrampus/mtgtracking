@@ -890,9 +890,11 @@ router.post('/level/cosmetics/purchase', verifyToken, requireAuth, async (req, r
     if (!level) return res.status(404).json({ message: 'Level not found' });
     if (level.cosmetics.purchased.includes(cosmeticId))
       return res.status(400).json({ message: 'Already owned' });
-    if (level.coins < cost)
-      return res.status(400).json({ message: 'Not enough coins' });
-    level.coins -= cost;
+    try {
+      level.spendCoins(cost);
+    } catch (e) {
+      return res.status(400).json({ message: e.message });
+    }
     level.cosmetics.purchased.push(cosmeticId);
     await level.save();
     res.json({ success: true, newCoins: level.coins, message: 'Purchased!' });
