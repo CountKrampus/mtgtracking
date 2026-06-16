@@ -77,6 +77,27 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
     }
   };
 
+  const handleDeleteThread = async () => {
+    if (!window.confirm('Are you sure you want to delete this thread? This cannot be undone.')) {
+      return;
+    }
+    try {
+      const response = await fetch(`${apiUrl}/forum/threads/${threadId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (response.ok) {
+        onBack();
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to delete thread');
+      }
+    } catch (error) {
+      console.error('Error deleting thread:', error);
+      alert('Failed to delete thread');
+    }
+  };
+
   const handleMoveThread = async () => {
     if (!selectedCategoryId) return;
 
@@ -213,6 +234,13 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
                     title={thread.isLocked ? 'Unlock thread' : 'Lock thread'}
                   >
                     {thread.isLocked ? <Lock size={18} /> : <Unlock size={18} />}
+                  </button>
+                  <button
+                    onClick={handleDeleteThread}
+                    className="p-2 hover:bg-slate-700 rounded text-red-500"
+                    title="Delete thread"
+                  >
+                    <Trash2 size={18} />
                   </button>
                 </div>
               )}

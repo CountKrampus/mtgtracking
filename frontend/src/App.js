@@ -32,6 +32,8 @@ import SpamFilterAdmin from './components/Forum/SpamFilterAdmin';
 import MuteManager from './components/Forum/MuteManager';
 import ForumLevelWidget from './components/Forum/ForumLevelWidget';
 import ForumShop from './components/Forum/ForumShop';
+import NotificationBell from './components/NotificationBell';
+import DMPreview from './components/DMPreview';
 import { API_URL } from './config';
 
 const DeckBuilder = React.lazy(() => import('./components/DeckBuilder'));
@@ -2771,8 +2773,16 @@ function App() {
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 mobile-content-offset sm:pt-6">
         <div className="max-w-7xl mx-auto">
-          {/* Breadcrumb */}
-          <Breadcrumb currentView={currentView} setCurrentView={setCurrentView} />
+          {/* Header with Breadcrumb and Notifications */}
+          <div className="flex items-center justify-between mb-6">
+            <Breadcrumb currentView={currentView} setCurrentView={setCurrentView} />
+            {authUser && (
+              <div className="flex items-center gap-2">
+                <NotificationBell apiUrl={API_URL} user={authUser} />
+                <DMPreview apiUrl={API_URL} user={authUser} />
+              </div>
+            )}
+          </div>
 
           {/* Dashboard View */}
           {currentView === 'dashboard' && (
