@@ -9,6 +9,7 @@ const userRoutes = require('./routes/users');
 const adminRoutes = require('./routes/admin');
 const forumRouter = require('./routes/forum');
 const notificationsRouter = require('./routes/notifications');
+const messagesRouter = require('./routes/messages');
 const path = require('path');
 const fs = require('fs');
 const { pipeline } = require('stream/promises');
@@ -93,6 +94,9 @@ app.use('/api/forum', forumRouter);
 
 // Mount notifications routes
 app.use('/api/notifications', notificationsRouter);
+
+// Mount messages routes
+app.use('/api/messages', messagesRouter);
 
 // Check maintenance mode for all other routes
 app.use(checkMaintenanceMode);
