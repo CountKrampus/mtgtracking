@@ -436,6 +436,35 @@ router.post('/threads/:threadId/import-deck', verifyToken, requireAuth, async (r
   }
 });
 
+// DELETE /api/forum/threads/:threadId
+router.delete('/threads/:threadId', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { threadId } = req.params;
+
+    const thread = await ForumThread.findById(threadId);
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+
+    // Delete all posts in this thread
+    await ForumPost.deleteMany({ threadId });
+
+    // Delete the thread itself
+    await ForumThread.findByIdAndDelete(threadId);
+
+    // Update category's thread count
+    await ForumCategory.findByIdAndUpdate(
+      thread.categoryId,
+      { $inc: { threadCount: -1 } }
+    );
+
+    res.json({ success: true, message: 'Thread deleted' });
+  } catch (error) {
+    console.error('Delete thread error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Forum Economy Endpoints
 
 // GET /api/forum/user-level
