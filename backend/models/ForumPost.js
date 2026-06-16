@@ -4,24 +4,16 @@ const postSchema = new mongoose.Schema({
   threadId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ForumThread',
-    required: [true, 'Thread ID is required']
+    required: true
   },
   authorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: [true, 'Author ID is required']
-  },
-  authorUsername: {
-    type: String,
-    default: ''
-  },
-  authorAvatarUrl: {
-    type: String,
-    default: ''
+    required: true
   },
   body: {
     type: String,
-    required: [true, 'Post body is required']
+    required: true
   },
   bodyFormat: {
     type: String,
@@ -54,18 +46,6 @@ const postSchema = new mongoose.Schema({
     default: false
   },
   hiddenReason: String,
-  isFlagHidden: {
-    type: Boolean,
-    default: false
-  },
-  isShadowHidden: {
-    type: Boolean,
-    default: false
-  },
-  upvotes: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
   likes: {
     type: Number,
     default: 0
