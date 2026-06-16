@@ -86,15 +86,22 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl, us
               className="w-full p-3 bg-slate-800 border border-slate-700 rounded text-white focus:outline-none focus:border-purple-500"
             >
               <option value="">Select a category...</option>
-              {categories.map((cat) => (
-                <optgroup key={cat._id} label={cat.name}>
-                  {cat.children?.map((child) => (
-                    <option key={child._id} value={child._id}>
-                      {cat.name} → {child.name}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
+              {categories.map((cat) => [
+                // Add parent category as an option
+                <option key={`parent-${cat._id}`} value={cat._id}>
+                  {cat.name}
+                </option>,
+                // Add child categories in an optgroup
+                ...(cat.children && cat.children.length > 0 ? [
+                  <optgroup key={`group-${cat._id}`} label={`${cat.name} Sub-categories`}>
+                    {cat.children.map((child) => (
+                      <option key={child._id} value={child._id}>
+                        {child.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ] : [])
+              ])}
             </select>
           </div>
 
