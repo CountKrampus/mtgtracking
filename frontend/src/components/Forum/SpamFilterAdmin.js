@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Sliders } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
 export default function SpamFilterAdmin({ apiUrl = 'http://localhost:5000/api' }) {
   const [loading, setLoading] = useState(true);
@@ -87,8 +87,10 @@ export default function SpamFilterAdmin({ apiUrl = 'http://localhost:5000/api' }
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       setSaveMessage({ type: 'success', text: 'Configuration saved successfully.' });
+      setTimeout(() => setSaveMessage(null), 4000);
     } catch (err) {
       setSaveMessage({ type: 'error', text: 'Failed to save configuration.' });
+      setTimeout(() => setSaveMessage(null), 4000);
       console.error('Error saving spam config:', err);
     }
   };
@@ -141,6 +143,8 @@ export default function SpamFilterAdmin({ apiUrl = 'http://localhost:5000/api' }
           </div>
           <button
             onClick={() => setIsEnabled(!isEnabled)}
+            role="switch"
+            aria-checked={isEnabled}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isEnabled ? 'bg-purple-600' : 'bg-slate-600'}`}
           >
             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
@@ -155,6 +159,8 @@ export default function SpamFilterAdmin({ apiUrl = 'http://localhost:5000/api' }
           </div>
           <button
             onClick={() => setEnableRepCheck(!enableRepCheck)}
+            role="switch"
+            aria-checked={enableRepCheck}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enableRepCheck ? 'bg-purple-600' : 'bg-slate-600'}`}
           >
             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableRepCheck ? 'translate-x-6' : 'translate-x-1'}`} />

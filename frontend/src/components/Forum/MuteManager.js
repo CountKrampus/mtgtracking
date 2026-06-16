@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Gavel, Trash2, Plus, Eye, Check, X, ChevronDown } from 'lucide-react';
+import { Gavel, Trash2, Plus, Eye, Check, X } from 'lucide-react';
 
 const getMuteLevelColor = (level) => {
   const colors = {
@@ -76,7 +76,8 @@ export default function MuteManager({ apiUrl = 'http://localhost:5000/api', isOp
 
   const handleUnmute = async (muteUserId) => {
     try {
-      await fetch(`${apiUrl}/admin/mute/${muteUserId}`, { method: 'DELETE' });
+      const response = await fetch(`${apiUrl}/admin/mute/${muteUserId}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       fetchMutes();
     } catch (err) {
       console.error('Error removing mute:', err);
@@ -87,7 +88,7 @@ export default function MuteManager({ apiUrl = 'http://localhost:5000/api', isOp
     if (!newMuteUserId.trim() || !newMuteReason.trim()) return;
     setMuteSubmitting(true);
     try {
-      await fetch(`${apiUrl}/admin/mute/${newMuteUserId.trim()}`, {
+      const response = await fetch(`${apiUrl}/admin/mute/${newMuteUserId.trim()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -96,6 +97,7 @@ export default function MuteManager({ apiUrl = 'http://localhost:5000/api', isOp
           duration: newMuteLevel === '5' ? undefined : parseInt(newMuteDuration, 10),
         }),
       });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       setShowNewMuteModal(false);
       setNewMuteUserId('');
       setNewMuteReason('');
@@ -111,7 +113,8 @@ export default function MuteManager({ apiUrl = 'http://localhost:5000/api', isOp
 
   const handleApproveAppeal = async (appealId) => {
     try {
-      await fetch(`${apiUrl}/admin/appeals/${appealId}/approve`, { method: 'POST' });
+      const response = await fetch(`${apiUrl}/admin/appeals/${appealId}/approve`, { method: 'POST' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       fetchAppeals();
     } catch (err) {
       console.error('Error approving appeal:', err);
@@ -120,11 +123,12 @@ export default function MuteManager({ apiUrl = 'http://localhost:5000/api', isOp
 
   const handleRejectAppeal = async (appealId) => {
     try {
-      await fetch(`${apiUrl}/admin/appeals/${appealId}/reject`, {
+      const response = await fetch(`${apiUrl}/admin/appeals/${appealId}/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: rejectReason }),
       });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       setRejectingId(null);
       setRejectReason('');
       fetchAppeals();
