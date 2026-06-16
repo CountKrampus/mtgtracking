@@ -4,7 +4,7 @@ import axios from 'axios';
 import { API_URL } from '../../config';
 import DuplicateDetectionModal from './DuplicateDetectionModal';
 
-export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl, user, onThreadCreated }) {
+export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = API_URL, user, onThreadCreated }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
@@ -95,6 +95,14 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl, us
     onClose();
   };
 
+  const handleCancel = () => {
+    setTitle('');
+    setContent('');
+    setTags('');
+    setError('');
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -104,7 +112,7 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl, us
         <div className="sticky top-0 flex items-center justify-between p-6 border-b border-slate-700 bg-slate-900">
           <h2 className="text-xl font-bold text-white">Create New Thread</h2>
           <button
-            onClick={onClose}
+            onClick={handleCancel}
             className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-white"
           >
             <X size={24} />
@@ -189,7 +197,7 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl, us
           {/* Buttons */}
           <div className="flex gap-3 justify-end pt-4 border-t border-slate-700">
             <button
-              onClick={onClose}
+              onClick={handleCancel}
               disabled={creating}
               className="px-6 py-2 text-slate-300 hover:text-white transition disabled:opacity-50"
             >

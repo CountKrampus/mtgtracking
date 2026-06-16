@@ -161,7 +161,7 @@ export default function MergeRequestAdmin() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleApprove(req)}
-                    disabled={actionLoadingId === req._id}
+                    disabled={actionLoadingId !== null}
                     className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-semibold text-sm transition disabled:opacity-50 flex items-center gap-2"
                   >
                     {actionLoadingId === req._id && <Loader size={14} className="animate-spin" />}
@@ -169,7 +169,7 @@ export default function MergeRequestAdmin() {
                   </button>
                   <button
                     onClick={() => handleReject(req)}
-                    disabled={actionLoadingId === req._id}
+                    disabled={actionLoadingId !== null}
                     className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-semibold text-sm transition disabled:opacity-50"
                   >
                     Reject

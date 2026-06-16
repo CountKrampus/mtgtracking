@@ -15,7 +15,7 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
     if (isOpen && !loadedTabs[activeTab]) {
       setLoadedTabs(prev => ({ ...prev, [activeTab]: true }));
     }
-  }, [isOpen, activeTab, loadedTabs]);
+  }, [isOpen, activeTab]); // loadedTabs intentionally omitted: reading it inside the effect is correct via closure, including it would cause a re-render loop
 
   if (!isOpen) return null;
 
