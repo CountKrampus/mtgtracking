@@ -15,8 +15,9 @@ export default function DuplicateDetectionModal({ isOpen, onClose, suggestedDupl
     setError('');
 
     try {
-      await axios.post(`${API_URL}/forum/threads/${targetThreadId}/merge-request`, {
-        sourceThreadId: newThreadId
+      await axios.put(`${API_URL}/forum/threads/${newThreadId}/merge-request`, {
+        suggestedThreadId: targetThreadId,
+        reason: 'User submitted merge request after duplicate detection'
       });
       setSuccessId(targetThreadId);
       onMergeRequest?.(targetThreadId);

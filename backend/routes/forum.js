@@ -705,6 +705,97 @@ router.put('/threads/:threadId/merge-request', async (req, res) => {
   }
 });
 
+// GET /api/forum/admin/merge-requests - list pending merge requests
+router.get('/admin/merge-requests', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const skip = (page - 1) * limit;
+
+    const pending = await ForumThread.find({ 'mergeRequest.status': 'pending' })
+      .select('title postCount mergeRequest createdAt')
+      .populate('mergeRequest.suggestedThreadId', 'title')
+      .sort({ 'mergeRequest.status': 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const total = await ForumThread.countDocuments({ 'mergeRequest.status': 'pending' });
+
+    res.json({
+      pending,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) }
+    });
+  } catch (error) {
+    console.error('Fetch merge requests error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST /api/forum/threads/:threadId/merge - approve and merge threads
+router.post('/threads/:threadId/merge', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { threadId } = req.params;
+    const thread = await ForumThread.findById(threadId);
+
+    if (!thread || !thread.mergeRequest.suggestedThreadId) {
+      return res.status(400).json({ message: 'No merge request found' });
+    }
+
+    // Move all posts from source thread to target thread
+    await ForumPost.updateMany(
+      { threadId },
+      { threadId: thread.mergeRequest.suggestedThreadId }
+    );
+
+    // Update postCount on target thread
+    const postCount = await ForumPost.countDocuments({
+      threadId: thread.mergeRequest.suggestedThreadId
+    });
+
+    await ForumThread.findByIdAndUpdate(
+      thread.mergeRequest.suggestedThreadId,
+      { postCount }
+    );
+
+    // Mark source thread as merged
+    thread.mergeRequest.status = 'approved';
+    thread.mergeRequest.reviewedBy = req.user._id;
+    thread.mergeRequest.reviewedAt = new Date();
+    thread.postCount = 0;
+    await thread.save();
+
+    res.json({ success: true, message: 'Threads merged successfully' });
+  } catch (error) {
+    console.error('Merge threads error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST /api/forum/threads/:threadId/merge-request/reject - reject merge request
+router.post('/threads/:threadId/merge-request/reject', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { threadId } = req.params;
+    const { reason } = req.body;
+
+    const thread = await ForumThread.findByIdAndUpdate(
+      threadId,
+      {
+        'mergeRequest.status': 'rejected',
+        'mergeRequest.reviewedBy': req.user._id,
+        'mergeRequest.reviewedAt': new Date(),
+        'mergeRequest.reason': reason || 'Rejected by admin'
+      },
+      { new: true }
+    );
+
+    res.json({ success: true, message: 'Merge request rejected', thread });
+  } catch (error) {
+    console.error('Reject merge request error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // POST /api/forum/threads/:threadId/import-deck
 router.post('/threads/:threadId/import-deck', verifyToken, requireAuth, async (req, res) => {
   try {
