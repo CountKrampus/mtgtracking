@@ -27,16 +27,20 @@ export default function CosmeticsManager() {
 
   const fetchCosmetics = async () => {
     setLoading(true);
+    setError(null);
     try {
       const token = localStorage.getItem('mtg_access_token');
       const response = await fetch(`${API_URL}/forum/admin/cosmetics`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
-      if (!response.ok) throw new Error('Failed to fetch cosmetics');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to fetch cosmetics');
+      }
       const data = await response.json();
       setCosmetics(data.cosmetics);
     } catch (err) {
-      setError('Failed to load cosmetics');
+      setError(err.message || 'Failed to load cosmetics');
       console.error(err);
     } finally {
       setLoading(false);
@@ -45,6 +49,7 @@ export default function CosmeticsManager() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
     try {
       const token = localStorage.getItem('mtg_access_token');
       const method = editingId ? 'PUT' : 'POST';
@@ -61,7 +66,11 @@ export default function CosmeticsManager() {
         body: JSON.stringify(formData)
       });
 
-      if (!response.ok) throw new Error('Failed to save cosmetic');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to save cosmetic');
+      }
 
       setMessage({ type: 'success', text: editingId ? 'Cosmetic updated' : 'Cosmetic created' });
       setTimeout(() => setMessage(null), 3000);
@@ -79,7 +88,7 @@ export default function CosmeticsManager() {
       setShowForm(false);
       fetchCosmetics();
     } catch (err) {
-      setError('Failed to save cosmetic');
+      setError(err.message || 'Failed to save cosmetic');
       console.error(err);
     }
   };
@@ -100,13 +109,17 @@ export default function CosmeticsManager() {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
 
-      if (!response.ok) throw new Error('Failed to delete cosmetic');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to delete cosmetic');
+      }
 
       setMessage({ type: 'success', text: 'Cosmetic deleted' });
       setTimeout(() => setMessage(null), 3000);
       fetchCosmetics();
     } catch (err) {
-      setError('Failed to delete cosmetic');
+      setError(err.message || 'Failed to delete cosmetic');
       console.error(err);
     }
   };
