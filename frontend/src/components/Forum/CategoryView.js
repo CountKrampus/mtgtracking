@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Lock, ArrowLeft } from 'lucide-react';
+import { Plus, Lock, Pin, ArrowLeft } from 'lucide-react';
+import ThreadComposer from './ThreadComposer';
 
 export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user, onBack, onViewProfile }) {
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({});
+  const [showComposer, setShowComposer] = useState(false);
 
   useEffect(() => {
     if (!categoryId) return;
@@ -49,7 +51,10 @@ export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user,
           <h2 className="text-2xl font-bold text-white">Threads</h2>
         </div>
         {user && (
-          <button className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded flex items-center gap-2">
+          <button
+            onClick={() => setShowComposer(true)}
+            className="px-4 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded flex items-center gap-2 transition"
+          >
             <Plus size={18} />
             New Thread
           </button>
@@ -71,9 +76,12 @@ export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user,
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
+                    {thread.isPinned && (
+                      <Pin size={14} className="text-yellow-400 flex-shrink-0" />
+                    )}
                     <h3 className="font-semibold text-white">{thread.title}</h3>
                     {thread.isLocked && (
-                      <Lock size={14} className="text-red-500" />
+                      <Lock size={14} className="text-red-500 flex-shrink-0" />
                     )}
                   </div>
                   <div className="text-sm text-slate-400 mt-1">
@@ -127,6 +135,21 @@ export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user,
           </button>
         </div>
       )}
+
+      {/* New Thread Composer */}
+      <ThreadComposer
+        isOpen={showComposer}
+        onClose={() => setShowComposer(false)}
+        categoryId={categoryId}
+        apiUrl={apiUrl}
+        user={user}
+        onThreadCreated={(newThread) => {
+          setShowComposer(false);
+          // Add the new thread to the top of the list (re-fetch to be safe with pagination)
+          setPage(1);
+          setThreads(prev => [newThread, ...prev]);
+        }}
+      />
     </div>
   );
 }
