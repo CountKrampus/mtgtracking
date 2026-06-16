@@ -222,6 +222,19 @@ router.post('/threads', verifyToken, requireAuth, checkMute, async (req, res) =>
       lastActivityAt: new Date()
     });
 
+    // Award XP and coins for creating a thread (async, non-blocking)
+    setImmediate(async () => {
+      try {
+        let level = await ForumLevel.findOne({ userId: req.user._id });
+        if (!level) level = await ForumLevel.create({ userId: req.user._id });
+        level.addExperience(50);
+        level.addCoins(10);
+        await level.save();
+      } catch (xpErr) {
+        console.error('XP/coin award error (thread creation):', xpErr);
+      }
+    });
+
     await thread.populate('authorId', 'username displayName');
 
     // Check for duplicate threads using Jaccard similarity
@@ -301,6 +314,19 @@ router.post('/posts', verifyToken, requireAuth, checkMute, async (req, res) => {
       } catch (notifError) {
         console.error('Error creating post notifications:', notifError);
         // Don't fail the request if notification creation fails
+      }
+    });
+
+    // Award XP and coins for creating a post (async, non-blocking)
+    setImmediate(async () => {
+      try {
+        let level = await ForumLevel.findOne({ userId: req.user._id });
+        if (!level) level = await ForumLevel.create({ userId: req.user._id });
+        level.addExperience(25);
+        level.addCoins(5);
+        await level.save();
+      } catch (xpErr) {
+        console.error('XP/coin award error (post creation):', xpErr);
       }
     });
 
@@ -402,6 +428,20 @@ router.post('/posts/:postId/upvote', verifyToken, requireAuth, async (req, res) 
         await createUpvoteNotification(post.authorId, userId, post._id, contentPreview);
       } catch (notifError) {
         console.error('Error creating upvote notification:', notifError);
+      }
+    });
+
+    // Award XP and coins to post author for receiving an upvote (async, non-blocking)
+    setImmediate(async () => {
+      try {
+        const authorId = post.authorId;
+        let level = await ForumLevel.findOne({ userId: authorId });
+        if (!level) level = await ForumLevel.create({ userId: authorId });
+        level.addExperience(10);
+        level.addCoins(2);
+        await level.save();
+      } catch (xpErr) {
+        console.error('XP/coin award error (upvote):', xpErr);
       }
     });
 
@@ -920,6 +960,131 @@ router.post('/level/cosmetics/equip', verifyToken, requireAuth, async (req, res)
     await level.save();
     res.json({ success: true, newEquipped: level.cosmetics.equipped });
   } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// GET /api/forum/level - Get authenticated user's level
+router.get('/level', verifyToken, requireAuth, async (req, res) => {
+  try {
+    let level = await ForumLevel.findOne({ userId: req.user._id });
+    if (!level) {
+      level = await ForumLevel.create({ userId: req.user._id });
+    }
+    const data = level.toObject();
+    data.experienceToNextLevel = level.nextLevelExperience;
+    res.json(data);
+  } catch (error) {
+    console.error('Get level error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// GET /api/forum/level/:userId - Get public level (respects privacy)
+router.get('/level/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId).select('privacy').lean();
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user.privacy?.showForum) {
+      return res.status(403).json({ message: 'Forum level not public' });
+    }
+    const level = await ForumLevel.findOne({ userId }).lean();
+    if (!level) return res.status(404).json({ message: 'Level not found' });
+    res.json(level);
+  } catch (error) {
+    console.error('Get public level error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// GET /api/forum/leaderboard - Get level leaderboard (public)
+router.get('/leaderboard', async (req, res) => {
+  try {
+    const { page = 1, limit = 100 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const entries = await ForumLevel.find()
+      .sort({ level: -1, coins: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .populate('userId', 'username displayName')
+      .lean();
+    const total = await ForumLevel.countDocuments();
+    res.json({
+      leaderboard: entries,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Leaderboard error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST /api/forum/level/award-xp - Award XP to a user (admin only)
+router.post('/level/award-xp', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { userId, amount } = req.body;
+    if (!userId || !amount) {
+      return res.status(400).json({ message: 'userId and amount required' });
+    }
+    let level = await ForumLevel.findOne({ userId });
+    if (!level) {
+      level = await ForumLevel.create({ userId });
+    }
+    const oldLevel = level.level;
+    level.addExperience(amount);
+    await level.save();
+    const leveledUp = level.level > oldLevel;
+    res.json({ newLevel: level.level, newXP: level.experience, leveledUp });
+  } catch (error) {
+    console.error('Award XP error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST /api/forum/level/coins/spend - Spend coins (authenticated)
+router.post('/level/coins/spend', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { amount } = req.body;
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ message: 'Valid amount required' });
+    }
+    const level = await ForumLevel.findOne({ userId: req.user._id });
+    if (!level) return res.status(404).json({ message: 'Level not found' });
+    try {
+      level.spendCoins(amount);
+    } catch (e) {
+      return res.status(400).json({ success: false, message: e.message, newCoins: level.coins });
+    }
+    await level.save();
+    res.json({ success: true, newCoins: level.coins, message: 'Coins spent successfully' });
+  } catch (error) {
+    console.error('Spend coins error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST /api/forum/level/coins/earn - Award coins to a user (admin only)
+router.post('/level/coins/earn', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { userId, amount, reason } = req.body;
+    if (!userId || !amount) {
+      return res.status(400).json({ message: 'userId and amount required' });
+    }
+    let level = await ForumLevel.findOne({ userId });
+    if (!level) {
+      level = await ForumLevel.create({ userId });
+    }
+    level.addCoins(amount);
+    await level.save();
+    res.json({ newCoins: level.coins });
+  } catch (error) {
+    console.error('Earn coins error:', error);
+    res.status(500).json({ message: error.message });
+  }
 });
 
 module.exports = router;
