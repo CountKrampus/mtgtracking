@@ -732,6 +732,34 @@ router.put('/threads/:threadId/merge-request', async (req, res) => {
   }
 });
 
+// GET /api/forum/admin/flagged-posts - list flagged/hidden posts (admin only)
+router.get('/admin/flagged-posts', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const skip = (page - 1) * limit;
+
+    const flaggedPosts = await ForumPost.find({ isHidden: true })
+      .select('body threadId authorId hiddenReason createdAt')
+      .populate('authorId', 'username displayName')
+      .populate('threadId', 'title')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const total = await ForumPost.countDocuments({ isHidden: true });
+
+    res.json({
+      flaggedPosts,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) }
+    });
+  } catch (error) {
+    console.error('Fetch flagged posts error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // GET /api/forum/admin/merge-requests - list pending merge requests
 router.get('/admin/merge-requests', async (req, res) => {
   try {
