@@ -17,6 +17,7 @@ const {
 const { generateDiff, recordEdit } = require('../utils/postEditHistory');
 const Ban = require('../models/Ban');
 const User = require('../models/User');
+const { extractDeckFromText } = require('../utils/deckExtractor');
 
 // POST /api/forum/categories - Create category (admin only)
 router.post('/categories', verifyToken, requireAuth, requireAdmin, async (req, res) => {
@@ -690,7 +691,6 @@ router.post('/threads/:threadId/import-deck', verifyToken, requireAuth, async (r
 router.post('/threads/:threadId/extract-deck', verifyToken, requireAuth, async (req, res) => {
   try {
     const { threadId } = req.params;
-    const { extractDeckFromText } = require('../utils/deckExtractor');
 
     const thread = await ForumThread.findById(threadId).select('content title').lean();
     if (!thread) {

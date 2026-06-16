@@ -42,15 +42,16 @@ export default function DeckImportButton({ threadId, user }) {
     setImportResult(null);
 
     try {
-      // Build text format for bulk-import endpoint
       const cardList = deckData.cards
-        .map(c => `${c.quantity} ${c.name}`)
-        .join('\n');
+        .map(c => `${c.quantity} ${c.name}`);
 
       const res = await fetch(`${API_URL}/cards/bulk-import`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cards: cardList })
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('mtg_access_token')}`
+        },
+        body: JSON.stringify({ cardList })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Import failed');
