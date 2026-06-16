@@ -1,11 +1,22 @@
 import React, { useState } from 'react';
-import { User, Mail, Lock, Save, AlertCircle, CheckCircle, LogOut, Trash2 } from 'lucide-react';
+import { User, Mail, Lock, Save, AlertCircle, CheckCircle, LogOut, Trash2, Shield } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { SessionManager } from './SessionManager';
 
 export function AccountSettings({ onClose }) {
   const { user, updateProfile, changePassword, logout, authFetch } = useAuthContext();
   const [activeTab, setActiveTab] = useState('profile');
+
+  // Privacy state — initialise from current user object
+  const [privacy, setPrivacy] = useState({
+    isPublic: user?.privacy?.isPublic ?? false,
+    showCollection: user?.privacy?.showCollection ?? false,
+    showDecks: user?.privacy?.showDecks ?? true,
+    showWishlist: user?.privacy?.showWishlist ?? false,
+    showForum: user?.privacy?.showForum ?? false
+  });
+  const [privacyLoading, setPrivacyLoading] = useState(false);
+  const [privacyMessage, setPrivacyMessage] = useState(null);
 
   // Profile state
   const [displayName, setDisplayName] = useState(user?.displayName || '');
@@ -103,6 +114,23 @@ export function AccountSettings({ onClose }) {
     }
   };
 
+  const updatePrivacy = async (changes) => {
+    const next = { ...privacy, ...changes };
+    setPrivacy(next);
+    setPrivacyLoading(true);
+    setPrivacyMessage(null);
+
+    const result = await updateProfile({ privacy: next });
+
+    if (result.success) {
+      setPrivacyMessage({ type: 'success', text: 'Privacy settings saved' });
+    } else {
+      setPrivacyMessage({ type: 'error', text: result.error || 'Failed to save privacy settings' });
+    }
+
+    setPrivacyLoading(false);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
@@ -114,7 +142,7 @@ export function AccountSettings({ onClose }) {
         </div>
 
         <div className="flex border-b border-gray-700">
-          {['profile', 'password', 'sessions', 'danger'].map((tab) => (
+          {['profile', 'password', 'privacy', 'sessions', 'danger'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -124,7 +152,7 @@ export function AccountSettings({ onClose }) {
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              {tab === 'danger' ? 'Danger Zone' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'danger' ? 'Danger Zone' : tab === 'privacy' ? 'Privacy & Sharing' : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
         </div>
@@ -251,6 +279,111 @@ export function AccountSettings({ onClose }) {
                 {passwordLoading ? 'Changing...' : 'Change Password'}
               </button>
             </form>
+          )}
+
+          {activeTab === 'privacy' && (
+            <div className="space-y-4">
+              {privacyMessage && (
+                <div className={`p-3 rounded-lg flex items-center gap-2 ${
+                  privacyMessage.type === 'success'
+                    ? 'bg-green-500/20 text-green-200'
+                    : 'bg-red-500/20 text-red-200'
+                }`}>
+                  {privacyMessage.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+                  <span>{privacyMessage.text}</span>
+                </div>
+              )}
+
+              <div className="p-4 bg-gray-700/50 rounded-lg space-y-1">
+                <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Shield size={14} /> Profile Visibility
+                </h3>
+
+                {/* Public Profile */}
+                <div className="flex items-center justify-between py-2 border-b border-gray-600/50">
+                  <div>
+                    <div className="text-white text-sm font-medium">Public profile</div>
+                    <div className="text-white/40 text-xs">Allow others to view your profile page</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => updatePrivacy({ isPublic: !privacy.isPublic })}
+                    disabled={privacyLoading}
+                    className={`relative w-10 h-5 rounded-full transition-colors disabled:opacity-50 ${privacy.isPublic ? 'bg-purple-600' : 'bg-gray-600'}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${privacy.isPublic ? 'left-5' : 'left-0.5'}`} />
+                  </button>
+                </div>
+
+                {/* Show Collection */}
+                <div className="flex items-center justify-between py-2 border-b border-gray-600/50">
+                  <div>
+                    <div className="text-white text-sm font-medium">Show collection</div>
+                    <div className="text-white/40 text-xs">Show your card collection on your public profile</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => updatePrivacy({ showCollection: !privacy.showCollection })}
+                    disabled={privacyLoading}
+                    className={`relative w-10 h-5 rounded-full transition-colors disabled:opacity-50 ${privacy.showCollection ? 'bg-purple-600' : 'bg-gray-600'}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${privacy.showCollection ? 'left-5' : 'left-0.5'}`} />
+                  </button>
+                </div>
+
+                {/* Show Decks */}
+                <div className="flex items-center justify-between py-2 border-b border-gray-600/50">
+                  <div>
+                    <div className="text-white text-sm font-medium">Show decks</div>
+                    <div className="text-white/40 text-xs">Show your decks on your public profile</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => updatePrivacy({ showDecks: !privacy.showDecks })}
+                    disabled={privacyLoading}
+                    className={`relative w-10 h-5 rounded-full transition-colors disabled:opacity-50 ${privacy.showDecks ? 'bg-purple-600' : 'bg-gray-600'}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${privacy.showDecks ? 'left-5' : 'left-0.5'}`} />
+                  </button>
+                </div>
+
+                {/* Show Wishlist */}
+                <div className="flex items-center justify-between py-2 border-b border-gray-600/50">
+                  <div>
+                    <div className="text-white text-sm font-medium">Show wishlist</div>
+                    <div className="text-white/40 text-xs">Show your wishlist on your public profile</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => updatePrivacy({ showWishlist: !privacy.showWishlist })}
+                    disabled={privacyLoading}
+                    className={`relative w-10 h-5 rounded-full transition-colors disabled:opacity-50 ${privacy.showWishlist ? 'bg-purple-600' : 'bg-gray-600'}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${privacy.showWishlist ? 'left-5' : 'left-0.5'}`} />
+                  </button>
+                </div>
+
+                {/* Show Forum */}
+                <div className="flex items-center justify-between py-2">
+                  <div>
+                    <div className="text-white text-sm font-medium">Show forum activity</div>
+                    <div className="text-white/40 text-xs">Show your reputation, badges, and recent posts on your public profile</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => updatePrivacy({ showForum: !privacy.showForum })}
+                    disabled={privacyLoading}
+                    className={`relative w-10 h-5 rounded-full transition-colors disabled:opacity-50 ${privacy.showForum ? 'bg-purple-600' : 'bg-gray-600'}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${privacy.showForum ? 'left-5' : 'left-0.5'}`} />
+                  </button>
+                </div>
+              </div>
+
+              {privacyLoading && (
+                <p className="text-white/40 text-xs text-center">Saving…</p>
+              )}
+            </div>
           )}
 
           {activeTab === 'sessions' && (
