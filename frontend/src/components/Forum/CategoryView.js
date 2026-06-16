@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Lock, ArrowLeft } from 'lucide-react';
 
-export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user, onBack }) {
+export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user, onBack, onViewProfile }) {
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -77,7 +77,21 @@ export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user,
                     )}
                   </div>
                   <div className="text-sm text-slate-400 mt-1">
-                    By {thread.authorId?.displayName || 'Unknown'} • {thread.postCount} posts
+                    By{' '}
+                    {onViewProfile ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewProfile(thread.authorId?.username);
+                        }}
+                        className="text-purple-400 hover:text-purple-300 transition"
+                      >
+                        {thread.authorId?.displayName || 'Unknown'}
+                      </button>
+                    ) : (
+                      thread.authorId?.displayName || 'Unknown'
+                    )}
+                    {' '}• {thread.postCount} posts
                   </div>
                 </div>
                 <div className="text-right">

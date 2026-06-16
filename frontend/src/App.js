@@ -38,6 +38,7 @@ import DMPreview from './components/DMPreview';
 import UserMenu from './components/UserMenu';
 import MessagesPage from './components/MessagesPage';
 import MyProfile from './components/MyProfile';
+import UserProfile from './components/UserProfile';
 
 const DeckBuilder = React.lazy(() => import('./components/DeckBuilder'));
 const CameraModal = React.lazy(() => import('./components/CameraModal'));
@@ -182,6 +183,7 @@ function App() {
   const [showSpamFilterAdmin, setShowSpamFilterAdmin] = useState(false);
   const [showMuteManager, setShowMuteManager] = useState(false);
   const [showForumShop, setShowForumShop] = useState(false);
+  const [selectedForumProfileUsername, setSelectedForumProfileUsername] = useState(null);
 
   // Location management
   const [locations, setLocations] = useState([]);
@@ -5153,6 +5155,13 @@ function App() {
           <MyProfile user={authUser} onBack={() => setCurrentView('dashboard')} />
         )}
 
+        {/* Forum Profile View */}
+        {currentView === 'forum-profile' && selectedForumProfileUsername && (
+          <UserProfile
+            username={selectedForumProfileUsername}
+          />
+        )}
+
         {/* Learning Components */}
         {currentView === 'card-rulings' && (
           <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
@@ -5242,6 +5251,10 @@ function App() {
                   setSelectedThreadId(null);
                   localStorage.removeItem('forumSelectedThread');
                 }}
+                onViewProfile={(username) => {
+                  setSelectedForumProfileUsername(username);
+                  setCurrentView('forum-profile');
+                }}
               />
             ) : selectedCategoryId ? (
               <CategoryView
@@ -5256,6 +5269,10 @@ function App() {
                   localStorage.removeItem('forumSelectedCategory');
                 }}
                 user={authUser}
+                onViewProfile={(username) => {
+                  setSelectedForumProfileUsername(username);
+                  setCurrentView('forum-profile');
+                }}
               />
             ) : (
               <ForumHome

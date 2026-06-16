@@ -4,7 +4,7 @@ import PostComposer from './PostComposer';
 import PostEditHistory from './PostEditHistory';
 import UserAvatar from '../avatars/UserAvatar';
 
-export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpdated }) {
+export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpdated, onViewProfile }) {
   const [thread, setThread] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -247,7 +247,18 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
               )}
             </div>
             <div className="text-slate-400 text-sm">
-              By {thread.authorId?.displayName} • {thread.views} views • {thread.postCount} posts
+              By{' '}
+              {onViewProfile ? (
+                <button
+                  onClick={() => onViewProfile(thread.authorId?.username)}
+                  className="text-purple-400 hover:text-purple-300 transition"
+                >
+                  {thread.authorId?.displayName}
+                </button>
+              ) : (
+                thread.authorId?.displayName
+              )}
+              {' '}• {thread.views} views • {thread.postCount} posts
               {thread.isLocked && <span className="ml-2 text-red-400">🔒 Locked</span>}
               {thread.isPinned && <span className="ml-2 text-yellow-400">📌 Pinned</span>}
             </div>
@@ -327,7 +338,16 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <div className="font-semibold text-white">
-                      {post.authorId?.displayName || 'Unknown'}
+                      {onViewProfile ? (
+                        <button
+                          onClick={() => onViewProfile(post.authorId?.username)}
+                          className="text-purple-400 hover:text-purple-300 transition"
+                        >
+                          {post.authorId?.displayName || 'Unknown'}
+                        </button>
+                      ) : (
+                        post.authorId?.displayName || 'Unknown'
+                      )}
                     </div>
                     <div className="text-xs text-slate-500">
                       {new Date(post.createdAt).toLocaleString()}
