@@ -17,17 +17,9 @@ const threadSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  authorUsername: {
-    type: String,
-    default: ''
-  },
   content: {
     type: String,
-    default: ''
-  },
-  body: {
-    type: String,
-    default: ''
+    required: true
   },
   contentFormat: {
     type: String,
