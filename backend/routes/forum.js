@@ -19,6 +19,7 @@ const Ban = require('../models/Ban');
 const User = require('../models/User');
 const { extractDeckFromText } = require('../utils/deckExtractor');
 const ForumLevel = require('../models/ForumLevel');
+const Cosmetic = require('../models/Cosmetic');
 
 // POST /api/forum/categories - Create category (admin only)
 router.post('/categories', verifyToken, requireAuth, requireAdmin, async (req, res) => {
@@ -1257,7 +1258,6 @@ router.post('/level/coins/earn', verifyToken, requireAuth, requireAdmin, async (
 // GET /api/forum/admin/cosmetics - list all cosmetics for admin
 router.get('/admin/cosmetics', verifyToken, requireAuth, requireAdmin, async (req, res) => {
   try {
-    const Cosmetic = require('../models/Cosmetic');
     const cosmetics = await Cosmetic.find({}).sort({ category: 1, rarity: 1 }).lean();
     res.json({ cosmetics });
   } catch (error) {
@@ -1269,7 +1269,6 @@ router.get('/admin/cosmetics', verifyToken, requireAuth, requireAdmin, async (re
 // POST /api/forum/admin/cosmetics - create new cosmetic
 router.post('/admin/cosmetics', verifyToken, requireAuth, requireAdmin, async (req, res) => {
   try {
-    const Cosmetic = require('../models/Cosmetic');
     const { name, category, cost, description, rarity, color, icon } = req.body;
 
     if (!name || !category || cost === undefined) {
@@ -1296,7 +1295,6 @@ router.post('/admin/cosmetics', verifyToken, requireAuth, requireAdmin, async (r
 // PUT /api/forum/admin/cosmetics/:cosmeticId - update cosmetic
 router.put('/admin/cosmetics/:cosmeticId', verifyToken, requireAuth, requireAdmin, async (req, res) => {
   try {
-    const Cosmetic = require('../models/Cosmetic');
     const { name, category, cost, description, rarity, color, icon, isActive } = req.body;
 
     const cosmetic = await Cosmetic.findByIdAndUpdate(
@@ -1328,7 +1326,6 @@ router.put('/admin/cosmetics/:cosmeticId', verifyToken, requireAuth, requireAdmi
 // DELETE /api/forum/admin/cosmetics/:cosmeticId - delete cosmetic
 router.delete('/admin/cosmetics/:cosmeticId', verifyToken, requireAuth, requireAdmin, async (req, res) => {
   try {
-    const Cosmetic = require('../models/Cosmetic');
     const cosmetic = await Cosmetic.findByIdAndDelete(req.params.cosmeticId);
 
     if (!cosmetic) {
