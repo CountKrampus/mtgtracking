@@ -58,7 +58,7 @@ export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user,
 
       {loading ? (
         <div className="text-slate-400">Loading...</div>
-      ) : threads.length === 0 ? (
+      ) : !threads || threads.length === 0 ? (
         <div className="text-slate-400">No threads in this category yet</div>
       ) : (
         <div className="space-y-3">
@@ -92,7 +92,7 @@ export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user,
         </div>
       )}
 
-      {pagination.pages > 1 && (
+      {pagination?.pages > 1 && (
         <div className="flex justify-center gap-2 mt-6">
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
@@ -102,11 +102,11 @@ export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user,
             Prev
           </button>
           <span className="px-3 py-1 text-slate-400">
-            Page {page} of {pagination.pages}
+            Page {page} of {pagination?.pages}
           </span>
           <button
-            onClick={() => setPage(p => Math.min(pagination.pages, p + 1))}
-            disabled={page === pagination.pages}
+            onClick={() => setPage(p => Math.min(pagination?.pages, p + 1))}
+            disabled={page === pagination?.pages}
             className="px-3 py-1 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 rounded"
           >
             Next

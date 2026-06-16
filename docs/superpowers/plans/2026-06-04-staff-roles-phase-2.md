@@ -114,7 +114,7 @@ router.put('/users/:userId/role', requireAdmin, async (req, res) => {
     });
 
     // Update role and staffSince for staff roles
-    const staffRoles = ['moderator', 'content_manager', 'community_manager', 'support'];
+    const staffRoles = ['moderator', 'content_manager', 'community_manager', 'support', 'forum_admin', 'forum_mod'];
     const update = { role: newRole };
 
     if (staffRoles.includes(newRole) && !targetUser.staffSince) {

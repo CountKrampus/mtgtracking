@@ -33,6 +33,11 @@ import MuteManager from './components/Forum/MuteManager';
 import ForumLevelWidget from './components/Forum/ForumLevelWidget';
 import ForumShop from './components/Forum/ForumShop';
 import { API_URL } from './config';
+import NotificationBell from './components/NotificationBell';
+import DMPreview from './components/DMPreview';
+import UserMenu from './components/UserMenu';
+import MessagesPage from './components/MessagesPage';
+import MyProfile from './components/MyProfile';
 
 const DeckBuilder = React.lazy(() => import('./components/DeckBuilder'));
 const CameraModal = React.lazy(() => import('./components/CameraModal'));
@@ -150,6 +155,7 @@ function App() {
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0, cardName: '' });
   const [isImporting, setIsImporting] = useState(false);
   const [offlineMode, setOfflineMode] = useState(false);
+  const [openPanel, setOpenPanel] = useState(null); // null | 'notifications' | 'dms'
   const [manualEntry, setManualEntry] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = settings.pageSize;
@@ -2727,9 +2733,34 @@ function App() {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex overflow-hidden">
-      {/* Sidebar Navigation */}
-      <Sidebar
+    <div className="h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col overflow-hidden">
+      {/* Top Header with Notifications and DMs */}
+      {authUser && (
+        <div className="bg-slate-900/80 backdrop-blur border-b border-slate-700 px-6 py-3 flex items-center justify-between">
+          <div className="flex-1"></div>
+          <div className="flex items-center gap-4">
+            <NotificationBell apiUrl={API_URL} user={authUser} openPanel={openPanel} setOpenPanel={setOpenPanel} />
+            <button
+              onClick={() => setCurrentView('messages')}
+              className="relative p-2 hover:bg-white/10 rounded-lg transition text-white/70 hover:text-white"
+              title="Messages"
+            >
+              <MessageSquare size={20} />
+            </button>
+            <UserMenu
+              user={authUser}
+              onProfile={() => setCurrentView('my-profile')}
+              onSettings={() => setShowAccountSettings(true)}
+              onLogout={authLogout}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Main Content Area */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar Navigation */}
+        <Sidebar
         currentView={currentView}
         setCurrentView={setCurrentView}
         sidebarCollapsed={sidebarCollapsed}
@@ -5112,6 +5143,16 @@ function App() {
           />
         )}
 
+        {/* Messages View */}
+        {currentView === 'messages' && authUser && (
+          <MessagesPage user={authUser} onBack={() => setCurrentView('dashboard')} />
+        )}
+
+        {/* My Profile View */}
+        {currentView === 'my-profile' && authUser && (
+          <MyProfile user={authUser} onBack={() => setCurrentView('dashboard')} />
+        )}
+
         {/* Learning Components */}
         {currentView === 'card-rulings' && (
           <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
@@ -5303,6 +5344,7 @@ function App() {
           <ForumLevelWidget apiUrl={API_URL} user={authUser} />
         </div>
       )}
+      </div>
     </div>
   );
 }

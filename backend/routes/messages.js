@@ -134,24 +134,25 @@ router.get('/', verifyToken, requireAuth, async (req, res) => {
         const partner = await User.findById(partnerId).select('username displayName');
 
         return {
-          conversationWith: {
+          otherUserId: partner._id,
+          otherUser: {
             id: partner._id,
             username: partner.username,
             displayName: partner.displayName
           },
-          lastMessage: {
-            id: lastMsg._id,
-            content: lastMsg.content.substring(0, 100), // Preview (first 100 chars)
-            createdAt: lastMsg.createdAt,
-            isRead: lastMsg.isRead,
-            fromUser: lastMsg.fromUserId.username
-          },
+          lastMessage: lastMsg.content.substring(0, 100), // Preview (first 100 chars)
           unreadCount: conv.unreadCount
         };
       })
     );
 
-    res.json(enrichedConversations);
+    // Calculate total unread count
+    const totalUnread = enrichedConversations.reduce((sum, conv) => sum + conv.unreadCount, 0);
+
+    res.json({
+      conversations: enrichedConversations,
+      totalUnread
+    });
   } catch (error) {
     console.error('Get conversations error:', error);
     res.status(500).json({ message: error.message });

@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Bell, X, Eye, Trash2 } from 'lucide-react';
 
-export default function NotificationBell({ apiUrl, user }) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function NotificationBell({ apiUrl, user, openPanel, setOpenPanel }) {
+  const buttonRef = useRef(null);
+  const [panelStyle, setPanelStyle] = useState({});
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  const isOpen = openPanel === 'notifications';
 
   const typeEmojis = {
     mention: '💬',
@@ -29,6 +33,22 @@ export default function NotificationBell({ apiUrl, user }) {
       console.error('Error fetching notifications:', error);
     }
   };
+
+  // Calculate panel position when opened
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPanelStyle({
+        position: 'fixed',
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right,
+        width: 384,
+        zIndex: 9999,
+        maxHeight: 384,
+        overflowY: 'auto'
+      });
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     fetchNotifications();
@@ -74,10 +94,15 @@ export default function NotificationBell({ apiUrl, user }) {
 
   if (!user) return null;
 
+  const togglePanel = () => {
+    setOpenPanel(isOpen ? null : 'notifications');
+  };
+
   return (
-    <div className="relative">
+    <>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        ref={buttonRef}
+        onClick={togglePanel}
         className="relative p-2 hover:bg-white/10 rounded-lg transition text-white/70 hover:text-white"
         title="Notifications"
       >
@@ -89,8 +114,10 @@ export default function NotificationBell({ apiUrl, user }) {
         )}
       </button>
 
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+      {isOpen && createPortal(
+        <>
+          <div className="fixed inset-0 z-[9998]" onClick={() => setOpenPanel(null)} />
+          <div style={panelStyle} className="bg-slate-950 border border-slate-600 rounded-lg shadow-2xl">
           <div className="p-4 border-b border-slate-700 flex items-center justify-between sticky top-0 bg-slate-800">
             <h3 className="font-semibold text-white">Notifications</h3>
             {unreadCount > 0 && (
@@ -147,7 +174,9 @@ export default function NotificationBell({ apiUrl, user }) {
             </div>
           )}
         </div>
+        </>,
+        document.body
       )}
-    </div>
+    </>
   );
 }

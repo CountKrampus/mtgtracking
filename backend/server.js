@@ -87,7 +87,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 
 // Serve user avatars
-const path = require('path');
 const AVATAR_DIR = path.join(__dirname, 'user-avatars');
 app.get('/api/users/avatar/:filename', (req, res) => {
   try {
