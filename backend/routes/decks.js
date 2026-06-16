@@ -481,5 +481,30 @@ router.get('/:id/changelog', requireAuth, async (req, res) => {
   }
 });
 
+// PUT /api/decks/:id/folder — assign deck to a folder (or move to root if folderId is null)
+// Body: { folderId: ObjectId|null }
+router.put('/:id/folder', requireAuth, async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { folderId } = req.body;
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(query);
+    if (!deck) return res.status(404).json({ message: 'Deck not found' });
+
+    if (folderId) {
+      // Validate the target folder belongs to this user
+      const DeckFolder = require('../models/DeckFolder');
+      const folder = await DeckFolder.findOne({ _id: folderId, userId });
+      if (!folder) return res.status(404).json({ message: 'Folder not found' });
+    }
+
+    deck.folderId = folderId || null;
+    await deck.save();
+    res.json({ _id: deck._id, folderId: deck.folderId });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
 module.exports.injectDependencies = injectDependencies;

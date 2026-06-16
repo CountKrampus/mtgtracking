@@ -580,6 +580,10 @@ async function cacheCardImage(scryfallId, imageUrl) {
 deckRoutes.injectDependencies(Card, getPriceWithFallback, GameSession);
 app.use('/api/decks', deckRoutes);
 
+// Deck folder routes
+const deckFolderRoutes = require('./routes/deckFolders');
+app.use('/api/deck-folders', deckFolderRoutes);
+
 // Search Scryfall API for card data with Exor Games pricing
 app.get('/api/scryfall/search', async (req, res) => {
   try {
