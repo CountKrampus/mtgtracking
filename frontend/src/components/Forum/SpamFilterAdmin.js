@@ -7,14 +7,11 @@ export default function SpamFilterAdmin({ apiUrl = 'http://localhost:5000/api' }
   const [saveMessage, setSaveMessage] = useState(null);
 
   // Config state
-  const [isEnabled, setIsEnabled] = useState(true);
-  const [enableRepCheck, setEnableRepCheck] = useState(false);
-  const [maxLinksPerPost, setMaxLinksPerPost] = useState(3);
-  const [maxCapitalLettersRatio, setMaxCapitalLettersRatio] = useState(0.5);
-  const [minPostLength, setMinPostLength] = useState(10);
-  const [minRepToBypassSpamCheck, setMinRepToBypassSpamCheck] = useState(100);
-  const [spamKeywords, setSpamKeywords] = useState('');
-  const [blockedDomains, setBlockedDomains] = useState('');
+  const [sensitivity, setSensitivity] = useState('moderate');
+  const [bannedWords, setBannedWords] = useState('');
+  const [minReputationToAutoFlag, setMinReputationToAutoFlag] = useState(-50);
+  const [maxPostsPerHourPerUser, setMaxPostsPerHourPerUser] = useState(10);
+  const [flagThreshold, setFlagThreshold] = useState(2);
 
   // Test section state
   const [testText, setTestText] = useState('');
@@ -30,17 +27,14 @@ export default function SpamFilterAdmin({ apiUrl = 'http://localhost:5000/api' }
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${apiUrl}/forum/admin/spam-config`);
+        const response = await fetch(`${apiUrl}/admin/spam-config`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
-        setIsEnabled(data.isEnabled ?? true);
-        setEnableRepCheck(data.enableRepCheck ?? false);
-        setMaxLinksPerPost(data.maxLinksPerPost ?? 3);
-        setMaxCapitalLettersRatio(data.maxCapitalLettersRatio ?? 0.5);
-        setMinPostLength(data.minPostLength ?? 10);
-        setMinRepToBypassSpamCheck(data.minRepToBypassSpamCheck ?? 100);
-        setSpamKeywords(Array.isArray(data.spamKeywords) ? data.spamKeywords.join(', ') : '');
-        setBlockedDomains(Array.isArray(data.blockedDomains) ? data.blockedDomains.join(', ') : '');
+        setSensitivity(data.sensitivity ?? 'moderate');
+        setBannedWords(Array.isArray(data.bannedWords) ? data.bannedWords.join(', ') : '');
+        setMinReputationToAutoFlag(data.minReputationToAutoFlag ?? -50);
+        setMaxPostsPerHourPerUser(data.maxPostsPerHourPerUser ?? 10);
+        setFlagThreshold(data.flagThreshold ?? 2);
       } catch (err) {
         setError('Failed to load spam filter configuration.');
         console.error('Error fetching spam config:', err);
@@ -71,18 +65,15 @@ export default function SpamFilterAdmin({ apiUrl = 'http://localhost:5000/api' }
   const handleSaveConfig = async () => {
     setSaveMessage(null);
     try {
-      const response = await fetch(`${apiUrl}/forum/admin/spam-config`, {
+      const response = await fetch(`${apiUrl}/admin/spam-config`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          isEnabled,
-          enableRepCheck,
-          maxLinksPerPost: parseInt(maxLinksPerPost, 10),
-          maxCapitalLettersRatio: parseFloat(maxCapitalLettersRatio),
-          minPostLength: parseInt(minPostLength, 10),
-          minRepToBypassSpamCheck: parseInt(minRepToBypassSpamCheck, 10),
-          spamKeywords: spamKeywords.split(',').map(w => w.trim()).filter(Boolean),
-          blockedDomains: blockedDomains.split(',').map(d => d.trim()).filter(Boolean),
+          sensitivity,
+          bannedWords: bannedWords.split(',').map(w => w.trim()).filter(Boolean),
+          minReputationToAutoFlag: parseInt(minReputationToAutoFlag, 10),
+          maxPostsPerHourPerUser: parseInt(maxPostsPerHourPerUser, 10),
+          flagThreshold: parseInt(flagThreshold, 10),
         }),
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
