@@ -30,6 +30,8 @@ import {
   Eye,
   MessageSquare
 } from 'lucide-react';
+import NotificationBell from './NotificationBell';
+import DMPreview from './DMPreview';
 
 const Sidebar = ({
   currentView,
@@ -58,7 +60,8 @@ const Sidebar = ({
   isMultiUserEnabled,
   onAccountSettings,
   onAdminPanel,
-  onLogout
+  onLogout,
+  apiUrl
 }) => {
   const ft = featureToggles || {};
   const allNavItems = [
@@ -193,11 +196,19 @@ const Sidebar = ({
                   {authUser.role}
                 </span>
               </div>
+              <div className="flex gap-1">
+                <NotificationBell apiUrl={apiUrl} user={authUser} />
+                <DMPreview apiUrl={apiUrl} user={authUser} />
+              </div>
             </div>
           ) : (
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold text-sm" title={authUser.displayName || authUser.username}>
                 {(authUser.displayName || authUser.username || '?')[0].toUpperCase()}
+              </div>
+              <div className="flex gap-1">
+                <NotificationBell apiUrl={apiUrl} user={authUser} />
+                <DMPreview apiUrl={apiUrl} user={authUser} />
               </div>
             </div>
           )}
