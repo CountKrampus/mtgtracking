@@ -32,12 +32,19 @@ export default function CosmeticsManager() {
       const response = await fetch(`${API_URL}/forum/admin/cosmetics`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        throw new Error(`Server returned invalid response: ${response.status} ${response.statusText}`);
+      }
+
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.message || 'Failed to fetch cosmetics');
       }
-      const data = await response.json();
-      setCosmetics(data.cosmetics);
+
+      setCosmetics(data.cosmetics || []);
     } catch (err) {
       setError(err.message || 'Failed to load cosmetics');
       console.error(err);
@@ -65,7 +72,12 @@ export default function CosmeticsManager() {
         body: JSON.stringify(formData)
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        throw new Error(`Server returned invalid response: ${response.status} ${response.statusText}`);
+      }
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to save cosmetic');
@@ -108,7 +120,12 @@ export default function CosmeticsManager() {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        throw new Error(`Server returned invalid response: ${response.status} ${response.statusText}`);
+      }
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to delete cosmetic');
