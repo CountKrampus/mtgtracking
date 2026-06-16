@@ -63,7 +63,11 @@ const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: { type: String, default: '' },
     earnedAt: { type: Date, default: Date.now }
-  }]
+  }],
+  avatarUrl: {
+    type: String,
+    default: ''
+  }
 });
 
 // Indexes (email and username already indexed via unique: true)
@@ -95,7 +99,8 @@ userSchema.methods.toSafeObject = function() {
     lastLoginAt: this.lastLoginAt,
     privacy: this.privacy,
     reputation: this.reputation,
-    badges: this.badges
+    badges: this.badges,
+    avatarUrl: this.avatarUrl
   };
 };
 

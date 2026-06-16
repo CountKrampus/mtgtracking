@@ -9,6 +9,9 @@ node_modules/
 # Image cache (too large for git)
 cache/
 
+# User avatars (uploaded files)
+user-avatars/
+
 # Logs
 *.log
 npm-debug.log*

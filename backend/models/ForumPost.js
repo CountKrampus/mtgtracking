@@ -15,6 +15,10 @@ const postSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  authorAvatarUrl: {
+    type: String,
+    default: ''
+  },
   body: {
     type: String,
     required: [true, 'Post body is required']

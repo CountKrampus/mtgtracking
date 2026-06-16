@@ -13,6 +13,14 @@ const directMessageSchema = new mongoose.Schema({
     required: [true, 'Recipient user ID is required'],
     index: true
   },
+  senderUsername: {
+    type: String,
+    default: ''
+  },
+  senderAvatarUrl: {
+    type: String,
+    default: ''
+  },
   content: {
     type: String,
     required: [true, 'Message content is required'],
