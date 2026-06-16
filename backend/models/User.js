@@ -92,7 +92,10 @@ userSchema.methods.toSafeObject = function() {
     isActive: this.isActive,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
-    lastLoginAt: this.lastLoginAt
+    lastLoginAt: this.lastLoginAt,
+    privacy: this.privacy,
+    reputation: this.reputation,
+    badges: this.badges
   };
 };
 

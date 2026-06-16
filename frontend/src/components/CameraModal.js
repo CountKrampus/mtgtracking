@@ -2,8 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createWorker } from 'tesseract.js';
 import { X, Camera, Upload, Crop, Search, Check } from 'lucide-react';
 import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_URL } from '../config';
 
 const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
   const [stream, setStream] = useState(null);

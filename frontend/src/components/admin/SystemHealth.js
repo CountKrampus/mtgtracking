@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Users, Database, Activity, Settings, AlertTriangle } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
+import { API_URL } from '../../config';
 
 export function SystemHealth() {
   const { authFetch } = useAuthContext();
@@ -16,7 +17,7 @@ export function SystemHealth() {
   const fetchHealth = async () => {
     setLoading(true);
     try {
-      const response = await authFetch('http://localhost:5000/api/admin/health');
+      const response = await authFetch(`${API_URL}/admin/health`);
       const data = await response.json();
 
       if (response.ok) {
@@ -35,7 +36,7 @@ export function SystemHealth() {
     setMaintenanceLoading(true);
     try {
       const newState = !health?.settings?.maintenanceMode?.value;
-      const response = await authFetch('http://localhost:5000/api/admin/maintenance', {
+      const response = await authFetch(`${API_URL}/admin/maintenance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled: newState })

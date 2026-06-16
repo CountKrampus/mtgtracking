@@ -1,7 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Plus, Upload, RefreshCw, BookOpen, Star, Layers, TrendingUp, TrendingDown } from 'lucide-react';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_URL } from '../config';
 
 // Reusable horizontal bar component
 const HorizontalBar = ({ label, value, total, color, formatLabel }) => {

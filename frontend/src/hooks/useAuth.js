@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_URL } from '../config';
 
 // Token storage keys
 const ACCESS_TOKEN_KEY = 'mtg_access_token';

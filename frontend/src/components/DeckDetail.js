@@ -3,8 +3,7 @@ import axios from 'axios';
 import ManaCurveChart from './ManaCurveChart';
 import DeckAnalysis from './DeckAnalysis';
 import DeckHandSimulator from './DeckHandSimulator';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_URL } from '../config';
 
 // ── CMC helpers ───────────────────────────────────────────────────────────────
 function parseCmcFromManaCost(manaCost) {

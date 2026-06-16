@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Database, AlertTriangle, CheckCircle, ArrowRight } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
+import { API_URL } from '../../config';
 
 export function MigrationPanel() {
   const { authFetch, user } = useAuthContext();
@@ -17,8 +18,8 @@ export function MigrationPanel() {
   const fetchData = async () => {
     try {
       const [usersRes, healthRes] = await Promise.all([
-        authFetch('http://localhost:5000/api/admin/users?limit=100'),
-        authFetch('http://localhost:5000/api/admin/health')
+        authFetch(`${API_URL}/admin/users?limit=100`),
+        authFetch(`${API_URL}/admin/health`)
       ]);
 
       const usersData = await usersRes.json();
@@ -51,7 +52,7 @@ export function MigrationPanel() {
     setResult(null);
 
     try {
-      const response = await authFetch('http://localhost:5000/api/admin/migrate', {
+      const response = await authFetch(`${API_URL}/admin/migrate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ targetUserId: targetUser })

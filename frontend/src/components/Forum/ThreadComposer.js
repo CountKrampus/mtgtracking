@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Loader } from 'lucide-react';
 import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_URL } from '../../config';
 
 export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl, user, onThreadCreated }) {
   const [title, setTitle] = useState('');

@@ -4,8 +4,7 @@ import DeckList from './DeckList';
 import DeckDetail from './DeckDetail';
 import DeckImport from './DeckImport';
 import DeckEditor from './DeckEditor';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_URL } from '../config';
 
 function DeckBuilder() {
   const [decks, setDecks] = useState([]);

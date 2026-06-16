@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, UserCog, Shield, Eye, Edit2, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
+import { API_URL } from '../../config';
 
 export function UserManagement() {
   const { authFetch, user: currentUser } = useAuthContext();
@@ -16,7 +17,7 @@ export function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      const response = await authFetch('http://localhost:5000/api/admin/users?limit=100');
+      const response = await authFetch(`${API_URL}/admin/users?limit=100`);
       const data = await response.json();
       if (response.ok) {
         setUsers(data.users);
@@ -32,7 +33,7 @@ export function UserManagement() {
 
   const updateUser = async (userId, updates) => {
     try {
-      const response = await authFetch(`http://localhost:5000/api/admin/users/${userId}`, {
+      const response = await authFetch(`${API_URL}/admin/users/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
@@ -57,7 +58,7 @@ export function UserManagement() {
     }
 
     try {
-      const response = await authFetch(`http://localhost:5000/api/admin/users/${userId}`, {
+      const response = await authFetch(`${API_URL}/admin/users/${userId}`, {
         method: 'DELETE'
       });
 

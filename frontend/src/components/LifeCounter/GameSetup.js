@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Play, Shield, Swords, User, Palette } from 'lucide-react';
 import PlayerProfiles, { PLAYER_COLORS } from './PlayerProfiles';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_URL } from '../../config';
 
 function GameSetup({
   gameFormat,

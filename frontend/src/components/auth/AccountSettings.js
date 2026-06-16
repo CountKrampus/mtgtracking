@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { User, Mail, Lock, Save, AlertCircle, CheckCircle, LogOut, Trash2, Shield } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { SessionManager } from './SessionManager';
+import { API_URL } from '../../config';
 
 export function AccountSettings({ onClose }) {
   const { user, updateProfile, changePassword, logout, authFetch } = useAuthContext();
@@ -92,7 +93,7 @@ export function AccountSettings({ onClose }) {
     setDeleteLoading(true);
 
     try {
-      const response = await authFetch('http://localhost:5000/api/users/me', {
+      const response = await authFetch(`${API_URL}/users/me`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

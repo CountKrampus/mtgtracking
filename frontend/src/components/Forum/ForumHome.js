@@ -3,8 +3,7 @@ import { Search, Plus, Zap, Settings } from 'lucide-react';
 import axios from 'axios';
 import ThreadComposer from './ThreadComposer';
 import ForumAdminPanel from './ForumAdminPanel';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_URL } from '../../config';
 
 export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, authUser }) {
   const [showThreadComposer, setShowThreadComposer] = useState(false);

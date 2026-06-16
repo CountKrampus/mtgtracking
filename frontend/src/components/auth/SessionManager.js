@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Monitor, Smartphone, Globe, Trash2, RefreshCw, AlertCircle } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
+import { API_URL } from '../../config';
 
 function parseUserAgent(ua) {
   if (!ua) return { device: 'Unknown', browser: 'Unknown' };
@@ -38,7 +39,7 @@ export function SessionManager() {
     setLoading(true);
     setError(null);
     try {
-      const response = await authFetch('http://localhost:5000/api/users/me/sessions');
+      const response = await authFetch(`${API_URL}/users/me/sessions`);
       if (response.ok) {
         const data = await response.json();
         setSessions(data.sessions || []);
@@ -59,7 +60,7 @@ export function SessionManager() {
 
   const revokeSession = async (sessionId) => {
     try {
-      const response = await authFetch(`http://localhost:5000/api/users/me/sessions/${sessionId}`, {
+      const response = await authFetch(`${API_URL}/users/me/sessions/${sessionId}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -77,7 +78,7 @@ export function SessionManager() {
       return;
     }
     try {
-      const response = await authFetch('http://localhost:5000/api/users/me/sessions', {
+      const response = await authFetch(`${API_URL}/users/me/sessions`, {
         method: 'DELETE'
       });
       if (response.ok) {

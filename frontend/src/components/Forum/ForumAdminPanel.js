@@ -3,8 +3,7 @@ import { X } from 'lucide-react';
 import ForumCategoriesTab from './ForumCategoriesTab';
 import SpamFilterAdmin from './SpamFilterAdmin';
 import MuteManager from './MuteManager';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_URL } from '../../config';
 
 export default function ForumAdminPanel({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('categories');

@@ -49,7 +49,7 @@ router.put('/me', async (req, res) => {
       });
     }
 
-    const { displayName, email } = req.body;
+    const { displayName, email, privacy } = req.body;
 
     // Update display name if provided
     if (displayName !== undefined) {
@@ -74,6 +74,16 @@ router.put('/me', async (req, res) => {
       }
 
       user.email = normalizedEmail;
+    }
+
+    // Update privacy sub-fields if provided (merge, don't replace)
+    if (privacy && typeof privacy === 'object') {
+      const allowed = ['isPublic', 'showCollection', 'showDecks', 'showWishlist', 'showForum', 'bio'];
+      for (const key of allowed) {
+        if (key in privacy) {
+          user.privacy[key] = privacy[key];
+        }
+      }
     }
 
     await user.save();

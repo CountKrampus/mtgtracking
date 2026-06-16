@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, Trash2, Edit2, Check, User, Image, Upload, Search, Wand2 } from 'lucide-react';
 import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_URL } from '../../config';
 
 const PLAYER_COLORS = [
   { name: 'Purple', value: '#9333ea' },

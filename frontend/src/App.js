@@ -32,6 +32,7 @@ import SpamFilterAdmin from './components/Forum/SpamFilterAdmin';
 import MuteManager from './components/Forum/MuteManager';
 import ForumLevelWidget from './components/Forum/ForumLevelWidget';
 import ForumShop from './components/Forum/ForumShop';
+import { API_URL } from './config';
 
 const DeckBuilder = React.lazy(() => import('./components/DeckBuilder'));
 const CameraModal = React.lazy(() => import('./components/CameraModal'));
@@ -48,8 +49,6 @@ const CubeBuilder = React.lazy(() => import('./components/Gameplay/CubeBuilder')
 const ReprintTracker = React.lazy(() => import('./components/Tools/ReprintTracker'));
 const SetReleaseCalendar = React.lazy(() => import('./components/Tools/SetReleaseCalendar'));
 const SpoilerSeasonIntegration = React.lazy(() => import('./components/Tools/SpoilerSeasonIntegration'));
-
-const API_URL = 'http://localhost:5000/api';
 
 // Helper to get auth headers for API calls
 const getAuthHeaders = () => {

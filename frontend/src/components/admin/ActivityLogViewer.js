@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Filter } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
+import { API_URL } from '../../config';
 
 export function ActivityLogViewer() {
   const { authFetch } = useAuthContext();
@@ -17,7 +18,7 @@ export function ActivityLogViewer() {
   const fetchActivity = async () => {
     setLoading(true);
     try {
-      let url = `http://localhost:5000/api/admin/activity?limit=${limit}`;
+      let url = `${API_URL}/admin/activity?limit=${limit}`;
       if (category) url += `&category=${category}`;
 
       const response = await authFetch(url);

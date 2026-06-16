@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, GripVertical, ChevronDown, ChevronRight, X, Save } from 'lucide-react';
 import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_URL } from '../../config';
 
 export default function ForumCategoriesTab() {
   const [categories, setCategories] = useState([]);
