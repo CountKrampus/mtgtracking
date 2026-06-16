@@ -26,10 +26,10 @@ export default function MessagesPage({ user, onBack }) {
   };
 
   // Fetch messages for selected conversation
-  const fetchMessages = async (conversationId) => {
+  const fetchMessages = async (otherUserId) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/messages/${conversationId}`, {
+      const response = await fetch(`${API_URL}/messages/${otherUserId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('mtg_access_token')}` }
       });
       if (response.ok) {
@@ -48,18 +48,25 @@ export default function MessagesPage({ user, onBack }) {
     if (!newMessage.trim() || !selectedConversation) return;
 
     try {
-      const response = await fetch(`${API_URL}/messages/${selectedConversation._id}/send`, {
+      const response = await fetch(`${API_URL}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('mtg_access_token')}`
         },
-        body: JSON.stringify({ body: newMessage })
+        body: JSON.stringify({ toUserId: selectedConversation.otherUserId, content: newMessage })
       });
 
       if (response.ok) {
         const data = await response.json();
-        setMessages([...messages, data.message]);
+        // Create a message object that matches our display format
+        const newMsg = {
+          _id: data._id || Math.random().toString(36),
+          content: newMessage,
+          createdAt: new Date().toISOString(),
+          fromUserId: { _id: user._id }
+        };
+        setMessages([...messages, newMsg]);
         setNewMessage('');
         // Refetch conversations to update last message
         fetchConversations();
@@ -77,18 +84,18 @@ export default function MessagesPage({ user, onBack }) {
 
   useEffect(() => {
     if (selectedConversation) {
-      fetchMessages(selectedConversation._id);
-      const interval = setInterval(() => fetchMessages(selectedConversation._id), 5000);
+      fetchMessages(selectedConversation.otherUserId);
+      const interval = setInterval(() => fetchMessages(selectedConversation.otherUserId), 5000);
       return () => clearInterval(interval);
     }
   }, [selectedConversation]);
 
   const filteredConversations = conversations.filter(conv =>
-    conv.participantUsername.toLowerCase().includes(searchTerm.toLowerCase())
+    conv.otherUser?.username?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getOtherParticipant = (conv) => {
-    return conv.participants.find(p => p._id !== user._id);
+    return conv.otherUser;
   };
 
   if (!selectedConversation) {
@@ -127,7 +134,7 @@ export default function MessagesPage({ user, onBack }) {
               const otherParticipant = getOtherParticipant(conv);
               return (
                 <button
-                  key={conv._id}
+                  key={conv.otherUserId}
                   onClick={() => setSelectedConversation(conv)}
                   className="w-full text-left p-3 hover:bg-slate-800 rounded-lg border border-slate-700 transition"
                 >
@@ -142,10 +149,7 @@ export default function MessagesPage({ user, onBack }) {
                     )}
                   </div>
                   <p className="text-sm text-slate-400 truncate">
-                    {conv.lastMessage?.body || 'No messages yet'}
-                  </p>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {conv.lastMessage?.createdAt ? new Date(conv.lastMessage.createdAt).toLocaleString() : ''}
+                    {conv.lastMessage || 'No messages yet'}
                   </p>
                 </button>
               );
@@ -193,16 +197,16 @@ export default function MessagesPage({ user, onBack }) {
           messages.map(msg => (
             <div
               key={msg._id}
-              className={`flex ${msg.senderId === user._id ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${msg.fromUserId._id === user._id ? 'justify-end' : 'justify-start'}`}
             >
               <div
                 className={`max-w-xs px-4 py-2 rounded-lg ${
-                  msg.senderId === user._id
+                  msg.fromUserId._id === user._id
                     ? 'bg-purple-600 text-white'
                     : 'bg-slate-700 text-slate-100'
                 }`}
               >
-                <p>{msg.body}</p>
+                <p>{msg.content}</p>
                 <p className="text-xs opacity-70 mt-1">
                   {new Date(msg.createdAt).toLocaleTimeString()}
                 </p>
