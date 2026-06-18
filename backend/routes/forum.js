@@ -1343,4 +1343,47 @@ router.delete('/admin/cosmetics/:cosmeticId', verifyToken, requireAuth, requireA
   }
 });
 
+// GET /api/forum/feed - combined threads and posts feed
+router.get('/feed', verifyToken, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = parseInt(req.query.skip) || 0;
+
+    const visibleFilter = { isFlagHidden: { $ne: true }, isShadowHidden: { $ne: true } };
+
+    // Fetch recent threads
+    const threads = await ForumThread.find({ isLocked: false })
+      .populate('authorId', 'username displayName avatar')
+      .select('title content createdAt categoryId authorId')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Fetch recent posts
+    const posts = await ForumPost.find(visibleFilter)
+      .populate('threadId', 'title')
+      .populate('authorId', 'username displayName avatar')
+      .select('body threadId createdAt upvotes likes authorId')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Merge and sort by creation date
+    const feedItems = [
+      ...threads.map(t => ({ ...t, type: 'thread' })),
+      ...posts.map(p => ({ ...p, type: 'post' }))
+    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // Apply pagination
+    const paginatedFeed = feedItems.slice(skip, skip + limit);
+
+    res.json({
+      items: paginatedFeed,
+      total: feedItems.length,
+      limit,
+      skip
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching feed', error: err.message });
+  }
+});
+
 module.exports = router;
