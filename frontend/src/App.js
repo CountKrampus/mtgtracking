@@ -4,6 +4,7 @@ import { Search, Plus, Trash2, Edit2, Save, X, Download, RefreshCw, DollarSign, 
 import QRCode from 'qrcode';
 import './App.css';
 import Sidebar from './components/Sidebar';
+import ValueHistoryChart from './components/ValueHistoryChart';
 import Breadcrumb from './components/Breadcrumb';
 import CommandPalette from './components/CommandPalette';
 import useKeyboardShortcuts, { buildShortcutKey } from './hooks/useKeyboardShortcuts';
@@ -3023,6 +3024,10 @@ function App() {
           {/* Collection View */}
         {currentView === 'collection' && (
           <>
+            {/* Collection value over time */}
+            <div className="mb-6">
+              <ValueHistoryChart />
+            </div>
             {/* Controls - Sticky Filters */}
             <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 mb-6 shadow-xl sticky top-0 z-30">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4 mb-4">

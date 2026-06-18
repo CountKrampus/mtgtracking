@@ -18,6 +18,9 @@ const { buildUserQuery, getUserId } = require('./middleware/multiUser');
 const { activityLoggers } = require('./middleware/activityLogger');
 const SystemSettings = require('./models/SystemSettings');
 const UserColumnPreferences = require('./models/UserColumnPreferences');
+const CardValueSnapshot = require('./models/CardValueSnapshot');
+const CardPriceHistory = require('./models/CardPriceHistory');
+const User = require('./models/User');
 
 // Try to load sharp for image hashing (optional dependency)
 let sharp = null;
@@ -1486,6 +1489,42 @@ app.get('/api/stats/value-history', requireAuth, async (req, res) => {
     res.json(snapshots);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// Create an on-demand collection value snapshot
+app.post('/api/value-snapshot', requireAuth, async (req, res) => {
+  try {
+    const cards = await Card.find(buildUserQuery({}, req));
+    const totalValue = cards.reduce((sum, card) => sum + ((card.price || 0) * card.quantity), 0);
+
+    const snapshot = await CardValueSnapshot.create({
+      userId: getUserId(req),
+      totalValue,
+      cardCount: cards.length
+    });
+
+    res.json(snapshot);
+  } catch (err) {
+    res.status(500).json({ message: 'Error creating snapshot', error: err.message });
+  }
+});
+
+// Get collection value history (default last 30 days)
+app.get('/api/value-history', requireAuth, async (req, res) => {
+  try {
+    const days = parseInt(req.query.days) || 30;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const history = await CardValueSnapshot.find({
+      userId: getUserId(req),
+      date: { $gte: startDate }
+    }).sort({ date: 1 }).lean();
+
+    res.json(history);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching value history', error: err.message });
   }
 });
 
@@ -3016,6 +3055,35 @@ app.put('/api/user/column-preferences', verifyToken, requireAuth, async (req, re
     res.status(500).json({ message: 'Failed to update column preferences', error: err.message });
   }
 });
+
+// Automatic daily collection value snapshot for every user
+setInterval(async () => {
+  try {
+    const users = await User.find({});
+    for (const user of users) {
+      const cards = await Card.find({ userId: user._id });
+      const totalValue = cards.reduce((sum, card) => sum + ((card.price || 0) * card.quantity), 0);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const existing = await CardValueSnapshot.findOne({
+        userId: user._id,
+        date: { $gte: today }
+      });
+
+      if (!existing) {
+        await CardValueSnapshot.create({
+          userId: user._id,
+          totalValue,
+          cardCount: cards.length
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error creating value snapshots:', err);
+  }
+}, 24 * 60 * 60 * 1000);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
