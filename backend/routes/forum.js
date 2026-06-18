@@ -79,7 +79,7 @@ router.delete('/categories/:id', verifyToken, requireAuth, requireAdmin, async (
     }
 
     // Cascade: find all threads in this category and subcategories
-    const subcategories = await ForumCategory.find({ parentCategoryId: id });
+    const subcategories = await ForumCategory.find({ parentCategoryId: id }).lean();
     const categoryIds = [id, ...subcategories.map(s => s._id.toString())];
 
     for (const catId of categoryIds) {
