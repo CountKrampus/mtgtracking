@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Coins, Zap, MessageSquare, Share2 } from 'lucide-react';
 import { API_URL } from '../../config';
+import UserAvatar from '../avatars/UserAvatar';
 
 export default function ForumProfilePage({ user, apiUrl }) {
   const [levelData, setLevelData] = useState(null);
@@ -48,11 +49,14 @@ export default function ForumProfilePage({ user, apiUrl }) {
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-900/50 to-slate-900 border border-purple-500/30 rounded-lg p-8">
         <div className="flex items-start justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-1">@{user.username}</h1>
-            <p className="text-slate-400">
-              {stats?.stats?.memberSince && `Member since ${new Date(stats.stats.memberSince).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
-            </p>
+          <div className="flex items-center gap-4">
+            <UserAvatar avatarUrl={user.avatarUrl} username={user.username} size="lg" />
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-1">@{user.username}</h1>
+              <p className="text-slate-400">
+                {stats?.stats?.memberSince && `Member since ${new Date(stats.stats.memberSince).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
+              </p>
+            </div>
           </div>
         </div>
 
