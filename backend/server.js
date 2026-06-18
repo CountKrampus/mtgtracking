@@ -1556,6 +1556,52 @@ app.get('/api/stats/price-changes', requireAuth, async (req, res) => {
   }
 });
 
+// Finance Tracking Endpoints
+
+// Get portfolio finance summary (buylist/sell/collection values and spread)
+app.get('/api/finance', requireAuth, async (req, res) => {
+  try {
+    const cards = await Card.find(buildUserQuery({}, req));
+
+    const totalBuylistValue = cards.reduce((sum, card) => sum + ((card.buylistValue || 0) * card.quantity), 0);
+    const totalSellValue = cards.reduce((sum, card) => sum + ((card.sellValue || 0) * card.quantity), 0);
+    const totalCollectionValue = cards.reduce((sum, card) => sum + ((card.price || 0) * card.quantity), 0);
+
+    res.json({
+      buylistValue: totalBuylistValue,
+      sellValue: totalSellValue,
+      collectionValue: totalCollectionValue,
+      spread: totalCollectionValue - totalBuylistValue
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching finance data', error: err.message });
+  }
+});
+
+// Update a card's finance fields (buylist/sell values, price alert)
+app.put('/api/cards/:id/finance', requireAuth, requireEditor, async (req, res) => {
+  try {
+    const { buylistValue, sellValue, priceAlert } = req.body;
+    const userId = getUserId(req);
+    const card = await Card.findOne(buildUserQuery({ _id: req.params.id }, req));
+
+    if (!card) {
+      return res.status(404).json({ message: 'Card not found' });
+    }
+
+    if (buylistValue !== undefined) card.buylistValue = buylistValue;
+    if (sellValue !== undefined) card.sellValue = sellValue;
+    if (priceAlert !== undefined) card.priceAlert = priceAlert;
+
+    await card.save();
+    clearCache(userId);
+
+    res.json(card);
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating card finance', error: err.message });
+  }
+});
+
 // Tag Management Endpoints
 
 // Add tag to a card
