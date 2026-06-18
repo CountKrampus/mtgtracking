@@ -26,38 +26,40 @@ export default function ColumnContextMenu({
 
   useEffect(() => {
     if (isOpen && menuRef.current) {
-      // Get menu dimensions
-      const rect = menuRef.current.getBoundingClientRect();
-      const menuWidth = rect.width || 250; // fallback width
-      const menuHeight = rect.height || 400; // fallback height
+      // Use requestAnimationFrame to ensure DOM is painted before measuring
+      requestAnimationFrame(() => {
+        const rect = menuRef.current.getBoundingClientRect();
+        const menuWidth = Math.max(rect.width, 250); // Use actual width, fallback to 250
+        const menuHeight = Math.max(rect.height, 50); // Use actual height, fallback to 50
 
-      const padding = 10; // margin from screen edges
-      let x = position.x;
-      let y = position.y;
+        const padding = 10;
+        let x = position.x;
+        let y = position.y;
 
-      // Adjust horizontal position if menu would go off right edge
-      if (x + menuWidth + padding > window.innerWidth) {
-        x = window.innerWidth - menuWidth - padding;
-      }
+        // Adjust if menu would go off right edge
+        if (x + menuWidth + padding > window.innerWidth) {
+          x = window.innerWidth - menuWidth - padding;
+        }
 
-      // Adjust vertical position if menu would go off bottom edge
-      if (y + menuHeight + padding > window.innerHeight) {
-        y = window.innerHeight - menuHeight - padding;
-      }
+        // Adjust if menu would go off bottom edge
+        if (y + menuHeight + padding > window.innerHeight) {
+          y = window.innerHeight - menuHeight - padding;
+        }
 
-      // Ensure menu doesn't go off left edge
-      if (x < padding) {
-        x = padding;
-      }
+        // Clamp to left edge
+        if (x < padding) {
+          x = padding;
+        }
 
-      // Ensure menu doesn't go off top edge
-      if (y < padding) {
-        y = padding;
-      }
+        // Clamp to top edge
+        if (y < padding) {
+          y = padding;
+        }
 
-      setAdjustedPosition({ x, y });
+        setAdjustedPosition({ x, y });
+      });
     }
-  }, [isOpen, position]);
+  }, [isOpen, position, menuRef]);
 
   if (!isOpen) return null;
 
