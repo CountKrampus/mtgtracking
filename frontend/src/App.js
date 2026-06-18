@@ -3704,6 +3704,11 @@ function App() {
           )}
         </div>
 
+        {/* Collection Value History - Bottom */}
+        <div className="mt-8 mb-6">
+          <ValueHistoryChart />
+        </div>
+
         {/* Card Image Hover Preview */}
         {hoveredCard && hoveredCard.scryfallId && (
           <div
