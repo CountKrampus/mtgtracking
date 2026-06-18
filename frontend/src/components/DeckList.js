@@ -159,11 +159,33 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck
             />
           )}
         </div>
-        <h3 className="text-xl font-bold text-white mb-2">{deck.name}</h3>
-        <div className="text-white/80 text-sm mb-2">
-          Commander: {deck.commander?.name}
-          {deck.partnerCommander && ` & ${deck.partnerCommander.name}`}
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <h3 className="text-xl font-bold text-white">{deck.name}</h3>
+          {deck.format && (
+            <span className={`px-2 py-1 rounded text-xs font-semibold ${
+              {
+                commander: 'bg-purple-600 text-white',
+                standard: 'bg-blue-600 text-white',
+                modern: 'bg-green-600 text-white',
+                pioneer: 'bg-teal-600 text-white',
+                legacy: 'bg-amber-600 text-white',
+                vintage: 'bg-red-600 text-white',
+                pauper: 'bg-gray-600 text-white',
+                draft: 'bg-orange-600 text-white',
+                oathbreaker: 'bg-pink-600 text-white',
+                other: 'bg-slate-600 text-white'
+              }[deck.format] || 'bg-slate-600 text-white'
+            }`}>
+              {deck.format.charAt(0).toUpperCase() + deck.format.slice(1)}
+            </span>
+          )}
         </div>
+        {deck.commander?.name && (
+          <div className="text-white/80 text-sm mb-2">
+            Commander: {deck.commander.name}
+            {deck.partnerCommander?.name && ` & ${deck.partnerCommander.name}`}
+          </div>
+        )}
         <div className="flex justify-between text-white/60 text-sm mb-2">
           <span>{deck.statistics?.totalCards || 100} cards</span>
           <span>${deck.totalValue?.toFixed(2) || '0.00'}</span>
