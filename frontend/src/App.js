@@ -3442,7 +3442,7 @@ function App() {
                       )}
                     </button>
                   </th>
-                  {isColumnVisible('cardName') && <th className="px-6 py-3 text-left text-white font-semibold">Card Name</th>}
+                  <th className="px-6 py-3 text-left text-white font-semibold">Card Name</th>
                   {isColumnVisible('set') && <th className="px-6 py-3 text-left text-white font-semibold hidden lg:table-cell">Set</th>}
                   {isColumnVisible('setCode') && <th className="px-6 py-3 text-left text-white font-semibold text-sm hidden xl:table-cell">Set Code</th>}
                   {isColumnVisible('collectorNumber') && <th className="px-6 py-3 text-left text-white font-semibold text-sm hidden xl:table-cell">#</th>}
@@ -3454,9 +3454,9 @@ function App() {
                   {isColumnVisible('foil') && <th className="px-6 py-3 text-left text-white font-semibold hidden xl:table-cell">Foil</th>}
                   {isColumnVisible('token') && <th className="px-6 py-3 text-left text-white font-semibold hidden xl:table-cell">Token</th>}
                   {isColumnVisible('tags') && <th className="px-6 py-3 text-left text-white font-semibold hidden xl:table-cell">Tags</th>}
-                  {isColumnVisible('quantity') && <th className="px-6 py-3 text-left text-white font-semibold">Qty</th>}
-                  {isColumnVisible('condition') && <th className="px-6 py-3 text-left text-white font-semibold">Condition</th>}
-                  {isColumnVisible('price') && <th className="px-6 py-3 text-left text-white font-semibold">Price</th>}
+                  <th className="px-6 py-3 text-left text-white font-semibold">Qty</th>
+                  <th className="px-6 py-3 text-left text-white font-semibold">Condition</th>
+                  <th className="px-6 py-3 text-left text-white font-semibold">Price</th>
                   {isColumnVisible('buylistValue') && <th className="px-6 py-3 text-left text-white font-semibold">Buylist Value</th>}
                   {isColumnVisible('sellValue') && <th className="px-6 py-3 text-left text-white font-semibold">Sell Value</th>}
                   {isColumnVisible('total') && <th className="px-6 py-3 text-left text-white font-semibold">Total</th>}
