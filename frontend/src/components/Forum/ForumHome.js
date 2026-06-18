@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Zap, Settings } from 'lucide-react';
+import { Search, Plus, Zap, Settings, ShoppingBag } from 'lucide-react';
 import axios from 'axios';
 import ThreadComposer from './ThreadComposer';
 import ForumAdminPanel from './ForumAdminPanel';
 import ForumFeed from './ForumFeed';
+import ForumShop from './ForumShop';
 import { API_URL } from '../../config';
 
 export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, authUser }) {
@@ -98,6 +99,16 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
         >
           Feed
         </button>
+        <button
+          onClick={() => setActiveTab('shop')}
+          className={`px-4 py-2 rounded-lg font-semibold transition flex items-center gap-2 ${
+            activeTab === 'shop'
+              ? 'bg-purple-600 text-white'
+              : 'bg-white/5 text-white/60 hover:text-white'
+          }`}
+        >
+          <ShoppingBag size={16} /> Shop
+        </button>
       </div>
 
       {/* Main Content */}
@@ -191,12 +202,18 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
                 </div>
               )}
             </>
-          ) : (
+          ) : activeTab === 'feed' ? (
             <ForumFeed
               onSelectThread={onSelectCategory}
               onSelectPost={(threadId) => onSelectCategory(threadId)}
             />
-          )}
+          ) : activeTab === 'shop' ? (
+            <div>
+              <h2 className="text-3xl font-bold text-white mb-2">Forum Shop</h2>
+              <p className="text-white/60 text-sm mb-8">Earn coins from forum activity and spend them on cosmetics to customize your profile!</p>
+              <ForumShop />
+            </div>
+          ) : null}
         </div>
       </div>
 
