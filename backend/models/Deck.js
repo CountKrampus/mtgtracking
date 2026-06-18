@@ -45,6 +45,11 @@ const deckSchema = new mongoose.Schema({
   },
   totalValue: { type: Number, default: 0 },
   description: { type: String, default: '' },
+  format: {
+    type: String,
+    enum: ['commander', 'standard', 'modern', 'pioneer', 'legacy', 'vintage', 'pauper', 'draft', 'oathbreaker', 'other'],
+    default: 'commander'
+  },
   tags: [{ type: String }],
   folder: { type: String, default: '' },
   folderId: { type: mongoose.Schema.Types.ObjectId, ref: 'DeckFolder', default: null },
