@@ -17,6 +17,7 @@ const { isMultiUserEnabled, verifyToken, requireAuth, requireEditor, checkMainte
 const { buildUserQuery, getUserId } = require('./middleware/multiUser');
 const { activityLoggers } = require('./middleware/activityLogger');
 const SystemSettings = require('./models/SystemSettings');
+const UserColumnPreferences = require('./models/UserColumnPreferences');
 
 // Try to load sharp for image hashing (optional dependency)
 let sharp = null;
@@ -2818,6 +2819,51 @@ app.post('/api/interactions/check', async (req, res) => {
   } catch (error) {
     console.error('Error checking interaction:', error.message);
     res.status(500).json({ message: error.message });
+  }
+});
+
+// GET /api/user/column-preferences - fetch user's visible columns
+app.get('/api/user/column-preferences', verifyToken, requireAuth, async (req, res) => {
+  try {
+    let prefs = await UserColumnPreferences.findOne({ userId: req.user._id });
+
+    if (!prefs) {
+      prefs = await UserColumnPreferences.create({
+        userId: req.user._id,
+        visibleColumns: ['cardName', 'quantity', 'condition', 'price']
+      });
+    }
+
+    res.json({ visibleColumns: prefs.visibleColumns });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch column preferences', error: err.message });
+  }
+});
+
+// PUT /api/user/column-preferences - update visible columns
+app.put('/api/user/column-preferences', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { visibleColumns } = req.body;
+
+    if (!Array.isArray(visibleColumns)) {
+      return res.status(400).json({ message: 'visibleColumns must be an array' });
+    }
+
+    let prefs = await UserColumnPreferences.findOne({ userId: req.user._id });
+
+    if (!prefs) {
+      prefs = await UserColumnPreferences.create({
+        userId: req.user._id,
+        visibleColumns
+      });
+    } else {
+      prefs.visibleColumns = visibleColumns;
+      await prefs.save();
+    }
+
+    res.json({ visibleColumns: prefs.visibleColumns });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to update column preferences', error: err.message });
   }
 });
 
