@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 
 export default function ColumnContextMenu({
   isOpen,
@@ -25,10 +26,10 @@ export default function ColumnContextMenu({
 
   if (!isOpen) return null;
 
-  return (
+  return ReactDOM.createPortal(
     <div
       ref={menuRef}
-      className="fixed bg-slate-800 border border-slate-700 rounded-lg shadow-lg z-50"
+      className="fixed bg-slate-800 border border-slate-700 rounded-lg shadow-lg z-[9999]"
       style={{
         top: `${position.y}px`,
         left: `${position.x}px`,
@@ -56,6 +57,7 @@ export default function ColumnContextMenu({
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
