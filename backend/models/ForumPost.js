@@ -72,6 +72,8 @@ const postSchema = new mongoose.Schema({
 postSchema.index({ threadId: 1, createdAt: 1 });
 postSchema.index({ authorId: 1, createdAt: -1 });
 postSchema.index({ threadId: 1, isHidden: 1 });
+postSchema.index({ authorId: 1, isHidden: 1, createdAt: -1 });
+postSchema.index({ isHidden: 1, createdAt: -1 });
 
 postSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
