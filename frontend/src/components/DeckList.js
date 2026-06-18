@@ -59,6 +59,8 @@ function FolderTreeNode({ folder, depth, activeFolderId, onSelect, deckCountByFo
 }
 
 function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck, folders = [], onFolderCreate, onDeckMoveToFolder }) {
+  const [newDeckName, setNewDeckName] = useState('');
+  const [newDeckFormat, setNewDeckFormat] = useState('commander');
   const [showSleeveCalc, setShowSleeveCalc] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -420,6 +422,87 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck
               >
                 Move Here
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create New Deck Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 rounded-lg border border-slate-700 w-full max-w-2xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-white">Create New Deck</h2>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-white mb-2">Deck Name</label>
+                <input
+                  type="text"
+                  value={newDeckName}
+                  onChange={(e) => setNewDeckName(e.target.value)}
+                  placeholder="e.g., Atraxa Control"
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-white mb-2">Format</label>
+                <select
+                  value={newDeckFormat}
+                  onChange={(e) => setNewDeckFormat(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white focus:outline-none focus:border-purple-500"
+                >
+                  <option value="commander">Commander</option>
+                  <option value="standard">Standard</option>
+                  <option value="modern">Modern</option>
+                  <option value="pioneer">Pioneer</option>
+                  <option value="legacy">Legacy</option>
+                  <option value="vintage">Vintage</option>
+                  <option value="pauper">Pauper</option>
+                  <option value="draft">Draft</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={async () => {
+                    const name = newDeckName.trim() || 'Untitled Deck';
+                    const format = newDeckFormat;
+                    try {
+                      await onCreateDeck({
+                        name,
+                        format,
+                        commander: null,
+                        cards: [],
+                        folderId: activeFolderId || null
+                      });
+                      setShowCreateModal(false);
+                      setNewDeckName('');
+                      setNewDeckFormat('commander');
+                    } catch (err) {
+                      alert('Error creating deck: ' + (err.message || err));
+                    }
+                  }}
+                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-semibold transition"
+                >
+                  Create
+                </button>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded font-semibold transition"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

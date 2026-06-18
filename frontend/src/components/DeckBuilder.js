@@ -87,6 +87,12 @@ function DeckBuilder() {
     }
   };
 
+  const createDeck = async (deckData) => {
+    const response = await axios.post(`${API_URL}/decks`, deckData);
+    await fetchDecks();
+    return response.data;
+  };
+
   const deleteDeck = async (id) => {
     if (!window.confirm('Are you sure you want to delete this deck?')) return;
 
@@ -109,6 +115,7 @@ function DeckBuilder() {
             setDeckView('detail');
           }}
           onDeleteDeck={deleteDeck}
+          onCreateDeck={createDeck}
           onImportClick={() => setDeckView('import')}
           deckPlayCounts={deckPlayCounts}
           folders={folders}
