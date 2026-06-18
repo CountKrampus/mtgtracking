@@ -157,6 +157,12 @@ cardSchema.index({ types: 1 });
 cardSchema.index({ tags: 1 });
 cardSchema.index({ name: 1, set: 1, condition: 1 }); // Compound index for duplicate detection
 
+// Multi-user specific indexes for faster queries
+cardSchema.index({ userId: 1, name: 1 });
+cardSchema.index({ userId: 1, set: 1 });
+cardSchema.index({ userId: 1, condition: 1 });
+cardSchema.index({ userId: 1, updatedAt: -1 });
+
 // Location Schema
 const locationSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
