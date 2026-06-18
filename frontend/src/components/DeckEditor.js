@@ -153,6 +153,32 @@ function DeckEditor({ deck, onSave, onCancel }) {
     setMainDeck(prev => prev.filter(c => c.scryfallId !== scryfallId));
   }, []);
 
+  // ── Drag-and-drop: drag a collection card onto the deck list ─────────────────
+  const buildDeckCard = useCallback((card) => ({
+    scryfallId: card.scryfallId,
+    name: card.name,
+    manaCost: card.manaCost || '',
+    types: card.types || [],
+    colors: card.colors || [],
+    imageUrl: card.imageUrl || '',
+    quantity: 1,
+  }), []);
+
+  const handleCardDragStart = useCallback((e, card) => {
+    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.setData('application/json', JSON.stringify(buildDeckCard(card)));
+  }, [buildDeckCard]);
+
+  const handleDeckDrop = useCallback((e) => {
+    e.preventDefault();
+    try {
+      const card = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (card && card.scryfallId) addCard(card);
+    } catch {
+      // ignore invalid drops
+    }
+  }, [addCard]);
+
   // ── Collection filtering ─────────────────────────────────────────────────────
   const filteredCollection = useMemo(() => {
     const q = collFilter.toLowerCase();
@@ -260,16 +286,10 @@ function DeckEditor({ deck, onSave, onCancel }) {
               return (
                 <button
                   key={idx}
-                  onClick={() => addCard({
-                    scryfallId: card.scryfallId,
-                    name: card.name,
-                    manaCost: card.manaCost || '',
-                    types: card.types || [],
-                    colors: card.colors || [],
-                    imageUrl: card.imageUrl || '',
-                    quantity: 1,
-                  })}
-                  className={`w-full flex items-center gap-2 px-3 py-1.5 rounded text-sm text-left transition ${
+                  draggable
+                  onDragStart={(e) => handleCardDragStart(e, card)}
+                  onClick={() => addCard(buildDeckCard(card))}
+                  className={`w-full flex items-center gap-2 px-3 py-1.5 rounded text-sm text-left transition cursor-grab active:cursor-grabbing ${
                     inDeck
                       ? 'bg-purple-600/20 border border-purple-500/30 hover:bg-purple-600/30'
                       : 'bg-white/5 border border-transparent hover:bg-white/10'
@@ -284,8 +304,12 @@ function DeckEditor({ deck, onSave, onCancel }) {
           </div>
         </div>
 
-        {/* ── Right: Current deck list ─────────────────────────────────────── */}
-        <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30">
+        {/* ── Right: Current deck list (drop zone) ─────────────────────────── */}
+        <div
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleDeckDrop}
+          className="bg-white/10 backdrop-blur-md rounded-lg p-4 border-2 border-dashed border-white/30 hover:border-purple-500/60 transition"
+        >
           <h3 className="text-base font-bold text-white mb-3">
             Deck Contents
             {deck.commander && (
@@ -297,7 +321,7 @@ function DeckEditor({ deck, onSave, onCancel }) {
 
           {mainDeck.length === 0 ? (
             <div className="text-white/30 text-sm text-center py-10 italic">
-              Click cards on the left to add them to your deck.
+              Click or drag cards from the left to add them to your deck.
             </div>
           ) : (
             <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1">
