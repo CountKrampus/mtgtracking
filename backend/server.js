@@ -78,6 +78,33 @@ mongoose.connect(MONGODB_URI)
 })
 .catch(err => console.error('MongoDB connection error:', err));
 
+// In-memory cache for cards and stats
+const cache = {
+  cards: new Map(),
+  stats: new Map(),
+  ttl: 5 * 60 * 1000 // 5 minute TTL
+};
+
+function getFromCache(key, userId) {
+  const entry = cache[key]?.get(userId?.toString());
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > cache.ttl) {
+    cache[key].delete(userId?.toString());
+    return null;
+  }
+  return entry.data;
+}
+
+function setInCache(key, userId, data) {
+  if (!cache[key]) cache[key] = new Map();
+  cache[key].set(userId?.toString(), { data, timestamp: Date.now() });
+}
+
+function clearCache(userId) {
+  cache.cards.delete(userId?.toString());
+  cache.stats.delete(userId?.toString());
+}
+
 // Serve user avatars (public endpoint - must be before auth middleware)
 const AVATAR_DIR = path.join(__dirname, 'user-avatars');
 app.get('/api/users/avatar/:filename', (req, res) => {
@@ -466,8 +493,20 @@ async function fetchCardFromScryfall(cardName, setCode, collectorNumber) {
 // Get all cards
 app.get('/api/cards', requireAuth, async (req, res) => {
   try {
+    const userId = getUserId(req);
+
+    // Check cache first
+    const cached = getFromCache('cards', userId);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const query = buildUserQuery({}, req);
     const cards = await Card.find(query).sort({ name: 1 });
+
+    // Store in cache
+    setInCache('cards', userId, cards);
+
     res.json(cards);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -723,6 +762,9 @@ app.post('/api/cards/:id/update-price', requireAuth, requireEditor, activityLogg
       // Non-critical: don't fail if snapshot fails
     }
 
+    const userId = getUserId(req);
+    clearCache(userId);
+
     res.json(card);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -824,6 +866,12 @@ app.post('/api/cards/update-all-prices', requireAuth, requireEditor, activityLog
       } catch (error) {
         console.error(`Error updating ${card.name}:`, error.message);
       }
+    }
+
+    // Clear cache if any cards were updated
+    if (updated > 0) {
+      const userId = getUserId(req);
+      clearCache(userId);
     }
 
     res.json({
@@ -972,6 +1020,11 @@ app.post('/api/cards/bulk-import', requireAuth, requireEditor, activityLoggers.c
       }
     }
 
+    // Clear cache if any cards were added or merged
+    if (results.added.length > 0 || results.merged.length > 0 || results.offline.length > 0) {
+      clearCache(userId);
+    }
+
     res.json(results);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -1045,6 +1098,11 @@ app.post('/api/cards/bulk-import-full', requireAuth, requireEditor, activityLogg
         console.error(`Error importing card:`, error.message);
         results.failed.push(`${cardData.name || 'Unknown'} - ${error.message}`);
       }
+    }
+
+    // Clear cache if any cards were added or merged
+    if (results.added.length > 0 || results.merged.length > 0) {
+      clearCache(userId);
     }
 
     res.json(results);
@@ -1125,6 +1183,11 @@ app.post('/api/cards/bulk-import-offline', requireAuth, requireEditor, activityL
       }
     }
 
+    // Clear cache if any cards were added or merged
+    if (results.added.length > 0 || results.merged.length > 0) {
+      clearCache(userId);
+    }
+
     res.json(results);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -1145,6 +1208,7 @@ app.post('/api/cards', requireAuth, requireEditor, activityLoggers.cardCreate, a
       // Card exists - increment quantity instead of creating duplicate
       existingCard.quantity += quantity || 1;
       const updatedCard = await existingCard.save();
+      clearCache(userId);
       return res.status(200).json({
         ...updatedCard.toObject(),
         merged: true,
@@ -1157,6 +1221,7 @@ app.post('/api/cards', requireAuth, requireEditor, activityLoggers.cardCreate, a
     if (userId) cardData.userId = userId;
     const card = new Card(cardData);
     const newCard = await card.save();
+    clearCache(userId);
     res.status(201).json(newCard);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -1166,6 +1231,7 @@ app.post('/api/cards', requireAuth, requireEditor, activityLoggers.cardCreate, a
 // Update card
 app.put('/api/cards/:id', requireAuth, requireEditor, activityLoggers.cardUpdate, async (req, res) => {
   try {
+    const userId = getUserId(req);
     const query = buildUserQuery({ _id: req.params.id }, req);
     const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
@@ -1174,6 +1240,7 @@ app.put('/api/cards/:id', requireAuth, requireEditor, activityLoggers.cardUpdate
     const { userId: _, ...updateData } = req.body;
     Object.assign(card, updateData);
     const updatedCard = await card.save();
+    clearCache(userId);
     res.json(updatedCard);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -1217,11 +1284,13 @@ app.delete('/api/cache/clear', requireAuth, requireEditor, async (req, res) => {
 // Delete card
 app.delete('/api/cards/:id', requireAuth, requireEditor, activityLoggers.cardDelete, async (req, res) => {
   try {
+    const userId = getUserId(req);
     const query = buildUserQuery({ _id: req.params.id }, req);
     const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
 
     await card.deleteOne();
+    clearCache(userId);
     res.json({ message: 'Card deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -1292,6 +1361,14 @@ app.get('/api/export/csv', requireAuth, activityLoggers.exportCsv, async (req, r
 // Get collection statistics
 app.get('/api/stats', requireAuth, async (req, res) => {
   try {
+    const userId = getUserId(req);
+
+    // Check cache first
+    const cached = getFromCache('stats', userId);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const cardQuery = buildUserQuery({}, req);
     const cards = await Card.find(cardQuery);
 
@@ -1371,7 +1448,7 @@ app.get('/api/stats', requireAuth, async (req, res) => {
       }
     });
 
-    res.json({
+    const stats = {
       totalCards,
       uniqueCards: cards.length,
       totalValue,
@@ -1381,7 +1458,12 @@ app.get('/api/stats', requireAuth, async (req, res) => {
       cachedImageCount,
       portfolioGain,
       portfolioCost
-    });
+    };
+
+    // Store in cache
+    setInCache('stats', userId, stats);
+
+    res.json(stats);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -2009,6 +2091,7 @@ app.post('/api/wishlist/update-all-prices', requireAuth, requireEditor, async (r
 // Bulk update multiple cards
 app.post('/api/cards/bulk-update', requireAuth, requireEditor, activityLoggers.cardBulkUpdate, async (req, res) => {
   try {
+    const userId = getUserId(req);
     const { cardIds, updates } = req.body;
 
     if (!cardIds || !Array.isArray(cardIds) || cardIds.length === 0) {
@@ -2060,6 +2143,10 @@ app.post('/api/cards/bulk-update', requireAuth, requireEditor, activityLoggers.c
       }
     }
 
+    if (updatedCount > 0) {
+      clearCache(userId);
+    }
+
     res.json({
       message: `Updated ${updatedCount} of ${cardIds.length} cards`,
       updated: updatedCount,
@@ -2074,6 +2161,7 @@ app.post('/api/cards/bulk-update', requireAuth, requireEditor, activityLoggers.c
 // Bulk delete multiple cards
 app.delete('/api/cards/bulk-delete', requireAuth, requireEditor, activityLoggers.cardBulkDelete, async (req, res) => {
   try {
+    const userId = getUserId(req);
     const { cardIds } = req.body;
 
     if (!cardIds || !Array.isArray(cardIds) || cardIds.length === 0) {
@@ -2098,6 +2186,10 @@ app.delete('/api/cards/bulk-delete', requireAuth, requireEditor, activityLoggers
       } catch (error) {
         results.push({ id: cardId, status: 'error', error: error.message });
       }
+    }
+
+    if (deletedCount > 0) {
+      clearCache(userId);
     }
 
     res.json({
