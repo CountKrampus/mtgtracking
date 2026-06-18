@@ -168,6 +168,12 @@ const cardSchema = new mongoose.Schema({
   oracleText: { type: String, default: '' },
   tags: [{ type: String }],
   location: { type: String, default: '' },
+  buylistValue: { type: Number, default: 0 },
+  sellValue: { type: Number, default: 0 },
+  priceAlert: {
+    targetPrice: Number,
+    emailNotification: { type: Boolean, default: false }
+  },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
