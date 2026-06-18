@@ -7,7 +7,7 @@ import ForumFeed from './ForumFeed';
 import ForumShop from './ForumShop';
 import { API_URL } from '../../config';
 
-export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, authUser }) {
+export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, authUser, onForumProfile }) {
   const [showThreadComposer, setShowThreadComposer] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showShop, setShowShop] = useState(false);
@@ -77,12 +77,12 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
               <ShoppingBag size={18} />
             </button>
           )}
-          {authUser && (
+          {authUser && onForumProfile && (
             <button
-              onClick={() => window.location.href = `/u/${authUser.username}`}
-              className="text-white/70 hover:text-white text-sm transition"
+              onClick={onForumProfile}
+              className="text-white/70 hover:text-white text-sm transition flex items-center gap-1"
             >
-              My Profile
+              🏛️ Forum Profile
             </button>
           )}
           {authUser?.role === 'admin' && (

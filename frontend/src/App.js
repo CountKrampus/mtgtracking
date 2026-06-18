@@ -5521,17 +5521,6 @@ function App() {
         {/* Forum View */}
         {currentView === 'forum' && (
           <div className="flex flex-col h-full">
-            {authUser && !selectedThreadId && !selectedCategoryId && (
-              <div className="flex justify-end px-4 pt-4">
-                <button
-                  onClick={() => setCurrentView('forum-profile-page')}
-                  className="flex items-center gap-2 text-white hover:text-purple-300 transition font-semibold"
-                  title="My Forum Profile"
-                >
-                  <User size={18} /> Forum Profile
-                </button>
-              </div>
-            )}
             <div className="flex flex-1 min-h-0">
             {selectedThreadId ? (
               <ThreadView
@@ -5579,6 +5568,7 @@ function App() {
                   setShowSpamFilterAdmin(true);
                 }}
                 authUser={authUser}
+                onForumProfile={() => setCurrentView('forum-profile-page')}
               />
             )}
             </div>
