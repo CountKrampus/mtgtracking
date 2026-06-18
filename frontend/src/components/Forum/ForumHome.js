@@ -248,7 +248,7 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-6">
-              <ForumShop />
+              <ForumShop apiUrl={API_URL} user={authUser} isOpen={showShop} onClose={() => setShowShop(false)} />
             </div>
           </div>
         </div>
