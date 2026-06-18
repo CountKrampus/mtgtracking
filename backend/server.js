@@ -1249,6 +1249,20 @@ app.put('/api/cards/:id', requireAuth, requireEditor, activityLoggers.cardUpdate
     const { userId: _, ...updateData } = req.body;
     Object.assign(card, updateData);
     const updatedCard = await card.save();
+
+    // Record price history point for trend tracking
+    if (updatedCard.price > 0) {
+      try {
+        await CardPriceHistory.create({
+          cardId: updatedCard._id,
+          userId: userId,
+          price: updatedCard.price
+        });
+      } catch (histErr) {
+        console.error('Error recording price history:', histErr.message);
+      }
+    }
+
     clearCache(userId);
     res.json(updatedCard);
   } catch (error) {
@@ -1540,9 +1554,21 @@ app.get('/api/cards/:id/price-history', requireAuth, async (req, res) => {
     const snapshots = await CardPriceSnapshot.find({
       cardId: card._id,
       createdAt: { $gte: ninetyDaysAgo }
-    }).sort({ createdAt: 1 });
+    }).sort({ createdAt: 1 }).lean();
 
-    res.json(snapshots);
+    // Also include points recorded via CardPriceHistory (e.g. on card edits)
+    const historyPoints = await CardPriceHistory.find({
+      cardId: card._id,
+      date: { $gte: ninetyDaysAgo }
+    }).sort({ date: 1 }).lean();
+
+    // Normalize to a unified { price, date } shape and merge chronologically
+    const merged = [
+      ...snapshots.map(s => ({ ...s, date: s.createdAt })),
+      ...historyPoints
+    ].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    res.json(merged);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
