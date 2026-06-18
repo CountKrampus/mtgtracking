@@ -34,6 +34,7 @@ import ThreadView from './components/Forum/ThreadView';
 import SpamFilterAdmin from './components/Forum/SpamFilterAdmin';
 import MuteManager from './components/Forum/MuteManager';
 import ForumLevelWidget from './components/Forum/ForumLevelWidget';
+import ForumProfilePage from './components/Forum/ForumProfilePage';
 import ForumShop from './components/Forum/ForumShop';
 import { API_URL } from './config';
 import NotificationBell from './components/NotificationBell';
@@ -341,6 +342,7 @@ function App() {
   const [showMuteManager, setShowMuteManager] = useState(false);
   const [showForumShop, setShowForumShop] = useState(false);
   const [selectedForumProfileUsername, setSelectedForumProfileUsername] = useState(null);
+  const [forumProfileView, setForumProfileView] = useState(false);
 
   // Location management
   const [locations, setLocations] = useState([]);
@@ -5434,6 +5436,11 @@ function App() {
           />
         )}
 
+        {/* Forum Profile Page (authenticated user's own forum profile) */}
+        {currentView === 'forum-profile-page' && authUser && (
+          <ForumProfilePage user={authUser} apiUrl={API_URL} />
+        )}
+
         {/* Learning Components */}
         {currentView === 'card-rulings' && (
           <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
@@ -5513,7 +5520,19 @@ function App() {
 
         {/* Forum View */}
         {currentView === 'forum' && (
-          <div className="flex h-full">
+          <div className="flex flex-col h-full">
+            {authUser && !selectedThreadId && !selectedCategoryId && (
+              <div className="flex justify-end px-4 pt-4">
+                <button
+                  onClick={() => setCurrentView('forum-profile-page')}
+                  className="flex items-center gap-2 text-white hover:text-purple-300 transition font-semibold"
+                  title="My Forum Profile"
+                >
+                  <User size={18} /> Forum Profile
+                </button>
+              </div>
+            )}
+            <div className="flex flex-1 min-h-0">
             {selectedThreadId ? (
               <ThreadView
                 threadId={selectedThreadId}
@@ -5562,6 +5581,7 @@ function App() {
                 authUser={authUser}
               />
             )}
+            </div>
           </div>
         )}
 
