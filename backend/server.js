@@ -2845,8 +2845,8 @@ app.put('/api/user/column-preferences', verifyToken, requireAuth, async (req, re
   try {
     const { visibleColumns } = req.body;
 
-    if (!Array.isArray(visibleColumns)) {
-      return res.status(400).json({ message: 'visibleColumns must be an array' });
+    if (!Array.isArray(visibleColumns) || visibleColumns.length === 0) {
+      return res.status(400).json({ message: 'visibleColumns must be a non-empty array' });
     }
 
     let prefs = await UserColumnPreferences.findOne({ userId: req.user._id });
