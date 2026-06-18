@@ -3691,7 +3691,7 @@ function App() {
         </div>
 
         {/* Card Image Hover Preview */}
-        {hoveredCard && hoveredCard.imageUrl && (
+        {hoveredCard && hoveredCard.scryfallId && (
           <div
             className="fixed z-50 pointer-events-none"
             style={{
@@ -3701,9 +3701,12 @@ function App() {
             }}
           >
             <img
-              src={hoveredCard.imageUrl?.startsWith('/api/') ? `${API_URL.replace('/api', '')}${hoveredCard.imageUrl}` : hoveredCard.imageUrl}
+              src={`${API_URL}/images/${hoveredCard.scryfallId}`}
               alt={hoveredCard.name}
               className="w-80 rounded-xl shadow-2xl border-4 border-purple-500 bg-gray-900"
+              onError={(e) => {
+                e.target.src = hoveredCard.imageUrl || '';
+              }}
             />
             {hoveredCardPriceHistory.length > 0 && (
               <div className="mt-2 bg-gray-900/90 rounded-lg px-3 py-2 border border-purple-500/50">
@@ -5343,7 +5346,7 @@ function App() {
             </div>
 
             {/* Wishlist Card Image Hover Preview */}
-            {hoveredCard && hoveredCard.imageUrl && (
+            {hoveredCard && hoveredCard.scryfallId && (
               <div
                 className="fixed z-50 pointer-events-none"
                 style={{
@@ -5353,9 +5356,12 @@ function App() {
                 }}
               >
                 <img
-                  src={hoveredCard.imageUrl?.startsWith('/api/') ? `${API_URL.replace('/api', '')}${hoveredCard.imageUrl}` : hoveredCard.imageUrl}
+                  src={`${API_URL}/images/${hoveredCard.scryfallId}`}
                   alt={hoveredCard.name}
                   className="w-80 rounded-xl shadow-2xl border-4 border-pink-500 bg-gray-900"
+                  onError={(e) => {
+                    e.target.src = hoveredCard.imageUrl || '';
+                  }}
                 />
               </div>
             )}
