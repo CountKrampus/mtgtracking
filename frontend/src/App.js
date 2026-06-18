@@ -301,6 +301,7 @@ function App() {
   const [filterSet, setFilterSet] = useState('all');
   const [sortBy, setSortBy] = useState(settings.defaultSort);
   const [showAddForm, setShowAddForm] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [autocompleteResults, setAutocompleteResults] = useState([]);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -3026,12 +3027,16 @@ function App() {
           {/* Collection View */}
         {currentView === 'collection' && (
           <>
-            {/* Collection value over time */}
+            {/* Search & Filter Bar - Collapseable */}
             <div className="mb-6">
-              <ValueHistoryChart />
-            </div>
-            {/* Controls - Sticky Filters */}
-            <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 mb-6 shadow-xl sticky top-0 z-30">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="w-full px-4 py-2 flex items-center justify-between text-white/70 hover:text-white font-semibold bg-white/5 rounded-t-lg transition"
+              >
+                <span>{showFilters ? '▼' : '▶'} Search &amp; Filter</span>
+              </button>
+              {showFilters && (
+            <div className="bg-white/10 backdrop-blur-md rounded-b-lg p-4 shadow-xl sticky top-0 z-30">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4 mb-4">
             <div className="relative md:col-span-2 lg:col-span-1">
               <Search className="absolute left-3 top-3 text-white/60" size={20} />
@@ -3173,15 +3178,21 @@ function App() {
               Offline Mode
             </label>
           </div>
-        </div>
+            </div>
+              )}
+            </div>
 
-        {/* Add/Edit Form */}
-        {showAddForm && (
-          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6 shadow-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-white">
-                {editingId ? 'Edit Card' : 'Add New Card'}
-              </h2>
+        {/* Add/Edit Form - Collapseable */}
+        <div className="bg-white/10 backdrop-blur-md rounded-lg mb-6 shadow-xl">
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="w-full px-6 py-3 flex items-center justify-between text-white font-semibold hover:bg-white/5 transition"
+          >
+            <span>{showAddForm ? '▼' : '▶'} {editingId ? 'Edit Card' : 'Add New Card'}</span>
+          </button>
+          {showAddForm && (
+          <div className="px-6 pb-6">
+            <div className="flex justify-end items-center mb-4">
               <label className="flex items-center gap-2 text-white/90 text-sm cursor-pointer bg-white/10 px-4 py-1 rounded-lg hover:bg-white/20 transition">
                 <input
                   type="checkbox"
@@ -3417,7 +3428,8 @@ function App() {
               </button>
             </div>
           </div>
-        )}
+          )}
+        </div>
 
         {/* Cards List */}
         <div className="bg-white/10 backdrop-blur-md rounded-lg overflow-hidden shadow-xl">
