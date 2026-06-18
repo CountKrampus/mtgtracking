@@ -775,29 +775,6 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
             )}
           </div>
 
-          {/* Missing Cards */}
-          {ownership?.missingCards?.length > 0 && (
-            <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30 mb-6">
-              <h3 className="text-lg font-bold text-white mb-4">Missing Cards ({ownership.missingCards.length})</h3>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {ownership.missingCards.map((card, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-3 bg-red-600/10 border border-red-600/30 rounded-lg">
-                    <div>
-                      <div className="text-white font-medium">{card.name}</div>
-                      <div className="text-white/60 text-sm">${card.price?.toFixed(2) || '0.00'}</div>
-                    </div>
-                    <button
-                      onClick={() => handleAddToCollection(card)}
-                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition text-sm"
-                    >
-                      + Add to Collection
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Deck Analysis */}
           <DeckAnalysis deck={deck} />
 
