@@ -15,6 +15,16 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('categories');
+  const [categoryRefreshPending, setCategoryRefreshPending] = useState(false);
+
+  const debouncedRefreshCategories = () => {
+    if (categoryRefreshPending) return; // Skip if refresh already pending
+    setCategoryRefreshPending(true);
+    axios
+      .get(`${API_URL}/forum/categories`)
+      .then((res) => setCategories(res.data))
+      .finally(() => setCategoryRefreshPending(false));
+  };
 
   useEffect(() => {
     axios
@@ -220,7 +230,7 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
         onThreadCreated={() => {
           setShowThreadComposer(false);
           // Refresh categories to show updated thread count
-          axios.get(`${API_URL}/forum/categories`).then((res) => setCategories(res.data));
+          debouncedRefreshCategories();
         }}
       />
 
@@ -230,7 +240,7 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
         onClose={() => {
           setShowAdminPanel(false);
           // Refresh categories after admin changes
-          axios.get(`${API_URL}/forum/categories`).then((res) => setCategories(res.data));
+          debouncedRefreshCategories();
         }}
       />
 
