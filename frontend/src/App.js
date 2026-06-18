@@ -3488,10 +3488,10 @@ function App() {
                       <td
                         className="px-6 py-4 text-white font-medium cursor-pointer hover:text-purple-300 transition"
                         onMouseEnter={(e) => {
-                          console.log('Hovering over:', card.name, 'Has image:', !!card.imageUrl);
                           setHoveredCard(card);
+                          handleCardHover(card);
                         }}
-                        onMouseLeave={() => setHoveredCard(null)}
+                        onMouseLeave={() => { setHoveredCard(null); setHoveredCardPriceHistory([]); }}
                       >
                         {card.name}
                       </td>
@@ -3704,8 +3704,22 @@ function App() {
               src={hoveredCard.imageUrl?.startsWith('/api/') ? `${API_URL.replace('/api', '')}${hoveredCard.imageUrl}` : hoveredCard.imageUrl}
               alt={hoveredCard.name}
               className="w-80 rounded-xl shadow-2xl border-4 border-purple-500 bg-gray-900"
-              onLoad={() => console.log('Image displayed:', hoveredCard.name)}
             />
+            {hoveredCardPriceHistory.length > 0 && (
+              <div className="mt-2 bg-gray-900/90 rounded-lg px-3 py-2 border border-purple-500/50">
+                <p className="text-xs text-slate-400 mb-1">Price trend</p>
+                <div className="flex gap-1 items-end h-6 justify-end">
+                  {hoveredCardPriceHistory.map((h, i) => (
+                    <div
+                      key={i}
+                      className="w-0.5 bg-purple-400"
+                      style={{ height: `${(h.price / Math.max(...hoveredCardPriceHistory.map(x => x.price))) * 20}px` }}
+                      title={`$${h.price.toFixed(2)} on ${new Date(h.date).toLocaleDateString()}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
           </>
