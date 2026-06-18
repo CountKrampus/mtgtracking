@@ -10,6 +10,7 @@ import { API_URL } from '../../config';
 export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, authUser }) {
   const [showThreadComposer, setShowThreadComposer] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showShop, setShowShop] = useState(false);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -59,6 +60,15 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
         <div className="flex items-center gap-3">
           {authUser && (
             <button
+              onClick={() => setShowShop(true)}
+              className="p-1.5 hover:bg-white/10 rounded text-white/70 hover:text-white transition"
+              title="Forum Shop"
+            >
+              <ShoppingBag size={18} />
+            </button>
+          )}
+          {authUser && (
+            <button
               onClick={() => window.location.href = `/u/${authUser.username}`}
               className="text-white/70 hover:text-white text-sm transition"
             >
@@ -98,16 +108,6 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
           }`}
         >
           Feed
-        </button>
-        <button
-          onClick={() => setActiveTab('shop')}
-          className={`px-4 py-2 rounded-lg font-semibold transition flex items-center gap-2 ${
-            activeTab === 'shop'
-              ? 'bg-purple-600 text-white'
-              : 'bg-white/5 text-white/60 hover:text-white'
-          }`}
-        >
-          <ShoppingBag size={16} /> Shop
         </button>
       </div>
 
@@ -207,12 +207,6 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
               onSelectThread={onSelectCategory}
               onSelectPost={(threadId) => onSelectCategory(threadId)}
             />
-          ) : activeTab === 'shop' ? (
-            <div>
-              <h2 className="text-3xl font-bold text-white mb-2">Forum Shop</h2>
-              <p className="text-white/60 text-sm mb-8">Earn coins from forum activity and spend them on cosmetics to customize your profile!</p>
-              <ForumShop />
-            </div>
           ) : null}
         </div>
       </div>
@@ -239,6 +233,26 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
           axios.get(`${API_URL}/forum/categories`).then((res) => setCategories(res.data));
         }}
       />
+
+      {/* Forum Shop Modal */}
+      {showShop && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 rounded-lg border border-slate-700 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-slate-700">
+              <h2 className="text-2xl font-bold text-white">Forum Shop</h2>
+              <button
+                onClick={() => setShowShop(false)}
+                className="text-slate-400 hover:text-white transition"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              <ForumShop />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
