@@ -304,6 +304,9 @@ function App() {
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [hoveredCardPriceHistory, setHoveredCardPriceHistory] = useState([]);
+  const [showFinancePanel, setShowFinancePanel] = useState(false);
+  const [financeData, setFinanceData] = useState(null);
   const [importResults, setImportResults] = useState(null);
   const [showImportResults, setShowImportResults] = useState(false);
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0, cardName: '' });
@@ -886,6 +889,31 @@ function App() {
       alert('Error updating oracle text');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ============================================
+  // FINANCE FUNCTIONS
+  // ============================================
+
+  const openFinancePanel = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/finance`);
+      setFinanceData(res.data);
+      setShowFinancePanel(true);
+    } catch (error) {
+      console.error('Error fetching finance data:', error);
+      alert('Error fetching finance data');
+    }
+  };
+
+  const handleCardHover = async (card) => {
+    try {
+      const res = await axios.get(`${API_URL}/cards/${card._id}/price-history`);
+      setHoveredCardPriceHistory(res.data);
+    } catch (err) {
+      console.error('Error fetching price history:', err);
+      setHoveredCardPriceHistory([]);
     }
   };
 
@@ -2366,6 +2394,7 @@ function App() {
       { id: 'act-export-csv', label: 'Export as CSV', icon: Download, category: 'Actions', action: () => exportData('csv') },
       { id: 'act-prices', label: 'Update Prices', icon: RefreshCw, category: 'Actions', action: () => setShowPriceUpdateModal(true) },
       { id: 'act-text', label: 'Fetch Card Text', icon: RefreshCw, category: 'Actions', action: () => updateAllOracleText() },
+      { id: 'act-finance', label: 'View Finance', icon: DollarSign, category: 'Actions', action: () => openFinancePanel() },
       { id: 'act-search', label: 'Focus Search', icon: Search, category: 'Actions', action: () => { setCurrentView('collection'); setTimeout(() => searchInputRef.current?.focus(), 100); } },
       // Tools
       { id: 'tool-commanders', label: 'Commander Recommendations', icon: Crown, category: 'Tools', action: () => getCommanderRecommendations(), feature: 'commanderRecs' },
@@ -2940,6 +2969,7 @@ function App() {
         onCommanders={getCommanderRecommendations}
         onSets={getSetCompletionData}
         onCombos={findCombos}
+        onFinance={openFinancePanel}
         onOpenSettings={() => setCurrentView('settings')}
         onOpenCamera={() => setShowCameraModal(true)}
         onCommandPalette={() => setShowCommandPalette(true)}
@@ -3422,6 +3452,8 @@ function App() {
                   {isColumnVisible('quantity') && <th className="px-6 py-3 text-left text-white font-semibold">Qty</th>}
                   {isColumnVisible('condition') && <th className="px-6 py-3 text-left text-white font-semibold">Condition</th>}
                   {isColumnVisible('price') && <th className="px-6 py-3 text-left text-white font-semibold">Price</th>}
+                  {isColumnVisible('buylistValue') && <th className="px-6 py-3 text-left text-white font-semibold">Buylist Value</th>}
+                  {isColumnVisible('sellValue') && <th className="px-6 py-3 text-left text-white font-semibold">Sell Value</th>}
                   {isColumnVisible('total') && <th className="px-6 py-3 text-left text-white font-semibold">Total</th>}
                   {isColumnVisible('actions') && <th className="px-6 py-3 text-left text-white font-semibold">Actions</th>}
                 </tr>
@@ -3564,6 +3596,8 @@ function App() {
                         </span>
                       </td>}
                       {isColumnVisible('price') && <td className="px-6 py-4 text-white/80">{formatPrice(card.price)}</td>}
+                      {isColumnVisible('buylistValue') && <td className="px-6 py-4 text-white">${(card.buylistValue || 0).toFixed(2)}</td>}
+                      {isColumnVisible('sellValue') && <td className="px-6 py-4 text-white">${(card.sellValue || 0).toFixed(2)}</td>}
                       {isColumnVisible('total') && <td className="px-6 py-4 text-white font-semibold">
                         {formatPrice(card.price * card.quantity)}
                       </td>}
@@ -4964,6 +4998,41 @@ function App() {
                 >
                   Cancel
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Finance Panel Modal */}
+        {showFinancePanel && financeData && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-slate-900 rounded-lg border border-slate-700 max-w-md w-full p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-white">Portfolio Finance</h2>
+                <button onClick={() => setShowFinancePanel(false)} className="text-slate-400 hover:text-white">
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div className="bg-slate-800/50 p-3 rounded">
+                  <p className="text-slate-400 text-sm">Collection Value</p>
+                  <p className="text-white font-bold text-xl">${financeData.collectionValue.toFixed(2)}</p>
+                </div>
+                <div className="bg-slate-800/50 p-3 rounded">
+                  <p className="text-slate-400 text-sm">Buylist Value</p>
+                  <p className="text-green-400 font-bold text-xl">${financeData.buylistValue.toFixed(2)}</p>
+                </div>
+                <div className="bg-slate-800/50 p-3 rounded">
+                  <p className="text-slate-400 text-sm">Sell Value</p>
+                  <p className="text-yellow-400 font-bold text-xl">${financeData.sellValue.toFixed(2)}</p>
+                </div>
+                <div className="bg-slate-800/50 p-3 rounded">
+                  <p className="text-slate-400 text-sm">Spread (Collection - Buylist)</p>
+                  <p className={`font-bold text-xl ${financeData.spread > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    ${financeData.spread.toFixed(2)}
+                  </p>
+                </div>
               </div>
             </div>
           </div>

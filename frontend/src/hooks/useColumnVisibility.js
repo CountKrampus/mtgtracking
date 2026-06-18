@@ -20,6 +20,8 @@ const ALL_COLUMNS = [
   { id: 'quantity', label: 'Qty', alwaysVisible: true },
   { id: 'condition', label: 'Condition', alwaysVisible: true },
   { id: 'price', label: 'Price', alwaysVisible: true },
+  { id: 'buylistValue', label: 'Buylist Value' },
+  { id: 'sellValue', label: 'Sell Value' },
   { id: 'total', label: 'Total' },
   { id: 'actions', label: 'Actions' }
 ];

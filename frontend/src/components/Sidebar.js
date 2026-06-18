@@ -28,7 +28,8 @@ import {
   TrendingDown,
   Calendar,
   Eye,
-  MessageSquare
+  MessageSquare,
+  DollarSign
 } from 'lucide-react';
 
 const Sidebar = ({
@@ -46,6 +47,7 @@ const Sidebar = ({
   onCommanders,
   onSets,
   onCombos,
+  onFinance,
   onOpenSettings,
   onOpenCamera,
   onCommandPalette,
@@ -113,6 +115,7 @@ const Sidebar = ({
     { label: 'Commanders', icon: Crown, onClick: onCommanders, color: 'text-amber-400', feature: 'commanderRecs' },
     { label: 'Sets', icon: BarChart3, onClick: onSets, color: 'text-teal-400', feature: 'setCompletion' },
     { label: 'Combos', icon: Zap, onClick: onCombos, color: 'text-orange-400', feature: 'comboFinder' },
+    { label: 'Finance', icon: DollarSign, onClick: onFinance, color: 'text-emerald-400' },
     { label: 'Scan Card', icon: Camera, onClick: onOpenCamera, color: 'text-cyan-400' },
   ];
   const toolItems = allToolItems.filter(item => !item.feature || ft[item.feature] !== false);
