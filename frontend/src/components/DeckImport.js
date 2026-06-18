@@ -101,12 +101,14 @@ function CommanderSearch({ label, value, onChange, onSelect }) {
 // ── Create New Deck form ──────────────────────────────────────────────────────
 function DeckCreateForm({ onBack, onImportComplete }) {
   const [deckName, setDeckName] = useState('');
+  const [format, setFormat] = useState('commander');
   const [commander, setCommander] = useState(null);
   const [partner, setPartner] = useState(null);
   const [hasPartner, setHasPartner] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const canCreate = deckName.trim() && commander;
+  const isCommanderFormat = format === 'commander';
+  const canCreate = deckName.trim() && (!isCommanderFormat || commander);
 
   const handleCreate = async () => {
     if (!canCreate) return;
@@ -114,8 +116,9 @@ function DeckCreateForm({ onBack, onImportComplete }) {
     try {
       await axios.post(`${API_URL}/decks`, {
         name: deckName.trim(),
-        commander,
-        partnerCommander: hasPartner && partner ? partner : null,
+        format,
+        commander: isCommanderFormat ? commander : null,
+        partnerCommander: isCommanderFormat && hasPartner && partner ? partner : null,
         mainDeck: [],
       });
 
@@ -141,27 +144,51 @@ function DeckCreateForm({ onBack, onImportComplete }) {
         />
       </div>
 
-      {/* Commander */}
-      <CommanderSearch
-        label="Commander"
-        value={commander}
-        onChange={setCommander}
-        onSelect={setCommander}
-      />
-
-      {/* Partner toggle */}
+      {/* Format */}
       <div>
-        <button
-          onClick={() => { setHasPartner(p => !p); setPartner(null); }}
-          className={`px-3 py-1 rounded text-sm transition ${
-            hasPartner ? 'bg-purple-600 text-white' : 'bg-white/10 text-white/60 hover:bg-white/20'
-          }`}
+        <label className="block text-white/80 text-sm mb-1">Format</label>
+        <select
+          value={format}
+          onChange={(e) => setFormat(e.target.value)}
+          className="w-full p-2 bg-slate-900 border border-slate-600 rounded text-white"
         >
-          {hasPartner ? '✓ Has Partner Commander' : '+ Add Partner Commander'}
-        </button>
+          <option value="commander">Commander</option>
+          <option value="standard">Standard</option>
+          <option value="modern">Modern</option>
+          <option value="pioneer">Pioneer</option>
+          <option value="legacy">Legacy</option>
+          <option value="vintage">Vintage</option>
+          <option value="pauper">Pauper</option>
+          <option value="draft">Draft</option>
+          <option value="other">Other</option>
+        </select>
       </div>
 
-      {hasPartner && (
+      {/* Commander (only for commander format) */}
+      {isCommanderFormat && (
+        <CommanderSearch
+          label="Commander"
+          value={commander}
+          onChange={setCommander}
+          onSelect={setCommander}
+        />
+      )}
+
+      {/* Partner toggle */}
+      {isCommanderFormat && (
+        <div>
+          <button
+            onClick={() => { setHasPartner(p => !p); setPartner(null); }}
+            className={`px-3 py-1 rounded text-sm transition ${
+              hasPartner ? 'bg-purple-600 text-white' : 'bg-white/10 text-white/60 hover:bg-white/20'
+            }`}
+          >
+            {hasPartner ? '✓ Has Partner Commander' : '+ Add Partner Commander'}
+          </button>
+        </div>
+      )}
+
+      {isCommanderFormat && hasPartner && (
         <CommanderSearch
           label="Partner Commander"
           value={partner}
@@ -171,7 +198,7 @@ function DeckCreateForm({ onBack, onImportComplete }) {
       )}
 
       {/* Commander preview */}
-      {commander?.imageUrl && (
+      {isCommanderFormat && commander?.imageUrl && (
         <div className="flex gap-4">
           <img src={commander.imageUrl} alt={commander.name} className="w-32 rounded-lg" />
           {partner?.imageUrl && (

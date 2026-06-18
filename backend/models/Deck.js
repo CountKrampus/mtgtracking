@@ -4,8 +4,8 @@ const deckSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
   name: { type: String, required: true },
   commander: {
-    scryfallId: { type: String, required: true },
-    name: { type: String, required: true },
+    scryfallId: { type: String },
+    name: { type: String },
     manaCost: { type: String },
     colorIdentity: [{ type: String }],
     imageUrl: { type: String },
