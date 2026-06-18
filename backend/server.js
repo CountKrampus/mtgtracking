@@ -32,7 +32,7 @@ try {
 }
 
 // Create cache directory if it doesn't exist
-const CACHE_DIR = path.join(__dirname, 'cached-images');
+const CACHE_DIR = path.join(__dirname, 'cached-images', 'mtg-cards');
 if (!fs.existsSync(CACHE_DIR)) {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
   console.log('Image cache directory created:', CACHE_DIR);
