@@ -3082,6 +3082,32 @@ app.put('/api/user/column-preferences', verifyToken, requireAuth, async (req, re
   }
 });
 
+// GET /api/admin/collection-audit/:userId - audit a user's collection
+app.get('/api/admin/collection-audit/:userId', verifyToken, requireAuth, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin only' });
+  }
+
+  try {
+    const cards = await Card.find({ userId: req.params.userId });
+    const duplicates = cards.filter((card, index, self) =>
+      self.findIndex(c => c.name === card.name && c.set === card.set) !== index
+    );
+
+    const audit = {
+      totalCards: cards.length,
+      totalValue: cards.reduce((sum, c) => sum + (c.price * c.quantity), 0),
+      duplicates: duplicates.length,
+      missingPrices: cards.filter(c => !c.price).length,
+      missingImages: cards.filter(c => !c.imageUrl).length
+    };
+
+    res.json(audit);
+  } catch (err) {
+    res.status(500).json({ message: 'Error auditing collection', error: err.message });
+  }
+});
+
 // Automatic daily collection value snapshot for every user
 setInterval(async () => {
   try {
