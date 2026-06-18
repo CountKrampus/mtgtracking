@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 export default function ColumnContextMenu({
   isOpen,
@@ -9,6 +9,7 @@ export default function ColumnContextMenu({
   onClose
 }) {
   const menuRef = useRef(null);
+  const [adjustedPosition, setAdjustedPosition] = useState(position);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -23,6 +24,41 @@ export default function ColumnContextMenu({
     }
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    if (isOpen && menuRef.current) {
+      // Get menu dimensions
+      const rect = menuRef.current.getBoundingClientRect();
+      const menuWidth = rect.width || 250; // fallback width
+      const menuHeight = rect.height || 400; // fallback height
+
+      const padding = 10; // margin from screen edges
+      let x = position.x;
+      let y = position.y;
+
+      // Adjust horizontal position if menu would go off right edge
+      if (x + menuWidth + padding > window.innerWidth) {
+        x = window.innerWidth - menuWidth - padding;
+      }
+
+      // Adjust vertical position if menu would go off bottom edge
+      if (y + menuHeight + padding > window.innerHeight) {
+        y = window.innerHeight - menuHeight - padding;
+      }
+
+      // Ensure menu doesn't go off left edge
+      if (x < padding) {
+        x = padding;
+      }
+
+      // Ensure menu doesn't go off top edge
+      if (y < padding) {
+        y = padding;
+      }
+
+      setAdjustedPosition({ x, y });
+    }
+  }, [isOpen, position]);
+
   if (!isOpen) return null;
 
   return (
@@ -30,8 +66,8 @@ export default function ColumnContextMenu({
       ref={menuRef}
       className="fixed bg-slate-800 border border-slate-700 rounded-lg shadow-lg z-50"
       style={{
-        top: `${position.y}px`,
-        left: `${position.x}px`,
+        top: `${adjustedPosition.y}px`,
+        left: `${adjustedPosition.x}px`,
         minWidth: '200px'
       }}
     >
