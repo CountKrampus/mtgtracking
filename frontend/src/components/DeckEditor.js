@@ -179,17 +179,36 @@ function DeckEditor({ deck, onSave, onCancel }) {
     }
   }, [addCard]);
 
+  // ── Commander color identity (for auto-filtering collection) ─────────────────
+  const commanderColorIdentity = useMemo(() => {
+    const ids = new Set([
+      ...(deck.commander?.colorIdentity || []),
+      ...(deck.partnerCommander?.colorIdentity || []),
+    ]);
+    return Array.from(ids);
+  }, [deck.commander, deck.partnerCommander]);
+
   // ── Collection filtering ─────────────────────────────────────────────────────
   const filteredCollection = useMemo(() => {
     const q = collFilter.toLowerCase();
     return collection.filter(c => {
-      if (!q) return true;
-      return (
+      // Text filter
+      if (q && !(
         c.name?.toLowerCase().includes(q) ||
         (c.types || []).some(t => t.toLowerCase().includes(q))
-      );
+      )) {
+        return false;
+      }
+      // Commander color identity filter: card colors must be within commander identity
+      if (commanderColorIdentity.length > 0) {
+        const cardColors = c.colors || [];
+        if (cardColors.length > 0 && !cardColors.every(col => commanderColorIdentity.includes(col))) {
+          return false;
+        }
+      }
+      return true;
     });
-  }, [collection, collFilter]);
+  }, [collection, collFilter, commanderColorIdentity]);
 
   // ── Categorized deck ────────────────────────────────────────────────────────
   const categorizedDeck = useMemo(() => {
@@ -270,6 +289,12 @@ function DeckEditor({ deck, onSave, onCancel }) {
             placeholder="Filter your collection..."
             className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-purple-400 text-sm mb-2"
           />
+
+          {commanderColorIdentity.length > 0 && (
+            <div className="px-3 py-2 bg-blue-900/30 border border-blue-600/50 rounded text-xs text-blue-300 mb-2">
+              Filtered to commander color identity: {commanderColorIdentity.join('')}
+            </div>
+          )}
 
           <div className="text-white/40 text-xs mb-2">
             Your collection ({filteredCollection.length} cards)
