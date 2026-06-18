@@ -270,6 +270,26 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
     }
   };
 
+  const handleAddAllMissingToCollection = async () => {
+    if (!ownership?.missingCards?.length) return;
+    let added = 0;
+    for (const card of ownership.missingCards) {
+      try {
+        await axios.post(`${API_URL}/cards`, {
+          name: card.name, set: 'Unknown', quantity: 1, condition: 'NM',
+          price: card.price, colors: card.colors, types: card.types,
+          manaCost: card.manaCost, scryfallId: card.scryfallId, imageUrl: card.imageUrl,
+        });
+        added++;
+        await new Promise(r => setTimeout(r, 200));
+      } catch (err) {
+        console.error('Error adding card:', err);
+      }
+    }
+    alert(`Added ${added} cards to collection`);
+    onRefresh();
+  };
+
   const handleSaveRename = async () => {
     if (!newDeckName.trim()) { alert('Deck name cannot be empty'); return; }
     try {
@@ -781,6 +801,16 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
           {/* Hand Simulator */}
           <DeckHandSimulator deck={deck} />
 
+          {/* Add all missing cards to collection */}
+          {ownership?.missingCards && ownership.missingCards.length > 0 && (
+            <button
+              onClick={handleAddAllMissingToCollection}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded mb-4 font-semibold"
+            >
+              + Add all {ownership.missingCards.length} missing cards to collection
+            </button>
+          )}
+
           {/* Categorized Deck List */}
           <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30">
             <h3 className="text-lg font-bold text-white mb-4">
@@ -824,8 +854,19 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
                                 <span className="text-white truncate">{card.name}</span>
                                 <span className="text-white/30 text-xs flex-shrink-0">{card.manaCost}</span>
                               </div>
-                              <div className="text-white/50 text-xs flex-shrink-0 ml-2">
-                                {owned ? `Own ${owned.collectionQuantity}` : 'Need'}
+                              <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                <span className="text-white/50 text-xs">
+                                  {owned ? `Own ${owned.collectionQuantity}` : 'Need'}
+                                </span>
+                                {!owned && (
+                                  <button
+                                    onClick={() => handleAddToCollection(card)}
+                                    className="px-2 py-0.5 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-semibold transition"
+                                    title="Add this card to your collection"
+                                  >
+                                    + Add
+                                  </button>
+                                )}
                               </div>
                             </div>
                           );
