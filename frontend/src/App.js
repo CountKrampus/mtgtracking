@@ -8,6 +8,8 @@ import Breadcrumb from './components/Breadcrumb';
 import CommandPalette from './components/CommandPalette';
 import useKeyboardShortcuts, { buildShortcutKey } from './hooks/useKeyboardShortcuts';
 import useSettings from './hooks/useSettings';
+import useColumnVisibility from './hooks/useColumnVisibility';
+import ColumnContextMenu from './components/ColumnContextMenu';
 import { AuthProvider, useAuthContext } from './contexts/AuthContext';
 import { AuthGuard } from './components/auth/AuthGuard';
 import { AccountSettings } from './components/auth/AccountSettings';
@@ -372,6 +374,10 @@ function App() {
   const [bulkCondition, setBulkCondition] = useState('NM');
   const [bulkLocation, setBulkLocation] = useState('');
   const [bulkTags, setBulkTags] = useState('');
+
+  // Column visibility
+  const { visibleColumns, isColumnVisible, toggleColumn, loading: colLoading, allColumns } = useColumnVisibility();
+  const [contextMenu, setContextMenu] = useState(null);
 
   // Print Proxies
   const [showPrintPreview, setShowPrintPreview] = useState(false);
@@ -3379,7 +3385,13 @@ function App() {
         {/* Cards List */}
         <div className="bg-white/10 backdrop-blur-md rounded-lg overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table
+              className="w-full"
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setContextMenu({ x: e.clientX, y: e.clientY });
+              }}
+            >
               <thead className="bg-white/20">
                 <tr>
                   <th className="px-3 py-3 text-center text-white font-semibold">
@@ -3395,23 +3407,23 @@ function App() {
                       )}
                     </button>
                   </th>
-                  <th className="px-6 py-3 text-left text-white font-semibold">Card Name</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold hidden lg:table-cell">Set</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold text-sm hidden xl:table-cell">Set Code</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold text-sm hidden xl:table-cell">#</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold text-sm hidden xl:table-cell">Rarity</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold hidden lg:table-cell">Mana Cost</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold hidden lg:table-cell">Colors</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold hidden lg:table-cell">Types</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold hidden xl:table-cell">Location</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold hidden xl:table-cell">Foil</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold hidden xl:table-cell">Token</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold hidden xl:table-cell">Tags</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold">Qty</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold">Condition</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold">Price</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold">Total</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold">Actions</th>
+                  {isColumnVisible('cardName') && <th className="px-6 py-3 text-left text-white font-semibold">Card Name</th>}
+                  {isColumnVisible('set') && <th className="px-6 py-3 text-left text-white font-semibold hidden lg:table-cell">Set</th>}
+                  {isColumnVisible('setCode') && <th className="px-6 py-3 text-left text-white font-semibold text-sm hidden xl:table-cell">Set Code</th>}
+                  {isColumnVisible('collectorNumber') && <th className="px-6 py-3 text-left text-white font-semibold text-sm hidden xl:table-cell">#</th>}
+                  {isColumnVisible('rarity') && <th className="px-6 py-3 text-left text-white font-semibold text-sm hidden xl:table-cell">Rarity</th>}
+                  {isColumnVisible('manaCost') && <th className="px-6 py-3 text-left text-white font-semibold hidden lg:table-cell">Mana Cost</th>}
+                  {isColumnVisible('colors') && <th className="px-6 py-3 text-left text-white font-semibold hidden lg:table-cell">Colors</th>}
+                  {isColumnVisible('types') && <th className="px-6 py-3 text-left text-white font-semibold hidden lg:table-cell">Types</th>}
+                  {isColumnVisible('location') && <th className="px-6 py-3 text-left text-white font-semibold hidden xl:table-cell">Location</th>}
+                  {isColumnVisible('foil') && <th className="px-6 py-3 text-left text-white font-semibold hidden xl:table-cell">Foil</th>}
+                  {isColumnVisible('token') && <th className="px-6 py-3 text-left text-white font-semibold hidden xl:table-cell">Token</th>}
+                  {isColumnVisible('tags') && <th className="px-6 py-3 text-left text-white font-semibold hidden xl:table-cell">Tags</th>}
+                  {isColumnVisible('quantity') && <th className="px-6 py-3 text-left text-white font-semibold">Qty</th>}
+                  {isColumnVisible('condition') && <th className="px-6 py-3 text-left text-white font-semibold">Condition</th>}
+                  {isColumnVisible('price') && <th className="px-6 py-3 text-left text-white font-semibold">Price</th>}
+                  {isColumnVisible('total') && <th className="px-6 py-3 text-left text-white font-semibold">Total</th>}
+                  {isColumnVisible('actions') && <th className="px-6 py-3 text-left text-white font-semibold">Actions</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/10">
@@ -3446,20 +3458,20 @@ function App() {
                       >
                         {card.name}
                       </td>
-                      <td className="px-6 py-4 text-white/80 text-sm hidden lg:table-cell">{card.set}</td>
-                      <td className="px-6 py-4 text-white/80 text-xs hidden xl:table-cell">{card.setCode || '—'}</td>
-                      <td className="px-6 py-4 text-white/80 text-xs hidden xl:table-cell">{card.collectorNumber || '—'}</td>
-                      <td className="px-6 py-4 text-white/80 text-xs hidden xl:table-cell">{card.rarity || '—'}</td>
-                      <td className="px-6 py-4 text-white/80 text-sm font-mono hidden lg:table-cell">
+                      {isColumnVisible('set') && <td className="px-6 py-4 text-white/80 text-sm hidden lg:table-cell">{card.set}</td>}
+                      {isColumnVisible('setCode') && <td className="px-6 py-4 text-white/80 text-xs hidden xl:table-cell">{card.setCode || '—'}</td>}
+                      {isColumnVisible('collectorNumber') && <td className="px-6 py-4 text-white/80 text-xs hidden xl:table-cell">{card.collectorNumber || '—'}</td>}
+                      {isColumnVisible('rarity') && <td className="px-6 py-4 text-white/80 text-xs hidden xl:table-cell">{card.rarity || '—'}</td>}
+                      {isColumnVisible('manaCost') && <td className="px-6 py-4 text-white/80 text-sm font-mono hidden lg:table-cell">
                         {card.manaCost || '0'}
-                      </td>
-                      <td className="px-6 py-4 text-white/80 text-sm hidden lg:table-cell">
+                      </td>}
+                      {isColumnVisible('colors') && <td className="px-6 py-4 text-white/80 text-sm hidden lg:table-cell">
                         {card.colors && card.colors.length > 0 ? card.colors.join(', ') : '-'}
-                      </td>
-                      <td className="px-6 py-4 text-white/80 text-sm hidden lg:table-cell">
+                      </td>}
+                      {isColumnVisible('types') && <td className="px-6 py-4 text-white/80 text-sm hidden lg:table-cell">
                         {card.types && card.types.length > 0 ? card.types.join(' ') : '-'}
-                      </td>
-                      <td className="px-6 py-4 text-white/80 text-sm hidden xl:table-cell">
+                      </td>}
+                      {isColumnVisible('location') && <td className="px-6 py-4 text-white/80 text-sm hidden xl:table-cell">
                         {card.location ? (
                           <span className="px-2 py-1 bg-blue-600/50 text-white text-xs rounded flex items-center gap-1 w-fit">
                             <MapPin size={12} /> {card.location}
@@ -3467,8 +3479,8 @@ function App() {
                         ) : (
                           <span className="text-white/40 text-sm">-</span>
                         )}
-                      </td>
-                      <td className="px-6 py-4 hidden xl:table-cell">
+                      </td>}
+                      {isColumnVisible('foil') && <td className="px-6 py-4 hidden xl:table-cell">
                         {card.isFoil ? (
                           <span className="px-2 py-1 bg-amber-600/50 text-white text-sm rounded font-semibold">
                             Foil ✨
@@ -3476,8 +3488,8 @@ function App() {
                         ) : (
                           <span className="text-white/40 text-sm">-</span>
                         )}
-                      </td>
-                      <td className="px-6 py-4 hidden xl:table-cell">
+                      </td>}
+                      {isColumnVisible('token') && <td className="px-6 py-4 hidden xl:table-cell">
                         {card.isToken ? (
                           <span className="px-2 py-1 bg-yellow-600/50 text-white text-sm rounded font-semibold">
                             Token
@@ -3485,8 +3497,8 @@ function App() {
                         ) : (
                           <span className="text-white/40 text-sm">-</span>
                         )}
-                      </td>
-                      <td className="px-6 py-4 hidden xl:table-cell">
+                      </td>}
+                      {isColumnVisible('tags') && <td className="px-6 py-4 hidden xl:table-cell">
                         <div className="flex flex-wrap gap-1 items-center">
                           {card.tags && card.tags.map((tag, idx) => (
                             <span
@@ -3544,18 +3556,18 @@ function App() {
                             </button>
                           )}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 text-white/80">{card.quantity}</td>
-                      <td className="px-6 py-4">
+                      </td>}
+                      {isColumnVisible('quantity') && <td className="px-6 py-4 text-white/80">{card.quantity}</td>}
+                      {isColumnVisible('condition') && <td className="px-6 py-4">
                         <span className="px-2 py-1 bg-purple-600/50 text-white text-sm rounded">
                           {card.condition}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-white/80">{formatPrice(card.price)}</td>
-                      <td className="px-6 py-4 text-white font-semibold">
+                      </td>}
+                      {isColumnVisible('price') && <td className="px-6 py-4 text-white/80">{formatPrice(card.price)}</td>}
+                      {isColumnVisible('total') && <td className="px-6 py-4 text-white font-semibold">
                         {formatPrice(card.price * card.quantity)}
-                      </td>
-                      <td className="px-6 py-4">
+                      </td>}
+                      {isColumnVisible('actions') && <td className="px-6 py-4">
                         <div className="flex gap-2">
                           <button
                             onClick={() => updateCardPrice(card._id)}
@@ -3593,13 +3605,22 @@ function App() {
                             <Trash2 size={16} />
                           </button>
                         </div>
-                      </td>
+                      </td>}
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
           </div>
+
+          <ColumnContextMenu
+            isOpen={contextMenu !== null}
+            position={contextMenu || { x: 0, y: 0 }}
+            columns={allColumns}
+            visibleColumns={visibleColumns}
+            onToggle={toggleColumn}
+            onClose={() => setContextMenu(null)}
+          />
 
           {/* Pagination Controls */}
           {filteredAndSortedCards.length > 0 && (
