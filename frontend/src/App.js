@@ -3438,7 +3438,14 @@ function App() {
               className="w-full"
               onContextMenu={(e) => {
                 e.preventDefault();
-                setContextMenu({ x: e.clientX, y: e.clientY });
+                const menuWidth = 250;
+                const menuHeight = 420;
+                const padding = 10;
+                let x = e.clientX;
+                let y = e.clientY;
+                if (x + menuWidth + padding > window.innerWidth) x = window.innerWidth - menuWidth - padding;
+                if (y + menuHeight + padding > window.innerHeight) y = window.innerHeight - menuHeight - padding;
+                setContextMenu({ x, y });
               }}
             >
               <thead className="bg-white/20">
