@@ -1073,11 +1073,14 @@ const COSMETICS_PRICES = Object.fromEntries(COSMETICS_CATALOG.map(c => [c.id, c.
 
 // GET /api/forum/cosmetics - list available cosmetics with user's purchased/equipped state
 router.get('/cosmetics', verifyToken, async (req, res) => {
-  if (!req.user) return res.json({ cosmetics: COSMETICS_CATALOG, purchased: [], equipped: {} });
   try {
+    const cosmetics = await Cosmetic.find({ isActive: true }).lean();
+
+    if (!req.user) return res.json({ cosmetics, purchased: [], equipped: {} });
+
     const level = await ForumLevel.findOne({ userId: req.user._id });
     res.json({
-      cosmetics: COSMETICS_CATALOG,
+      cosmetics,
       purchased: level?.cosmetics?.purchased || [],
       equipped: level?.cosmetics?.equipped || {}
     });
@@ -1087,9 +1090,10 @@ router.get('/cosmetics', verifyToken, async (req, res) => {
 // POST /api/forum/level/cosmetics/purchase
 router.post('/level/cosmetics/purchase', verifyToken, requireAuth, async (req, res) => {
   const { cosmeticId } = req.body;
-  const cost = COSMETICS_PRICES[cosmeticId];
-  if (!cost) return res.status(400).json({ message: 'Invalid cosmetic' });
   try {
+    const cosmetic = await Cosmetic.findById(cosmeticId);
+    if (!cosmetic || !cosmetic.isActive) return res.status(400).json({ message: 'Invalid cosmetic' });
+    const cost = cosmetic.cost;
     const level = await ForumLevel.findOne({ userId: req.user._id });
     if (!level) return res.status(404).json({ message: 'Level not found' });
     if (level.cosmetics.purchased.includes(cosmeticId))
