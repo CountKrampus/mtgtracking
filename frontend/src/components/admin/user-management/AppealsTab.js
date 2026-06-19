@@ -219,7 +219,7 @@ export function AppealsTab() {
                 </thead>
                 <tbody className="divide-y divide-gray-700">
                   {appeals.map((appeal) => (
-                    <tr key={appeal._id} className="bg-gray-800 hover:bg-gray-750 transition-colors">
+                    <tr key={appeal._id} className="bg-gray-800 hover:bg-gray-700 transition-colors">
                       {/* User */}
                       <td className="px-4 py-3">
                         <div className="text-white font-medium">
