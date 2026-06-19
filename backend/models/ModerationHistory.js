@@ -14,8 +14,8 @@ const moderationHistorySchema = new mongoose.Schema({
   actionDetails: mongoose.Schema.Types.Mixed,
   performedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    ref: 'User'
+    // optional — null when action was system-generated
   },
   createdAt: {
     type: Date,
@@ -24,10 +24,10 @@ const moderationHistorySchema = new mongoose.Schema({
   }
 });
 
-// Compound index on userId, actionType, and createdAt
-moderationHistorySchema.index({ userId: 1, actionType: 1, createdAt: 1 });
+// Primary user history query index
+moderationHistorySchema.index({ userId: 1, createdAt: -1 });
 
-// Single index on createdAt descending for recent-first queries
+// Global feed index for recent-first queries
 moderationHistorySchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('ModerationHistory', moderationHistorySchema);

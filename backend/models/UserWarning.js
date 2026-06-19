@@ -9,6 +9,7 @@ const userWarningSchema = new mongoose.Schema({
   reason: {
     type: String,
     required: true,
+    minlength: 1,
     maxlength: 500
   },
   warnedBy: {
@@ -27,16 +28,6 @@ const userWarningSchema = new mongoose.Schema({
     max: 3,
     default: 1
   },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
-});
-
-// Pre-save middleware to auto-update updatedAt
-userWarningSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
-  next();
 });
 
 // Compound index on userId and warnedAt

@@ -27,6 +27,7 @@ const collectionAuditSchema = new mongoose.Schema({
   },
   issues: [
     {
+      _id: false,
       cardId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Card'
@@ -37,8 +38,15 @@ const collectionAuditSchema = new mongoose.Schema({
       },
       cardName: String,
       setName: String,
-      issueType: String,
-      issueValue: String,
+      issueType: {
+        type: String,
+        enum: ['missing_price', 'missing_set', 'missing_scryfall_id', 'invalid_quantity', 'duplicate_entry', 'missing_condition', 'other'],
+        required: true
+      },
+      issueValue: {
+        type: String,
+        maxlength: 500
+      },
       flagged: {
         type: Boolean,
         default: false
@@ -56,5 +64,8 @@ collectionAuditSchema.index({ status: 1, ranAt: -1 });
 
 // Single index on ranAt descending for recent-first queries
 collectionAuditSchema.index({ ranAt: -1 });
+
+// Index for createdBy user audit history
+collectionAuditSchema.index({ createdBy: 1, ranAt: -1 });
 
 module.exports = mongoose.model('CollectionAudit', collectionAuditSchema);

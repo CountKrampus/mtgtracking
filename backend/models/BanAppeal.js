@@ -45,11 +45,18 @@ const banAppealSchema = new mongoose.Schema({
   }
 });
 
-// Pre-save middleware to auto-update updatedAt
+// Pre-save middleware
 banAppealSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
+  if (this.status !== 'pending') {
+    if (!this.reviewedBy) return next(new Error('reviewedBy is required when status is not pending'));
+    if (!this.decisionReason) return next(new Error('decisionReason is required when status is not pending'));
+  }
   next();
 });
+
+// Unique index to prevent duplicate appeals for same ban
+banAppealSchema.index({ userId: 1, banId: 1 }, { unique: true });
 
 // Compound index on userId and status
 banAppealSchema.index({ userId: 1, status: 1 });
