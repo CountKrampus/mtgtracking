@@ -142,6 +142,10 @@ export function RoleManagement() {
     setHistoryLoading(true);
     try {
       const res = await authFetch(`${API_URL}/admin/role-history/${user._id}`);
+      if (!res.ok) {
+        setRoleHistory([]);
+        return;
+      }
       const data = await res.json();
       setRoleHistory(data.history || []);
     } catch {
@@ -169,10 +173,7 @@ export function RoleManagement() {
       );
       // Refresh history if this user's history is currently shown
       if (selectedUser && selectedUser._id === userId) {
-        const updated = users.find(u => u._id === userId);
-        if (updated) {
-          loadRoleHistory({ ...updated, role: newRole });
-        }
+        loadRoleHistory({ ...selectedUser, role: newRole });
       }
     } catch (err) {
       alert(`Failed to update role: ${err.message}`);
