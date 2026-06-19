@@ -1493,5 +1493,170 @@ router.get('/force-price-update/:jobId', async (req, res) => {
   res.json({ jobId: req.params.jobId, ...job });
 });
 
+// ==================== COLLECTION AUDITS ====================
+
+/**
+ * POST /api/admin/audits/run - Start async collection audit scan
+ */
+router.post('/audits/run', async (req, res) => {
+  try {
+    const { auditName = `Audit ${new Date().toLocaleDateString()}` } = req.body;
+
+    const audit = new CollectionAudit({
+      auditName,
+      status: 'running',
+      createdBy: req.user._id
+    });
+    await audit.save();
+
+    res.status(201).json({ message: 'Audit started', auditId: audit._id });
+
+    // Run async in background
+    (async () => {
+      try {
+        const Card = require('../models/Card');
+        const cards = await Card.find({});
+        const issues = [];
+
+        for (const card of cards) {
+          // Check for missing price
+          if (!card.price || card.price === 0) {
+            issues.push({
+              cardId: card._id,
+              userId: card.userId,
+              cardName: card.name,
+              setName: card.set || 'Unknown',
+              issueType: 'missing_price',
+              issueValue: '0',
+              flagged: false,
+              resolved: false
+            });
+          }
+          // Check for missing set
+          if (!card.set || card.set === 'Unknown') {
+            issues.push({
+              cardId: card._id,
+              userId: card.userId,
+              cardName: card.name,
+              setName: card.set || 'Unknown',
+              issueType: 'missing_set',
+              issueValue: card.set || 'none',
+              flagged: false,
+              resolved: false
+            });
+          }
+          // Check for missing Scryfall ID
+          if (!card.scryfallId) {
+            issues.push({
+              cardId: card._id,
+              userId: card.userId,
+              cardName: card.name,
+              setName: card.set || 'Unknown',
+              issueType: 'missing_scryfall_id',
+              issueValue: 'none',
+              flagged: false,
+              resolved: false
+            });
+          }
+          // Check for invalid quantity
+          if (!card.quantity || card.quantity < 1) {
+            issues.push({
+              cardId: card._id,
+              userId: card.userId,
+              cardName: card.name,
+              setName: card.set || 'Unknown',
+              issueType: 'invalid_quantity',
+              issueValue: String(card.quantity || 0),
+              flagged: false,
+              resolved: false
+            });
+          }
+        }
+
+        await CollectionAudit.findByIdAndUpdate(audit._id, {
+          status: 'complete',
+          completedAt: new Date(),
+          issues
+        });
+      } catch (err) {
+        await CollectionAudit.findByIdAndUpdate(audit._id, {
+          status: 'failed',
+          completedAt: new Date()
+        });
+      }
+    })();
+  } catch (error) {
+    console.error('Start audit error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/audits - List all audits
+ */
+router.get('/audits', async (req, res) => {
+  try {
+    const audits = await CollectionAudit.find()
+      .populate('createdBy', 'username')
+      .sort({ ranAt: -1 })
+      .select('-issues'); // Exclude issues array for list view (can be large)
+
+    res.json({ audits });
+  } catch (error) {
+    console.error('List audits error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/audits/:id - Fetch audit results including issues
+ */
+router.get('/audits/:id', async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid audit ID' });
+    }
+    const audit = await CollectionAudit.findById(req.params.id).populate('createdBy', 'username');
+    if (!audit) return res.status(404).json({ message: 'Audit not found' });
+
+    res.json({ audit });
+  } catch (error) {
+    console.error('Get audit error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * PUT /api/admin/audits/:id/action - Resolve/flag/delete an issue
+ */
+router.put('/audits/:id/action', async (req, res) => {
+  try {
+    const { issueIndex, action } = req.body; // action: 'resolve', 'flag', 'delete'
+    if (!['resolve', 'flag', 'delete'].includes(action)) {
+      return res.status(400).json({ message: 'action must be resolve, flag, or delete' });
+    }
+
+    const audit = await CollectionAudit.findById(req.params.id);
+    if (!audit) return res.status(404).json({ message: 'Audit not found' });
+    if (issueIndex === undefined || issueIndex < 0 || issueIndex >= audit.issues.length) {
+      return res.status(400).json({ message: 'Invalid issueIndex' });
+    }
+
+    if (action === 'delete') {
+      audit.issues.splice(issueIndex, 1);
+    } else if (action === 'resolve') {
+      audit.issues[issueIndex].resolved = true;
+    } else if (action === 'flag') {
+      audit.issues[issueIndex].flagged = !audit.issues[issueIndex].flagged; // toggle
+    }
+
+    await audit.save();
+    res.json({ message: `Issue ${action}d`, audit });
+  } catch (error) {
+    console.error('Audit action error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 
 module.exports = router;
