@@ -1122,6 +1122,13 @@ router.put('/account-bans/:id', async (req, res) => {
     if (expiresAt !== undefined) ban.expiresAt = expiresAt ? new Date(expiresAt) : null;
     await ban.save();
 
+    await ModerationHistory.create({
+      userId: ban.userId,
+      actionType: 'override',
+      actionDetails: { banId: ban._id, reason: ban.reason, expiresAt: ban.expiresAt },
+      performedBy: req.user._id
+    });
+
     res.json({ message: 'Ban updated', ban });
   } catch (error) {
     console.error('Update ban error:', error);
