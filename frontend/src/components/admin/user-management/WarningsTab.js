@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertTriangle, Search, X, Plus, ChevronDown } from 'lucide-react';
 import { useAuthContext } from '../../../contexts/AuthContext';
-import API_URL from '../../../config';
+import { API_URL } from '../../../config';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -323,7 +323,7 @@ function WarningsTable({ warnings }) {
           {warnings.map((w, idx) => (
             <tr
               key={w._id || idx}
-              className={`border-t border-gray-700 ${idx % 2 === 0 ? 'bg-gray-800' : 'bg-gray-750'} hover:bg-gray-700 transition-colors`}
+              className={`border-t border-gray-700 ${idx % 2 === 0 ? 'bg-gray-800' : 'bg-gray-700/50'} hover:bg-gray-700 transition-colors`}
             >
               <td className="px-4 py-3 text-white break-words max-w-xs">{w.reason || '—'}</td>
               <td className="px-4 py-3">
