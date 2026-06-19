@@ -35,6 +35,10 @@ const ROLE_PERMISSIONS = {
   viewer: ['collection:view']
 };
 
+// Freeze to prevent accidental mutation by callers
+Object.values(ROLE_PERMISSIONS).forEach(arr => Object.freeze(arr));
+Object.freeze(ROLE_PERMISSIONS);
+
 // Staff roles that get a staffSince timestamp when assigned
 const STAFF_ROLES = ['admin', 'moderator', 'content_manager', 'community_manager', 'support'];
 

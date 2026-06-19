@@ -549,6 +549,12 @@ When executing Phase 2 (`2026-06-04-staff-roles-phase-2.md`), make these correct
 
 4. **Task 7, endpoint permission checks:** `requireModerator` etc. are now factory functions — use them with parens: `router.delete('/messages/:id', requireModerator(), ...)`. Ensure they are destructured from `../middleware/auth` at the top of `admin.js`.
 
+5. **`staffSince` must be wired in Task 1's role update endpoint:** `isStaffRole()` is exported from `permissions.js` but has no callers yet. The PUT `/api/admin/users/:userId/role` route in Task 1 must set `staffSince = new Date()` when assigning a staff role and `null` when demoting to `user`/`editor`/`viewer`. Use `isStaffRole(newRole)` from `../utils/permissions`.
+
+6. **Registration default is still `'editor'`, not `'user'`:** New registrations get `role: 'editor'` from SystemSettings. Phase 2 code that checks `role === 'user'` will not match any user who registered through the existing auth flow. Either update the SystemSettings default to `'user'`, or treat `editor` and `user` as equivalent where permission checks apply.
+
+7. **`requireEditor` does not admit `user`-role accounts:** `requireEditor = requireRole('admin', 'editor')` was defined before the `user` role existed. Any endpoint guarded by `requireEditor` will reject `user`-role accounts even though they have the same permission set. Update `requireEditor` in `auth.js` to `requireRole('admin', 'editor', 'user')` before shipping Phase 2 to non-editor users.
+
 ---
 
 ## Self-Review
