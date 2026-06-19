@@ -166,7 +166,7 @@ export function ModerationHistoryPanel({ userId, username, onClose }) {
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, authFetch]);
 
   return (
     <>
