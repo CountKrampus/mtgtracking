@@ -122,6 +122,30 @@ const requireEditor = requireRole('admin', 'editor');
 const requireAdmin = requireRole('admin');
 
 /**
+ * Require moderator or admin role.
+ * Called as requireModerator() — returns middleware.
+ */
+const requireModerator = () => requireRole('admin', 'moderator');
+
+/**
+ * Require content_manager or admin role.
+ * Called as requireContentManager() — returns middleware.
+ */
+const requireContentManager = () => requireRole('admin', 'content_manager');
+
+/**
+ * Require community_manager or admin role.
+ * Called as requireCommunityManager() — returns middleware.
+ */
+const requireCommunityManager = () => requireRole('admin', 'community_manager');
+
+/**
+ * Require support or admin role.
+ * Called as requireSupport() — returns middleware.
+ */
+const requireSupport = () => requireRole('admin', 'support');
+
+/**
  * Check maintenance mode
  * Blocks non-admin users when maintenance mode is enabled
  */
@@ -204,6 +228,10 @@ module.exports = {
   requireRole,
   requireEditor,
   requireAdmin,
+  requireModerator,
+  requireContentManager,
+  requireCommunityManager,
+  requireSupport,
   checkMaintenanceMode,
   userRateLimit
 };
