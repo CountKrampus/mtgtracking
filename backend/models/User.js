@@ -73,7 +73,16 @@ const userSchema = new mongoose.Schema({
   },
   reputation: {
     type: Number,
+    min: 0,
     default: 0
+  },
+  communityStats: {
+    decksShared: { type: Number, default: 0 },
+    cardsAdded: { type: Number, default: 0 },
+    postCount: { type: Number, default: 0 },
+    threadCount: { type: Number, default: 0 },
+    monthlyActivityRate: { type: Number, default: 0 },
+    lastActivityAt: { type: Date }
   },
   badges: [{
     name: { type: String, required: true },
