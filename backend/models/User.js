@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { getPermissionsForRole } = require('../utils/permissions');
 
 const userSchema = new mongoose.Schema({
   email: {
@@ -29,8 +30,23 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['admin', 'editor', 'viewer'],
+    enum: [
+      // Staff roles (Phase 2)
+      'admin',
+      'moderator',
+      'content_manager',
+      'community_manager',
+      'support',
+      'user',
+      // Legacy roles (kept for backward compatibility — existing users)
+      'editor',
+      'viewer'
+    ],
     default: 'editor'
+  },
+  staffSince: {
+    type: Date,
+    default: null
   },
   isActive: {
     type: Boolean,
@@ -93,6 +109,8 @@ userSchema.methods.toSafeObject = function() {
     username: this.username,
     displayName: this.displayName,
     role: this.role,
+    permissions: getPermissionsForRole(this.role),
+    staffSince: this.staffSince,
     isActive: this.isActive,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
