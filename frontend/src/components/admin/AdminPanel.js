@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Users, Activity, Server, Database, MessageSquare, Settings, ChevronDown, ChevronRight, Shield, AlertTriangle, BarChart2, FileText, Archive, Trash2 } from 'lucide-react';
 
 import UsersTab from './user-management/UsersTab';
+import RoleManagement from './RoleManagement';
 import BansTab from './user-management/BansTab';
 import WarningsTab from './user-management/WarningsTab';
 import AppealsTab from './user-management/AppealsTab';
@@ -27,6 +28,7 @@ const groups = [
     color: 'text-blue-400',
     tabs: [
       { id: 'users', label: 'Users', icon: Users },
+      { id: 'roles', label: 'Roles', icon: Shield },
       { id: 'bans', label: 'Bans', icon: Shield },
       { id: 'warnings', label: 'Warnings', icon: AlertTriangle },
       { id: 'appeals', label: 'Appeals', icon: MessageSquare }
@@ -71,6 +73,7 @@ const groups = [
 function renderContent(activeTab) {
   switch (activeTab) {
     case 'users':      return <UsersTab />;
+    case 'roles':      return <RoleManagement />;
     case 'bans':       return <BansTab />;
     case 'warnings':   return <WarningsTab />;
     case 'appeals':    return <AppealsTab />;
