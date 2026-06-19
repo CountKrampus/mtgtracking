@@ -27,11 +27,11 @@ const groups = [
     icon: Users,
     color: 'text-blue-400',
     tabs: [
-      { id: 'users', label: 'Users', icon: Users },
-      { id: 'roles', label: 'Roles', icon: Shield },
-      { id: 'bans', label: 'Bans', icon: Shield },
-      { id: 'warnings', label: 'Warnings', icon: AlertTriangle },
-      { id: 'appeals', label: 'Appeals', icon: MessageSquare }
+      { id: 'users', label: 'Users', icon: Users, requiresRole: 'admin' },
+      { id: 'roles', label: 'Roles', icon: Shield, requiresRole: 'admin' },
+      { id: 'bans', label: 'Bans', icon: Shield, requiresRole: 'moderator' },
+      { id: 'warnings', label: 'Warnings', icon: AlertTriangle, requiresRole: 'moderator' },
+      { id: 'appeals', label: 'Appeals', icon: MessageSquare, requiresRole: 'moderator' }
     ]
   },
   {
@@ -40,11 +40,11 @@ const groups = [
     icon: Database,
     color: 'text-green-400',
     tabs: [
-      { id: 'health', label: 'System Health', icon: Server },
-      { id: 'pricing', label: 'Pricing', icon: BarChart2 },
-      { id: 'audits', label: 'Collection Audits', icon: FileText },
-      { id: 'backups', label: 'Backups & Exports', icon: Archive },
-      { id: 'cleanup', label: 'Data Cleanup', icon: Trash2 }
+      { id: 'health', label: 'System Health', icon: Server, requiresRole: 'admin' },
+      { id: 'pricing', label: 'Pricing', icon: BarChart2, requiresRole: 'content_manager' },
+      { id: 'audits', label: 'Collection Audits', icon: FileText, requiresRole: 'content_manager' },
+      { id: 'backups', label: 'Backups & Exports', icon: Archive, requiresRole: 'admin' },
+      { id: 'cleanup', label: 'Data Cleanup', icon: Trash2, requiresRole: 'admin' }
     ]
   },
   {
@@ -53,8 +53,8 @@ const groups = [
     icon: MessageSquare,
     color: 'text-purple-400',
     tabs: [
-      { id: 'moderation', label: 'Content Moderation', icon: Shield },
-      { id: 'feedback', label: 'Feedback', icon: MessageSquare }
+      { id: 'moderation', label: 'Content Moderation', icon: Shield, requiresRole: 'moderator' },
+      { id: 'feedback', label: 'Feedback', icon: MessageSquare, requiresRole: 'support' }
     ]
   },
   {
@@ -63,12 +63,19 @@ const groups = [
     icon: Settings,
     color: 'text-slate-400',
     tabs: [
-      { id: 'activity', label: 'Activity Log', icon: Activity },
-      { id: 'settings', label: 'Settings', icon: Settings },
-      { id: 'sessions', label: 'Sessions', icon: Database }
+      { id: 'activity', label: 'Activity Log', icon: Activity, requiresRole: 'admin' },
+      { id: 'settings', label: 'Settings', icon: Settings, requiresRole: 'admin' },
+      { id: 'sessions', label: 'Sessions', icon: Database, requiresRole: 'admin' }
     ]
   }
 ];
+
+function canSeeTab(tab, user) {
+  if (!tab.requiresRole) return true;
+  if (!user || !user.role) return false;
+  if (user.role === 'admin') return true;
+  return user.role === tab.requiresRole;
+}
 
 function renderContent(activeTab) {
   switch (activeTab) {
@@ -91,7 +98,7 @@ function renderContent(activeTab) {
   }
 }
 
-export function AdminPanel({ onClose }) {
+export function AdminPanel({ onClose, user }) {
   const [activeTab, setActiveTab] = useState('users');
   const [expandedGroups, setExpandedGroups] = useState({
     userManagement: true,
@@ -103,6 +110,13 @@ export function AdminPanel({ onClose }) {
   const toggleGroup = (groupId) => {
     setExpandedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
   };
+
+  React.useEffect(() => {
+    const allVisibleTabs = groups.flatMap(g => g.tabs.filter(t => canSeeTab(t, user)));
+    if (allVisibleTabs.length > 0 && !allVisibleTabs.find(t => t.id === activeTab)) {
+      setActiveTab(allVisibleTabs[0].id);
+    }
+  }, [user, activeTab]);
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -119,7 +133,7 @@ export function AdminPanel({ onClose }) {
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar */}
           <div className="w-56 bg-gray-900 border-r border-gray-700 overflow-y-auto flex-shrink-0">
-            {groups.map(group => {
+            {groups.filter(group => group.tabs.some(tab => canSeeTab(tab, user))).map(group => {
               const GroupIcon = group.icon;
               const isExpanded = expandedGroups[group.id];
               return (
@@ -135,7 +149,7 @@ export function AdminPanel({ onClose }) {
                       : <ChevronRight size={14} className="text-gray-500" />}
                   </button>
 
-                  {isExpanded && group.tabs.map(tab => {
+                  {isExpanded && group.tabs.filter(tab => canSeeTab(tab, user)).map(tab => {
                     const TabIcon = tab.icon;
                     return (
                       <button
