@@ -3,10 +3,13 @@ const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const mongoose = require('mongoose');
 
 const User = require('../models/User');
 const Session = require('../models/Session');
 const ActivityLog = require('../models/ActivityLog');
+const BanAppeal = require('../models/BanAppeal');
+const UserBan = require('../models/UserBan');
 const { hashPassword, verifyPassword, validatePasswordStrength } = require('../utils/passwords');
 const { verifyToken, requireAuth, isMultiUserEnabled } = require('../middleware/auth');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
@@ -567,6 +570,42 @@ router.delete('/me/avatar', async (req, res) => {
   } catch (error) {
     console.error('Delete avatar error:', error);
     res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * POST /api/users/ban-appeals - Submit a ban appeal (user-facing)
+ */
+router.post('/ban-appeals', async (req, res) => {
+  try {
+    const { banId, appealText } = req.body;
+    if (!banId || !appealText) {
+      return res.status(400).json({ message: 'banId and appealText are required' });
+    }
+    if (!mongoose.isValidObjectId(banId)) {
+      return res.status(400).json({ message: 'Invalid banId' });
+    }
+    if (appealText.length < 20) {
+      return res.status(400).json({ message: 'Appeal text must be at least 20 characters' });
+    }
+
+    const ban = await UserBan.findOne({ _id: banId, userId: req.user._id, isActive: true });
+    if (!ban) return res.status(404).json({ message: 'Active ban not found for your account' });
+
+    const existing = await BanAppeal.findOne({ userId: req.user._id, banId });
+    if (existing) return res.status(409).json({ message: 'You have already submitted an appeal for this ban' });
+
+    const appeal = new BanAppeal({
+      userId: req.user._id,
+      banId,
+      appealText
+    });
+    await appeal.save();
+
+    res.status(201).json({ message: 'Appeal submitted', appeal });
+  } catch (error) {
+    console.error('Submit appeal error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

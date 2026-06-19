@@ -1049,6 +1049,9 @@ router.post('/account-bans', async (req, res) => {
     if (!userId || !banType || !reason) {
       return res.status(400).json({ message: 'userId, banType, and reason are required' });
     }
+    if (!mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ message: 'Invalid userId' });
+    }
     if (banType === 'suspension' && !expiresAt) {
       return res.status(400).json({ message: 'expiresAt is required for suspension bans' });
     }
@@ -1118,6 +1121,8 @@ router.put('/account-bans/:id', async (req, res) => {
     const ban = await UserBan.findById(req.params.id);
     if (!ban) return res.status(404).json({ message: 'Ban not found' });
 
+    if (!ban.isActive) return res.status(409).json({ message: 'Cannot modify an inactive ban' });
+
     if (reason) ban.reason = reason;
     if (expiresAt !== undefined) ban.expiresAt = expiresAt ? new Date(expiresAt) : null;
     await ban.save();
@@ -1173,6 +1178,9 @@ router.post('/warnings', async (req, res) => {
     if (!userId || !reason) {
       return res.status(400).json({ message: 'userId and reason are required' });
     }
+    if (!mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ message: 'Invalid userId' });
+    }
 
     // Count recent warnings (90 days)
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
@@ -1197,6 +1205,15 @@ router.post('/warnings', async (req, res) => {
       actionDetails: { warningId: warning._id, reason, escalationLevel },
       performedBy: req.user._id
     });
+
+    if (bypassEscalation && escalationLevel >= 3) {
+      await ModerationHistory.create({
+        userId,
+        actionType: 'override',
+        actionDetails: { warningId: warning._id, reason: 'escalation bypass by admin', escalationLevel },
+        performedBy: req.user._id
+      });
+    }
 
     let autoSuspension = null;
 
@@ -1239,6 +1256,9 @@ router.post('/warnings', async (req, res) => {
  */
 router.get('/warnings/:userId', async (req, res) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.userId)) {
+      return res.status(400).json({ message: 'Invalid userId' });
+    }
     const warnings = await UserWarning.find({ userId: req.params.userId })
       .populate('warnedBy', 'username')
       .sort({ warnedAt: -1 });
@@ -1254,36 +1274,6 @@ router.get('/warnings/:userId', async (req, res) => {
 });
 
 // ==================== BAN APPEAL MANAGEMENT ====================
-
-/**
- * POST /api/admin/ban-appeals - Submit a ban appeal (user-facing, requires auth)
- */
-router.post('/ban-appeals', async (req, res) => {
-  try {
-    const { banId, appealText } = req.body;
-    if (!banId || !appealText) {
-      return res.status(400).json({ message: 'banId and appealText are required' });
-    }
-
-    const ban = await UserBan.findOne({ _id: banId, userId: req.user._id, isActive: true });
-    if (!ban) return res.status(404).json({ message: 'Active ban not found for your account' });
-
-    const existing = await BanAppeal.findOne({ userId: req.user._id, banId });
-    if (existing) return res.status(409).json({ message: 'You have already submitted an appeal for this ban' });
-
-    const appeal = new BanAppeal({
-      userId: req.user._id,
-      banId,
-      appealText
-    });
-    await appeal.save();
-
-    res.status(201).json({ message: 'Appeal submitted', appeal });
-  } catch (error) {
-    console.error('Submit appeal error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
 
 /**
  * GET /api/admin/ban-appeals - List pending appeals (admin view)
@@ -1337,7 +1327,11 @@ router.put('/ban-appeals/:id', async (req, res) => {
     await appeal.save();
 
     if (status === 'approved') {
-      await UserBan.findByIdAndUpdate(appeal.banId, { isActive: false });
+      const associatedBan = await UserBan.findById(appeal.banId);
+      if (associatedBan) {
+        associatedBan.isActive = false;
+        await associatedBan.save();
+      }
       await ModerationHistory.create({
         userId: appeal.userId,
         actionType: 'appeal_approved',
@@ -1365,6 +1359,9 @@ router.put('/ban-appeals/:id', async (req, res) => {
  */
 router.get('/moderation-history/:userId', async (req, res) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.userId)) {
+      return res.status(400).json({ message: 'Invalid userId' });
+    }
     const history = await ModerationHistory.find({ userId: req.params.userId })
       .populate('performedBy', 'username')
       .sort({ createdAt: -1 });
