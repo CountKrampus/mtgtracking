@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
 
+// Usage note for role change logging (called from admin.js):
+// ActivityLog.log({ userId, action: 'user_role_change', category: 'admin',
+//   targetType: 'user', targetId, targetName: username, details: { oldRole, newRole } })
+
 const activityLogSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
