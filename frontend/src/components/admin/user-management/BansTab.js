@@ -18,7 +18,7 @@ function StatusBadge({ ban }) {
   if (!isActive || isExpired) {
     return (
       <span className="px-2 py-0.5 rounded-full text-xs border bg-green-500/20 text-green-300 border-green-500/50">
-        Expired
+        Active
       </span>
     );
   }
