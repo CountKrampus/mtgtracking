@@ -15,6 +15,7 @@ const ModerationHistory = require('../models/ModerationHistory');
 const CollectionAudit = require('../models/CollectionAudit');
 const { verifyToken, requireAuth, requireAdmin, isMultiUserEnabled } = require('../middleware/auth');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
+const { isStaffRole, ROLE_PERMISSIONS } = require('../utils/permissions');
 
 // All admin routes require authentication and admin role
 router.use(verifyToken);
@@ -147,7 +148,6 @@ router.put('/users/:id', async (req, res) => {
       changes.oldRole = user.role;
       changes.newRole = role;
       user.role = role;
-      const { isStaffRole } = require('../utils/permissions');
       user.staffSince = isStaffRole(role) ? (user.staffSince || new Date()) : null;
 
       // Log role change
@@ -272,16 +272,26 @@ router.put('/users/:userId/role', async (req, res) => {
   try {
     const { userId } = req.params;
     const { newRole } = req.body;
-    const { isStaffRole } = require('../utils/permissions');
 
-    const validRoles = ['admin', 'moderator', 'content_manager', 'community_manager', 'support', 'user', 'editor', 'viewer'];
+    const validRoles = Object.keys(ROLE_PERMISSIONS);
     if (!validRoles.includes(newRole)) {
-      return res.status(400).json({ message: 'Invalid role' });
+      return res.status(400).json({ message: 'Invalid role', code: 'INVALID_ROLE' });
     }
 
     const targetUser = await User.findById(userId);
     if (!targetUser) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: 'User not found', code: 'USER_NOT_FOUND' });
+    }
+
+    // Prevent demoting the only remaining admin
+    if (newRole !== 'admin' && targetUser.role === 'admin') {
+      const adminCount = await User.countDocuments({ role: 'admin', isActive: true });
+      if (adminCount <= 1) {
+        return res.status(400).json({
+          message: 'Cannot demote the only admin. Please assign admin role to another user first.',
+          code: 'LAST_ADMIN'
+        });
+      }
     }
 
     const oldRole = targetUser.role;
