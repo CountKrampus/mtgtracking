@@ -147,6 +147,8 @@ router.put('/users/:id', async (req, res) => {
       changes.oldRole = user.role;
       changes.newRole = role;
       user.role = role;
+      const { isStaffRole } = require('../utils/permissions');
+      user.staffSince = isStaffRole(role) ? (user.staffSince || new Date()) : null;
 
       // Log role change
       await logActivity({
@@ -258,6 +260,80 @@ router.delete('/users/:id', async (req, res) => {
   } catch (error) {
     console.error('Delete user error:', error);
     res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * PUT /api/admin/users/:userId/role
+ * Role Management — dedicated role assignment endpoint
+ * Called by the RoleManagement frontend component with body: { newRole }
+ */
+router.put('/users/:userId/role', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { newRole } = req.body;
+    const { isStaffRole } = require('../utils/permissions');
+
+    const validRoles = ['admin', 'moderator', 'content_manager', 'community_manager', 'support', 'user', 'editor', 'viewer'];
+    if (!validRoles.includes(newRole)) {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const oldRole = targetUser.role;
+    targetUser.role = newRole;
+    targetUser.staffSince = isStaffRole(newRole) ? (targetUser.staffSince || new Date()) : null;
+
+    await targetUser.save();
+
+    await logActivity({
+      userId: req.user._id,
+      action: 'user_role_change',
+      category: 'admin',
+      targetType: 'user',
+      targetId: targetUser._id,
+      targetName: targetUser.username,
+      details: { oldRole, newRole },
+      ipAddress: getClientIp(req)
+    });
+
+    res.json({ message: `User role changed to ${newRole}`, newRole });
+  } catch (error) {
+    console.error('Error updating user role:', error.message);
+    res.status(500).json({ message: 'Failed to update user role' });
+  }
+});
+
+/**
+ * GET /api/admin/role-history/:userId
+ * Fetch role change history for a specific user from the activity log
+ */
+router.get('/role-history/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const history = await ActivityLog.find({
+      action: 'user_role_change',
+      targetId: userId
+    })
+      .populate('userId', 'username displayName')
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean();
+
+    res.json({ history });
+  } catch (error) {
+    console.error('Error fetching role history:', error.message);
+    res.status(500).json({ message: 'Failed to fetch role history' });
   }
 });
 
