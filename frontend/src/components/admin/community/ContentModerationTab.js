@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { RefreshCw, Trash2, AlertTriangle, MessageSquare, Layers } from 'lucide-react';
 import { useAuthContext } from '../../../contexts/AuthContext';
 import { API_URL } from '../../../config';
@@ -84,17 +84,9 @@ function FlaggedContentTab({ authFetch }) {
     try {
       const res = await authFetch(`${API_URL}/admin/forum-content?flagged=true`);
 
-      if (res.status === 404) {
-        setNotImplemented(true);
-        return;
-      }
-
+      if (res.status === 404 || res.status === 501) { setNotImplemented(true); return; }
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        if (res.status === 404 || res.status === 501) {
-          setNotImplemented(true);
-          return;
-        }
         setError(data.message || `Error ${res.status}`);
         return;
       }
@@ -102,8 +94,7 @@ function FlaggedContentTab({ authFetch }) {
       const data = await res.json();
       setFlaggedItems(data.items || data.content || data.posts || []);
     } catch {
-      // Network errors also treated as "not implemented" gracefully
-      setNotImplemented(true);
+      setError('Failed to connect to moderation API');
     } finally {
       setLoading(false);
     }
@@ -236,7 +227,9 @@ function RecentPostsTab({ authFetch }) {
   const [error, setError] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [deleting, setDeleting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const timerRef = useRef(null);
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
@@ -266,10 +259,13 @@ function RecentPostsTab({ authFetch }) {
     fetchPosts();
   }, [fetchPosts]);
 
-  const showSuccess = (msg) => {
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+
+  const showSuccess = useCallback((msg) => {
     setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(null), 3000);
-  };
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setSuccessMsg(null), 3000);
+  }, []);
 
   const handleDelete = async (post) => {
     const preview = truncate(post.content || post.body, 60);
@@ -278,6 +274,7 @@ function RecentPostsTab({ authFetch }) {
     );
     if (!confirmed) return;
 
+    setDeletingId(post._id);
     try {
       const res = await authFetch(`${API_URL}/admin/forum-posts/${post._id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -294,6 +291,8 @@ function RecentPostsTab({ authFetch }) {
       }
     } catch {
       alert('Failed to delete post.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -306,7 +305,7 @@ function RecentPostsTab({ authFetch }) {
 
     setDeleting(true);
     let deletedCount = 0;
-    const ids = Array.from(selected);
+    const ids = new Set(Array.from(selected));
 
     for (const id of ids) {
       try {
@@ -317,7 +316,7 @@ function RecentPostsTab({ authFetch }) {
       }
     }
 
-    setPosts((prev) => prev.filter((p) => !selected.has(p._id)));
+    setPosts((prev) => prev.filter((p) => !ids.has(p._id)));
     setSelected(new Set());
     setDeleting(false);
     showSuccess(`Deleted ${deletedCount} item${deletedCount !== 1 ? 's' : ''}.`);
@@ -418,7 +417,8 @@ function RecentPostsTab({ authFetch }) {
                 <td className="px-4 py-3 text-right">
                   <button
                     onClick={() => handleDelete(post)}
-                    className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                    disabled={deletingId === post._id}
+                    className="p-1 text-red-400 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     title="Delete post"
                   >
                     <Trash2 size={16} />
@@ -439,7 +439,9 @@ function RecentThreadsTab({ authFetch }) {
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const timerRef = useRef(null);
 
   const fetchThreads = useCallback(async () => {
     setLoading(true);
@@ -468,10 +470,13 @@ function RecentThreadsTab({ authFetch }) {
     fetchThreads();
   }, [fetchThreads]);
 
-  const showSuccess = (msg) => {
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+
+  const showSuccess = useCallback((msg) => {
     setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(null), 3000);
-  };
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setSuccessMsg(null), 3000);
+  }, []);
 
   const handleDelete = async (thread) => {
     const confirmed = window.confirm(
@@ -479,6 +484,7 @@ function RecentThreadsTab({ authFetch }) {
     );
     if (!confirmed) return;
 
+    setDeletingId(thread._id);
     try {
       const res = await authFetch(`${API_URL}/admin/forum-threads/${thread._id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -490,6 +496,8 @@ function RecentThreadsTab({ authFetch }) {
       }
     } catch {
       alert('Failed to delete thread.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -541,7 +549,8 @@ function RecentThreadsTab({ authFetch }) {
                 <td className="px-4 py-3 text-right">
                   <button
                     onClick={() => handleDelete(thread)}
-                    className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                    disabled={deletingId === thread._id}
+                    className="p-1 text-red-400 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     title="Delete thread"
                   >
                     <Trash2 size={16} />
