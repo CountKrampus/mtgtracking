@@ -116,7 +116,7 @@ export function AdminPanel({ onClose, user }) {
     if (allVisibleTabs.length > 0 && !allVisibleTabs.find(t => t.id === activeTab)) {
       setActiveTab(allVisibleTabs[0].id);
     }
-  }, [user, activeTab]);
+  }, [user]);
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
