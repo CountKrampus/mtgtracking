@@ -373,8 +373,8 @@ const Sidebar = ({
           );
         })}
 
-        {/* Admin Section (only for admin users) */}
-        {isMultiUserEnabled && authUser?.role === 'admin' && (
+        {/* Admin Section (admin + staff roles with panel access) */}
+        {isMultiUserEnabled && ['admin', 'moderator', 'content_manager', 'support'].includes(authUser?.role) && (
           <>
             <div className="mt-4 px-2 mb-1">
               {!sidebarCollapsed && (
