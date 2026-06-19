@@ -19,12 +19,17 @@ const userBanSchema = new mongoose.Schema({
   bannedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    description: 'Admin who issued the ban'
+    required: true
   },
   expiresAt: {
     type: Date,
-    description: 'When suspension expires (null for permanent bans)'
+    validate: {
+      validator: function(v) {
+        if (this.banType === 'suspension') return v != null;
+        return true; // permanent bans have no expiry
+      },
+      message: 'expiresAt is required for suspension bans'
+    }
   },
   isActive: {
     type: Boolean,
@@ -45,7 +50,7 @@ const userBanSchema = new mongoose.Schema({
 userBanSchema.index({ userId: 1, isActive: 1 });
 
 // Index on expiresAt for finding expired suspensions
-userBanSchema.index({ expiresAt: 1 });
+userBanSchema.index({ expiresAt: 1 }, { sparse: true });
 
 // Pre-save middleware to auto-update updatedAt
 userBanSchema.pre('save', function(next) {
@@ -60,13 +65,5 @@ userBanSchema.virtual('isExpired').get(function() {
   }
   return new Date() > this.expiresAt;
 });
-
-// Method to check if ban has expired
-userBanSchema.methods.hasExpired = function() {
-  if (this.banType !== 'suspension' || !this.expiresAt) {
-    return false;
-  }
-  return new Date() > this.expiresAt;
-};
 
 module.exports = mongoose.model('UserBan', userBanSchema);
