@@ -6,6 +6,10 @@ const User = require('../models/User');
 const Session = require('../models/Session');
 const ActivityLog = require('../models/ActivityLog');
 const SystemSettings = require('../models/SystemSettings');
+const UserBan = require('../models/UserBan');
+const UserWarning = require('../models/UserWarning');
+const BanAppeal = require('../models/BanAppeal');
+const ModerationHistory = require('../models/ModerationHistory');
 const { verifyToken, requireAuth, requireAdmin, isMultiUserEnabled } = require('../middleware/auth');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
 
@@ -1031,6 +1035,337 @@ router.post('/modmail', verifyToken, requireAuth, requireAdmin, async (req, res)
   } catch (error) {
     console.error('Send modmail error:', error);
     res.status(500).json({ message: error.message });
+  }
+});
+
+// ==================== ACCOUNT BAN MANAGEMENT ====================
+
+/**
+ * POST /api/admin/account-bans - Create account ban or suspension
+ */
+router.post('/account-bans', async (req, res) => {
+  try {
+    const { userId, banType, reason, expiresAt } = req.body;
+    if (!userId || !banType || !reason) {
+      return res.status(400).json({ message: 'userId, banType, and reason are required' });
+    }
+    if (banType === 'suspension' && !expiresAt) {
+      return res.status(400).json({ message: 'expiresAt is required for suspension bans' });
+    }
+
+    // Deactivate any existing active ban for this user
+    await UserBan.updateMany({ userId, isActive: true }, { isActive: false });
+
+    const ban = new UserBan({
+      userId,
+      banType,
+      reason,
+      bannedBy: req.user._id,
+      expiresAt: banType === 'suspension' ? new Date(expiresAt) : null,
+      isActive: true
+    });
+    await ban.save();
+
+    await ModerationHistory.create({
+      userId,
+      actionType: banType === 'suspension' ? 'suspend' : 'ban',
+      actionDetails: { banId: ban._id, reason, expiresAt },
+      performedBy: req.user._id
+    });
+
+    res.status(201).json({ message: 'Ban created', ban });
+  } catch (error) {
+    console.error('Create ban error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/account-bans - List active bans with optional filters
+ */
+router.get('/account-bans', async (req, res) => {
+  try {
+    const { userId, banType, active = 'true', page = 1, limit = 50 } = req.query;
+    const query = {};
+    if (userId) query.userId = userId;
+    if (banType) query.banType = banType;
+    if (active !== 'all') query.isActive = active === 'true';
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const [bans, total] = await Promise.all([
+      UserBan.find(query)
+        .populate('userId', 'username email')
+        .populate('bannedBy', 'username')
+        .sort({ bannedAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      UserBan.countDocuments(query)
+    ]);
+
+    res.json({ bans, total, page: parseInt(page), limit: parseInt(limit) });
+  } catch (error) {
+    console.error('List bans error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * PUT /api/admin/account-bans/:id - Update ban expiration or reason
+ */
+router.put('/account-bans/:id', async (req, res) => {
+  try {
+    const { reason, expiresAt } = req.body;
+    const ban = await UserBan.findById(req.params.id);
+    if (!ban) return res.status(404).json({ message: 'Ban not found' });
+
+    if (reason) ban.reason = reason;
+    if (expiresAt !== undefined) ban.expiresAt = expiresAt ? new Date(expiresAt) : null;
+    await ban.save();
+
+    res.json({ message: 'Ban updated', ban });
+  } catch (error) {
+    console.error('Update ban error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * DELETE /api/admin/account-bans/:id - Revoke (deactivate) a ban
+ */
+router.delete('/account-bans/:id', async (req, res) => {
+  try {
+    const ban = await UserBan.findById(req.params.id);
+    if (!ban) return res.status(404).json({ message: 'Ban not found' });
+
+    ban.isActive = false;
+    await ban.save();
+
+    await ModerationHistory.create({
+      userId: ban.userId,
+      actionType: 'ban_revoked',
+      actionDetails: { banId: ban._id, revokedBy: req.user._id },
+      performedBy: req.user._id
+    });
+
+    res.json({ message: 'Ban revoked' });
+  } catch (error) {
+    console.error('Revoke ban error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// ==================== WARNING MANAGEMENT ====================
+
+/**
+ * POST /api/admin/warnings - Issue a warning to a user
+ * Auto-escalates to 7-day suspension if user has 3+ warnings in 90 days
+ */
+router.post('/warnings', async (req, res) => {
+  try {
+    const { userId, reason, bypassEscalation = false } = req.body;
+    if (!userId || !reason) {
+      return res.status(400).json({ message: 'userId and reason are required' });
+    }
+
+    // Count recent warnings (90 days)
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const recentWarnings = await UserWarning.countDocuments({
+      userId,
+      warnedAt: { $gte: ninetyDaysAgo }
+    });
+
+    const escalationLevel = Math.min(recentWarnings + 1, 3);
+
+    const warning = new UserWarning({
+      userId,
+      reason,
+      warnedBy: req.user._id,
+      escalationLevel
+    });
+    await warning.save();
+
+    await ModerationHistory.create({
+      userId,
+      actionType: 'warn',
+      actionDetails: { warningId: warning._id, reason, escalationLevel },
+      performedBy: req.user._id
+    });
+
+    let autoSuspension = null;
+
+    // Auto-escalate to 7-day suspension at level 3
+    if (escalationLevel >= 3 && !bypassEscalation) {
+      await UserBan.updateMany({ userId, isActive: true }, { isActive: false });
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      autoSuspension = new UserBan({
+        userId,
+        banType: 'suspension',
+        reason: 'Auto-escalated: 3 warnings in 90 days',
+        bannedBy: req.user._id,
+        expiresAt,
+        isActive: true
+      });
+      await autoSuspension.save();
+
+      await ModerationHistory.create({
+        userId,
+        actionType: 'suspend',
+        actionDetails: { banId: autoSuspension._id, reason: 'auto-escalation', warningId: warning._id },
+        performedBy: req.user._id
+      });
+    }
+
+    res.status(201).json({
+      message: autoSuspension ? 'Warning issued and auto-suspension applied' : 'Warning issued',
+      warning,
+      autoSuspension,
+      escalationLevel
+    });
+  } catch (error) {
+    console.error('Issue warning error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/warnings/:userId - List warnings for a specific user
+ */
+router.get('/warnings/:userId', async (req, res) => {
+  try {
+    const warnings = await UserWarning.find({ userId: req.params.userId })
+      .populate('warnedBy', 'username')
+      .sort({ warnedAt: -1 });
+
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const recentCount = warnings.filter(w => w.warnedAt >= ninetyDaysAgo).length;
+
+    res.json({ warnings, recentCount, currentEscalationLevel: Math.min(recentCount, 3) });
+  } catch (error) {
+    console.error('List warnings error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// ==================== BAN APPEAL MANAGEMENT ====================
+
+/**
+ * POST /api/admin/ban-appeals - Submit a ban appeal (user-facing, requires auth)
+ */
+router.post('/ban-appeals', async (req, res) => {
+  try {
+    const { banId, appealText } = req.body;
+    if (!banId || !appealText) {
+      return res.status(400).json({ message: 'banId and appealText are required' });
+    }
+
+    const ban = await UserBan.findOne({ _id: banId, userId: req.user._id, isActive: true });
+    if (!ban) return res.status(404).json({ message: 'Active ban not found for your account' });
+
+    const existing = await BanAppeal.findOne({ userId: req.user._id, banId });
+    if (existing) return res.status(409).json({ message: 'You have already submitted an appeal for this ban' });
+
+    const appeal = new BanAppeal({
+      userId: req.user._id,
+      banId,
+      appealText
+    });
+    await appeal.save();
+
+    res.status(201).json({ message: 'Appeal submitted', appeal });
+  } catch (error) {
+    console.error('Submit appeal error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/ban-appeals - List pending appeals (admin view)
+ */
+router.get('/ban-appeals', async (req, res) => {
+  try {
+    const { status = 'pending', page = 1, limit = 50 } = req.query;
+    const query = {};
+    if (status !== 'all') query.status = status;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const [appeals, total] = await Promise.all([
+      BanAppeal.find(query)
+        .populate('userId', 'username email')
+        .populate('banId')
+        .populate('reviewedBy', 'username')
+        .sort({ submittedAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      BanAppeal.countDocuments(query)
+    ]);
+
+    res.json({ appeals, total, page: parseInt(page), limit: parseInt(limit) });
+  } catch (error) {
+    console.error('List appeals error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * PUT /api/admin/ban-appeals/:id - Approve or deny an appeal
+ */
+router.put('/ban-appeals/:id', async (req, res) => {
+  try {
+    const { status, decisionReason } = req.body;
+    if (!['approved', 'denied'].includes(status)) {
+      return res.status(400).json({ message: 'status must be approved or denied' });
+    }
+    if (!decisionReason) {
+      return res.status(400).json({ message: 'decisionReason is required' });
+    }
+
+    const appeal = await BanAppeal.findById(req.params.id);
+    if (!appeal) return res.status(404).json({ message: 'Appeal not found' });
+    if (appeal.status !== 'pending') return res.status(409).json({ message: 'Appeal has already been reviewed' });
+
+    appeal.status = status;
+    appeal.reviewedBy = req.user._id;
+    appeal.reviewedAt = new Date();
+    appeal.decisionReason = decisionReason;
+    await appeal.save();
+
+    if (status === 'approved') {
+      await UserBan.findByIdAndUpdate(appeal.banId, { isActive: false });
+      await ModerationHistory.create({
+        userId: appeal.userId,
+        actionType: 'appeal_approved',
+        actionDetails: { appealId: appeal._id, banId: appeal.banId, decisionReason },
+        performedBy: req.user._id
+      });
+    } else {
+      await ModerationHistory.create({
+        userId: appeal.userId,
+        actionType: 'appeal_denied',
+        actionDetails: { appealId: appeal._id, decisionReason },
+        performedBy: req.user._id
+      });
+    }
+
+    res.json({ message: `Appeal ${status}`, appeal });
+  } catch (error) {
+    console.error('Review appeal error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/moderation-history/:userId - Full moderation audit trail for a user
+ */
+router.get('/moderation-history/:userId', async (req, res) => {
+  try {
+    const history = await ModerationHistory.find({ userId: req.params.userId })
+      .populate('performedBy', 'username')
+      .sort({ createdAt: -1 });
+
+    res.json({ history });
+  } catch (error) {
+    console.error('Moderation history error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
