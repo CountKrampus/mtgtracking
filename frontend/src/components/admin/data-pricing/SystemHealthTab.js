@@ -3,6 +3,23 @@ import { RefreshCw, Users, Database, Activity, Settings, AlertTriangle } from 'l
 import { useAuthContext } from '../../../contexts/AuthContext';
 import { API_URL } from '../../../config';
 
+function StatCard({ icon: Icon, label, value, subtext, color = 'purple' }) {
+  return (
+    <div className="bg-gray-700/50 rounded-lg p-4">
+      <div className="flex items-center gap-3">
+        <div className={`p-2 rounded-lg bg-${color}-500/20`}>
+          <Icon className={`text-${color}-400`} size={20} />
+        </div>
+        <div>
+          <p className="text-gray-400 text-sm">{label}</p>
+          <p className="text-white text-2xl font-bold">{value}</p>
+          {subtext && <p className="text-gray-500 text-xs">{subtext}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function SystemHealthTab() {
   const { authFetch } = useAuthContext();
   const [health, setHealth] = useState(null);
@@ -73,21 +90,6 @@ export function SystemHealthTab() {
       </div>
     );
   }
-
-  const StatCard = ({ icon: Icon, label, value, subtext, color = 'purple' }) => (
-    <div className="bg-gray-700/50 rounded-lg p-4">
-      <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-lg bg-${color}-500/20`}>
-          <Icon className={`text-${color}-400`} size={20} />
-        </div>
-        <div>
-          <p className="text-gray-400 text-sm">{label}</p>
-          <p className="text-white text-2xl font-bold">{value}</p>
-          {subtext && <p className="text-gray-500 text-xs">{subtext}</p>}
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="space-y-6">
