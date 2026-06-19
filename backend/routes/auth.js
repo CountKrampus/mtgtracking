@@ -5,6 +5,7 @@ const User = require('../models/User');
 const Session = require('../models/Session');
 const SystemSettings = require('../models/SystemSettings');
 const PasswordResetToken = require('../models/PasswordResetToken');
+const UserBan = require('../models/UserBan');
 const { hashPassword, verifyPassword, validatePasswordStrength } = require('../utils/passwords');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/jwt');
 const { isMultiUserEnabled, verifyToken, requireAuth } = require('../middleware/auth');
@@ -206,6 +207,27 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({
         message: 'Invalid credentials',
         code: 'INVALID_CREDENTIALS'
+      });
+    }
+
+    // Check for active account bans
+    // First, deactivate expired suspensions automatically
+    await UserBan.updateMany(
+      { userId: user._id, banType: 'suspension', isActive: true, expiresAt: { $lt: new Date() } },
+      { $set: { isActive: false } }
+    );
+
+    // Check for remaining active bans
+    const activeBan = await UserBan.findOne({ userId: user._id, isActive: true });
+    if (activeBan) {
+      return res.status(403).json({
+        message: 'Your account has been suspended or banned.',
+        ban: {
+          type: activeBan.banType,
+          reason: activeBan.reason,
+          bannedAt: activeBan.bannedAt,
+          expiresAt: activeBan.expiresAt
+        }
       });
     }
 
