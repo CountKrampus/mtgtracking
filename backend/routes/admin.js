@@ -1658,5 +1658,176 @@ router.put('/audits/:id/action', async (req, res) => {
   }
 });
 
+// ==================== DATA MANAGEMENT ====================
+
+// In-memory backup store
+const backups = {};
+
+/**
+ * POST /api/admin/backup - Create in-memory backup of all cards
+ */
+router.post('/backup', async (req, res) => {
+  try {
+    const Card = require('../models/Card');
+
+    const [cards, users] = await Promise.all([
+      Card.find({}).lean(),
+      User.find({}).select('-password -passwordHash').lean()
+    ]);
+
+    const backupId = `backup_${Date.now()}`;
+    const backup = {
+      id: backupId,
+      createdAt: new Date(),
+      createdBy: req.user._id,
+      cardCount: cards.length,
+      userCount: users.length,
+      data: { cards, users }
+    };
+    backups[backupId] = backup;
+
+    res.json({
+      backupId,
+      createdAt: backup.createdAt,
+      cardCount: backup.cardCount,
+      userCount: backup.userCount,
+      message: 'Backup created (in-memory, lost on server restart)'
+    });
+  } catch (error) {
+    console.error('Backup error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/backup/:id/download - Download a backup as JSON
+ */
+router.get('/backup/:id/download', async (req, res) => {
+  const backup = backups[req.params.id];
+  if (!backup) return res.status(404).json({ message: 'Backup not found (may have expired on restart)' });
+
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Disposition', `attachment; filename="mtg-backup-${req.params.id}.json"`);
+  res.send(JSON.stringify(backup.data, null, 2));
+});
+
+/**
+ * POST /api/admin/restore - Restore cards from a backup (replaces all cards)
+ * Body: { backupId } or { data: { cards: [...] } }
+ */
+router.post('/restore', async (req, res) => {
+  try {
+    const { backupId, data } = req.body;
+
+    let restoreData;
+    if (backupId) {
+      const backup = backups[backupId];
+      if (!backup) return res.status(404).json({ message: 'Backup not found' });
+      restoreData = backup.data;
+    } else if (data && data.cards) {
+      restoreData = data;
+    } else {
+      return res.status(400).json({ message: 'backupId or data.cards required' });
+    }
+
+    const Card = require('../models/Card');
+    await Card.deleteMany({});
+    await Card.insertMany(restoreData.cards);
+
+    res.json({ message: `Restored ${restoreData.cards.length} cards` });
+  } catch (error) {
+    console.error('Restore error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/export - Export data as JSON (cards, users, activity, moderation)
+ */
+router.post('/export', async (req, res) => {
+  try {
+    const { type = 'cards' } = req.body;
+
+    const Card = require('../models/Card');
+
+    let exportData;
+    let filename;
+
+    switch (type) {
+      case 'cards':
+        exportData = await Card.find({}).lean();
+        filename = 'cards-export.json';
+        break;
+      case 'users':
+        exportData = await User.find({}).select('-password -passwordHash').lean();
+        filename = 'users-export.json';
+        break;
+      case 'activity':
+        exportData = await ActivityLog.find({}).sort({ createdAt: -1 }).lean();
+        filename = 'activity-export.json';
+        break;
+      case 'moderation':
+        exportData = await ModerationHistory.find({}).populate('userId', 'username').populate('performedBy', 'username').lean();
+        filename = 'moderation-export.json';
+        break;
+      default:
+        return res.status(400).json({ message: 'type must be cards, users, activity, or moderation' });
+    }
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(JSON.stringify(exportData, null, 2));
+  } catch (error) {
+    console.error('Export error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/cleanup - Delete orphaned/expired data and archive old logs
+ */
+router.post('/cleanup', async (req, res) => {
+  try {
+    const { daysToKeep = 90, preview = false } = req.body;
+    const cutoff = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000);
+
+    // Count items to clean
+    const [oldLogs, expiredSessions, expiredBans] = await Promise.all([
+      ActivityLog.countDocuments({ createdAt: { $lt: cutoff } }),
+      Session.countDocuments({ expiresAt: { $lt: new Date() } }),
+      UserBan.countDocuments({ isActive: false, updatedAt: { $lt: cutoff } })
+    ]);
+
+    if (preview) {
+      return res.json({
+        preview: true,
+        items: {
+          oldActivityLogs: oldLogs,
+          expiredSessions,
+          inactiveBans: expiredBans
+        }
+      });
+    }
+
+    // Execute cleanup
+    const [logsDeleted, sessionsDeleted, bansDeleted] = await Promise.all([
+      ActivityLog.deleteMany({ createdAt: { $lt: cutoff } }),
+      Session.deleteMany({ expiresAt: { $lt: new Date() } }),
+      UserBan.deleteMany({ isActive: false, updatedAt: { $lt: cutoff } })
+    ]);
+
+    res.json({
+      message: 'Cleanup complete',
+      deleted: {
+        activityLogs: logsDeleted.deletedCount,
+        sessions: sessionsDeleted.deletedCount,
+        inactiveBans: bansDeleted.deletedCount
+      }
+    });
+  } catch (error) {
+    console.error('Cleanup error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
 
 module.exports = router;
