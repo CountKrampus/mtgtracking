@@ -8,7 +8,7 @@ const moderationHistorySchema = new mongoose.Schema({
   },
   actionType: {
     type: String,
-    enum: ['ban', 'suspend', 'warn', 'appeal_approved', 'appeal_denied', 'override', 'ban_revoked'],
+    enum: ['ban', 'suspend', 'warn', 'appeal_approved', 'appeal_denied', 'override', 'ban_revoked', 'price_update'],
     required: true
   },
   actionDetails: mongoose.Schema.Types.Mixed,

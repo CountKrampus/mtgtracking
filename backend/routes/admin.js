@@ -1442,10 +1442,13 @@ router.post('/force-price-update', async (req, res) => {
 
     res.json({ jobId, message: 'Price update job started' });
 
+    // Capture adminId before IIFE (req not available inside async background)
+    const adminId = req.user._id;
+
     // Run async in background (don't await)
     (async () => {
       try {
-        const Card = require('../models/Card');
+        const Card = mongoose.model('Card');
         const cards = await Card.find({});
         priceUpdateJobs[jobId].total = cards.length;
 
@@ -1473,6 +1476,23 @@ router.post('/force-price-update', async (req, res) => {
 
         priceUpdateJobs[jobId].status = 'complete';
         priceUpdateJobs[jobId].completedAt = new Date();
+
+        try {
+          await ModerationHistory.create({
+            userId: adminId,
+            actionType: 'price_update',
+            actionDetails: {
+              jobId,
+              total: priceUpdateJobs[jobId].total,
+              updated: priceUpdateJobs[jobId].updated,
+              skipped: priceUpdateJobs[jobId].skipped,
+              failed: priceUpdateJobs[jobId].failed
+            },
+            performedBy: adminId
+          });
+        } catch (logErr) {
+          console.error('Failed to log price update to ModerationHistory:', logErr);
+        }
       } catch (err) {
         priceUpdateJobs[jobId].status = 'failed';
         priceUpdateJobs[jobId].error = err.message;
@@ -1514,7 +1534,7 @@ router.post('/audits/run', async (req, res) => {
     // Run async in background
     (async () => {
       try {
-        const Card = require('../models/Card');
+        const Card = mongoose.model('Card');
         const cards = await Card.find({});
         const issues = [];
 
@@ -1579,6 +1599,7 @@ router.post('/audits/run', async (req, res) => {
           issues
         });
       } catch (err) {
+        console.error('Audit background error:', err);
         await CollectionAudit.findByIdAndUpdate(audit._id, {
           status: 'failed',
           completedAt: new Date()
@@ -1668,7 +1689,7 @@ const backups = {};
  */
 router.post('/backup', async (req, res) => {
   try {
-    const Card = require('../models/Card');
+    const Card = mongoose.model('Card');
 
     const [cards, users] = await Promise.all([
       Card.find({}).lean(),
@@ -1717,7 +1738,13 @@ router.get('/backup/:id/download', async (req, res) => {
  */
 router.post('/restore', async (req, res) => {
   try {
-    const { backupId, data } = req.body;
+    const { backupId, data, confirm } = req.body;
+
+    if (confirm !== 'RESTORE') {
+      return res.status(400).json({
+        message: 'Restoration requires confirm: "RESTORE" in request body. This action will permanently delete all current cards.'
+      });
+    }
 
     let restoreData;
     if (backupId) {
@@ -1730,7 +1757,11 @@ router.post('/restore', async (req, res) => {
       return res.status(400).json({ message: 'backupId or data.cards required' });
     }
 
-    const Card = require('../models/Card');
+    if (!Array.isArray(restoreData.cards)) {
+      return res.status(400).json({ message: 'restoreData.cards must be an array' });
+    }
+
+    const Card = mongoose.model('Card');
     await Card.deleteMany({});
     await Card.insertMany(restoreData.cards);
 
@@ -1748,7 +1779,7 @@ router.post('/export', async (req, res) => {
   try {
     const { type = 'cards' } = req.body;
 
-    const Card = require('../models/Card');
+    const Card = mongoose.model('Card');
 
     let exportData;
     let filename;
