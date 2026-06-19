@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 
+const axios = require('axios');
+
 const User = require('../models/User');
 const Session = require('../models/Session');
 const ActivityLog = require('../models/ActivityLog');
@@ -10,6 +12,7 @@ const UserBan = require('../models/UserBan');
 const UserWarning = require('../models/UserWarning');
 const BanAppeal = require('../models/BanAppeal');
 const ModerationHistory = require('../models/ModerationHistory');
+const CollectionAudit = require('../models/CollectionAudit');
 const { verifyToken, requireAuth, requireAdmin, isMultiUserEnabled } = require('../middleware/auth');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
 
@@ -1372,5 +1375,123 @@ router.get('/moderation-history/:userId', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+
+// ==================== PRICING ADMIN ====================
+
+// In-memory job store (simple; resets on server restart)
+const priceUpdateJobs = {};
+
+/**
+ * Helper: fetch price from Exor Games with Scryfall fallback.
+ * Mirrors the getPriceWithFallback function in server.js (no import to avoid circular deps).
+ */
+async function fetchPriceForCard(cardName, isFoil = false) {
+  // Try Exor Games first
+  try {
+    const searchUrl = `https://exorgames.com/a/search?type=product&q=${encodeURIComponent(cardName)}`;
+    const response = await axios.get(searchUrl);
+    const html = response.data;
+
+    const priceMatch = html.match(/"price":\s*(\d+)/);
+    if (priceMatch) {
+      const priceInCents = parseInt(priceMatch[1]);
+      const priceCAD = priceInCents / 100;
+      const priceUSD = Math.round(priceCAD * 0.73 * 100) / 100;
+
+      if (priceUSD > 0) {
+        return { cad: priceCAD, usd: priceUSD, source: 'Exor Games' };
+      }
+    }
+  } catch (error) {
+    console.error('Exor Games price fetch failed:', error.message);
+  }
+
+  // Fallback to Scryfall
+  try {
+    console.log('Admin price fetch: falling back to Scryfall for:', cardName);
+    const response = await axios.get(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
+    const scryfallPrice = isFoil
+      ? (response.data.prices.usd_foil ? parseFloat(response.data.prices.usd_foil) : 0)
+      : (response.data.prices.usd ? parseFloat(response.data.prices.usd) : 0);
+
+    if (scryfallPrice > 0) {
+      return { cad: 0, usd: scryfallPrice, source: 'Scryfall (backup)' };
+    }
+  } catch (error) {
+    console.error('Scryfall price fetch failed:', error.message);
+  }
+
+  return { cad: 0, usd: 0, source: 'None (not found)' };
+}
+
+/**
+ * POST /api/admin/force-price-update - Start async background price update job
+ */
+router.post('/force-price-update', async (req, res) => {
+  try {
+    const jobId = `price_update_${Date.now()}`;
+    priceUpdateJobs[jobId] = {
+      status: 'running',
+      startedAt: new Date(),
+      total: 0,
+      updated: 0,
+      skipped: 0,
+      failed: 0,
+      errors: []
+    };
+
+    res.json({ jobId, message: 'Price update job started' });
+
+    // Run async in background (don't await)
+    (async () => {
+      try {
+        const Card = require('../models/Card');
+        const cards = await Card.find({});
+        priceUpdateJobs[jobId].total = cards.length;
+
+        for (const card of cards) {
+          try {
+            // Rate limit: 500ms between requests
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const priceData = await fetchPriceForCard(card.name, card.isFoil);
+
+            if (priceData && (priceData.usd > 0 || priceData.source !== 'None (not found)')) {
+              await Card.findByIdAndUpdate(card._id, {
+                price: priceData.usd,
+                updatedAt: new Date()
+              });
+              priceUpdateJobs[jobId].updated++;
+            } else {
+              priceUpdateJobs[jobId].skipped++;
+            }
+          } catch (cardErr) {
+            priceUpdateJobs[jobId].failed++;
+            priceUpdateJobs[jobId].errors.push({ card: card.name, error: cardErr.message });
+          }
+        }
+
+        priceUpdateJobs[jobId].status = 'complete';
+        priceUpdateJobs[jobId].completedAt = new Date();
+      } catch (err) {
+        priceUpdateJobs[jobId].status = 'failed';
+        priceUpdateJobs[jobId].error = err.message;
+      }
+    })();
+  } catch (error) {
+    console.error('Force price update error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/force-price-update/:jobId - Poll job status
+ */
+router.get('/force-price-update/:jobId', async (req, res) => {
+  const job = priceUpdateJobs[req.params.jobId];
+  if (!job) return res.status(404).json({ message: 'Job not found' });
+  res.json({ jobId: req.params.jobId, ...job });
+});
+
 
 module.exports = router;
