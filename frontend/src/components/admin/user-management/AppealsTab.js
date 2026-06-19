@@ -69,7 +69,7 @@ function StatusBadge({ status }) {
   );
 }
 
-export default function AppealsTab() {
+export function AppealsTab() {
   const { authFetch } = useAuthContext();
 
   const [statusFilter, setStatusFilter] = useState('pending');
@@ -343,3 +343,5 @@ export default function AppealsTab() {
     </div>
   );
 }
+
+export default AppealsTab;
