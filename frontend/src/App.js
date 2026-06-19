@@ -5632,6 +5632,7 @@ function App() {
           onClose={() => setShowAdminPanel(false)}
           onOpenSpamFilter={() => setShowSpamFilterAdmin(true)}
           onOpenMuteManager={() => setShowMuteManager(true)}
+          user={authUser}
         />
       )}
 
