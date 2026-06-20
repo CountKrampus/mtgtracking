@@ -508,6 +508,19 @@ router.put('/:id/folder', requireAuth, async (req, res) => {
   }
 });
 
+// Toggle deck visibility (public/private)
+router.patch('/:id/visibility', requireAuth, requireEditor, async (req, res) => {
+  try {
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(query);
+    if (!deck) return res.status(404).json({ message: 'Deck not found' });
+    if (!deck.shareCode) return res.status(400).json({ message: 'Generate a share link first' });
+    deck.isPublic = !!req.body.isPublic;
+    await deck.save();
+    res.json({ isPublic: deck.isPublic, shareCode: deck.shareCode });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
 // Share deck (generate share code)
 router.post('/:id/share', requireAuth, requireEditor, async (req, res) => {
   try {
@@ -516,7 +529,9 @@ router.post('/:id/share', requireAuth, requireEditor, async (req, res) => {
     if (!deck) return res.status(404).json({ message: 'Deck not found' });
 
     const isFirstShare = !deck.shareCode;
-    deck.shareCode = require('crypto').randomBytes(8).toString('hex');
+    if (isFirstShare) {
+      deck.shareCode = require('crypto').randomBytes(8).toString('hex');
+    }
     await deck.save();
 
     // First-time share: award +3 rep + Deck Builder badge + increment decksShared
