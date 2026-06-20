@@ -28,6 +28,9 @@ export default function ForumProfilePage({ user, apiUrl }) {
   const [selectedPins, setSelectedPins] = useState([]);
   const [memberTitleInput, setMemberTitleInput] = useState('');
   const [signatureInput, setSignatureInput] = useState('');
+  const [wardrobeItems, setWardrobeItems] = useState([]);
+  const [wardrobeOpen, setWardrobeOpen] = useState(false);
+  const [equipLoading, setEquipLoading] = useState(null);
 
   useEffect(() => {
     fetchProfileData();
@@ -77,6 +80,41 @@ export default function ForumProfilePage({ user, apiUrl }) {
       },
       body: JSON.stringify({ text: memberTitleInput }),
     });
+  };
+
+  const openWardrobe = async () => {
+    setWardrobeOpen(true);
+    if (wardrobeItems.length > 0) return; // already loaded
+    try {
+      const token = localStorage.getItem('mtg_access_token');
+      const res = await fetch(`${apiUrl}/forum/cosmetics`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setWardrobeItems(data.cosmetics || []);
+      }
+    } catch {}
+  };
+
+  const handleWardrobeEquip = async (cosmeticId, category) => {
+    setEquipLoading(cosmeticId);
+    try {
+      const token = localStorage.getItem('mtg_access_token');
+      const res = await fetch(`${apiUrl}/forum/level/cosmetics/equip`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ cosmeticId, category }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Update levelData equipped state
+        setLevelData(prev => prev ? { ...prev, cosmetics: { ...prev.cosmetics, equipped: data.newEquipped } } : prev);
+        // Re-fetch profile to update equippedCosmetics
+        fetchProfileData();
+      }
+    } catch {}
+    setEquipLoading(null);
   };
 
   const saveSignature = async () => {
@@ -271,6 +309,97 @@ export default function ForumProfilePage({ user, apiUrl }) {
               </span>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* My Cosmetics Wardrobe */}
+      {levelData?.cosmetics?.purchased?.length > 0 && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg overflow-hidden">
+          <button
+            onClick={wardrobeOpen ? () => setWardrobeOpen(false) : openWardrobe}
+            className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-700/30 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-white font-semibold">My Cosmetics</span>
+              <span className="text-xs bg-purple-900/50 text-purple-300 px-2 py-0.5 rounded-full">
+                {levelData.cosmetics.purchased.length} owned
+              </span>
+            </div>
+            <span className="text-slate-400 text-sm">{wardrobeOpen ? '▲' : '▼'}</span>
+          </button>
+
+          {wardrobeOpen && (
+            <div className="border-t border-slate-700 p-4 space-y-5">
+              {[
+                {
+                  label: 'Post Appearance',
+                  cats: ['titleColor', 'avatarBorder', 'flairIcon', 'postBackground', 'postFrame', 'threadHighlight'],
+                },
+                {
+                  label: 'Forum Profile',
+                  cats: ['profileBorderColor', 'profileBackground', 'profileBanner', 'profileTheme'],
+                },
+                {
+                  label: 'Unlocks',
+                  cats: ['memberTitle', 'signature', 'achievementShowcase', 'favoriteCardsShowcase', 'deckShowcase', 'collectionStatsWidget', 'wishlistPreview'],
+                },
+              ].map(group => {
+                // Filter wardrobe items to ones the user owns AND in this group
+                const purchasedSet = new Set(levelData.cosmetics.purchased.map(String));
+                const groupItems = wardrobeItems.filter(
+                  item => group.cats.includes(item.category) && purchasedSet.has(item._id.toString())
+                );
+                if (groupItems.length === 0) return null;
+
+                const equippedMap = levelData.cosmetics.equipped || {};
+
+                return (
+                  <div key={group.label}>
+                    <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{group.label}</h4>
+                    <div className="space-y-1.5">
+                      {groupItems.map(item => {
+                        const isEquipped = equippedMap[item.category] === item._id.toString();
+                        const isLoading = equipLoading === item._id.toString();
+
+                        // Visual preview
+                        const preview = item.color === 'rainbow'
+                          ? <div className="w-6 h-6 rounded-full flex-shrink-0" style={{ background: 'linear-gradient(135deg, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff)' }} />
+                          : item.color
+                          ? <div className="w-6 h-6 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                          : item.cssProperties
+                          ? <div className="w-6 h-6 rounded flex-shrink-0" style={item.cssProperties} />
+                          : <div className="w-6 h-6 rounded-full flex-shrink-0 bg-slate-600 flex items-center justify-center text-xs">✦</div>;
+
+                        return (
+                          <div
+                            key={item._id}
+                            className={`flex items-center gap-3 p-2 rounded-lg ${isEquipped ? 'bg-green-900/20 border border-green-700/40' : 'bg-slate-900/40'}`}
+                          >
+                            {preview}
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm text-white truncate">{item.name}</div>
+                              <div className="text-xs text-slate-500 capitalize">{item.category}</div>
+                            </div>
+                            {isEquipped ? (
+                              <span className="text-xs text-green-400 font-medium">Equipped</span>
+                            ) : (
+                              <button
+                                onClick={() => handleWardrobeEquip(item._id.toString(), item.category)}
+                                disabled={isLoading}
+                                className="text-xs bg-purple-700 hover:bg-purple-600 text-white px-2.5 py-1 rounded disabled:opacity-50"
+                              >
+                                {isLoading ? '...' : 'Equip'}
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
