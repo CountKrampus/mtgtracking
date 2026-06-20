@@ -37,6 +37,7 @@ import ForumLevelWidget from './components/Forum/ForumLevelWidget';
 import ForumProfilePage from './components/Forum/ForumProfilePage';
 import ForumShop from './components/Forum/ForumShop';
 import ForumLeaderboard from './components/Forum/ForumLeaderboard';
+import SharedDeckView from './components/CommunityDecks/SharedDeckView';
 import { API_URL } from './config';
 import NotificationBell from './components/NotificationBell';
 import DMPreview from './components/DMPreview';
@@ -2931,6 +2932,12 @@ function App() {
       </div>
     );
   };
+
+  // URL routing: public shared deck view
+  const sharedDeckMatch = window.location.pathname.match(/^\/shared\/deck\/([a-f0-9]+)$/i);
+  if (sharedDeckMatch) {
+    return <SharedDeckView shareCode={sharedDeckMatch[1]} />;
+  }
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col overflow-hidden">
