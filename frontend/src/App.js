@@ -36,6 +36,7 @@ import MuteManager from './components/Forum/MuteManager';
 import ForumLevelWidget from './components/Forum/ForumLevelWidget';
 import ForumProfilePage from './components/Forum/ForumProfilePage';
 import ForumShop from './components/Forum/ForumShop';
+import ForumLeaderboard from './components/Forum/ForumLeaderboard';
 import { API_URL } from './config';
 import NotificationBell from './components/NotificationBell';
 import DMPreview from './components/DMPreview';
@@ -344,6 +345,7 @@ function App() {
   const [showForumShop, setShowForumShop] = useState(false);
   const [selectedForumProfileUsername, setSelectedForumProfileUsername] = useState(null);
   const [forumProfileView, setForumProfileView] = useState(false);
+  const [showForumLeaderboard, setShowForumLeaderboard] = useState(false);
 
   // Location management
   const [locations, setLocations] = useState([]);
@@ -5546,7 +5548,11 @@ function App() {
         {currentView === 'forum' && (
           <div className="flex flex-col h-full">
             <div className="flex flex-1 min-h-0">
-            {selectedThreadId ? (
+            {showForumLeaderboard ? (
+              <ForumLeaderboard
+                onBack={() => setShowForumLeaderboard(false)}
+              />
+            ) : selectedThreadId ? (
               <ThreadView
                 threadId={selectedThreadId}
                 apiUrl={API_URL}
@@ -5593,6 +5599,7 @@ function App() {
                 }}
                 authUser={authUser}
                 onForumProfile={() => setCurrentView('forum-profile-page')}
+                onLeaderboard={() => setShowForumLeaderboard(true)}
               />
             )}
             </div>

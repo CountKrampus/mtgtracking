@@ -7,7 +7,7 @@ import ForumFeed from './ForumFeed';
 import ForumShop from './ForumShop';
 import { API_URL } from '../../config';
 
-export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, authUser, onForumProfile }) {
+export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, authUser, onForumProfile, onLeaderboard }) {
   const [showThreadComposer, setShowThreadComposer] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showShop, setShowShop] = useState(false);
@@ -131,7 +131,10 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
               <p className="text-white/60 text-sm mt-1">Discussion for MTG players</p>
             </div>
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 transition font-semibold">
+              <button
+                onClick={() => onLeaderboard && onLeaderboard()}
+                className="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 transition font-semibold"
+              >
                 <Zap size={18} /> Leaderboard
               </button>
               <button
