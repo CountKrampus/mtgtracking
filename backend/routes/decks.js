@@ -39,6 +39,63 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
+// Public: get a deck by share code (no auth required)
+router.get('/shared/:shareCode', async (req, res) => {
+  try {
+    const deck = await Deck.findOne({ shareCode: req.params.shareCode })
+      .populate('userId', 'username displayName')
+      .lean();
+    if (!deck) return res.status(404).json({ message: 'Deck not found' });
+    const owner = deck.userId || {};
+    const { userId, ...deckData } = deck;
+    res.json({ deck: deckData, owner: { username: owner.username, displayName: owner.displayName } });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// Public: browse community decks (no auth required)
+router.get('/community', async (req, res) => {
+  try {
+    const { format, colors, commander, tags, sort = 'newest', page = 1 } = req.query;
+    const filter = { isPublic: true };
+    if (format) filter.format = format;
+    if (colors) {
+      const colorList = colors.split(',').map(c => c.trim()).filter(Boolean);
+      if (colorList.length) filter['commander.colorIdentity'] = { $all: colorList };
+    }
+    if (commander) filter['commander.name'] = { $regex: commander, $options: 'i' };
+    if (tags) {
+      const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
+      if (tagList.length) filter.tags = { $in: tagList };
+    }
+
+    const sortMap = {
+      newest:   { updatedAt: -1 },
+      imported: { importCount: -1 },
+      name:     { name: 1 }
+    };
+    const sortQuery = sortMap[sort] || sortMap.newest;
+    const PAGE_SIZE = 20;
+    const skip = (Math.max(1, parseInt(page)) - 1) * PAGE_SIZE;
+
+    const [decks, total] = await Promise.all([
+      Deck.find(filter)
+        .sort(sortQuery)
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .populate('userId', 'username displayName')
+        .lean(),
+      Deck.countDocuments(filter)
+    ]);
+
+    const result = decks.map(d => {
+      const { mainDeck, userId, ...rest } = d;
+      return { ...rest, cardCount: (mainDeck || []).length, owner: { username: userId?.username, displayName: userId?.displayName } };
+    });
+
+    res.json({ decks: result, total, page: parseInt(page), pages: Math.ceil(total / PAGE_SIZE) });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
 // Get single deck
 router.get('/:id', requireAuth, async (req, res) => {
   try {

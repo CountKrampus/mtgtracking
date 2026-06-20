@@ -165,3 +165,99 @@ describe('PATCH /api/decks/:id/visibility', () => {
     expect(updated.isPublic).toBe(false);
   });
 });
+
+describe('GET /api/decks/shared/:shareCode', () => {
+  test('returns deck and owner for a valid shareCode', async () => {
+    const user = await User.create({ email: 'f@test.com', username: 'userf', displayName: 'User F', passwordHash: 'h' });
+    await Deck.create({
+      userId: user._id,
+      name: 'Public Deck',
+      shareCode: 'pubcode1',
+      isPublic: true,
+      mainDeck: [{ scryfallId: 'abc', name: 'Lightning Bolt', quantity: 4 }]
+    });
+    const app = buildApp();
+
+    const res = await request(app).get('/api/decks/shared/pubcode1');
+
+    expect(res.status).toBe(200);
+    expect(res.body.deck.name).toBe('Public Deck');
+    expect(res.body.deck.mainDeck).toHaveLength(1);
+    expect(res.body.owner.username).toBe('userf');
+    expect(res.body.owner.displayName).toBe('User F');
+  });
+
+  test('returns 404 for unknown shareCode', async () => {
+    const app = buildApp();
+    const res = await request(app).get('/api/decks/shared/notacode');
+    expect(res.status).toBe(404);
+  });
+
+  test('works without auth header', async () => {
+    const user = await User.create({ email: 'g@test.com', username: 'userg', passwordHash: 'h' });
+    await Deck.create({ userId: user._id, name: 'Open Deck', shareCode: 'opencode' });
+    const app = buildApp();
+
+    const res = await request(app).get('/api/decks/shared/opencode');
+    expect(res.status).toBe(200);
+  });
+});
+
+describe('GET /api/decks/community', () => {
+  test('returns only isPublic decks', async () => {
+    const user = await User.create({ email: 'h@test.com', username: 'userh', passwordHash: 'h' });
+    await Deck.create({ userId: user._id, name: 'Private', shareCode: 'priv1', isPublic: false });
+    await Deck.create({ userId: user._id, name: 'Public', shareCode: 'pub2', isPublic: true });
+    const app = buildApp();
+
+    const res = await request(app).get('/api/decks/community');
+    expect(res.status).toBe(200);
+    expect(res.body.decks).toHaveLength(1);
+    expect(res.body.decks[0].name).toBe('Public');
+    expect(res.body.total).toBe(1);
+  });
+
+  test('filters by format', async () => {
+    const user = await User.create({ email: 'i@test.com', username: 'useri', passwordHash: 'h' });
+    await Deck.create({ userId: user._id, name: 'Commander Deck', shareCode: 'cmd1', isPublic: true, format: 'commander' });
+    await Deck.create({ userId: user._id, name: 'Modern Deck', shareCode: 'mod1', isPublic: true, format: 'modern' });
+    const app = buildApp();
+
+    const res = await request(app).get('/api/decks/community?format=commander');
+    expect(res.status).toBe(200);
+    expect(res.body.decks).toHaveLength(1);
+    expect(res.body.decks[0].name).toBe('Commander Deck');
+  });
+
+  test('filters by commander name (case-insensitive)', async () => {
+    const user = await User.create({ email: 'j@test.com', username: 'userj', passwordHash: 'h' });
+    await Deck.create({ userId: user._id, name: 'Atraxa Deck', shareCode: 'at1', isPublic: true, commander: { name: "Atraxa, Praetors' Voice" } });
+    await Deck.create({ userId: user._id, name: 'Other Deck', shareCode: 'ot1', isPublic: true, commander: { name: 'Urza, Lord High Artificer' } });
+    const app = buildApp();
+
+    const res = await request(app).get('/api/decks/community?commander=atraxa');
+    expect(res.status).toBe(200);
+    expect(res.body.decks).toHaveLength(1);
+    expect(res.body.decks[0].name).toBe('Atraxa Deck');
+  });
+
+  test('does not include mainDeck in community listing', async () => {
+    const user = await User.create({ email: 'k@test.com', username: 'userk', passwordHash: 'h' });
+    await Deck.create({
+      userId: user._id, name: 'Listed', shareCode: 'lst1', isPublic: true,
+      mainDeck: [{ scryfallId: 'x', name: 'Forest', quantity: 40 }]
+    });
+    const app = buildApp();
+
+    const res = await request(app).get('/api/decks/community');
+    expect(res.status).toBe(200);
+    expect(res.body.decks[0].mainDeck).toBeUndefined();
+    expect(res.body.decks[0].cardCount).toBe(1);
+  });
+
+  test('works without auth header', async () => {
+    const app = buildApp();
+    const res = await request(app).get('/api/decks/community');
+    expect(res.status).toBe(200);
+  });
+});
