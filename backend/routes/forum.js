@@ -453,15 +453,12 @@ router.post('/posts/:postId/upvote', verifyToken, requireAuth, async (req, res) 
 
     const uid = req.user._id;
     const idx = post.upvotes.findIndex(id => id.toString() === uid.toString());
-    if (idx === -1) {
-      post.upvotes.push(uid);
-      // Capture authorId before any populate() mutates it
-      const postAuthorId = post.authorId;
+    const isAdding = idx === -1;
+    const postAuthorId = post.authorId;
+    const isSelfVote = postAuthorId.toString() === uid.toString();
 
-      // Award +5 rep to post author (fire-and-forget)
-      if (postAuthorId.toString() !== uid.toString()) {
-        User.findByIdAndUpdate(postAuthorId, { $inc: { reputation: 5 } }).catch(() => {});
-      }
+    if (isAdding) {
+      post.upvotes.push(uid);
 
       // Create upvote notification asynchronously
       setImmediate(async () => {
@@ -490,7 +487,35 @@ router.post('/posts/:postId/upvote', verifyToken, requireAuth, async (req, res) 
       // No rep deduction on unvote
     }
     await post.save();
-    res.json({ upvoteCount: post.upvotes.length, hasUpvoted: idx === -1 });
+
+    // Best-answer detection for Q&A threads
+    let awardedBestAnswer = false;
+    const thread = await ForumThread.findById(post.threadId);
+    if (thread && thread.isQA) {
+      const allPosts = await ForumPost.find({ threadId: thread._id })
+        .select('_id authorId upvotes').lean();
+      const topPost = allPosts.reduce((best, p) =>
+        p.upvotes.length > (best ? best.upvotes.length : 0) ? p : best, null);
+
+      const prevBestId = thread.bestAnswerPostId ? thread.bestAnswerPostId.toString() : null;
+      const newBestId = topPost && topPost.upvotes.length >= 3 ? topPost._id.toString() : null;
+
+      thread.bestAnswerPostId = newBestId ? topPost._id : null;
+      await thread.save();
+
+      // Award +15 rep to new best-answer author (one-time: only when bestAnswerPostId changes to this post)
+      if (newBestId && newBestId !== prevBestId && !isSelfVote) {
+        User.findByIdAndUpdate(topPost.authorId, { $inc: { reputation: 15 } }).catch(() => {});
+        awardedBestAnswer = true;
+      }
+    }
+
+    // Award +5 rep to post author for regular upvote (skip if best-answer rep was just awarded)
+    if (isAdding && !isSelfVote && !awardedBestAnswer) {
+      User.findByIdAndUpdate(postAuthorId, { $inc: { reputation: 5 } }).catch(() => {});
+    }
+
+    res.json({ upvoteCount: post.upvotes.length, hasUpvoted: isAdding });
   } catch (e) {
     console.error('Upvote post error:', e);
     res.status(500).json({ message: e.message });

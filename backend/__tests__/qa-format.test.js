@@ -105,3 +105,72 @@ test('thread in non-QA category can opt into isQA', async () => {
   expect(res.status).toBe(201);
   expect(res.body.thread.isQA).toBe(true);
 });
+
+const ForumPost = require('../models/ForumPost');
+
+test('best answer is set when a post crosses 3 upvotes in QA thread', async () => {
+  const ForumCategory = require('../models/ForumCategory');
+  const ForumThread = require('../models/ForumThread');
+  const User = require('../models/User');
+
+  const cat = await ForumCategory.create({ name: 'BQ', slug: 'bq', isQA: true });
+  const author = await User.create({ email: 'e@t.com', username: 'uee', passwordHash: 'h', role: 'user' });
+  const voter1 = await User.create({ email: 'v1@t.com', username: 'vv1', passwordHash: 'h' });
+  const voter2 = await User.create({ email: 'v2@t.com', username: 'vv2', passwordHash: 'h' });
+  const voter3 = await User.create({ email: 'v3@t.com', username: 'vv3', passwordHash: 'h' });
+
+  const thread = await ForumThread.create({
+    categoryId: cat._id, authorId: author._id,
+    title: 'QQ', content: 'Q?', isQA: true
+  });
+  const post = await ForumPost.create({
+    threadId: thread._id, authorId: author._id,
+    body: 'Answer',
+    upvotes: [voter1._id, voter2._id]
+  });
+
+  const app = buildApp();
+  const token = makeToken(voter3._id.toString());
+
+  const res = await request(app)
+    .post(`/api/forum/posts/${post._id}/upvote`)
+    .set('Authorization', `Bearer ${token}`);
+
+  expect(res.status).toBe(200);
+
+  const updatedThread = await ForumThread.findById(thread._id);
+  expect(updatedThread.bestAnswerPostId.toString()).toBe(post._id.toString());
+});
+
+test('best answer author receives +15 rep (first time only)', async () => {
+  const ForumCategory = require('../models/ForumCategory');
+  const ForumThread = require('../models/ForumThread');
+  const User = require('../models/User');
+
+  const cat = await ForumCategory.create({ name: 'RQ', slug: 'rq', isQA: true });
+  const postAuthor = await User.create({ email: 'pa@t.com', username: 'paa', passwordHash: 'h', reputation: 0 });
+  const voter1 = await User.create({ email: 'rv1@t.com', username: 'rv1', passwordHash: 'h' });
+  const voter2 = await User.create({ email: 'rv2@t.com', username: 'rv2', passwordHash: 'h' });
+  const voter3 = await User.create({ email: 'rv3@t.com', username: 'rv3', passwordHash: 'h' });
+
+  const thread = await ForumThread.create({
+    categoryId: cat._id, authorId: postAuthor._id,
+    title: 'RT', content: 'Q?', isQA: true
+  });
+  const post = await ForumPost.create({
+    threadId: thread._id, authorId: postAuthor._id,
+    body: 'Rep answer',
+    upvotes: [voter1._id, voter2._id]
+  });
+
+  const app = buildApp();
+  const token = makeToken(voter3._id.toString());
+  await request(app)
+    .post(`/api/forum/posts/${post._id}/upvote`)
+    .set('Authorization', `Bearer ${token}`);
+
+  await new Promise(r => setTimeout(r, 150));
+
+  const updated = await User.findById(postAuthor._id);
+  expect(updated.reputation).toBe(15);
+});
