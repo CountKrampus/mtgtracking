@@ -1,11 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Coins, Zap, MessageSquare, Share2 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { API_URL } from '../../config';
 import UserAvatar from '../avatars/UserAvatar';
+
+function renderBadgeIcon(iconStr) {
+  if (!iconStr) return '🏅';
+  if (iconStr.startsWith('mana:')) {
+    const key = iconStr.slice(5);
+    return <i className={`ms ms-${key}`} style={{ fontSize: 13, verticalAlign: 'middle' }} />;
+  }
+  if (iconStr.startsWith('lucide:')) {
+    const name = iconStr.slice(7);
+    const Icon = LucideIcons[name];
+    if (Icon) return <Icon size={13} style={{ display: 'inline', verticalAlign: 'middle' }} />;
+  }
+  return '🏅';
+}
 
 export default function ForumProfilePage({ user, apiUrl }) {
   const [levelData, setLevelData] = useState(null);
   const [stats, setStats] = useState(null);
+  const [equippedCosmetics, setEquippedCosmetics] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -31,6 +47,9 @@ export default function ForumProfilePage({ user, apiUrl }) {
       });
       const activityInfo = await activityRes.json();
       setStats(activityInfo);
+      if (activityInfo.equippedCosmetics) {
+        setEquippedCosmetics(activityInfo.equippedCosmetics);
+      }
 
       setError(null);
     } catch (err) {
@@ -45,9 +64,19 @@ export default function ForumProfilePage({ user, apiUrl }) {
   if (error) return <div className="text-center py-12 text-red-400">{error}</div>;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div
+      className="max-w-4xl mx-auto space-y-6"
+      style={equippedCosmetics.profileTheme?.color
+        ? { '--profile-accent': equippedCosmetics.profileTheme.color }
+        : {}}
+    >
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-900/50 to-slate-900 border border-purple-500/30 rounded-lg p-8">
+      <div
+        className="bg-gradient-to-r from-purple-900/50 to-slate-900 rounded-lg p-8"
+        style={{ border: equippedCosmetics.profileBorderColor?.color
+          ? `2px solid ${equippedCosmetics.profileBorderColor.color}`
+          : '1px solid rgba(168, 85, 247, 0.3)' }}
+      >
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
             <UserAvatar avatarUrl={user.avatarUrl} username={user.username} size="lg" />
@@ -122,6 +151,25 @@ export default function ForumProfilePage({ user, apiUrl }) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Badges */}
+      {stats?.badges && stats.badges.length > 0 && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
+          <h3 className="text-lg font-bold text-white mb-4">Badges</h3>
+          <div className="flex flex-wrap gap-2">
+            {stats.badges.map((badge, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center gap-1.5 text-xs bg-purple-900/40 border border-purple-700/40 text-purple-300 px-3 py-1.5 rounded-full"
+                title={badge.description}
+              >
+                {renderBadgeIcon(badge.icon)}
+                {badge.name}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 

@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import * as LucideIcons from 'lucide-react';
 import { API_URL } from '../config';
 import UserAvatar from './avatars/UserAvatar';
 
-const BADGE_EMOJI = {
-  'First Post': '📝',
-  'Century': '💬',
-  'Thread Starter': '🧵',
-  'Deck Builder': '🃏',
-  'Collector': '📦',
-  'Veteran': '🗓️',
-  'Engaged Member': '🌟'
-};
+function renderBadgeIcon(iconStr) {
+  if (!iconStr) return '🏅';
+  if (iconStr.startsWith('mana:')) {
+    const key = iconStr.slice(5);
+    return <i className={`ms ms-${key}`} style={{ fontSize: 13, verticalAlign: 'middle' }} />;
+  }
+  if (iconStr.startsWith('lucide:')) {
+    const name = iconStr.slice(7);
+    const Icon = LucideIcons[name];
+    if (Icon) return <Icon size={13} style={{ display: 'inline', verticalAlign: 'middle' }} />;
+  }
+  return '🏅';
+}
 
 function ForumActivitySection({ activity }) {
   const stats = activity.stats || {};
@@ -19,7 +24,12 @@ function ForumActivitySection({ activity }) {
     : '—';
 
   return (
-    <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6">
+    <div
+      className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6"
+      style={{ border: activity.equippedCosmetics?.profileBorderColor?.color
+        ? `2px solid ${activity.equippedCosmetics.profileBorderColor.color}`
+        : undefined }}
+    >
       <h2 className="text-2xl font-bold text-white mb-4">Forum Activity</h2>
 
       {/* Rep + badges */}
@@ -38,7 +48,7 @@ function ForumActivitySection({ activity }) {
                 className="text-xs bg-purple-900/30 border border-purple-700/30 text-purple-300 px-2 py-0.5 rounded-full"
                 title={badge.description}
               >
-                {BADGE_EMOJI[badge.name] || '🏅'} {badge.name}
+                {renderBadgeIcon(badge.icon)} {badge.name}
               </span>
             ))}
           </div>
@@ -207,7 +217,7 @@ export default function UserProfile({ username }) {
                   className="text-xs bg-purple-900/40 border border-purple-700/40 text-purple-300 px-2 py-1 rounded-full"
                   title={badge.description}
                 >
-                  {BADGE_EMOJI[badge.name] || '🏅'} {badge.name}
+                  {renderBadgeIcon(badge.icon)} {badge.name}
                 </span>
               ))}
             </div>

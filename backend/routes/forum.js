@@ -1190,6 +1190,31 @@ router.get('/users/:username/activity', async (req, res) => {
       ForumPost.countDocuments(baseMatch)
     ]);
 
+    // Resolve profile-level equipped cosmetics for display
+    const userLevel = await ForumLevel.findOne({ userId: user._id })
+      .select('cosmetics memberTitleText').lean();
+
+    let equippedCosmetics = {};
+    if (userLevel) {
+      const eq = userLevel.cosmetics?.equipped || {};
+      const profileCosmeticIds = [
+        eq.profileBorderColor, eq.profileBackground, eq.profileBanner, eq.profileTheme
+      ].filter(Boolean);
+
+      const profileCosmetics = profileCosmeticIds.length > 0
+        ? await Cosmetic.find({ _id: { $in: profileCosmeticIds } }).lean()
+        : [];
+      const cosMap = Object.fromEntries(profileCosmetics.map(c => [c._id.toString(), c]));
+
+      equippedCosmetics = {
+        profileBorderColor: eq.profileBorderColor ? cosMap[eq.profileBorderColor] || null : null,
+        profileBackground:  eq.profileBackground  ? cosMap[eq.profileBackground]  || null : null,
+        profileBanner:      eq.profileBanner      ? cosMap[eq.profileBanner]      || null : null,
+        profileTheme:       eq.profileTheme       ? cosMap[eq.profileTheme]       || null : null,
+        memberTitleText:    userLevel.memberTitleText || '',
+      };
+    }
+
     res.json({
       username: user.username,
       reputation: user.reputation || 0,
@@ -1203,7 +1228,8 @@ router.get('/users/:username/activity', async (req, res) => {
         memberSince: user.createdAt
       },
       recentPosts,
-      topPosts
+      topPosts,
+      equippedCosmetics
     });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
@@ -1267,7 +1293,13 @@ router.post('/level/cosmetics/purchase', verifyToken, requireAuth, async (req, r
 // POST /api/forum/level/cosmetics/equip
 router.post('/level/cosmetics/equip', verifyToken, requireAuth, async (req, res) => {
   const { cosmeticId, category } = req.body;
-  const VALID_CATEGORIES = ['titleColor', 'profileBorderColor', 'avatarBorder'];
+  const VALID_CATEGORIES = [
+    'titleColor', 'profileBorderColor', 'avatarBorder',
+    'flairIcon', 'postBackground', 'postFrame', 'memberTitle', 'signature',
+    'threadHighlight', 'profileBackground', 'profileBanner', 'profileTheme',
+    'achievementShowcase', 'favoriteCardsShowcase', 'deckShowcase',
+    'collectionStatsWidget', 'wishlistPreview',
+  ];
   if (!VALID_CATEGORIES.includes(category))
     return res.status(400).json({ message: 'Invalid category' });
   try {
@@ -1279,6 +1311,66 @@ router.post('/level/cosmetics/equip', verifyToken, requireAuth, async (req, res)
     level.markModified('cosmetics.equipped');
     await level.save();
     res.json({ success: true, newEquipped: level.cosmetics.equipped });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// PUT /api/forum/level/member-title — set member title text (requires owning memberTitle cosmetic)
+router.put('/level/member-title', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (typeof text !== 'string') return res.status(400).json({ message: 'text is required' });
+    const trimmed = text.trim().slice(0, 40);
+
+    const level = await ForumLevel.findOne({ userId: req.user._id });
+    if (!level) return res.status(404).json({ message: 'Level not found' });
+
+    // Check user owns a memberTitle cosmetic
+    const memberTitleCosmetics = await Cosmetic.find({ category: 'memberTitle' }).lean();
+    const ownsMemberTitle = memberTitleCosmetics.some(c => level.cosmetics.purchased.includes(c._id.toString()));
+    if (!ownsMemberTitle) return res.status(403).json({ message: 'Member title not unlocked' });
+
+    level.memberTitleText = trimmed;
+    await level.save();
+    res.json({ memberTitleText: level.memberTitleText });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// PUT /api/forum/level/signature — set signature text (requires owning signature cosmetic)
+router.put('/level/signature', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (typeof text !== 'string') return res.status(400).json({ message: 'text is required' });
+    const trimmed = text.trim().slice(0, 120);
+
+    const level = await ForumLevel.findOne({ userId: req.user._id });
+    if (!level) return res.status(404).json({ message: 'Level not found' });
+
+    const signatureCosmetics = await Cosmetic.find({ category: 'signature' }).lean();
+    const ownsSignature = signatureCosmetics.some(c => level.cosmetics.purchased.includes(c._id.toString()));
+    if (!ownsSignature) return res.status(403).json({ message: 'Signature not unlocked' });
+
+    level.signatureText = trimmed;
+    await level.save();
+    res.json({ signatureText: level.signatureText });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// PUT /api/forum/level/pinned-achievements — set pinned achievements (requires owning achievementShowcase cosmetic)
+router.put('/level/pinned-achievements', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { names } = req.body;
+    if (!Array.isArray(names)) return res.status(400).json({ message: 'names must be an array' });
+
+    const level = await ForumLevel.findOne({ userId: req.user._id });
+    if (!level) return res.status(404).json({ message: 'Level not found' });
+
+    const showcaseCosmetics = await Cosmetic.find({ category: 'achievementShowcase' }).lean();
+    const ownsShowcase = showcaseCosmetics.some(c => level.cosmetics.purchased.includes(c._id.toString()));
+    if (!ownsShowcase) return res.status(403).json({ message: 'Achievement showcase not unlocked' });
+
+    level.pinnedAchievements = names.slice(0, 3);
+    await level.save();
+    res.json({ pinnedAchievements: level.pinnedAchievements });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
