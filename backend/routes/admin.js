@@ -13,6 +13,7 @@ const UserWarning = require('../models/UserWarning');
 const BanAppeal = require('../models/BanAppeal');
 const ModerationHistory = require('../models/ModerationHistory');
 const CollectionAudit = require('../models/CollectionAudit');
+const Badge = require('../models/Badge');
 const { verifyToken, requireAuth, requireAdmin, requireModerator, requireContentManager, requireSupport, isMultiUserEnabled } = require('../middleware/auth');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
 const { isStaffRole, ROLE_PERMISSIONS } = require('../utils/permissions');
@@ -316,6 +317,54 @@ router.put('/users/:userId/role', requireAdmin, async (req, res) => {
     console.error('Error updating user role:', error.message);
     res.status(500).json({ message: 'Failed to update user role' });
   }
+});
+
+// ── Badge management ──────────────────────────────────────────────────────────
+
+// GET /api/admin/badges — list all badges
+router.get('/badges', requireAdmin, async (req, res) => {
+  try {
+    const badges = await Badge.find().sort({ name: 1 }).lean();
+    res.json({ badges });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// POST /api/admin/badges/:badgeId/grant/:userId — grant a badge to a user
+router.post('/badges/:badgeId/grant/:userId', requireAdmin, async (req, res) => {
+  try {
+    const badge = await Badge.findById(req.params.badgeId).lean();
+    if (!badge) return res.status(404).json({ message: 'Badge not found' });
+
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const alreadyHas = user.badges?.some(b => b.name === badge.name);
+    if (alreadyHas) return res.status(409).json({ message: 'User already has this badge' });
+
+    user.badges = user.badges || [];
+    user.badges.push({ name: badge.name, description: badge.description, earnedAt: new Date() });
+    await user.save();
+
+    res.json({ message: `Badge "${badge.name}" granted to ${user.username}`, badges: user.badges });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// DELETE /api/admin/badges/:badgeId/revoke/:userId — revoke a badge from a user
+router.delete('/badges/:badgeId/revoke/:userId', requireAdmin, async (req, res) => {
+  try {
+    const badge = await Badge.findById(req.params.badgeId).lean();
+    if (!badge) return res.status(404).json({ message: 'Badge not found' });
+
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const before = user.badges?.length || 0;
+    user.badges = (user.badges || []).filter(b => b.name !== badge.name);
+    if (user.badges.length === before) return res.status(404).json({ message: 'User does not have this badge' });
+
+    await user.save();
+    res.json({ message: `Badge "${badge.name}" revoked from ${user.username}`, badges: user.badges });
+  } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
 /**
