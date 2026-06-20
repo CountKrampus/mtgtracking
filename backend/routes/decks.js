@@ -585,6 +585,30 @@ router.patch('/:id/visibility', requireAuth, requireEditor, async (req, res) => 
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
+// Authenticated: import (clone) a community deck into your collection
+router.post('/community/:shareCode/import', requireAuth, async (req, res) => {
+  try {
+    const original = await Deck.findOne({ shareCode: req.params.shareCode }).lean();
+    if (!original) return res.status(404).json({ message: 'Deck not found' });
+
+    const userId = getUserId(req);
+    const { _id, shareCode, isPublic, importCount, userId: _ownerId, createdAt, updatedAt, __v, ...deckData } = original;
+
+    const newDeck = new Deck({
+      ...deckData,
+      userId,
+      shareCode: null,
+      isPublic: false,
+      importCount: 0
+    });
+    await newDeck.save();
+
+    await Deck.findByIdAndUpdate(original._id, { $inc: { importCount: 1 } });
+
+    res.status(201).json({ deckId: newDeck._id });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
 // Share deck (generate share code)
 router.post('/:id/share', requireAuth, requireEditor, async (req, res) => {
   try {

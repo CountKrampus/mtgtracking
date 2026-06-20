@@ -261,3 +261,67 @@ describe('GET /api/decks/community', () => {
     expect(res.status).toBe(200);
   });
 });
+
+describe('POST /api/decks/community/:shareCode/import', () => {
+  test('clones deck into requesting user collection', async () => {
+    const owner = await User.create({ email: 'l@test.com', username: 'userl', passwordHash: 'h' });
+    const importer = await User.create({ email: 'm@test.com', username: 'userm', passwordHash: 'h' });
+    await Deck.create({
+      userId: owner._id,
+      name: 'Great Deck',
+      shareCode: 'import1',
+      isPublic: true,
+      mainDeck: [{ scryfallId: 'abc', name: 'Lightning Bolt', quantity: 4 }]
+    });
+    const app = buildApp();
+
+    const res = await request(app)
+      .post('/api/decks/community/import1/import')
+      .set('Authorization', `Bearer ${makeToken(importer._id)}`);
+
+    expect(res.status).toBe(201);
+    expect(res.body.deckId).toBeTruthy();
+
+    const newDeck = await Deck.findById(res.body.deckId);
+    expect(newDeck.name).toBe('Great Deck');
+    expect(newDeck.userId.toString()).toBe(importer._id.toString());
+    expect(newDeck.shareCode).toBeNull();
+    expect(newDeck.isPublic).toBe(false);
+    expect(newDeck.importCount).toBe(0);
+    expect(newDeck.mainDeck).toHaveLength(1);
+  });
+
+  test('increments importCount on the original deck', async () => {
+    const owner = await User.create({ email: 'n@test.com', username: 'usern', passwordHash: 'h' });
+    const importer = await User.create({ email: 'o@test.com', username: 'usero', passwordHash: 'h' });
+    const original = await Deck.create({ userId: owner._id, name: 'Popular', shareCode: 'import2', isPublic: true, importCount: 5 });
+    const app = buildApp();
+
+    await request(app)
+      .post('/api/decks/community/import2/import')
+      .set('Authorization', `Bearer ${makeToken(importer._id)}`);
+
+    const updated = await Deck.findById(original._id);
+    expect(updated.importCount).toBe(6);
+  });
+
+  test('returns 401 without auth', async () => {
+    const owner = await User.create({ email: 'p@test.com', username: 'userp', passwordHash: 'h' });
+    await Deck.create({ userId: owner._id, name: 'Deck', shareCode: 'import3', isPublic: true });
+    const app = buildApp();
+
+    const res = await request(app).post('/api/decks/community/import3/import');
+    expect(res.status).toBe(401);
+  });
+
+  test('returns 404 for unknown shareCode', async () => {
+    const importer = await User.create({ email: 'q@test.com', username: 'userq', passwordHash: 'h' });
+    const app = buildApp();
+
+    const res = await request(app)
+      .post('/api/decks/community/nocode/import')
+      .set('Authorization', `Bearer ${makeToken(importer._id)}`);
+
+    expect(res.status).toBe(404);
+  });
+});
