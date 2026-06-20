@@ -592,7 +592,7 @@ router.post('/community/:shareCode/import', requireAuth, async (req, res) => {
     if (!original) return res.status(404).json({ message: 'Deck not found' });
 
     const userId = getUserId(req);
-    const { _id, shareCode, isPublic, importCount, userId: _ownerId, createdAt, updatedAt, __v, ...deckData } = original;
+    const { _id, shareCode, isPublic, importCount, userId: _ownerId, createdAt, updatedAt, __v, folderId, folder, ...deckData } = original;
 
     const newDeck = new Deck({
       ...deckData,

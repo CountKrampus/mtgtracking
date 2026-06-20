@@ -289,6 +289,7 @@ describe('POST /api/decks/community/:shareCode/import', () => {
     expect(newDeck.isPublic).toBe(false);
     expect(newDeck.importCount).toBe(0);
     expect(newDeck.mainDeck).toHaveLength(1);
+    expect(newDeck.folderId).toBeNull();
   });
 
   test('increments importCount on the original deck', async () => {
