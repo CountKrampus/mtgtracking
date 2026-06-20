@@ -9,7 +9,13 @@ const cosmeticSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['titleColor', 'profileBorderColor', 'avatarBorder', 'badgeColor'],
+    enum: [
+      'titleColor', 'profileBorderColor', 'avatarBorder', 'badgeColor',
+      'flairIcon', 'postBackground', 'postFrame', 'memberTitle', 'signature',
+      'threadHighlight', 'profileBackground', 'profileBanner', 'profileTheme',
+      'achievementShowcase', 'favoriteCardsShowcase', 'deckShowcase',
+      'collectionStatsWidget', 'wishlistPreview'
+    ],
     required: true
   },
   cost: {
@@ -37,6 +43,18 @@ const cosmeticSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  cssProperties: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
+  },
+  imageUrl: {
+    type: String,
+    default: null
+  },
+  animationClass: {
+    type: String,
+    default: null
   },
   createdAt: {
     type: Date,

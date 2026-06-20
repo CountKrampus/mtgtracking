@@ -39,9 +39,26 @@ const forumLevelSchema = new mongoose.Schema({
     equipped: {
       titleColor: String,
       profileBorderColor: String,
-      avatarBorder: String
+      avatarBorder: String,
+      flairIcon: { type: String, default: null },
+      postBackground: { type: String, default: null },
+      postFrame: { type: String, default: null },
+      memberTitle: { type: String, default: null },
+      signature: { type: String, default: null },
+      threadHighlight: { type: String, default: null },
+      profileBackground: { type: String, default: null },
+      profileBanner: { type: String, default: null },
+      profileTheme: { type: String, default: null },
+      achievementShowcase: { type: String, default: null },
+      favoriteCardsShowcase: { type: String, default: null },
+      deckShowcase: { type: String, default: null },
+      collectionStatsWidget: { type: String, default: null },
+      wishlistPreview: { type: String, default: null }
     }
   },
+  memberTitleText: { type: String, default: '', maxlength: 40 },
+  signatureText: { type: String, default: '', maxlength: 120 },
+  pinnedAchievements: { type: [String], default: [] },
   achievements: [
     {
       name: String,

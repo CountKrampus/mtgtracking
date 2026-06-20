@@ -87,7 +87,14 @@ const userSchema = new mongoose.Schema({
   badges: [{
     name: { type: String, required: true },
     description: { type: String, default: '' },
+    icon: { type: String, default: '' },
     earnedAt: { type: Date, default: Date.now }
+  }],
+  pinnedCards: [{
+    cardId: { type: mongoose.Schema.Types.ObjectId, ref: 'Card', default: null },
+    scryfallId: { type: String, default: '' },
+    name: { type: String, default: '' },
+    imageUrl: { type: String, default: '' }
   }],
   avatarUrl: {
     type: String,
