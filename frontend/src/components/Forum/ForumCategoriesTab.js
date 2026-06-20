@@ -63,6 +63,29 @@ export default function ForumCategoriesTab() {
     }
   };
 
+  const handleToggleCategoryQA = async (catId, newValue) => {
+    try {
+      const token = localStorage.getItem('mtg_access_token');
+      await axios.put(`${API_URL}/forum/categories/${catId}`, { isQA: newValue }, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      setCategories(prev => prev.map(c => {
+        if (c._id === catId) return { ...c, isQA: newValue };
+        if (c.children) {
+          return {
+            ...c,
+            children: c.children.map(sub =>
+              sub._id === catId ? { ...sub, isQA: newValue } : sub
+            )
+          };
+        }
+        return c;
+      }));
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to update category');
+    }
+  };
+
   const handleDeleteCategory = async (id) => {
     // eslint-disable-next-line no-restricted-globals
     if (!confirm('Are you sure you want to delete this category?')) return;
@@ -248,6 +271,16 @@ export default function ForumCategoriesTab() {
                   )}
                 </div>
 
+                <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
+                  <div
+                    onClick={() => handleToggleCategoryQA(category._id, !category.isQA)}
+                    className={`relative w-8 h-4 rounded-full transition cursor-pointer ${category.isQA ? 'bg-green-600' : 'bg-gray-700'}`}
+                  >
+                    <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${category.isQA ? 'left-4' : 'left-0.5'}`} />
+                  </div>
+                  <span className="text-white/60 text-xs">Q&amp;A</span>
+                </label>
+
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
                   {editingId === category._id ? (
                     <>
@@ -313,6 +346,16 @@ export default function ForumCategoriesTab() {
                         )}
                         <div className="text-white/30 text-xs">{subcategory.threadCount} threads</div>
                       </div>
+                      <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
+                        <div
+                          onClick={() => handleToggleCategoryQA(subcategory._id, !subcategory.isQA)}
+                          className={`relative w-8 h-4 rounded-full transition cursor-pointer ${subcategory.isQA ? 'bg-green-600' : 'bg-gray-700'}`}
+                        >
+                          <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${subcategory.isQA ? 'left-4' : 'left-0.5'}`} />
+                        </div>
+                        <span className="text-white/60 text-xs">Q&amp;A</span>
+                      </label>
+
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
                         <button
                           onClick={() => {
