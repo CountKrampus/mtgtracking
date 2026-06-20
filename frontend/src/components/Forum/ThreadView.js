@@ -6,6 +6,18 @@ import UserAvatar from '../avatars/UserAvatar';
 import DeckImportButton from './DeckImportButton';
 import UserHoverCard from './UserHoverCard';
 
+function findPostById(nodes, id) {
+  if (!nodes || !id) return null;
+  for (const node of nodes) {
+    if (node._id === id || node._id?.toString() === id?.toString()) return node;
+    if (node.replies?.length) {
+      const found = findPostById(node.replies, id);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 const BADGE_EMOJI = {
   'First Post': '📝',
   'Century': '💬',
@@ -16,7 +28,7 @@ const BADGE_EMOJI = {
   'Engaged Member': '🌟'
 };
 
-function PostNode({ post, isOP, user, onViewProfile, onDeletePost, onEditPost, editingPostId, editBody, setEditingPostId, setEditBody, setHistoryPostId }) {
+function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost, onEditPost, editingPostId, editBody, setEditingPostId, setEditBody, setHistoryPostId }) {
   const [hoverPos, setHoverPos] = useState(null);
 
   return (
@@ -43,6 +55,7 @@ function PostNode({ post, isOP, user, onViewProfile, onDeletePost, onEditPost, e
               </span>
             )}
             {isOP && <span className="ml-1 text-[10px] bg-purple-800/50 text-purple-300 px-1.5 py-0.5 rounded">OP</span>}
+            {isBestAnswer && <span className="text-[10px] bg-green-900/40 text-green-400 border border-green-700/30 px-1.5 py-0.5 rounded">✅ Best</span>}
             {post.authorReputation > 0 && (
               <span className="text-amber-400 text-xs font-semibold ml-1">⚡ {post.authorReputation}</span>
             )}
@@ -337,6 +350,10 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
     }
   };
 
+  const bestAnswerPost = thread?.isQA && thread?.bestAnswerPostId
+    ? findPostById(posts, thread.bestAnswerPostId)
+    : null;
+
   if (!threadId) {
     return <div className="flex-1 p-6 text-slate-400">Select a thread</div>;
   }
@@ -493,12 +510,34 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
             </div>
           )}
 
+          {/* Best answer pin */}
+          {bestAnswerPost && (
+            <div className="mb-4">
+              <div className="text-[10px] text-green-400 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <span>✅ Best Answer</span>
+                <span className="text-white/30">— {bestAnswerPost.upvotes?.length || bestAnswerPost.upvoteCount || 0} upvote{(bestAnswerPost.upvotes?.length || bestAnswerPost.upvoteCount || 0) !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="border border-green-700/40 bg-green-900/10 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-7 h-7 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    {(bestAnswerPost.authorId?.displayName || bestAnswerPost.authorId?.username || '?')[0].toUpperCase()}
+                  </div>
+                  <span className="text-white text-sm font-medium">{bestAnswerPost.authorId?.displayName || bestAnswerPost.authorId?.username}</span>
+                </div>
+                <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap">
+                  {bestAnswerPost.body || ''}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-4 mb-6">
             {posts.map(post => (
               <PostNode
                 key={post._id}
                 post={post}
                 isOP={thread.authorId?._id === post.authorId?._id || thread.authorId === post.authorId?._id}
+                isBestAnswer={!!(thread?.bestAnswerPostId && (post._id === thread.bestAnswerPostId || post._id?.toString() === thread.bestAnswerPostId?.toString()))}
                 user={user}
                 onViewProfile={onViewProfile}
                 onDeletePost={handleDeletePost}
