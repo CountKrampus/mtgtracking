@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Search, Plus, Trash2, Edit2, Save, X, Download, RefreshCw, DollarSign, Upload, Camera, Settings, Heart, CheckSquare, Square, MapPin, Star, Layers, Zap, Crown, BarChart3, Users, QrCode, Printer, Home, BookOpen, Trophy, User, MessageSquare } from 'lucide-react';
 import QRCode from 'qrcode';
 import './App.css';
+import 'mana-font';
 import Sidebar from './components/Sidebar';
 import ValueHistoryChart from './components/ValueHistoryChart';
 import Breadcrumb from './components/Breadcrumb';
