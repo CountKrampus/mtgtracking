@@ -96,6 +96,15 @@ export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user,
                     {thread.isPinned && (
                       <Pin size={14} className="text-yellow-400 flex-shrink-0" />
                     )}
+                    {thread.isQA && thread.bestAnswerPostId && (
+                      <span className="bg-green-900/30 text-green-400 border border-green-700/30 text-[10px] px-2 py-0.5 rounded whitespace-nowrap">✅ Answered</span>
+                    )}
+                    {thread.isQA && !thread.bestAnswerPostId && (
+                      <span className="bg-blue-900/30 text-blue-300 border border-blue-700/30 text-[10px] px-2 py-0.5 rounded whitespace-nowrap">❓ Unanswered</span>
+                    )}
+                    {!thread.isQA && (
+                      <span className="bg-gray-700/20 text-gray-500 border border-gray-700/20 text-[10px] px-2 py-0.5 rounded whitespace-nowrap">💬 Discussion</span>
+                    )}
                     <h3 className="font-semibold text-white">{thread.title}</h3>
                     {thread.isLocked && (
                       <Lock size={14} className="text-red-500 flex-shrink-0" />
