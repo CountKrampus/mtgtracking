@@ -234,7 +234,7 @@ router.get('/threads/:threadId', async (req, res) => {
 // POST /api/forum/threads - Create new thread (requires auth)
 router.post('/threads', verifyToken, requireAuth, checkMute, async (req, res) => {
   try {
-    const { categoryId, title, contentFormat = 'markdown', tags = [] } = req.body;
+    const { categoryId, title, contentFormat = 'markdown', tags = [], isQA: isQAOverride } = req.body;
     const content = req.body.content || req.body.body;
 
     if (!categoryId || !title || !content) {
@@ -252,7 +252,8 @@ router.post('/threads', verifyToken, requireAuth, checkMute, async (req, res) =>
       content,
       contentFormat,
       tags,
-      authorId: req.user._id
+      authorId: req.user._id,
+      isQA: isQAOverride !== undefined ? Boolean(isQAOverride) : Boolean(category.isQA)
     });
 
     await thread.save();
