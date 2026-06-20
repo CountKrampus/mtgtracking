@@ -155,6 +155,18 @@ router.get('/categories/:categoryId/threads', async (req, res) => {
   }
 });
 
+// GET /api/forum/leaderboard — top 10 users by reputation
+router.get('/leaderboard', async (req, res) => {
+  try {
+    const leaders = await User.find({ reputation: { $gt: 0 }, isActive: true })
+      .sort({ reputation: -1 })
+      .limit(10)
+      .select('username displayName reputation badges')
+      .lean();
+    res.json({ leaderboard: leaders });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
 // GET /api/forum/threads/:threadId - Get single thread with posts
 router.get('/threads/:threadId', async (req, res) => {
   try {
@@ -180,9 +192,32 @@ router.get('/threads/:threadId', async (req, res) => {
 
     const total = await ForumPost.countDocuments({ threadId, isHidden: false });
 
+    // Batch-fetch author rep/badges for all unique authors
+    const flatPostsList = Array.isArray(posts) ? posts : [];
+    const threadAuthorId = thread.authorId?._id?.toString() || thread.authorId?.toString();
+    const authorIds = [...new Set(
+      [threadAuthorId,
+       ...flatPostsList.map(p => p.authorId?._id?.toString() || p.authorId?.toString())]
+        .filter(Boolean)
+    )];
+    const authorDocs = await User.find({ _id: { $in: authorIds } })
+      .select('reputation badges').lean();
+    const authorMap = Object.fromEntries(authorDocs.map(u => [u._id.toString(), u]));
+
     res.json({
-      thread,
-      posts,
+      thread: {
+        ...thread.toObject(),
+        authorReputation: authorMap[threadAuthorId]?.reputation || 0,
+        authorBadges: (authorMap[threadAuthorId]?.badges || []).slice(0, 5)
+      },
+      posts: flatPostsList.map(p => {
+        const postAuthorId = p.authorId?._id?.toString() || p.authorId?.toString();
+        return {
+          ...p.toObject(),
+          authorReputation: authorMap[postAuthorId]?.reputation || 0,
+          authorBadges: (authorMap[postAuthorId]?.badges || []).slice(0, 5)
+        };
+      }),
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -1194,8 +1229,8 @@ router.get('/level/:userId', async (req, res) => {
   }
 });
 
-// GET /api/forum/leaderboard - Get level leaderboard (public)
-router.get('/leaderboard', async (req, res) => {
+// GET /api/forum/leaderboard-levels - Get level leaderboard (public)
+router.get('/leaderboard-levels', async (req, res) => {
   try {
     const { page = 1, limit = 100 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
