@@ -4,6 +4,132 @@ import PostComposer from './PostComposer';
 import PostEditHistory from './PostEditHistory';
 import UserAvatar from '../avatars/UserAvatar';
 import DeckImportButton from './DeckImportButton';
+import UserHoverCard from './UserHoverCard';
+
+const BADGE_EMOJI = {
+  'First Post': '📝',
+  'Century': '💬',
+  'Thread Starter': '🧵',
+  'Deck Builder': '🃏',
+  'Collector': '📦',
+  'Veteran': '🗓️',
+  'Engaged Member': '🌟'
+};
+
+function PostNode({ post, isOP, user, onViewProfile, onDeletePost, onEditPost, editingPostId, editBody, setEditingPostId, setEditBody, setHistoryPostId }) {
+  const [hoverPos, setHoverPos] = useState(null);
+
+  return (
+    <div key={post._id} className="bg-slate-800 p-4 rounded border border-slate-700">
+      <div className="flex items-start justify-between mb-2">
+        <div>
+          <div className="font-semibold text-white flex items-center flex-wrap gap-x-1">
+            {onViewProfile ? (
+              <span
+                className="font-medium text-white text-sm cursor-pointer hover:text-purple-300 transition"
+                onMouseEnter={e => setHoverPos({ x: e.clientX, y: e.clientY, post })}
+                onMouseLeave={() => setHoverPos(null)}
+                onClick={() => onViewProfile(post.authorId?.username)}
+              >
+                {post.authorId?.displayName || 'Unknown'}
+              </span>
+            ) : (
+              <span
+                className="font-medium text-white text-sm cursor-pointer hover:text-purple-300 transition"
+                onMouseEnter={e => setHoverPos({ x: e.clientX, y: e.clientY, post })}
+                onMouseLeave={() => setHoverPos(null)}
+              >
+                {post.authorId?.displayName || 'Unknown'}
+              </span>
+            )}
+            {isOP && <span className="ml-1 text-[10px] bg-purple-800/50 text-purple-300 px-1.5 py-0.5 rounded">OP</span>}
+            {post.authorReputation > 0 && (
+              <span className="text-amber-400 text-xs font-semibold ml-1">⚡ {post.authorReputation}</span>
+            )}
+            {(post.authorBadges || []).slice(0, 3).map((badge, i) => (
+              <span key={i} className="text-sm ml-0.5" title={badge.name}>
+                {BADGE_EMOJI[badge.name] || '🏅'}
+              </span>
+            ))}
+            {hoverPos && (
+              <UserHoverCard
+                pos={hoverPos}
+                username={post.authorId?.username}
+                displayName={post.authorId?.displayName}
+                reputation={post.authorReputation || 0}
+                badges={post.authorBadges || []}
+                onClose={() => setHoverPos(null)}
+              />
+            )}
+          </div>
+          <div className="text-xs text-slate-500">
+            {new Date(post.createdAt).toLocaleString()}
+            {post.isEdited && ' (edited)'}
+          </div>
+        </div>
+        {user && (user._id === post.authorId._id || user.role === 'admin') && (
+          <div className="flex gap-2">
+            {user._id === post.authorId._id && (
+              <button
+                onClick={() => {
+                  setEditingPostId(post._id);
+                  setEditBody(post.body);
+                }}
+                className="p-1 hover:bg-slate-700 rounded"
+                title="Edit post"
+              >
+                <Edit2 size={16} />
+              </button>
+            )}
+            {post.isEdited && (
+              <button
+                onClick={() => setHistoryPostId(post._id)}
+                className="p-1 hover:bg-slate-700 rounded text-blue-400"
+                title="View edit history"
+              >
+                <History size={16} />
+              </button>
+            )}
+            <button
+              onClick={() => onDeletePost(post._id)}
+              className="p-1 hover:bg-slate-700 rounded text-red-500"
+              title="Delete post"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {editingPostId === post._id ? (
+        <div>
+          <textarea
+            value={editBody}
+            onChange={(e) => setEditBody(e.target.value)}
+            className="w-full p-2 bg-slate-900 border border-slate-600 rounded text-white mb-2"
+            rows="4"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => onEditPost(post._id)}
+              className="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded text-sm"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => setEditingPostId(null)}
+              className="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="text-slate-200">{post.body}</div>
+      )}
+    </div>
+  );
+}
 
 export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpdated, onViewProfile }) {
   const [thread, setThread] = useState(null);
@@ -275,7 +401,7 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
             <div className="flex items-center gap-2 mb-2">
               <DeckImportButton threadId={threadId} user={user} />
             </div>
-            <div className="text-slate-400 text-sm">
+            <div className="text-slate-400 text-sm flex items-center flex-wrap gap-x-1">
               By{' '}
               {onViewProfile ? (
                 <button
@@ -287,6 +413,12 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
               ) : (
                 thread.authorId?.displayName
               )}
+              {thread.authorReputation > 0 && (
+                <span className="text-amber-400 text-xs font-semibold ml-1">⚡ {thread.authorReputation}</span>
+              )}
+              {(thread.authorBadges || []).slice(0, 3).map((badge, i) => (
+                <span key={i} className="text-sm ml-0.5" title={badge.name}>{BADGE_EMOJI[badge.name] || '🏅'}</span>
+              ))}
               {' '}• {thread.views} views • {thread.postCount} posts
               {thread.isLocked && <span className="ml-2 text-red-400">🔒 Locked</span>}
               {thread.isPinned && <span className="ml-2 text-yellow-400">📌 Pinned</span>}
@@ -363,87 +495,20 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
 
           <div className="space-y-4 mb-6">
             {posts.map(post => (
-              <div key={post._id} className="bg-slate-800 p-4 rounded border border-slate-700">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <div className="font-semibold text-white">
-                      {onViewProfile ? (
-                        <button
-                          onClick={() => onViewProfile(post.authorId?.username)}
-                          className="text-purple-400 hover:text-purple-300 transition"
-                        >
-                          {post.authorId?.displayName || 'Unknown'}
-                        </button>
-                      ) : (
-                        post.authorId?.displayName || 'Unknown'
-                      )}
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      {new Date(post.createdAt).toLocaleString()}
-                      {post.isEdited && ' (edited)'}
-                    </div>
-                  </div>
-                  {user && (user._id === post.authorId._id || user.role === 'admin') && (
-                    <div className="flex gap-2">
-                      {user._id === post.authorId._id && (
-                        <button
-                          onClick={() => {
-                            setEditingPostId(post._id);
-                            setEditBody(post.body);
-                          }}
-                          className="p-1 hover:bg-slate-700 rounded"
-                          title="Edit post"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                      )}
-                      {post.isEdited && (
-                        <button
-                          onClick={() => setHistoryPostId(post._id)}
-                          className="p-1 hover:bg-slate-700 rounded text-blue-400"
-                          title="View edit history"
-                        >
-                          <History size={16} />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDeletePost(post._id)}
-                        className="p-1 hover:bg-slate-700 rounded text-red-500"
-                        title="Delete post"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {editingPostId === post._id ? (
-                  <div>
-                    <textarea
-                      value={editBody}
-                      onChange={(e) => setEditBody(e.target.value)}
-                      className="w-full p-2 bg-slate-900 border border-slate-600 rounded text-white mb-2"
-                      rows="4"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEditPost(post._id)}
-                        className="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded text-sm"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={() => setEditingPostId(null)}
-                        className="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-sm"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-slate-200">{post.body}</div>
-                )}
-              </div>
+              <PostNode
+                key={post._id}
+                post={post}
+                isOP={thread.authorId?._id === post.authorId?._id || thread.authorId === post.authorId?._id}
+                user={user}
+                onViewProfile={onViewProfile}
+                onDeletePost={handleDeletePost}
+                onEditPost={handleEditPost}
+                editingPostId={editingPostId}
+                editBody={editBody}
+                setEditingPostId={setEditingPostId}
+                setEditBody={setEditBody}
+                setHistoryPostId={setHistoryPostId}
+              />
             ))}
           </div>
 
