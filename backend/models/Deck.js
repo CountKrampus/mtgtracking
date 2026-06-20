@@ -53,9 +53,14 @@ const deckSchema = new mongoose.Schema({
   tags: [{ type: String }],
   folder: { type: String, default: '' },
   folderId: { type: mongoose.Schema.Types.ObjectId, ref: 'DeckFolder', default: null },
+  shareCode: { type: String, default: null },
+  isPublic: { type: Boolean, default: false },
+  importCount: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
+
+deckSchema.index({ shareCode: 1 }, { sparse: true, unique: true });
 
 // Pre-save middleware to update timestamp
 deckSchema.pre('save', function(next) {
