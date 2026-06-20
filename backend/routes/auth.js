@@ -11,6 +11,7 @@ const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = requir
 const { isMultiUserEnabled, verifyToken, requireAuth } = require('../middleware/auth');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
 const { sendPasswordResetEmail, sendPasswordChangedEmail } = require('../utils/email');
+const { checkAndAwardBadges } = require('../utils/badgeManager');
 
 /**
  * GET /api/auth/status
@@ -243,6 +244,9 @@ router.post('/login', async (req, res) => {
     // Update last login
     user.lastLoginAt = new Date();
     await user.save();
+
+    // Check Veteran badge (fire-and-forget)
+    checkAndAwardBadges(user._id, 'login').catch(() => {});
 
     // Generate tokens
     const accessToken = generateAccessToken(user);

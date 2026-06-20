@@ -13,6 +13,8 @@ const {
 const { requireAuth, requireEditor } = require('../middleware/auth');
 const { buildUserQuery, getUserId } = require('../middleware/multiUser');
 const { activityLoggers } = require('../middleware/activityLogger');
+const { checkAndAwardBadges } = require('../utils/badgeManager');
+const User = require('../models/User');
 
 // Import Card model and getPriceWithFallback from parent scope
 // These will be injected when mounting the router
@@ -503,6 +505,30 @@ router.put('/:id/folder', requireAuth, async (req, res) => {
     res.json({ _id: deck._id, folderId: deck.folderId });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+
+// Share deck (generate share code)
+router.post('/:id/share', requireAuth, requireEditor, async (req, res) => {
+  try {
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(query);
+    if (!deck) return res.status(404).json({ message: 'Deck not found' });
+
+    const isFirstShare = !deck.shareCode;
+    deck.shareCode = require('crypto').randomBytes(8).toString('hex');
+    await deck.save();
+
+    // First-time share: award +3 rep + Deck Builder badge + increment decksShared
+    if (isFirstShare) {
+      User.findByIdAndUpdate(req.user._id, {
+        $inc: { reputation: 3, 'communityStats.decksShared': 1 }
+      }).then(() => checkAndAwardBadges(req.user._id, 'deck_share')).catch(() => {});
+    }
+
+    res.json({ shareCode: deck.shareCode, shareUrl: `/shared/deck/${deck.shareCode}` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 });
 
