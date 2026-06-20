@@ -50,11 +50,11 @@ router.post('/categories', verifyToken, requireAuth, requireAdmin, async (req, r
 router.put('/categories/:id', verifyToken, requireAuth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, parentCategoryId, displayOrder, isActive } = req.body;
+    const { name, description, parentCategoryId, displayOrder, isActive, isQA } = req.body;
 
     const category = await ForumCategory.findByIdAndUpdate(
       id,
-      { name, description, parentCategoryId, displayOrder, isActive },
+      { name, description, parentCategoryId, displayOrder, isActive, ...(isQA !== undefined && { isQA: Boolean(isQA) }) },
       { new: true, runValidators: true }
     );
 
