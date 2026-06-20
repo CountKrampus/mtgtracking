@@ -1,17 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { API_URL } from '../config';
 import UserAvatar from './avatars/UserAvatar';
+
+function renderBadgeIcon(iconStr) {
+  if (!iconStr) return '🏅';
+  if (iconStr.startsWith('mana:')) {
+    const key = iconStr.slice(5);
+    return <i className={`ms ms-${key}`} style={{ fontSize: 13, verticalAlign: 'middle' }} />;
+  }
+  if (iconStr.startsWith('lucide:')) {
+    const name = iconStr.slice(7);
+    const Icon = LucideIcons[name];
+    if (Icon) return <Icon size={13} style={{ display: 'inline', verticalAlign: 'middle' }} />;
+  }
+  return '🏅';
+}
 
 export default function MyProfile({ user, onBack }) {
   const [profile, setProfile] = useState(user);
   const [forumActivity, setForumActivity] = useState(null);
+  const [unlockStatus, setUnlockStatus] = useState({});
+  const [pinnedCards, setPinnedCards] = useState(Array.isArray(user?.pinnedCards) ? user.pinnedCards : []);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [myCards, setMyCards] = useState([]);
+  const [cardSearchQuery, setCardSearchQuery] = useState('');
 
   useEffect(() => {
     if (user?.username) {
       fetchForumActivity();
     }
   }, [user]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('mtg_access_token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    fetch(`${API_URL}/users/me/unlock-status`, { headers })
+      .then(r => r.ok ? r.json() : {})
+      .then(data => setUnlockStatus(data))
+      .catch(() => {});
+  }, []);
 
   const fetchForumActivity = async () => {
     try {
@@ -21,23 +51,39 @@ export default function MyProfile({ user, onBack }) {
       if (response.ok) {
         const data = await response.json();
         setForumActivity(data);
+        if (Array.isArray(data?.pinnedCards) && data.pinnedCards.length > 0 && pinnedCards.length === 0) {
+          setPinnedCards(data.pinnedCards);
+        }
       }
     } catch (error) {
       console.error('Error fetching forum activity:', error);
     }
   };
 
+  const savePinnedCards = async () => {
+    const token = localStorage.getItem('mtg_access_token');
+    await fetch(`${API_URL}/users/pinned-cards`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ cards: pinnedCards }),
+    });
+    setShowPinModal(false);
+  };
+
+  const loadMyCards = () => {
+    if (myCards.length > 0) return;
+    const token = localStorage.getItem('mtg_access_token');
+    fetch(`${API_URL}/cards`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setMyCards(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  };
+
   if (!profile) return null;
 
-  const BADGE_EMOJI = {
-    'First Post': '📝',
-    'Century': '💬',
-    'Thread Starter': '🧵',
-    'Deck Builder': '🃏',
-    'Collector': '📦',
-    'Veteran': '🗓️',
-    'Engaged Member': '🌟'
-  };
 
   return (
     <div className="flex flex-col h-full">
@@ -89,7 +135,7 @@ export default function MyProfile({ user, onBack }) {
                   className="text-xs bg-purple-900/40 border border-purple-700/40 text-purple-300 px-2 py-1 rounded-full"
                   title={badge.description}
                 >
-                  {BADGE_EMOJI[badge.name] || '🏅'} {badge.name}
+                  {renderBadgeIcon(badge.icon)} {badge.name}
                 </span>
               ))}
             </div>
@@ -203,6 +249,135 @@ export default function MyProfile({ user, onBack }) {
         {!forumActivity && profile.privacy?.showForum === false && (
           <div className="bg-white/5 rounded-lg p-6 text-center text-white/30 text-sm">
             Forum activity is private.
+          </div>
+        )}
+
+        {/* Favorite Cards Showcase */}
+        {unlockStatus.favoriteCardsShowcase && (
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">Favorite Cards</h2>
+              <button
+                onClick={() => { setShowPinModal(true); loadMyCards(); }}
+                className="text-sm text-purple-400 hover:text-purple-300"
+              >
+                Edit
+              </button>
+            </div>
+            {pinnedCards.length === 0 ? (
+              <p className="text-white/40 text-sm">No cards pinned yet. Click Edit to pin up to 5 favorites.</p>
+            ) : (
+              <div className="flex gap-3 flex-wrap">
+                {pinnedCards.map((card, i) => (
+                  <div key={i} className="text-center">
+                    {card.imageUrl ? (
+                      <img
+                        src={card.imageUrl}
+                        alt={card.name}
+                        className="rounded object-cover object-top"
+                        style={{ width: 60, height: 84 }}
+                        title={card.name}
+                      />
+                    ) : (
+                      <div
+                        className="bg-slate-700 rounded flex items-center justify-center text-white/40 text-xs text-center p-1"
+                        style={{ width: 60, height: 84 }}
+                      >
+                        {card.name}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Pin Card Modal */}
+            {showPinModal && (
+              <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 max-w-lg w-full mx-4 max-h-[80vh] flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-white font-bold">Pin Favorite Cards (max 5)</h3>
+                    <button onClick={() => setShowPinModal(false)} className="text-white/50 hover:text-white">
+                      <X size={18} />
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search your collection..."
+                    value={cardSearchQuery}
+                    onChange={e => setCardSearchQuery(e.target.value)}
+                    className="bg-slate-700 border border-slate-600 text-white rounded px-3 py-2 text-sm mb-3 focus:outline-none focus:border-purple-500"
+                  />
+                  <div className="overflow-y-auto flex-1">
+                    {myCards.length === 0 && (
+                      <div className="text-white/40 text-sm text-center py-8">Loading your collection...</div>
+                    )}
+                    {myCards
+                      .filter(c => !cardSearchQuery || c.name.toLowerCase().includes(cardSearchQuery.toLowerCase()))
+                      .slice(0, 30)
+                      .map((card, i) => {
+                        const isPinned = pinnedCards.some(p => p.name === card.name || (p.scryfallId && p.scryfallId === card.scryfallId));
+                        return (
+                          <div key={i} className="flex items-center gap-3 py-2 border-b border-slate-700">
+                            {card.imageUrl && (
+                              <img src={card.imageUrl} alt={card.name} className="w-8 h-11 rounded object-cover" />
+                            )}
+                            <span className="text-slate-300 text-sm flex-1">{card.name}</span>
+                            <button
+                              onClick={() => {
+                                if (isPinned) {
+                                  setPinnedCards(prev => prev.filter(p => p.name !== card.name));
+                                } else if (pinnedCards.length < 5) {
+                                  setPinnedCards(prev => [...prev, {
+                                    cardId: card._id,
+                                    scryfallId: card.scryfallId || '',
+                                    name: card.name,
+                                    imageUrl: card.imageUrl || '',
+                                  }]);
+                                }
+                              }}
+                              disabled={!isPinned && pinnedCards.length >= 5}
+                              className={`text-xs px-2 py-1 rounded ${isPinned ? 'bg-red-700 hover:bg-red-600 text-white' : 'bg-purple-700 hover:bg-purple-600 text-white disabled:opacity-40'}`}
+                            >
+                              {isPinned ? 'Remove' : 'Pin'}
+                            </button>
+                          </div>
+                        );
+                      })}
+                  </div>
+                  <button
+                    onClick={savePinnedCards}
+                    className="mt-4 w-full bg-purple-600 hover:bg-purple-500 text-white rounded py-2 text-sm font-medium"
+                  >
+                    Save Pins ({pinnedCards.length}/5)
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Deck Showcase */}
+        {unlockStatus.deckShowcase && (
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
+            <h2 className="text-xl font-bold text-white mb-3">My Public Decks</h2>
+            <p className="text-white/40 text-sm">Public decks are visible to other users. Mark decks as public in the Deck Builder.</p>
+          </div>
+        )}
+
+        {/* Collection Stats Widget */}
+        {unlockStatus.collectionStatsWidget && (
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
+            <h2 className="text-xl font-bold text-white mb-3">Collection Stats</h2>
+            <p className="text-white/40 text-sm">Your collection statistics will appear here on your public profile.</p>
+          </div>
+        )}
+
+        {/* Wishlist Preview */}
+        {unlockStatus.wishlistPreview && (
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
+            <h2 className="text-xl font-bold text-white mb-3">Wishlist Preview</h2>
+            <p className="text-white/40 text-sm">Your top wishlist items will be visible on your public profile.</p>
           </div>
         )}
       </div>

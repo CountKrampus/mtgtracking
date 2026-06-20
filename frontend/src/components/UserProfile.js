@@ -128,6 +128,7 @@ export default function UserProfile({ username }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [forumActivity, setForumActivity] = useState(null);
+  const [publicProfile, setPublicProfile] = useState(null);
 
   useEffect(() => {
     if (!username) return;
@@ -152,6 +153,11 @@ export default function UserProfile({ username }) {
     fetch(`${API_URL}/forum/users/${username}/activity`, { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then(data => setForumActivity(data))
+      .catch(() => {});
+
+    fetch(`${API_URL}/users/${username}/public-profile`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setPublicProfile(data))
       .catch(() => {});
   }, [profile, username]);
 
@@ -233,6 +239,78 @@ export default function UserProfile({ username }) {
         {!forumActivity && profile.privacy?.showForum === false && (
           <div className="bg-white/5 rounded-lg p-6 text-center text-white/30 text-sm">
             Forum activity is private.
+          </div>
+        )}
+
+        {/* Favorite Cards Showcase */}
+        {publicProfile?.pinnedCards && publicProfile.pinnedCards.length > 0 && (
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-bold text-white mb-4">Favorite Cards</h2>
+            <div className="flex gap-3 flex-wrap">
+              {publicProfile.pinnedCards.map((card, i) => (
+                <div key={i} className="text-center">
+                  {card.imageUrl ? (
+                    <img
+                      src={card.imageUrl}
+                      alt={card.name}
+                      className="rounded object-cover object-top"
+                      style={{ width: 60, height: 84 }}
+                      title={card.name}
+                    />
+                  ) : (
+                    <div
+                      className="bg-white/10 rounded flex items-center justify-center text-white/40 text-xs text-center p-1"
+                      style={{ width: 60, height: 84 }}
+                    >
+                      {card.name}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Public Decks Showcase */}
+        {publicProfile?.publicDecks && publicProfile.publicDecks.length > 0 && (
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-bold text-white mb-4">Public Decks</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {publicProfile.publicDecks.map((deck, i) => (
+                <div key={i} className="bg-white/5 rounded-lg p-3">
+                  <div className="text-white font-medium text-sm">{deck.name}</div>
+                  {deck.format && <div className="text-white/40 text-xs mt-0.5">{deck.format}</div>}
+                  {deck.commander && (
+                    <div className="text-purple-300 text-xs mt-0.5">Commander: {deck.commander}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Collection Stats Widget */}
+        {publicProfile?.collectionStats && (
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-bold text-white mb-4">Collection Stats</h2>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-white">{publicProfile.collectionStats.totalCards}</div>
+                <div className="text-white/40 text-xs">Total Cards</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-green-400">${publicProfile.collectionStats.totalValue}</div>
+                <div className="text-white/40 text-xs">Collection Value</div>
+              </div>
+              {publicProfile.collectionStats.mostValuableCard && (
+                <div>
+                  <div className="text-sm font-bold text-amber-400 truncate">
+                    {publicProfile.collectionStats.mostValuableCard.name}
+                  </div>
+                  <div className="text-white/40 text-xs">Most Valuable</div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
