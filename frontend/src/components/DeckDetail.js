@@ -163,6 +163,12 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
   const [isPublic, setIsPublic] = useState(deck.isPublic || false);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [shareError, setShareError] = useState('');
+
+  useEffect(() => {
+    setShareCode(deck.shareCode || null);
+    setIsPublic(deck.isPublic || false);
+  }, [deck._id]);
 
   useEffect(() => {
     if (!deck._id) return;
@@ -341,6 +347,7 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
   // ── Share handlers ────────────────────────────────────────────────────────
   const handleShare = async () => {
     setShareLoading(true);
+    setShareError('');
     try {
       const token = localStorage.getItem('mtg_access_token');
       const res = await fetch(`${API_URL}/decks/${deck._id}/share`, {
@@ -348,20 +355,39 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
       const data = await res.json();
-      if (res.ok) setShareCode(data.shareCode);
-    } catch (e) { /* ignore */ }
+      if (res.ok) {
+        setShareCode(data.shareCode);
+      } else {
+        setShareError(data.message || 'Failed to generate share link');
+      }
+    } catch (e) {
+      setShareError('Network error — could not share deck');
+    }
     setShareLoading(false);
   };
 
   const handleCopyLink = () => {
     const url = `${window.location.origin}/shared/deck/${shareCode}`;
-    navigator.clipboard.writeText(url).then(() => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+      });
+    } else {
+      const el = document.createElement('textarea');
+      el.value = url;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
       setShareCopied(true);
       setTimeout(() => setShareCopied(false), 2000);
-    });
+    }
   };
 
   const handleTogglePublic = async () => {
+    if (shareLoading) return;
+    setShareLoading(true);
     try {
       const token = localStorage.getItem('mtg_access_token');
       const res = await fetch(`${API_URL}/decks/${deck._id}/visibility`, {
@@ -371,7 +397,11 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
       });
       const data = await res.json();
       if (res.ok) setIsPublic(data.isPublic);
-    } catch (e) { /* ignore */ }
+      else console.error('Visibility toggle failed:', data.message);
+    } catch (e) {
+      console.error('Visibility toggle error:', e);
+    }
+    setShareLoading(false);
   };
 
   // Mongoose Maps serialize as plain objects over JSON, but guard anyway
@@ -436,7 +466,8 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
               </button>
               <button
                 onClick={handleTogglePublic}
-                className={`px-3 py-1 rounded-lg text-sm border transition ${
+                disabled={shareLoading}
+                className={`px-3 py-1 rounded-lg text-sm border transition disabled:opacity-50 ${
                   isPublic
                     ? 'bg-purple-600/40 border-purple-400/60 text-purple-200'
                     : 'bg-white/10 border-white/20 text-gray-300 hover:border-purple-400/40'
@@ -447,6 +478,7 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
               </button>
             </div>
           )}
+          {shareError && <p className="text-red-400 text-xs mt-1">{shareError}</p>}
           <button onClick={onBack} className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition text-sm">
             ← Back
           </button>
