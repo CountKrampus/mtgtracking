@@ -140,8 +140,46 @@ router.get('/categories/:categoryId/threads', async (req, res) => {
 
     const total = await ForumThread.countDocuments({ categoryId });
 
+    // Batch-fetch ForumLevel for thread authors to resolve threadHighlight cosmetic
+    const threadAuthorIds = [...new Set(
+      threads.map(t => t.authorId?._id?.toString() || t.authorId?.toString()).filter(Boolean)
+    )];
+
+    const threadAuthorLevels = threadAuthorIds.length > 0
+      ? await ForumLevel.find({ userId: { $in: threadAuthorIds } })
+          .select('userId cosmetics').lean()
+      : [];
+
+    // Collect all equipped threadHighlight cosmetic IDs
+    const threadHighlightIds = [...new Set(
+      threadAuthorLevels
+        .map(l => l.cosmetics?.equipped?.threadHighlight)
+        .filter(Boolean)
+    )];
+
+    const threadHighlightDocs = threadHighlightIds.length > 0
+      ? await Cosmetic.find({ _id: { $in: threadHighlightIds } }).lean()
+      : [];
+    const threadHighlightMap = Object.fromEntries(
+      threadHighlightDocs.map(c => [c._id.toString(), c])
+    );
+
+    const threadLevelMap = Object.fromEntries(
+      threadAuthorLevels.map(l => [l.userId.toString(), l])
+    );
+
+    const threadsWithHighlight = threads.map(t => {
+      const authorId = t.authorId?._id?.toString() || t.authorId?.toString();
+      const level = threadLevelMap[authorId];
+      const highlightId = level?.cosmetics?.equipped?.threadHighlight;
+      const highlightCosmetic = highlightId ? threadHighlightMap[highlightId.toString()] : null;
+      const threadObj = t.toObject();
+      threadObj.authorHighlightColor = highlightCosmetic?.color || null;
+      return threadObj;
+    });
+
     res.json({
-      threads,
+      threads: threadsWithHighlight,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),

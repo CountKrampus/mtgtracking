@@ -105,7 +105,10 @@ export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user,
                     {!thread.isQA && (
                       <span className="bg-gray-700/20 text-gray-500 border border-gray-700/20 text-[10px] px-2 py-0.5 rounded whitespace-nowrap">💬 Discussion</span>
                     )}
-                    <h3 className="font-semibold text-white">{thread.title}</h3>
+                    <h3
+                      className="font-semibold text-white"
+                      style={thread.authorHighlightColor ? { color: thread.authorHighlightColor } : {}}
+                    >{thread.title}</h3>
                     {thread.isLocked && (
                       <Lock size={14} className="text-red-500 flex-shrink-0" />
                     )}

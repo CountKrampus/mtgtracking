@@ -1,10 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Edit2, Trash2, History, Lock, Unlock, RefreshCw, X } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import PostComposer from './PostComposer';
 import PostEditHistory from './PostEditHistory';
 import UserAvatar from '../avatars/UserAvatar';
 import DeckImportButton from './DeckImportButton';
 import UserHoverCard from './UserHoverCard';
+
+function renderBadgeIcon(iconStr) {
+  if (!iconStr) return null;
+  if (iconStr.startsWith('mana:')) {
+    const key = iconStr.slice(5);
+    return <i className={`ms ms-${key}`} style={{ fontSize: 13, verticalAlign: 'middle' }} />;
+  }
+  if (iconStr.startsWith('lucide:')) {
+    const name = iconStr.slice(7);
+    const Icon = LucideIcons[name];
+    if (Icon) return <Icon size={13} style={{ display: 'inline', verticalAlign: 'middle' }} />;
+  }
+  return null;
+}
+
+function hexWithAlpha(hex, alpha) {
+  if (!hex) return undefined;
+  const a = Math.round(alpha * 255).toString(16).padStart(2, '0');
+  return `${hex}${a}`;
+}
 
 function findPostById(nodes, id) {
   if (!nodes || !id) return null;
@@ -30,54 +51,77 @@ const BADGE_EMOJI = {
 
 function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost, onEditPost, editingPostId, editBody, setEditingPostId, setEditBody, setHistoryPostId }) {
   const [hoverPos, setHoverPos] = useState(null);
+  const ac = post.authorCosmetics || {};
+
+  const postWrapperStyle = {
+    ...(ac.postBackground?.color ? { backgroundColor: hexWithAlpha(ac.postBackground.color, 0.12) } : {}),
+    ...(ac.postFrame?.cssProperties || {}),
+  };
 
   return (
-    <div key={post._id} className="bg-slate-800 p-4 rounded border border-slate-700">
+    <div key={post._id} className="bg-slate-800 p-4 rounded border border-slate-700" style={postWrapperStyle}>
       <div className="flex items-start justify-between mb-2">
-        <div>
-          <div className="font-semibold text-white flex items-center flex-wrap gap-x-1">
-            {onViewProfile ? (
-              <span
-                className="font-medium text-white text-sm cursor-pointer hover:text-purple-300 transition"
-                onMouseEnter={e => setHoverPos({ x: e.clientX, y: e.clientY, post })}
-                onMouseLeave={() => setHoverPos(null)}
-                onClick={() => onViewProfile(post.authorId?.username)}
-              >
-                {post.authorId?.displayName || 'Unknown'}
-              </span>
-            ) : (
-              <span
-                className="font-medium text-white text-sm cursor-pointer hover:text-purple-300 transition"
-                onMouseEnter={e => setHoverPos({ x: e.clientX, y: e.clientY, post })}
-                onMouseLeave={() => setHoverPos(null)}
-              >
-                {post.authorId?.displayName || 'Unknown'}
-              </span>
+        <div className="flex items-start gap-2">
+          <UserAvatar
+            avatarUrl={post.authorId?.avatarUrl}
+            username={post.authorId?.username}
+            size="sm"
+            borderColor={ac.avatarBorder?.color || null}
+            animationClass={ac.avatarBorder?.animationClass || null}
+          />
+          <div>
+            <div className="font-semibold text-white flex items-center flex-wrap gap-x-1">
+              {onViewProfile ? (
+                <span
+                  className={`font-medium text-sm cursor-pointer hover:text-purple-300 transition${ac.titleColor?.color === 'rainbow' ? ' text-rainbow' : ''}`}
+                  style={ac.titleColor?.color && ac.titleColor.color !== 'rainbow' ? { color: ac.titleColor.color } : {}}
+                  onMouseEnter={e => setHoverPos({ x: e.clientX, y: e.clientY, post })}
+                  onMouseLeave={() => setHoverPos(null)}
+                  onClick={() => onViewProfile(post.authorId?.username)}
+                >
+                  {post.authorId?.displayName || 'Unknown'}
+                </span>
+              ) : (
+                <span
+                  className={`font-medium text-sm cursor-pointer hover:text-purple-300 transition${ac.titleColor?.color === 'rainbow' ? ' text-rainbow' : ''}`}
+                  style={ac.titleColor?.color && ac.titleColor.color !== 'rainbow' ? { color: ac.titleColor.color } : {}}
+                  onMouseEnter={e => setHoverPos({ x: e.clientX, y: e.clientY, post })}
+                  onMouseLeave={() => setHoverPos(null)}
+                >
+                  {post.authorId?.displayName || 'Unknown'}
+                </span>
+              )}
+              {ac.flairIcon?.icon && (
+                <span className="ml-1">{renderBadgeIcon(ac.flairIcon.icon)}</span>
+              )}
+              {isOP && <span className="ml-1 text-[10px] bg-purple-800/50 text-purple-300 px-1.5 py-0.5 rounded">OP</span>}
+              {isBestAnswer && <span className="text-[10px] bg-green-900/40 text-green-400 border border-green-700/30 px-1.5 py-0.5 rounded">✅ Best</span>}
+              {post.authorReputation > 0 && (
+                <span className="text-amber-400 text-xs font-semibold ml-1">⚡ {post.authorReputation}</span>
+              )}
+              {(post.authorBadges || []).slice(0, 3).map((badge, i) => (
+                <span key={i} className="text-sm ml-0.5" title={badge.name}>
+                  {BADGE_EMOJI[badge.name] || '🏅'}
+                </span>
+              ))}
+              {hoverPos && (
+                <UserHoverCard
+                  pos={hoverPos}
+                  username={post.authorId?.username}
+                  displayName={post.authorId?.displayName}
+                  reputation={post.authorReputation || 0}
+                  badges={post.authorBadges || []}
+                  onClose={() => setHoverPos(null)}
+                />
+              )}
+            </div>
+            {ac.memberTitleText && (
+              <div className="text-xs text-slate-500 italic">{ac.memberTitleText}</div>
             )}
-            {isOP && <span className="ml-1 text-[10px] bg-purple-800/50 text-purple-300 px-1.5 py-0.5 rounded">OP</span>}
-            {isBestAnswer && <span className="text-[10px] bg-green-900/40 text-green-400 border border-green-700/30 px-1.5 py-0.5 rounded">✅ Best</span>}
-            {post.authorReputation > 0 && (
-              <span className="text-amber-400 text-xs font-semibold ml-1">⚡ {post.authorReputation}</span>
-            )}
-            {(post.authorBadges || []).slice(0, 3).map((badge, i) => (
-              <span key={i} className="text-sm ml-0.5" title={badge.name}>
-                {BADGE_EMOJI[badge.name] || '🏅'}
-              </span>
-            ))}
-            {hoverPos && (
-              <UserHoverCard
-                pos={hoverPos}
-                username={post.authorId?.username}
-                displayName={post.authorId?.displayName}
-                reputation={post.authorReputation || 0}
-                badges={post.authorBadges || []}
-                onClose={() => setHoverPos(null)}
-              />
-            )}
-          </div>
-          <div className="text-xs text-slate-500">
-            {new Date(post.createdAt).toLocaleString()}
-            {post.isEdited && ' (edited)'}
+            <div className="text-xs text-slate-500">
+              {new Date(post.createdAt).toLocaleString()}
+              {post.isEdited && ' (edited)'}
+            </div>
           </div>
         </div>
         {user && (user._id === post.authorId._id || user.role === 'admin') && (
@@ -138,7 +182,15 @@ function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost,
           </div>
         </div>
       ) : (
-        <div className="text-slate-200">{post.body}</div>
+        <>
+          <div className="text-slate-200">{post.body}</div>
+          {ac.signatureText && (
+            <>
+              <hr className="border-slate-700 my-2" />
+              <p className="text-xs italic text-slate-500">{ac.signatureText}</p>
+            </>
+          )}
+        </>
       )}
     </div>
   );
