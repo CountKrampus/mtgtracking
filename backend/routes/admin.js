@@ -329,6 +329,45 @@ router.get('/badges', requireAdmin, async (req, res) => {
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
+// POST /api/admin/badges — create a new badge definition
+router.post('/badges', requireAdmin, async (req, res) => {
+  try {
+    const { name, description, icon } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ message: 'Badge name is required' });
+    const existing = await Badge.findOne({ name: name.trim() });
+    if (existing) return res.status(409).json({ message: 'A badge with that name already exists' });
+    const badge = new Badge({ name: name.trim(), description: description || '', icon: icon || '' });
+    await badge.save();
+    res.status(201).json({ badge });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// PUT /api/admin/badges/:id — update a badge definition
+router.put('/badges/:id', requireAdmin, async (req, res) => {
+  try {
+    const { name, description, icon } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ message: 'Badge name is required' });
+    const badge = await Badge.findById(req.params.id);
+    if (!badge) return res.status(404).json({ message: 'Badge not found' });
+    const conflict = await Badge.findOne({ name: name.trim(), _id: { $ne: badge._id } });
+    if (conflict) return res.status(409).json({ message: 'A badge with that name already exists' });
+    badge.name = name.trim();
+    badge.description = description ?? badge.description;
+    badge.icon = icon ?? badge.icon;
+    await badge.save();
+    res.json({ badge });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// DELETE /api/admin/badges/:id — delete a badge definition
+router.delete('/badges/:id', requireAdmin, async (req, res) => {
+  try {
+    const badge = await Badge.findByIdAndDelete(req.params.id);
+    if (!badge) return res.status(404).json({ message: 'Badge not found' });
+    res.json({ message: `Badge "${badge.name}" deleted` });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
 // POST /api/admin/badges/:badgeId/grant/:userId — grant a badge to a user
 router.post('/badges/:badgeId/grant/:userId', requireAdmin, async (req, res) => {
   try {
