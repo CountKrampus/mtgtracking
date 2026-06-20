@@ -60,7 +60,7 @@ const deckSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-deckSchema.index({ shareCode: 1 }, { sparse: true, unique: true });
+deckSchema.index({ shareCode: 1 }, { unique: true, partialFilterExpression: { shareCode: { $type: 'string' } } });
 
 // Pre-save middleware to update timestamp
 deckSchema.pre('save', function(next) {

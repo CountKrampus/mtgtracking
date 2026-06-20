@@ -52,5 +52,12 @@ test('two decks cannot have the same non-null shareCode', async () => {
   await Deck.create({ userId: testUserId(), name: 'Deck A', shareCode: 'uniquecode1' });
   await expect(
     Deck.create({ userId: testUserId(), name: 'Deck B', shareCode: 'uniquecode1' })
-  ).rejects.toThrow();
+  ).rejects.toMatchObject({ code: 11000 });
+});
+
+test('multiple decks can have null shareCode', async () => {
+  await Deck.create({ userId: testUserId(), name: 'Deck A' });
+  await expect(
+    Deck.create({ userId: testUserId(), name: 'Deck B' })
+  ).resolves.toBeDefined();
 });
