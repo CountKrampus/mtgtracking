@@ -91,3 +91,71 @@ test('awards Thread Starter badge on first thread', async () => {
   const updated = await User.findById(user._id);
   expect(updated.badges.some(b => b.name === 'Thread Starter')).toBe(true);
 });
+
+const express = require('express');
+const request = require('supertest');
+const ForumCategory = require('../models/ForumCategory');
+const ForumThread = require('../models/ForumThread');
+const jwt = require('jsonwebtoken');
+
+function makeToken(userId, role = 'user') {
+  return jwt.sign({ userId, role }, process.env.JWT_SECRET || 'test-secret', { expiresIn: '1h' });
+}
+
+function buildApp() {
+  const app = express();
+  app.use(express.json());
+  app.use('/api/forum', require('../routes/forum'));
+  return app;
+}
+
+test('creating a thread adds +2 rep and threadCount to author', async () => {
+  const author = await User.create({
+    email: 'th@test.com', username: 'threadauthor', passwordHash: 'hash', role: 'user',
+    reputation: 0
+  });
+  const cat = await ForumCategory.create({ name: 'General', slug: 'general' });
+
+  const app = buildApp();
+  const token = makeToken(author._id.toString(), 'user');
+
+  await request(app)
+    .post('/api/forum/threads')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ categoryId: cat._id, title: 'My Thread', body: 'Hello world' });
+
+  // Wait briefly for fire-and-forget side effects
+  await new Promise(r => setTimeout(r, 100));
+
+  const updated = await User.findById(author._id);
+  expect(updated.reputation).toBe(2);
+  expect(updated.communityStats.threadCount).toBe(1);
+});
+
+test('creating a post adds +1 rep and postCount to author', async () => {
+  const author = await User.create({
+    email: 'pa@test.com', username: 'postauthor', passwordHash: 'hash', role: 'user',
+    reputation: 0
+  });
+  const cat = await ForumCategory.create({ name: 'General2', slug: 'general2' });
+  const thread = await ForumThread.create({
+    categoryId: cat._id, authorId: author._id,
+    authorUsername: 'postauthor', authorDisplayName: 'postauthor',
+    title: 'Thread', content: 'Body'
+  });
+
+  const app = buildApp();
+  const token = makeToken(author._id.toString(), 'user');
+
+  await request(app)
+    .post('/api/forum/posts')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ threadId: thread._id, body: 'My reply' });
+
+  // Wait briefly for fire-and-forget side effects
+  await new Promise(r => setTimeout(r, 100));
+
+  const updated = await User.findById(author._id);
+  expect(updated.reputation).toBe(1);
+  expect(updated.communityStats.postCount).toBe(1);
+});

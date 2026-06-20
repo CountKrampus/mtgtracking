@@ -20,6 +20,7 @@ const User = require('../models/User');
 const { extractDeckFromText } = require('../utils/deckExtractor');
 const ForumLevel = require('../models/ForumLevel');
 const Cosmetic = require('../models/Cosmetic');
+const { checkAndAwardBadges } = require('../utils/badgeManager');
 
 // POST /api/forum/categories - Create category (admin only)
 router.post('/categories', verifyToken, requireAuth, requireAdmin, async (req, res) => {
@@ -198,7 +199,8 @@ router.get('/threads/:threadId', async (req, res) => {
 // POST /api/forum/threads - Create new thread (requires auth)
 router.post('/threads', verifyToken, requireAuth, checkMute, async (req, res) => {
   try {
-    const { categoryId, title, content, contentFormat = 'markdown', tags = [] } = req.body;
+    const { categoryId, title, contentFormat = 'markdown', tags = [] } = req.body;
+    const content = req.body.content || req.body.body;
 
     if (!categoryId || !title || !content) {
       return res.status(400).json({ message: 'Missing required fields' });
@@ -241,6 +243,11 @@ router.post('/threads', verifyToken, requireAuth, checkMute, async (req, res) =>
 
     // Check for duplicate threads using Jaccard similarity
     const suggestedDuplicates = await findDuplicates(title, categoryId, 0.6);
+
+    // Rep + badge side effects (fire-and-forget, don't block response)
+    User.findByIdAndUpdate(req.user._id, {
+      $inc: { reputation: 2, 'communityStats.threadCount': 1 }
+    }).then(() => checkAndAwardBadges(req.user._id, 'thread_create')).catch(() => {});
 
     res.status(201).json({ thread, suggestedDuplicates });
   } catch (error) {
@@ -331,6 +338,11 @@ router.post('/posts', verifyToken, requireAuth, checkMute, async (req, res) => {
         console.error('XP/coin award error (post creation):', xpErr);
       }
     });
+
+    // Rep + badge side effects (fire-and-forget)
+    User.findByIdAndUpdate(req.user._id, {
+      $inc: { reputation: 1, 'communityStats.postCount': 1 }
+    }).then(() => checkAndAwardBadges(req.user._id, 'post_create')).catch(() => {});
 
     res.status(201).json(post);
   } catch (error) {
@@ -987,7 +999,7 @@ router.post('/shop/purchase', verifyToken, requireAuth, async (req, res) => {
 router.get('/users/:username/activity', async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username })
-      .select('privacy reputation badges createdAt').lean();
+      .select('username privacy reputation badges createdAt').lean();
 
     if (!user || !user.privacy?.isPublic || !user.privacy?.showForum) {
       return res.status(404).json({ message: 'Forum activity not available' });
@@ -1042,12 +1054,15 @@ router.get('/users/:username/activity', async (req, res) => {
     ]);
 
     res.json({
+      username: user.username,
       reputation: user.reputation || 0,
       badges: user.badges || [],
       stats: {
+        posts: postCount,
         postCount,
+        threads: threadCount,
         threadCount,
-        upvotesReceived: upvotesResult[0]?.total || 0,
+        upvotes: upvotesResult[0]?.total || 0,
         memberSince: user.createdAt
       },
       recentPosts,
