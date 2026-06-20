@@ -515,7 +515,10 @@ router.patch('/:id/visibility', requireAuth, requireEditor, async (req, res) => 
     const deck = await Deck.findOne(query);
     if (!deck) return res.status(404).json({ message: 'Deck not found' });
     if (!deck.shareCode) return res.status(400).json({ message: 'Generate a share link first' });
-    deck.isPublic = !!req.body.isPublic;
+    if (typeof req.body.isPublic !== 'boolean') {
+      return res.status(400).json({ message: 'isPublic must be a boolean' });
+    }
+    deck.isPublic = req.body.isPublic;
     await deck.save();
     res.json({ isPublic: deck.isPublic, shareCode: deck.shareCode });
   } catch (e) { res.status(500).json({ message: e.message }); }

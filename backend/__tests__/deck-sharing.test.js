@@ -4,6 +4,10 @@ process.env.MULTI_USER_ENABLED = 'true';
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const Deck = require('../models/Deck');
+const request = require('supertest');
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 let mongod;
 
@@ -61,11 +65,6 @@ test('multiple decks can have null shareCode', async () => {
     Deck.create({ userId: testUserId(), name: 'Deck B' })
   ).resolves.toBeDefined();
 });
-
-const request = require('supertest');
-const express = require('express');
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
 
 function makeToken(userId) {
   return jwt.sign({ userId: userId.toString(), role: 'admin' }, 'test-secret');
@@ -161,5 +160,8 @@ describe('PATCH /api/decks/:id/visibility', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.isPublic).toBe(false);
+
+    const updated = await Deck.findById(deck._id);
+    expect(updated.isPublic).toBe(false);
   });
 });
