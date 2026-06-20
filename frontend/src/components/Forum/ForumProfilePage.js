@@ -26,6 +26,8 @@ export default function ForumProfilePage({ user, apiUrl }) {
   const [error, setError] = useState(null);
   const [showPinPicker, setShowPinPicker] = useState(false);
   const [selectedPins, setSelectedPins] = useState([]);
+  const [memberTitleInput, setMemberTitleInput] = useState('');
+  const [signatureInput, setSignatureInput] = useState('');
 
   useEffect(() => {
     fetchProfileData();
@@ -43,6 +45,8 @@ export default function ForumProfilePage({ user, apiUrl }) {
       const levelInfo = await levelRes.json();
       setLevelData(levelInfo);
       setSelectedPins(levelInfo?.pinnedAchievements || []);
+      if (levelInfo?.memberTitleText !== undefined) setMemberTitleInput(levelInfo.memberTitleText);
+      if (levelInfo?.signatureText !== undefined) setSignatureInput(levelInfo.signatureText);
 
       // Fetch activity/stats (current authenticated user)
       const activityRes = await fetch(`${apiUrl}/forum/users/${user.username}/activity`, {
@@ -61,6 +65,30 @@ export default function ForumProfilePage({ user, apiUrl }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const saveMemberTitle = async () => {
+    const token = localStorage.getItem('mtg_access_token');
+    await fetch(`${apiUrl}/forum/level/member-title`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ text: memberTitleInput }),
+    });
+  };
+
+  const saveSignature = async () => {
+    const token = localStorage.getItem('mtg_access_token');
+    await fetch(`${apiUrl}/forum/level/signature`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ text: signatureInput }),
+    });
   };
 
   if (loading) return <div className="text-center py-12 text-white">Loading profile...</div>;
@@ -243,6 +271,61 @@ export default function ForumProfilePage({ user, apiUrl }) {
               </span>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Account Settings — member title and signature */}
+      {(levelData?.ownsMemberTitle || levelData?.ownsSignature) && (
+        <div id="account-settings" className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
+          <h3 className="text-lg font-bold text-white mb-4">Profile Customization</h3>
+
+          {levelData.ownsMemberTitle && (
+            <div className="mb-4">
+              <label className="block text-sm text-slate-400 mb-1">
+                Member Title <span className="text-slate-500 text-xs">(max 40 chars)</span>
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  maxLength={40}
+                  value={memberTitleInput}
+                  onChange={e => setMemberTitleInput(e.target.value)}
+                  placeholder="Your member title..."
+                  className="flex-1 bg-slate-700 border border-slate-600 text-white rounded px-3 py-1.5 text-sm focus:outline-none focus:border-purple-500"
+                />
+                <button
+                  onClick={saveMemberTitle}
+                  className="bg-purple-600 hover:bg-purple-500 text-white text-sm px-3 py-1.5 rounded"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          )}
+
+          {levelData.ownsSignature && (
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">
+                Forum Signature <span className="text-slate-500 text-xs">(max 120 chars)</span>
+              </label>
+              <div className="flex gap-2">
+                <textarea
+                  maxLength={120}
+                  rows={2}
+                  value={signatureInput}
+                  onChange={e => setSignatureInput(e.target.value)}
+                  placeholder="Your forum signature..."
+                  className="flex-1 bg-slate-700 border border-slate-600 text-white rounded px-3 py-1.5 text-sm focus:outline-none focus:border-purple-500 resize-none"
+                />
+                <button
+                  onClick={saveSignature}
+                  className="self-start bg-purple-600 hover:bg-purple-500 text-white text-sm px-3 py-1.5 rounded"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

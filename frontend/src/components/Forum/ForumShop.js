@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Coins, Check, X, Search, Crown, Palette, Shield } from 'lucide-react';
+import {
+  ShoppingCart, Coins, Check, X, Search, Crown, Palette, Shield,
+  Star, Layers, Image, Trophy, PenLine, BadgeCheck, Heart, BarChart2,
+  Paintbrush, Sparkles
+} from 'lucide-react';
 
 const COSMETICS_CATALOG = [
   // Title Colors
@@ -21,9 +25,32 @@ const COSMETICS_CATALOG = [
 
 const CATEGORY_TABS = [
   { id: 'all', label: 'All', icon: ShoppingCart },
+  // Post Appearance
   { id: 'titleColor', label: 'Title Colors', icon: Crown },
   { id: 'avatarBorder', label: 'Avatar Borders', icon: Palette },
+  { id: 'flairIcon', label: 'Flair Icons', icon: Star },
+  { id: 'postBackground', label: 'Post Tints', icon: Layers },
+  { id: 'postFrame', label: 'Post Frames', icon: Layers },
+  { id: 'threadHighlight', label: 'Thread Color', icon: Sparkles },
+  // Forum Profile
   { id: 'profileBorderColor', label: 'Profile Borders', icon: Shield },
+  { id: 'profileBackground', label: 'Profile BG', icon: Image },
+  { id: 'profileBanner', label: 'Banners', icon: Image },
+  { id: 'profileTheme', label: 'Profile Theme', icon: Paintbrush },
+  // Unlocks (user-typed content)
+  { id: 'memberTitle', label: 'Member Title', icon: BadgeCheck },
+  { id: 'signature', label: 'Signature', icon: PenLine },
+  { id: 'achievementShowcase', label: 'Achievement Pin', icon: Trophy },
+  // Main Profile Unlocks
+  { id: 'favoriteCardsShowcase', label: 'Card Showcase', icon: Sparkles },
+  { id: 'deckShowcase', label: 'Deck Showcase', icon: Layers },
+  { id: 'collectionStatsWidget', label: 'Stats Widget', icon: BarChart2 },
+  { id: 'wishlistPreview', label: 'Wishlist Preview', icon: Heart },
+];
+
+const UNLOCK_CATEGORIES = [
+  'memberTitle', 'signature', 'achievementShowcase',
+  'favoriteCardsShowcase', 'deckShowcase', 'collectionStatsWidget', 'wishlistPreview'
 ];
 
 const RARITY_STYLES = {
@@ -51,6 +78,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose }) {
   const [coins, setCoins] = useState(0);
   const [purchased, setPurchased] = useState([]);
   const [equipped, setEquipped] = useState({});
+  const [catalogItems, setCatalogItems] = useState([]);
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [alert, setAlert] = useState(null); // { type: 'success'|'error', message }
@@ -58,24 +86,37 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose }) {
 
   useEffect(() => {
     if (isOpen && user) {
-      fetchUserLevel();
+      fetchShopData();
     }
   }, [isOpen, user]);
 
-  const fetchUserLevel = async () => {
+  const fetchShopData = async () => {
     try {
       const token = localStorage.getItem('mtg_access_token');
-      const response = await fetch(`${apiUrl}/forum/user-level`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (!response.ok) throw new Error('Failed to fetch user level');
-      const data = await response.json();
-      setUserLevel(data);
-      setCoins(data.coins || 0);
-      setPurchased(data.cosmetics?.purchased || []);
-      setEquipped(data.cosmetics?.equipped || {});
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const [levelRes, catalogRes] = await Promise.all([
+        fetch(`${apiUrl}/forum/user-level`, { headers }),
+        fetch(`${apiUrl}/forum/cosmetics`, { headers }),
+      ]);
+
+      if (levelRes.ok) {
+        const data = await levelRes.json();
+        setUserLevel(data);
+        setCoins(data.coins || 0);
+        setPurchased(data.cosmetics?.purchased || []);
+        setEquipped(data.cosmetics?.equipped || {});
+      }
+
+      if (catalogRes.ok) {
+        const data = await catalogRes.json();
+        const items = (data.cosmetics || []).map(c => ({ ...c, id: c._id }));
+        setCatalogItems(items);
+        if (data.purchased) setPurchased(data.purchased);
+        if (data.equipped) setEquipped(data.equipped);
+      }
     } catch (error) {
-      console.error('Error fetching user level:', error);
+      console.error('Error fetching shop data:', error);
     }
   };
 
@@ -139,7 +180,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose }) {
     }
   };
 
-  const filteredItems = COSMETICS_CATALOG.filter(item => {
+  const filteredItems = catalogItems.filter(item => {
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
     const matchesSearch = !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
@@ -186,7 +227,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose }) {
         )}
 
         {/* Category Tabs */}
-        <div className="flex gap-1 px-5 pt-4 flex-shrink-0">
+        <div className="flex gap-1 px-5 pt-4 flex-shrink-0 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-slate-600">
           {CATEGORY_TABS.map(tab => {
             const Icon = tab.icon;
             return (
@@ -231,21 +272,26 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose }) {
                 const isEquipped = equipped[item.category] === item.id;
                 const canAfford = coins >= item.cost;
                 const isLoading = loadingId === item.id;
+                const isUnlock = UNLOCK_CATEGORIES.includes(item.category);
+                const categoryTab = CATEGORY_TABS.find(t => t.id === item.category);
+                const CategoryIcon = categoryTab?.icon || ShoppingCart;
 
                 return (
                   <div
                     key={item.id}
                     className={`p-4 rounded-lg border-2 bg-slate-900 flex flex-col gap-3 ${
-                      isEquipped
-                        ? 'border-green-600'
-                        : isOwned
+                      isOwned
                         ? 'border-blue-700'
                         : 'border-slate-700'
                     }`}
                   >
-                    {/* Color swatch + name row */}
+                    {/* Swatch/icon + name row */}
                     <div className="flex items-center gap-3">
-                      {item.color === 'rainbow' ? (
+                      {isUnlock ? (
+                        <div className="rounded-full flex-shrink-0 bg-slate-700 flex items-center justify-center" style={{ width: 48, height: 48 }}>
+                          <CategoryIcon size={24} className="text-purple-400" />
+                        </div>
+                      ) : item.color === 'rainbow' ? (
                         <RainbowSwatch />
                       ) : (
                         <div
@@ -271,7 +317,31 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose }) {
                     </div>
 
                     {/* Action button */}
-                    {isEquipped ? (
+                    {isUnlock ? (
+                      isOwned ? (
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-blue-900 border border-blue-700 text-blue-200 text-sm font-medium">
+                            <Check size={14} />
+                            Owned ✓
+                          </div>
+                          {(item.category === 'memberTitle' || item.category === 'signature') && (
+                            <div className="text-xs text-slate-400 text-center">Set in your profile settings</div>
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handlePurchase(item)}
+                          disabled={!canAfford || isLoading}
+                          className={`py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                            canAfford && !isLoading
+                              ? 'bg-purple-700 hover:bg-purple-600 text-white'
+                              : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                          }`}
+                        >
+                          {isLoading ? 'Purchasing...' : !canAfford ? 'Not enough coins' : 'Unlock'}
+                        </button>
+                      )
+                    ) : isEquipped ? (
                       <div className="flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-green-800 border border-green-600 text-green-200 text-sm font-medium">
                         <Check size={14} />
                         Equipped

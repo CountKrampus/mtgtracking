@@ -1141,10 +1141,22 @@ router.get('/user-level', async (req, res) => {
     const data = level.toObject();
     data.experienceToNextLevel = level.nextLevelExperience;
 
-    // Compute whether the user owns any achievementShowcase cosmetic
-    const showcaseCosmetics = await Cosmetic.find({ category: 'achievementShowcase' }).lean();
+    // Compute whether the user owns unlock-type cosmetics (single query for all unlock categories)
+    const unlockCosmetics = await Cosmetic.find({
+      category: { $in: ['achievementShowcase', 'memberTitle', 'signature'] }
+    }).lean();
     const purchasedIds = (level.cosmetics?.purchased || []).map(String);
-    data.ownsAchievementShowcase = showcaseCosmetics.some(c => purchasedIds.includes(c._id.toString()));
+    data.ownsAchievementShowcase = unlockCosmetics
+      .filter(c => c.category === 'achievementShowcase')
+      .some(c => purchasedIds.includes(c._id.toString()));
+    data.ownsMemberTitle = unlockCosmetics
+      .filter(c => c.category === 'memberTitle')
+      .some(c => purchasedIds.includes(c._id.toString()));
+    data.ownsSignature = unlockCosmetics
+      .filter(c => c.category === 'signature')
+      .some(c => purchasedIds.includes(c._id.toString()));
+    data.memberTitleText = level.memberTitleText || '';
+    data.signatureText = level.signatureText || '';
 
     res.json(data);
   } catch (error) {
