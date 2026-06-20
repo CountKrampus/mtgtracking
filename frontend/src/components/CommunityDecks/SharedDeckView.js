@@ -27,7 +27,7 @@ function groupByType(mainDeck) {
 }
 
 function SharedDeckView({ shareCode }) {
-  const { authUser } = useAuthContext();
+  const { user: authUser, authFetch } = useAuthContext();
   const [deck, setDeck] = useState(null);
   const [owner, setOwner] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,17 +39,15 @@ function SharedDeckView({ shareCode }) {
     fetch(`${API_URL}/decks/shared/${shareCode}`)
       .then(r => r.ok ? r.json() : r.json().then(d => Promise.reject(d.message)))
       .then(data => { setDeck(data.deck); setOwner(data.owner); setLoading(false); })
-      .catch(e => { setError(e); setLoading(false); });
+      .catch(e => { setError(typeof e === 'string' ? e : (e?.message || 'Unknown error')); setLoading(false); });
   }, [shareCode]);
 
   const handleImport = async () => {
     if (!authUser) { setImportMsg('Log in to import decks.'); return; }
     setImporting(true);
     try {
-      const token = localStorage.getItem('mtg_access_token');
-      const res = await fetch(`${API_URL}/decks/community/${shareCode}/import`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+      const res = await authFetch(`${API_URL}/decks/community/${shareCode}/import`, {
+        method: 'POST'
       });
       const data = await res.json();
       if (res.ok) {
