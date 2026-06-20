@@ -609,4 +609,71 @@ router.post('/ban-appeals', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/users/me/unlock-status
+ * Which profile section unlocks does the current user own?
+ */
+router.get('/me/unlock-status', async (req, res) => {
+  try {
+    const ForumLevel = require('../models/ForumLevel');
+    const Cosmetic = require('../models/Cosmetic');
+
+    const level = await ForumLevel.findOne({ userId: req.user._id })
+      .select('cosmetics').lean();
+
+    const purchased = (level?.cosmetics?.purchased || []).map(String);
+
+    const unlockCosmetics = await Cosmetic.find({
+      category: { $in: ['favoriteCardsShowcase', 'deckShowcase', 'collectionStatsWidget', 'wishlistPreview'] },
+      isActive: true,
+    }).lean();
+
+    const hasUnlock = (category) =>
+      unlockCosmetics
+        .filter(c => c.category === category)
+        .some(c => purchased.includes(c._id.toString()));
+
+    res.json({
+      favoriteCardsShowcase: hasUnlock('favoriteCardsShowcase'),
+      deckShowcase: hasUnlock('deckShowcase'),
+      collectionStatsWidget: hasUnlock('collectionStatsWidget'),
+      wishlistPreview: hasUnlock('wishlistPreview'),
+    });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+/**
+ * PUT /api/users/pinned-cards
+ * Set pinned cards for current user (max 5).
+ * Body: { cards: [{ cardId?, scryfallId, name, imageUrl? }] }
+ */
+router.put('/pinned-cards', async (req, res) => {
+  try {
+    const { cards } = req.body;
+    if (!Array.isArray(cards)) {
+      return res.status(400).json({ message: 'cards must be an array' });
+    }
+    if (cards.length > 5) {
+      return res.status(400).json({ message: 'Maximum 5 pinned cards' });
+    }
+
+    const validCards = cards
+      .filter(c => c.name && c.scryfallId)
+      .map(c => ({
+        cardId: c.cardId || null,
+        scryfallId: c.scryfallId,
+        name: c.name,
+        imageUrl: c.imageUrl || '',
+      }));
+
+    await User.findByIdAndUpdate(req.user._id, { pinnedCards: validCards });
+    res.json({ pinnedCards: validCards });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
 module.exports = router;
+

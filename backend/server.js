@@ -130,6 +130,9 @@ app.use(verifyToken);
 // Mount auth routes (these don't require authentication)
 app.use('/api/auth', authRoutes);
 
+// Public user profile endpoint (no auth required — must be before the auth-protected users router)
+app.use('/api/users', require('./routes/usersPublic'));
+
 // Mount user routes (require authentication)
 app.use('/api/users', userRoutes);
 
