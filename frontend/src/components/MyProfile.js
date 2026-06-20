@@ -26,6 +26,9 @@ export default function MyProfile({ user, onBack }) {
   const [showPinModal, setShowPinModal] = useState(false);
   const [myCards, setMyCards] = useState([]);
   const [cardSearchQuery, setCardSearchQuery] = useState('');
+  const [myDecks, setMyDecks] = useState(null);
+  const [collectionStats, setCollectionStats] = useState(null);
+  const [wishlistItems, setWishlistItems] = useState(null);
 
   useEffect(() => {
     if (user?.username) {
@@ -42,6 +45,34 @@ export default function MyProfile({ user, onBack }) {
       .then(data => setUnlockStatus(data))
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!unlockStatus.deckShowcase) return;
+    const token = localStorage.getItem('mtg_access_token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    fetch(`${API_URL}/decks`, { headers })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setMyDecks(Array.isArray(data) ? data : []))
+      .catch(() => setMyDecks([]));
+  }, [unlockStatus.deckShowcase]);
+
+  useEffect(() => {
+    if (!unlockStatus.collectionStatsWidget) return;
+    const token = localStorage.getItem('mtg_access_token');
+    fetch(`${API_URL}/stats`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setCollectionStats(data))
+      .catch(() => {});
+  }, [unlockStatus.collectionStatsWidget]);
+
+  useEffect(() => {
+    if (!unlockStatus.wishlistPreview) return;
+    const token = localStorage.getItem('mtg_access_token');
+    fetch(`${API_URL}/wishlist`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setWishlistItems(Array.isArray(data) ? data.slice(0, 3) : []))
+      .catch(() => setWishlistItems([]));
+  }, [unlockStatus.wishlistPreview]);
 
   const fetchForumActivity = async () => {
     try {
@@ -359,25 +390,98 @@ export default function MyProfile({ user, onBack }) {
 
         {/* Deck Showcase */}
         {unlockStatus.deckShowcase && (
-          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
-            <h2 className="text-xl font-bold text-white mb-3">My Public Decks</h2>
-            <p className="text-white/40 text-sm">Public decks are visible to other users. Mark decks as public in the Deck Builder.</p>
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-bold text-white mb-4">My Public Decks</h2>
+            {myDecks === null ? (
+              <p className="text-white/40 text-sm">Loading...</p>
+            ) : myDecks.length === 0 ? (
+              <p className="text-white/40 text-sm">No decks yet. Create decks in the Deck Builder and share them to show them here.</p>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {myDecks.map(deck => (
+                  <div key={deck._id} className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white font-medium text-sm truncate">{deck.name}</div>
+                      <div className="text-white/40 text-xs mt-0.5">
+                        {deck.format && <span className="mr-2">{deck.format}</span>}
+                        {deck.commander?.name && <span className="text-purple-300">Cmdr: {deck.commander.name}</span>}
+                      </div>
+                    </div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${deck.isPublic ? 'bg-green-900/40 text-green-300' : 'bg-slate-700 text-slate-400'}`}>
+                      {deck.isPublic ? 'Public' : 'Private'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="text-white/30 text-xs mt-3">Mark decks as public in the Deck Builder to feature them here.</p>
           </div>
         )}
 
         {/* Collection Stats Widget */}
         {unlockStatus.collectionStatsWidget && (
-          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
-            <h2 className="text-xl font-bold text-white mb-3">Collection Stats</h2>
-            <p className="text-white/40 text-sm">Your collection statistics will appear here on your public profile.</p>
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-bold text-white mb-4">Collection Stats</h2>
+            {collectionStats ? (
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-white">{(collectionStats.totalCards || 0).toLocaleString()}</div>
+                  <div className="text-white/40 text-xs mt-1">Total Cards</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-400">${(collectionStats.totalValue || 0).toFixed(2)}</div>
+                  <div className="text-white/40 text-xs mt-1">Collection Value</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-400">{(collectionStats.uniqueCards || collectionStats.totalCards || 0).toLocaleString()}</div>
+                  <div className="text-white/40 text-xs mt-1">Unique Cards</div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-white/40 text-sm">Loading stats...</p>
+            )}
+            <p className="text-white/30 text-xs mt-3">These stats are visible on your public profile.</p>
           </div>
         )}
 
         {/* Wishlist Preview */}
         {unlockStatus.wishlistPreview && (
-          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
-            <h2 className="text-xl font-bold text-white mb-3">Wishlist Preview</h2>
-            <p className="text-white/40 text-sm">Your top wishlist items will be visible on your public profile.</p>
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-bold text-white mb-4">Wishlist Preview</h2>
+            {wishlistItems === null ? (
+              <p className="text-white/40 text-sm">Loading...</p>
+            ) : wishlistItems.length === 0 ? (
+              <p className="text-white/40 text-sm">Your wishlist is empty. Add cards to your wishlist to show them here.</p>
+            ) : (
+              <div className="space-y-2">
+                {wishlistItems.map((item, i) => (
+                  <div key={item._id || i} className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white text-sm font-medium truncate">{item.name}</div>
+                      {item.set && <div className="text-white/40 text-xs">{item.set}</div>}
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      {item.targetPrice > 0 && (
+                        <div className="text-xs text-slate-400">
+                          Target: <span className="text-white">${item.targetPrice.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {item.currentPrice > 0 && (
+                        <div className={`text-xs font-medium ${item.currentPrice <= item.targetPrice ? 'text-green-400' : 'text-red-400'}`}>
+                          ${item.currentPrice.toFixed(2)}
+                        </div>
+                      )}
+                    </div>
+                    <span className={`text-xs px-1.5 py-0.5 rounded capitalize ${
+                      item.priority === 'high' ? 'bg-red-900/40 text-red-300' :
+                      item.priority === 'medium' ? 'bg-amber-900/40 text-amber-300' :
+                      'bg-slate-700 text-slate-400'
+                    }`}>{item.priority}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="text-white/30 text-xs mt-3">Top 3 wishlist items are visible on your public profile.</p>
           </div>
         )}
       </div>
