@@ -31,6 +31,10 @@ const categorySchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  isQA: {
+    type: Boolean,
+    default: false
+  },
   threadCount: {
     type: Number,
     default: 0

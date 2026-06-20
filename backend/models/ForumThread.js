@@ -84,6 +84,15 @@ const threadSchema = new mongoose.Schema({
     },
     reviewedAt: Date
   },
+  isQA: {
+    type: Boolean,
+    default: false
+  },
+  bestAnswerPostId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ForumPost',
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now,
