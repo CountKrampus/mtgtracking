@@ -2,22 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Globe } from 'lucide-react';
 import { API_URL } from '../../config';
 import SharedDeckView from './SharedDeckView';
+import { COLOR_PIPS, FORMAT_COLORS } from './deckConstants';
 
 const FORMATS = ['commander', 'standard', 'modern', 'pioneer', 'legacy', 'vintage', 'pauper', 'draft', 'oathbreaker', 'other'];
 const COLORS = ['W', 'U', 'B', 'R', 'G'];
 const COLOR_LABELS = { W: '☀️ White', U: '💧 Blue', B: '💀 Black', R: '🔥 Red', G: '🌲 Green' };
-const COLOR_PIPS = { W: '☀️', U: '💧', B: '💀', R: '🔥', G: '🌲' };
-const FORMAT_COLORS = {
-  commander: 'bg-purple-600/30 text-purple-300 border-purple-500/40',
-  standard:  'bg-blue-600/30 text-blue-300 border-blue-500/40',
-  modern:    'bg-green-600/30 text-green-300 border-green-500/40',
-  pioneer:   'bg-teal-600/30 text-teal-300 border-teal-500/40',
-  legacy:    'bg-amber-600/30 text-amber-300 border-amber-500/40',
-  vintage:   'bg-red-600/30 text-red-300 border-red-500/40',
-  pauper:    'bg-gray-600/30 text-gray-300 border-gray-500/40',
-  draft:     'bg-orange-600/30 text-orange-300 border-orange-500/40',
-  other:     'bg-slate-600/30 text-slate-300 border-slate-500/40',
-};
 
 function DeckCard({ deck, onView }) {
   return (
@@ -100,9 +89,12 @@ function CommunityDecks() {
     params.set('page', page);
 
     fetch(`${API_URL}/decks/community?${params}`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`Server error ${r.status}`);
+        return r.json();
+      })
       .then(d => { setDecks(d.decks || []); setTotal(d.total || 0); setPages(d.pages || 1); setLoading(false); })
-      .catch(e => { setError(e.message); setLoading(false); });
+      .catch(e => { setError(e.message || 'Failed to load decks'); setLoading(false); });
   }, [format, selectedColors, commander, tags, sort, page]);
 
   useEffect(() => { fetchDecks(); }, [fetchDecks]);
