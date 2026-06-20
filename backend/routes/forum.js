@@ -1140,6 +1140,12 @@ router.get('/user-level', async (req, res) => {
     if (!level) return res.json(null);
     const data = level.toObject();
     data.experienceToNextLevel = level.nextLevelExperience;
+
+    // Compute whether the user owns any achievementShowcase cosmetic
+    const showcaseCosmetics = await Cosmetic.find({ category: 'achievementShowcase' }).lean();
+    const purchasedIds = (level.cosmetics?.purchased || []).map(String);
+    data.ownsAchievementShowcase = showcaseCosmetics.some(c => purchasedIds.includes(c._id.toString()));
+
     res.json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });

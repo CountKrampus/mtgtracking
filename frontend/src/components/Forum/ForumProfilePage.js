@@ -24,6 +24,8 @@ export default function ForumProfilePage({ user, apiUrl }) {
   const [equippedCosmetics, setEquippedCosmetics] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showPinPicker, setShowPinPicker] = useState(false);
+  const [selectedPins, setSelectedPins] = useState([]);
 
   useEffect(() => {
     fetchProfileData();
@@ -40,6 +42,7 @@ export default function ForumProfilePage({ user, apiUrl }) {
       });
       const levelInfo = await levelRes.json();
       setLevelData(levelInfo);
+      setSelectedPins(levelInfo?.pinnedAchievements || []);
 
       // Fetch activity/stats (current authenticated user)
       const activityRes = await fetch(`${apiUrl}/forum/users/${user.username}/activity`, {
@@ -72,11 +75,36 @@ export default function ForumProfilePage({ user, apiUrl }) {
     >
       {/* Header */}
       <div
-        className="bg-gradient-to-r from-purple-900/50 to-slate-900 rounded-lg p-8"
-        style={{ border: equippedCosmetics.profileBorderColor?.color
-          ? `2px solid ${equippedCosmetics.profileBorderColor.color}`
-          : '1px solid rgba(168, 85, 247, 0.3)' }}
+        className="rounded-lg p-8"
+        style={{
+          ...(equippedCosmetics.profileBackground?.cssProperties
+            ? equippedCosmetics.profileBackground.cssProperties
+            : { background: 'linear-gradient(to right, rgba(88,28,135,0.5), rgb(15,23,42))' }),
+          border: equippedCosmetics.profileBorderColor?.color
+            ? `2px solid ${equippedCosmetics.profileBorderColor.color}`
+            : '1px solid rgba(168, 85, 247, 0.3)'
+        }}
       >
+        {/* Profile Banner */}
+        {equippedCosmetics.profileBanner && (
+          <div
+            className="w-full h-32 rounded-t-lg -mx-8 -mt-8 mb-6"
+            style={{
+              marginLeft: '-2rem',
+              marginRight: '-2rem',
+              marginTop: '-2rem',
+              borderRadius: '0.5rem 0.5rem 0 0',
+              width: 'calc(100% + 4rem)',
+              ...(equippedCosmetics.profileBanner.imageUrl
+                ? {
+                    backgroundImage: `url(${equippedCosmetics.profileBanner.imageUrl})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }
+                : equippedCosmetics.profileBanner.cssProperties || {}),
+            }}
+          />
+        )}
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
             <UserAvatar avatarUrl={user.avatarUrl} username={user.username} size="lg" />
@@ -110,8 +138,13 @@ export default function ForumProfilePage({ user, apiUrl }) {
               </div>
               <div className="w-full h-4 bg-slate-700 rounded overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-amber-400 to-amber-300 transition-all duration-500"
-                  style={{ width: `${(levelData.experience / (levelData.experienceToNextLevel || levelData.level * 500)) * 100}%` }}
+                  className="h-full transition-all duration-500"
+                  style={{
+                    width: `${(levelData.experience / (levelData.experienceToNextLevel || levelData.level * 500)) * 100}%`,
+                    background: equippedCosmetics.profileTheme?.color
+                      ? `linear-gradient(to right, ${equippedCosmetics.profileTheme.color}, ${equippedCosmetics.profileTheme.color}cc)`
+                      : 'linear-gradient(to right, #fbbf24, #fcd34d)'
+                  }}
                 />
               </div>
             </div>
@@ -127,6 +160,42 @@ export default function ForumProfilePage({ user, apiUrl }) {
                     </span>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Pinned Achievements Showcase */}
+            {levelData?.pinnedAchievements && levelData.pinnedAchievements.length > 0 && (
+              <div className="mt-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="text-sm font-semibold text-amber-300">Pinned Achievements</p>
+                  {levelData?.ownsAchievementShowcase && (
+                    <button
+                      onClick={() => setShowPinPicker(true)}
+                      className="text-xs text-amber-400 hover:text-amber-300"
+                    >
+                      Edit Pinned
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {levelData.pinnedAchievements.map((name, i) => (
+                    <span key={i} className="inline-flex items-center gap-1.5 text-sm bg-amber-900/30 border border-amber-600/40 text-amber-300 px-3 py-1.5 rounded-full">
+                      🏆 {name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Show "Edit Pinned" button even when no pins yet, if user owns showcase */}
+            {levelData?.ownsAchievementShowcase && (!levelData?.pinnedAchievements || levelData.pinnedAchievements.length === 0) && (
+              <div className="mt-4">
+                <button
+                  onClick={() => setShowPinPicker(true)}
+                  className="text-xs text-amber-400 hover:text-amber-300 underline"
+                >
+                  Pin Achievements
+                </button>
               </div>
             )}
           </div>
@@ -145,7 +214,11 @@ export default function ForumProfilePage({ user, apiUrl }) {
             const Icon = stat.icon;
             return (
               <div key={i} className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
-                <Icon size={20} className={`${stat.color} mb-2`} />
+                <Icon
+                  size={20}
+                  className={`${stat.color} mb-2`}
+                  style={equippedCosmetics.profileTheme?.color ? { color: equippedCosmetics.profileTheme.color } : {}}
+                />
                 <p className="text-slate-400 text-sm mb-1">{stat.label}</p>
                 <p className="text-2xl font-bold text-white">{stat.value}</p>
               </div>
@@ -184,6 +257,63 @@ export default function ForumProfilePage({ user, apiUrl }) {
                 <p className="text-slate-400 text-xs">{new Date(post.createdAt).toLocaleDateString()}</p>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Pin Achievements Picker Modal */}
+      {showPinPicker && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-white font-bold mb-4">Pin Achievements (max 3)</h3>
+            <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
+              {(levelData?.achievements || []).map((name, i) => (
+                <label key={i} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedPins.includes(name)}
+                    onChange={e => {
+                      if (e.target.checked && selectedPins.length < 3) {
+                        setSelectedPins([...selectedPins, name]);
+                      } else {
+                        setSelectedPins(selectedPins.filter(p => p !== name));
+                      }
+                    }}
+                    className="rounded"
+                  />
+                  <span className="text-slate-300 text-sm">🏆 {name}</span>
+                </label>
+              ))}
+              {(!levelData?.achievements || levelData.achievements.length === 0) && (
+                <p className="text-slate-400 text-sm">No achievements earned yet.</p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  const token = localStorage.getItem('mtg_access_token');
+                  await fetch(`${apiUrl}/forum/level/pinned-achievements`, {
+                    method: 'PUT',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      ...(token ? { Authorization: `Bearer ${token}` } : {})
+                    },
+                    body: JSON.stringify({ names: selectedPins }),
+                  });
+                  setShowPinPicker(false);
+                  fetchProfileData();
+                }}
+                className="flex-1 bg-amber-600 hover:bg-amber-500 text-white rounded py-1.5 text-sm font-medium"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setShowPinPicker(false)}
+                className="flex-1 bg-slate-700 hover:bg-slate-600 text-white rounded py-1.5 text-sm"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
