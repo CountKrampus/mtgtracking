@@ -53,12 +53,35 @@ const forumLevelSchema = new mongoose.Schema({
       favoriteCardsShowcase: { type: String, default: null },
       deckShowcase: { type: String, default: null },
       collectionStatsWidget: { type: String, default: null },
-      wishlistPreview: { type: String, default: null }
+      wishlistPreview: { type: String, default: null },
+      nameplateBackground: { type: String, default: null },
+      formatBadge: { type: String, default: null },
+      aboutMe: { type: String, default: null },
+      personalLinksUnlock: { type: String, default: null },
+      setSymbolFlair: { type: String, default: null }
     }
   },
   memberTitleText: { type: String, default: '', maxlength: 40 },
   signatureText: { type: String, default: '', maxlength: 120 },
   pinnedAchievements: { type: [String], default: [] },
+  aboutMeText: { type: String, default: '', maxlength: 300 },
+  personalLinks: {
+    type: [{
+      label: { type: String, default: '', maxlength: 30 },
+      url:   { type: String, default: '', maxlength: 200 },
+    }],
+    default: [],
+    validate: [arr => arr.length <= 5, 'Maximum 5 personal links'],
+  },
+  manaIdentity: {
+    type: [{ type: String, enum: ['W', 'U', 'B', 'R', 'G', 'C'] }],
+    default: [],
+  },
+  commanderCard: {
+    scryfallId: { type: String, default: '' },
+    name:       { type: String, default: '' },
+    imageUrl:   { type: String, default: '' },
+  },
   achievements: [
     {
       name: String,

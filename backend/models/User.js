@@ -63,6 +63,10 @@ const userSchema = new mongoose.Schema({
   lastLoginAt: {
     type: Date
   },
+  lastSeenAt: {
+    type: Date,
+    default: null,
+  },
   privacy: {
     isPublic: { type: Boolean, default: false },
     showCollection: { type: Boolean, default: false },

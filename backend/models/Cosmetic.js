@@ -14,7 +14,8 @@ const cosmeticSchema = new mongoose.Schema({
       'flairIcon', 'postBackground', 'postFrame', 'memberTitle', 'signature',
       'threadHighlight', 'profileBackground', 'profileBanner', 'profileTheme',
       'achievementShowcase', 'favoriteCardsShowcase', 'deckShowcase',
-      'collectionStatsWidget', 'wishlistPreview'
+      'collectionStatsWidget', 'wishlistPreview',
+      'nameplateBackground', 'formatBadge', 'aboutMe', 'personalLinks', 'setSymbolFlair'
     ],
     required: true
   },
@@ -55,6 +56,10 @@ const cosmeticSchema = new mongoose.Schema({
   animationClass: {
     type: String,
     default: null
+  },
+  availableUntil: {
+    type: Date,
+    default: null  // null = permanent; set a date for seasonal items that expire
   },
   createdAt: {
     type: Date,
