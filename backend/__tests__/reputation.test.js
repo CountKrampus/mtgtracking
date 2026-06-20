@@ -159,3 +159,62 @@ test('creating a post adds +1 rep and postCount to author', async () => {
   expect(updated.reputation).toBe(1);
   expect(updated.communityStats.postCount).toBe(1);
 });
+
+test('upvoting a post adds +5 rep to post author', async () => {
+  const postAuthor = await User.create({
+    email: 'upvpa@test.com', username: 'upvpostauthor', passwordHash: 'hash', reputation: 0
+  });
+  const voter = await User.create({
+    email: 'voter@test.com', username: 'voter', passwordHash: 'hash'
+  });
+  const cat = await ForumCategory.create({ name: 'Upvote', slug: 'upvote' });
+  const thread = await ForumThread.create({
+    categoryId: cat._id, authorId: postAuthor._id,
+    authorUsername: 'upvpostauthor', title: 'T', content: 'B'
+  });
+  const ForumPost = require('../models/ForumPost');
+  const post = await ForumPost.create({
+    threadId: thread._id, authorId: postAuthor._id,
+    authorUsername: 'upvpostauthor', body: 'My post'
+  });
+
+  const app = buildApp();
+  const token = makeToken(voter._id.toString());
+  await request(app)
+    .post(`/api/forum/posts/${post._id}/upvote`)
+    .set('Authorization', `Bearer ${token}`);
+
+  await new Promise(r => setTimeout(r, 100));
+  const updated = await User.findById(postAuthor._id);
+  expect(updated.reputation).toBe(5);
+});
+
+test('removing an upvote does NOT deduct rep from post author', async () => {
+  const postAuthor = await User.create({
+    email: 'unupvpa@test.com', username: 'unupvpostauthor', passwordHash: 'hash', reputation: 5
+  });
+  const voter = await User.create({
+    email: 'unvoter@test.com', username: 'unvoter', passwordHash: 'hash'
+  });
+  const cat = await ForumCategory.create({ name: 'Unupvote', slug: 'unupvote' });
+  const thread = await ForumThread.create({
+    categoryId: cat._id, authorId: postAuthor._id,
+    authorUsername: 'unupvpostauthor', title: 'T2', content: 'B2'
+  });
+  const ForumPost = require('../models/ForumPost');
+  const post = await ForumPost.create({
+    threadId: thread._id, authorId: postAuthor._id,
+    authorUsername: 'unupvpostauthor', body: 'My post',
+    upvotes: [voter._id]
+  });
+
+  const app = buildApp();
+  const token = makeToken(voter._id.toString());
+  await request(app)
+    .post(`/api/forum/posts/${post._id}/upvote`)
+    .set('Authorization', `Bearer ${token}`);
+
+  await new Promise(r => setTimeout(r, 100));
+  const updated = await User.findById(postAuthor._id);
+  expect(updated.reputation).toBe(5); // unchanged
+});

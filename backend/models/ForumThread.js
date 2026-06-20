@@ -56,6 +56,10 @@ const threadSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  upvotes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   mergeRequest: {
     suggestedThreadId: {
       type: mongoose.Schema.Types.ObjectId,

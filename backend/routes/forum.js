@@ -409,64 +409,79 @@ router.get('/posts/:postId/edits', async (req, res) => {
   }
 });
 
-// POST /api/forum/posts/:postId/upvote - Upvote a post (requires auth)
+// POST /api/forum/posts/:postId/upvote — toggle
 router.post('/posts/:postId/upvote', verifyToken, requireAuth, async (req, res) => {
   try {
-    const { postId } = req.params;
-    const userId = req.user._id;
+    const post = await ForumPost.findById(req.params.postId);
+    if (!post) return res.status(404).json({ message: 'Post not found' });
 
-    const post = await ForumPost.findById(postId);
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
+    const uid = req.user._id;
+    const idx = post.upvotes.findIndex(id => id.toString() === uid.toString());
+    if (idx === -1) {
+      post.upvotes.push(uid);
+      // Capture authorId before any populate() mutates it
+      const postAuthorId = post.authorId;
+
+      // Award +5 rep to post author (fire-and-forget)
+      if (postAuthorId.toString() !== uid.toString()) {
+        User.findByIdAndUpdate(postAuthorId, { $inc: { reputation: 5 } }).catch(() => {});
+      }
+
+      // Create upvote notification asynchronously
+      setImmediate(async () => {
+        try {
+          const contentPreview = post.body.substring(0, 50);
+          await createUpvoteNotification(postAuthorId, uid, post._id, contentPreview);
+        } catch (notifError) {
+          console.error('Error creating upvote notification:', notifError);
+        }
+      });
+
+      // Award XP and coins to post author for receiving an upvote (async, non-blocking)
+      setImmediate(async () => {
+        try {
+          let level = await ForumLevel.findOne({ userId: postAuthorId });
+          if (!level) level = await ForumLevel.create({ userId: postAuthorId });
+          level.addExperience(10);
+          level.addCoins(2);
+          await level.save();
+        } catch (xpErr) {
+          console.error('XP/coin award error (upvote):', xpErr);
+        }
+      });
+    } else {
+      post.upvotes.splice(idx, 1);
+      // No rep deduction on unvote
     }
-
-    // Check if user already upvoted
-    const hasUpvoted = post.upvotes.some(id => id.toString() === userId.toString());
-
-    if (hasUpvoted) {
-      // Remove upvote
-      post.upvotes = post.upvotes.filter(id => id.toString() !== userId.toString());
-      await post.save();
-      await post.populate('authorId', 'username displayName');
-      return res.json({ post, action: 'removed' });
-    }
-
-    // Add upvote
-    post.upvotes.push(userId);
-    // Capture authorId as ObjectId before any populate() mutates it
-    const postAuthorId = post.authorId;
     await post.save();
-
-    // Create upvote notification asynchronously
-    setImmediate(async () => {
-      try {
-        const contentPreview = post.body.substring(0, 50);
-        await createUpvoteNotification(postAuthorId, userId, post._id, contentPreview);
-      } catch (notifError) {
-        console.error('Error creating upvote notification:', notifError);
-      }
-    });
-
-    // Award XP and coins to post author for receiving an upvote (async, non-blocking)
-    setImmediate(async () => {
-      try {
-        let level = await ForumLevel.findOne({ userId: postAuthorId });
-        if (!level) level = await ForumLevel.create({ userId: postAuthorId });
-        level.addExperience(10);
-        level.addCoins(2);
-        await level.save();
-      } catch (xpErr) {
-        console.error('XP/coin award error (upvote):', xpErr);
-      }
-    });
-
-    await post.populate('authorId', 'username displayName');
-
-    res.json({ post, action: 'added' });
-  } catch (error) {
-    console.error('Upvote post error:', error);
-    res.status(500).json({ message: error.message });
+    res.json({ upvoteCount: post.upvotes.length, hasUpvoted: idx === -1 });
+  } catch (e) {
+    console.error('Upvote post error:', e);
+    res.status(500).json({ message: e.message });
   }
+});
+
+// POST /api/forum/threads/:id/upvote — toggle
+router.post('/threads/:id/upvote', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const thread = await ForumThread.findById(req.params.id);
+    if (!thread) return res.status(404).json({ message: 'Thread not found' });
+
+    const uid = req.user._id;
+    const idx = thread.upvotes.findIndex(id => id.toString() === uid.toString());
+    if (idx === -1) {
+      thread.upvotes.push(uid);
+      // Award +10 rep to thread author (fire-and-forget)
+      if (thread.authorId.toString() !== uid.toString()) {
+        User.findByIdAndUpdate(thread.authorId, { $inc: { reputation: 10 } }).catch(() => {});
+      }
+    } else {
+      thread.upvotes.splice(idx, 1);
+      // No rep deduction on unvote
+    }
+    await thread.save();
+    res.json({ upvoteCount: thread.upvotes.length, hasUpvoted: idx === -1 });
+  } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
 // PUT /api/forum/threads/:threadId - Update thread (author or admin)
