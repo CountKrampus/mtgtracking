@@ -8,6 +8,23 @@ export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user,
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({});
   const [showComposer, setShowComposer] = useState(false);
+  const [category, setCategory] = useState(null);
+
+  useEffect(() => {
+    if (!categoryId) return;
+    const fetchCategory = async () => {
+      try {
+        const response = await fetch(`${apiUrl}/forum/categories/${categoryId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setCategory(data);
+        }
+      } catch (error) {
+        console.error('Error fetching category:', error);
+      }
+    };
+    fetchCategory();
+  }, [categoryId, apiUrl]);
 
   useEffect(() => {
     if (!categoryId) return;
@@ -143,6 +160,7 @@ export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user,
         categoryId={categoryId}
         apiUrl={apiUrl}
         user={user}
+        categoryIsQA={category?.isQA || false}
         onThreadCreated={(newThread) => {
           setShowComposer(false);
           // Add the new thread to the top of the list (re-fetch to be safe with pagination)

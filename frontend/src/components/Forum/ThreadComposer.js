@@ -4,7 +4,7 @@ import axios from 'axios';
 import { API_URL } from '../../config';
 import DuplicateDetectionModal from './DuplicateDetectionModal';
 
-export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = API_URL, user, onThreadCreated }) {
+export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = API_URL, user, onThreadCreated, categoryIsQA = false }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
@@ -16,6 +16,7 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = A
   const [suggestedDuplicates, setSuggestedDuplicates] = useState([]);
   const [newThreadId, setNewThreadId] = useState(null);
   const [createdThread, setCreatedThread] = useState(null);
+  const [isQA, setIsQA] = useState(categoryIsQA);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -36,6 +37,8 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = A
     setSelectedCategoryId(categoryId);
   }, [categoryId]);
 
+  useEffect(() => { setIsQA(categoryIsQA); }, [categoryIsQA]);
+
   const handleCreateThread = async () => {
     if (!title.trim() || !content.trim() || !selectedCategoryId) {
       setError('Title, content, and category are required');
@@ -51,7 +54,8 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = A
         title: title.trim(),
         content: content.trim(),
         tags: tags.split(',').map(t => t.trim()).filter(t => t),
-        contentFormat: 'markdown'
+        contentFormat: 'markdown',
+        isQA
       });
 
       const threadData = response.data;
@@ -161,6 +165,18 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = A
             />
             <div className="text-xs text-slate-500 mt-1">{title.length}/200</div>
           </div>
+
+          {/* Q&A toggle (new threads only) */}
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <div
+              onClick={() => setIsQA(v => !v)}
+              className={`relative w-9 h-5 rounded-full transition ${isQA ? 'bg-green-600' : 'bg-gray-700'}`}
+            >
+              <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${isQA ? 'left-4' : 'left-0.5'}`} />
+            </div>
+            <span className="text-white/60 text-sm">This is a question (Q&amp;A format)</span>
+            {isQA && <span className="text-green-400 text-xs">❓ Q&amp;A</span>}
+          </label>
 
           {/* Content */}
           <div>
