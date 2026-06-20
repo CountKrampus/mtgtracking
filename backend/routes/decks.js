@@ -62,7 +62,10 @@ router.get('/community', async (req, res) => {
       const colorList = colors.split(',').map(c => c.trim()).filter(Boolean);
       if (colorList.length) filter['commander.colorIdentity'] = { $all: colorList };
     }
-    if (commander) filter['commander.name'] = { $regex: commander, $options: 'i' };
+    if (commander) {
+      const escapedCommander = commander.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      filter['commander.name'] = { $regex: escapedCommander, $options: 'i' };
+    }
     if (tags) {
       const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
       if (tagList.length) filter.tags = { $in: tagList };
@@ -75,7 +78,8 @@ router.get('/community', async (req, res) => {
     };
     const sortQuery = sortMap[sort] || sortMap.newest;
     const PAGE_SIZE = 20;
-    const skip = (Math.max(1, parseInt(page)) - 1) * PAGE_SIZE;
+    const safePage = Math.max(1, parseInt(page) || 1);
+    const skip = (safePage - 1) * PAGE_SIZE;
 
     const [decks, total] = await Promise.all([
       Deck.find(filter)
@@ -92,7 +96,7 @@ router.get('/community', async (req, res) => {
       return { ...rest, cardCount: (mainDeck || []).length, owner: { username: userId?.username, displayName: userId?.displayName } };
     });
 
-    res.json({ decks: result, total, page: parseInt(page), pages: Math.ceil(total / PAGE_SIZE) });
+    res.json({ decks: result, total, page: safePage, pages: Math.ceil(total / PAGE_SIZE) });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
