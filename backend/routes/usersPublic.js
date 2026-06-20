@@ -1,9 +1,45 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const ForumLevel = require('../models/ForumLevel');
 const Cosmetic = require('../models/Cosmetic');
 const Deck = require('../models/Deck');
+
+/**
+ * Get (or lazily register) the Card model.
+ * In production, server.js registers it before any request arrives.
+ * In tests that build a minimal app without server.js, we register a
+ * minimal schema here so queries work against the in-memory database.
+ */
+function getCardModel() {
+  if (mongoose.modelNames().includes('Card')) return mongoose.model('Card');
+  const schema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+    name: String,
+    set: String,
+    quantity: { type: Number, default: 1 },
+    price: { type: Number, default: 0 },
+    condition: String,
+  });
+  return mongoose.model('Card', schema);
+}
+
+/**
+ * Get (or lazily register) the WishlistItem model.
+ * Same reasoning as getCardModel above.
+ */
+function getWishlistItemModel() {
+  if (mongoose.modelNames().includes('WishlistItem')) return mongoose.model('WishlistItem');
+  const schema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+    name: String,
+    targetPrice: { type: Number, default: 0 },
+    currentPrice: { type: Number, default: 0 },
+    priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
+  });
+  return mongoose.model('WishlistItem', schema);
+}
 
 /**
  * GET /api/users/:username/public-profile
@@ -12,6 +48,11 @@ const Deck = require('../models/Deck');
  */
 router.get('/:username/public-profile', async (req, res) => {
   try {
+    // Get models — uses registry if server.js has already registered them,
+    // otherwise falls back to minimal schema registration (for test environments).
+    const Card = getCardModel();
+    const WishlistItem = getWishlistItemModel();
+
     const { username } = req.params;
     const user = await User.findOne({ username, isActive: true })
       .select('username displayName avatarUrl reputation badges createdAt privacy pinnedCards')
@@ -45,21 +86,48 @@ router.get('/:username/public-profile', async (req, res) => {
     // Deck showcase — gated by deckShowcase unlock and privacy setting
     let publicDecks = null;
     if (hasUnlock('deckShowcase') && user.privacy?.showDecks !== false) {
-      try {
-        publicDecks = await Deck.find({ userId: user._id, isPublic: true })
-          .select('name format commander description')
-          .limit(6)
-          .lean();
-      } catch {
-        publicDecks = [];
-      }
+      publicDecks = await Deck.find({ userId: user._id, isPublic: true })
+        .select('name format commander description colors createdAt')
+        .sort({ updatedAt: -1 })
+        .limit(6)
+        .lean();
     }
 
-    // Collection stats — no standalone Card model to query; return null
-    const collectionStats = null;
+    // Collection stats — gated by collectionStatsWidget unlock and privacy setting
+    let collectionStats = null;
+    if (hasUnlock('collectionStatsWidget') && user.privacy?.showCollection) {
+      const [aggResult, topCard] = await Promise.all([
+        Card.aggregate([
+          { $match: { userId: user._id } },
+          { $group: {
+            _id: null,
+            totalCards: { $sum: '$quantity' },
+            totalValue: { $sum: { $multiply: ['$price', '$quantity'] } },
+            uniqueCards: { $sum: 1 },
+          }},
+        ]),
+        Card.findOne({ userId: user._id, price: { $gt: 0 } })
+          .sort({ price: -1 })
+          .select('name price')
+          .lean(),
+      ]);
+      collectionStats = {
+        totalCards: aggResult[0]?.totalCards || 0,
+        uniqueCards: aggResult[0]?.uniqueCards || 0,
+        totalValue: Number((aggResult[0]?.totalValue || 0).toFixed(2)),
+        mostValuableCard: topCard ? { name: topCard.name, price: topCard.price } : null,
+      };
+    }
 
-    // Wishlist preview — no WishlistItem model to query; return null
-    const wishlistPreview = null;
+    // Wishlist preview — gated by wishlistPreview unlock and privacy setting
+    let wishlistPreview = null;
+    if (hasUnlock('wishlistPreview') && user.privacy?.showWishlist) {
+      wishlistPreview = await WishlistItem.find({ userId: user._id })
+        .select('name targetPrice currentPrice priority')
+        .sort({ priority: -1, targetPrice: 1 })
+        .limit(3)
+        .lean();
+    }
 
     res.json({
       username: user.username,
