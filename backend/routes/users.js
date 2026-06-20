@@ -10,6 +10,8 @@ const Session = require('../models/Session');
 const ActivityLog = require('../models/ActivityLog');
 const BanAppeal = require('../models/BanAppeal');
 const UserBan = require('../models/UserBan');
+const ForumLevel = require('../models/ForumLevel');
+const Cosmetic = require('../models/Cosmetic');
 const { hashPassword, verifyPassword, validatePasswordStrength } = require('../utils/passwords');
 const { verifyToken, requireAuth, isMultiUserEnabled } = require('../middleware/auth');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
@@ -615,9 +617,6 @@ router.post('/ban-appeals', async (req, res) => {
  */
 router.get('/me/unlock-status', async (req, res) => {
   try {
-    const ForumLevel = require('../models/ForumLevel');
-    const Cosmetic = require('../models/Cosmetic');
-
     const level = await ForumLevel.findOne({ userId: req.user._id })
       .select('cosmetics').lean();
 
@@ -655,9 +654,6 @@ router.put('/pinned-cards', async (req, res) => {
     if (!Array.isArray(cards)) {
       return res.status(400).json({ message: 'cards must be an array' });
     }
-    if (cards.length > 5) {
-      return res.status(400).json({ message: 'Maximum 5 pinned cards' });
-    }
 
     const validCards = cards
       .filter(c => c.name && c.scryfallId)
@@ -667,6 +663,10 @@ router.put('/pinned-cards', async (req, res) => {
         name: c.name,
         imageUrl: c.imageUrl || '',
       }));
+
+    if (validCards.length > 5) {
+      return res.status(400).json({ message: 'Maximum 5 pinned cards' });
+    }
 
     await User.findByIdAndUpdate(req.user._id, { pinnedCards: validCards });
     res.json({ pinnedCards: validCards });

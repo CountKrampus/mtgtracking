@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const ForumLevel = require('../models/ForumLevel');
 const Cosmetic = require('../models/Cosmetic');
+const Deck = require('../models/Deck');
 
 /**
  * GET /api/users/:username/public-profile
@@ -16,7 +17,7 @@ router.get('/:username/public-profile', async (req, res) => {
       .select('username displayName avatarUrl reputation badges createdAt privacy pinnedCards')
       .lean();
 
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user || !user.privacy?.isPublic) return res.status(404).json({ message: 'User not found' });
 
     // Fetch ForumLevel to check purchased unlocks
     const level = await ForumLevel.findOne({ userId: user._id })
@@ -45,7 +46,6 @@ router.get('/:username/public-profile', async (req, res) => {
     let publicDecks = null;
     if (hasUnlock('deckShowcase') && user.privacy?.showDecks !== false) {
       try {
-        const Deck = require('../models/Deck');
         publicDecks = await Deck.find({ userId: user._id, isPublic: true })
           .select('name format commander description')
           .limit(6)

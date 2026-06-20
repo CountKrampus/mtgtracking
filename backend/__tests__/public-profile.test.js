@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const ForumLevel = require('../models/ForumLevel');
 const Cosmetic = require('../models/Cosmetic');
+const Deck = require('../models/Deck');
 
 /**
  * Create a signed JWT for the given userId.
@@ -68,6 +69,7 @@ describe('GET /api/users/:username/public-profile', () => {
       passwordHash: 'hash',
       role: 'user',
       reputation: 42,
+      privacy: { isPublic: true },
     });
 
     const app = buildApp();
@@ -87,6 +89,7 @@ describe('GET /api/users/:username/public-profile', () => {
       username: 'bob',
       passwordHash: 'hash',
       role: 'user',
+      privacy: { isPublic: true },
     });
 
     const cosmetic = await Cosmetic.create({
@@ -116,6 +119,7 @@ describe('GET /api/users/:username/public-profile', () => {
       username: 'carol',
       passwordHash: 'hash',
       role: 'user',
+      privacy: { isPublic: true },
       pinnedCards: [
         { scryfallId: 'abc123', name: 'Lightning Bolt', imageUrl: 'http://example.com/bolt.jpg' },
       ],
@@ -152,6 +156,81 @@ describe('GET /api/users/:username/public-profile', () => {
     const app = buildApp();
     const res = await request(app).get('/api/users/inactiveuser/public-profile');
     expect(res.status).toBe(404);
+  });
+
+  it('returns 404 when privacy.isPublic is false (active user with private profile)', async () => {
+    await User.create({
+      email: 'private@test.com',
+      username: 'privateuser',
+      passwordHash: 'hash',
+      role: 'user',
+      privacy: { isPublic: false },
+    });
+
+    const app = buildApp();
+    const res = await request(app).get('/api/users/privateuser/public-profile');
+    expect(res.status).toBe(404);
+    expect(res.body.message).toMatch(/not found/i);
+  });
+
+  it('returns publicDecks when deckShowcase cosmetic is purchased and user has public decks', async () => {
+    const user = await User.create({
+      email: 'deckuser@test.com',
+      username: 'deckuser',
+      passwordHash: 'hash',
+      role: 'user',
+      privacy: { isPublic: true, showDecks: true },
+    });
+
+    const cosmetic = await Cosmetic.create({
+      name: 'Deck Showcase',
+      category: 'deckShowcase',
+      cost: 500,
+      isActive: true,
+    });
+
+    await ForumLevel.create({
+      userId: user._id,
+      cosmetics: { purchased: [cosmetic._id.toString()] },
+    });
+
+    await Deck.create({ userId: user._id, name: 'My Deck', isPublic: true });
+
+    const app = buildApp();
+    const res = await request(app).get('/api/users/deckuser/public-profile');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.publicDecks)).toBe(true);
+    expect(res.body.publicDecks).toHaveLength(1);
+    expect(res.body.publicDecks[0].name).toBe('My Deck');
+  });
+
+  it('returns null for publicDecks when privacy.showDecks is false even if deckShowcase is purchased', async () => {
+    const user = await User.create({
+      email: 'nodecks@test.com',
+      username: 'nodecksuser',
+      passwordHash: 'hash',
+      role: 'user',
+      privacy: { isPublic: true, showDecks: false },
+    });
+
+    const cosmetic = await Cosmetic.create({
+      name: 'Deck Showcase',
+      category: 'deckShowcase',
+      cost: 500,
+      isActive: true,
+    });
+
+    await ForumLevel.create({
+      userId: user._id,
+      cosmetics: { purchased: [cosmetic._id.toString()] },
+    });
+
+    await Deck.create({ userId: user._id, name: 'Hidden Deck', isPublic: true });
+
+    const app = buildApp();
+    const res = await request(app).get('/api/users/nodecksuser/public-profile');
+    expect(res.status).toBe(200);
+    expect(res.body.publicDecks).toBeNull();
   });
 });
 
@@ -322,6 +401,7 @@ describe('PUT /api/users/pinned-cards', () => {
     const cards = Array.from({ length: 6 }, (_, i) => ({
       scryfallId: `id${i}`,
       name: `Card ${i}`,
+      imageUrl: '',
     }));
 
     const token = makeToken(user._id);
