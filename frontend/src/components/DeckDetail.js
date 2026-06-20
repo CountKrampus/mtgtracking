@@ -159,6 +159,10 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
   const [selectedCmc, setSelectedCmc] = useState(null);
   const [collapsedCategories, setCollapsedCategories] = useState({});
   const [showExport, setShowExport] = useState(false);
+  const [shareCode, setShareCode] = useState(deck.shareCode || null);
+  const [isPublic, setIsPublic] = useState(deck.isPublic || false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   useEffect(() => {
     if (!deck._id) return;
@@ -334,6 +338,42 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
     navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!'));
   };
 
+  // ── Share handlers ────────────────────────────────────────────────────────
+  const handleShare = async () => {
+    setShareLoading(true);
+    try {
+      const token = localStorage.getItem('mtg_access_token');
+      const res = await fetch(`${API_URL}/decks/${deck._id}/share`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      if (res.ok) setShareCode(data.shareCode);
+    } catch (e) { /* ignore */ }
+    setShareLoading(false);
+  };
+
+  const handleCopyLink = () => {
+    const url = `${window.location.origin}/shared/deck/${shareCode}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    });
+  };
+
+  const handleTogglePublic = async () => {
+    try {
+      const token = localStorage.getItem('mtg_access_token');
+      const res = await fetch(`${API_URL}/decks/${deck._id}/visibility`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPublic: !isPublic })
+      });
+      const data = await res.json();
+      if (res.ok) setIsPublic(data.isPublic);
+    } catch (e) { /* ignore */ }
+  };
+
   // Mongoose Maps serialize as plain objects over JSON, but guard anyway
   const toPlainObj = (val) =>
     val instanceof Map ? Object.fromEntries(val) : (val || {});
@@ -377,6 +417,36 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
           >
             Export
           </button>
+          {/* Share controls */}
+          {!shareCode ? (
+            <button
+              onClick={handleShare}
+              disabled={shareLoading}
+              className="px-3 py-1 bg-white/20 hover:bg-white/30 disabled:opacity-50 text-white rounded-lg text-sm transition"
+            >
+              {shareLoading ? '...' : '🔗 Share'}
+            </button>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={handleCopyLink}
+                className="px-3 py-1 bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-300 rounded-lg text-sm transition"
+              >
+                {shareCopied ? '✅ Copied!' : '🔗 Copy Link'}
+              </button>
+              <button
+                onClick={handleTogglePublic}
+                className={`px-3 py-1 rounded-lg text-sm border transition ${
+                  isPublic
+                    ? 'bg-purple-600/40 border-purple-400/60 text-purple-200'
+                    : 'bg-white/10 border-white/20 text-gray-300 hover:border-purple-400/40'
+                }`}
+                title={isPublic ? 'Listed in Community — click to unlist' : 'Click to list in Community Decks'}
+              >
+                {isPublic ? '🌐 Public' : '🌐 List Publicly'}
+              </button>
+            </div>
+          )}
           <button onClick={onBack} className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition text-sm">
             ← Back
           </button>

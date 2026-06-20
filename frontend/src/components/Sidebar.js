@@ -29,7 +29,8 @@ import {
   Calendar,
   Eye,
   MessageSquare,
-  DollarSign
+  DollarSign,
+  Globe
 } from 'lucide-react';
 
 const Sidebar = ({
@@ -70,6 +71,7 @@ const Sidebar = ({
     { id: 'decks', label: 'Deck Builder', icon: Layers, feature: 'deckBuilder' },
     { id: 'wishlist', label: 'Wishlist', icon: Heart, feature: 'wishlist' },
     { id: 'forum', label: 'Forum', icon: MessageSquare },
+    { id: 'community-decks', label: 'Community Decks', icon: Globe },
     { id: 'lifecounter', label: 'Life Counter', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];

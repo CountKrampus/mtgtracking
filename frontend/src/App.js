@@ -38,6 +38,7 @@ import ForumProfilePage from './components/Forum/ForumProfilePage';
 import ForumShop from './components/Forum/ForumShop';
 import ForumLeaderboard from './components/Forum/ForumLeaderboard';
 import SharedDeckView from './components/CommunityDecks/SharedDeckView';
+import CommunityDecks from './components/CommunityDecks/CommunityDecks';
 import { API_URL } from './config';
 import NotificationBell from './components/NotificationBell';
 import DMPreview from './components/DMPreview';
@@ -5611,6 +5612,11 @@ function App() {
             )}
             </div>
           </div>
+        )}
+
+        {/* Community Decks View */}
+        {currentView === 'community-decks' && (
+          <CommunityDecks />
         )}
 
         {/* Camera OCR Modal */}
