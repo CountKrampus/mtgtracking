@@ -2,7 +2,7 @@ import React from 'react';
 import { AVATAR_PRESETS } from './presets';
 import { API_URL } from '../../config';
 
-export default function UserAvatar({ avatarUrl, username, size = 'md' }) {
+export default function UserAvatar({ avatarUrl, username, size = 'md', borderColor = null, animationClass = null }) {
   const sizeClass = {
     sm: 'w-6 h-6 text-xs',
     md: 'w-8 h-8 text-sm',
@@ -10,13 +10,29 @@ export default function UserAvatar({ avatarUrl, username, size = 'md' }) {
     xl: 'w-16 h-16 text-2xl'
   }[size] || 'w-8 h-8 text-sm';
 
+  const ringStyle = borderColor
+    ? { boxShadow: `0 0 0 2px ${borderColor}, 0 0 0 3px rgba(0,0,0,0.3)` }
+    : {};
+
+  function wrapWithBorder(avatarEl) {
+    if (!borderColor && !animationClass) return avatarEl;
+    return (
+      <div
+        className={`rounded-full inline-flex flex-shrink-0 ${animationClass || ''}`}
+        style={animationClass ? {} : ringStyle}
+      >
+        {avatarEl}
+      </div>
+    );
+  }
+
   // Handle preset avatars
   if (avatarUrl?.startsWith('preset:')) {
     const presetId = avatarUrl.replace('preset:', '');
     const preset = AVATAR_PRESETS.find(p => p.id === presetId);
 
     if (preset) {
-      return (
+      return wrapWithBorder(
         <div className={`${sizeClass} rounded-full overflow-hidden flex-shrink-0`}>
           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             {preset.svg.props.children}
@@ -28,9 +44,8 @@ export default function UserAvatar({ avatarUrl, username, size = 'md' }) {
 
   // Handle uploaded avatars
   if (avatarUrl && !avatarUrl.startsWith('preset:')) {
-    // Construct full URL if relative URL
     const fullUrl = avatarUrl.startsWith('http') ? avatarUrl : `${API_URL.replace('/api', '')}${avatarUrl}`;
-    return (
+    return wrapWithBorder(
       <img
         src={fullUrl}
         alt={username || 'Avatar'}
@@ -59,7 +74,7 @@ export default function UserAvatar({ avatarUrl, username, size = 'md' }) {
     return colors[name.charCodeAt(0) % colors.length];
   };
 
-  return (
+  return wrapWithBorder(
     <div
       className={`${sizeClass} ${getColorClass(username)} rounded-full flex items-center justify-center text-white font-bold flex-shrink-0`}
       title={username}

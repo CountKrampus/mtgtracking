@@ -10,3 +10,32 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Forum cosmetic animations */
+@keyframes border-fire {
+  0%, 100% { box-shadow: 0 0 0 2px #ff4500, 0 0 10px #ff6b35; }
+  50%       { box-shadow: 0 0 0 2px #ff8c00, 0 0 18px #ffd700; }
+}
+@keyframes border-lightning {
+  0%, 100% { box-shadow: 0 0 0 2px #4fc3f7; }
+  50%       { box-shadow: 0 0 0 2px #ffffff, 0 0 14px #4fc3f7; }
+}
+@keyframes border-diamond {
+  0%   { box-shadow: 0 0 0 2px #b9f2ff; }
+  33%  { box-shadow: 0 0 0 2px #e8f4fd; }
+  66%  { box-shadow: 0 0 0 2px #b2ebf2; }
+  100% { box-shadow: 0 0 0 2px #b9f2ff; }
+}
+@keyframes rainbow-text {
+  0%   { color: #ff0000; }
+  16%  { color: #ff8800; }
+  33%  { color: #ffff00; }
+  50%  { color: #00ff00; }
+  66%  { color: #0088ff; }
+  83%  { color: #8800ff; }
+  100% { color: #ff0000; }
+}
+.border-anim-fire      { animation: border-fire 1.5s ease-in-out infinite; }
+.border-anim-lightning { animation: border-lightning 0.8s ease-in-out infinite; }
+.border-anim-diamond   { animation: border-diamond 3s linear infinite; }
+.text-rainbow          { animation: rainbow-text 3s linear infinite; }

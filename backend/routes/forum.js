@@ -204,18 +204,55 @@ router.get('/threads/:threadId', async (req, res) => {
       .select('reputation badges').lean();
     const authorMap = Object.fromEntries(authorDocs.map(u => [u._id.toString(), u]));
 
+    // Fetch ForumLevel for each author to resolve equipped cosmetics
+    const authorLevels = await ForumLevel.find({ userId: { $in: authorIds } })
+      .select('userId cosmetics memberTitleText signatureText').lean();
+
+    // Collect all equipped cosmetic IDs (across all slots)
+    const allEquippedIds = [...new Set(
+      authorLevels.flatMap(l => Object.values(l.cosmetics?.equipped || {}).filter(Boolean))
+    )];
+
+    // Batch-fetch all needed Cosmetic documents
+    const cosmeticDocs = allEquippedIds.length > 0
+      ? await Cosmetic.find({ _id: { $in: allEquippedIds } }).lean()
+      : [];
+    const cosmeticMap = Object.fromEntries(cosmeticDocs.map(c => [c._id.toString(), c]));
+
+    // Build a lookup: userId → resolved cosmetics
+    const levelMap = Object.fromEntries(authorLevels.map(l => [l.userId.toString(), l]));
+
+    function resolveAuthorCosmetics(userId) {
+      const level = levelMap[userId ? userId.toString() : ''];
+      if (!level) return {};
+      const eq = level.cosmetics?.equipped || {};
+      const resolve = id => id ? (cosmeticMap[id.toString()] || null) : null;
+      return {
+        titleColor:      resolve(eq.titleColor),
+        avatarBorder:    resolve(eq.avatarBorder),
+        flairIcon:       resolve(eq.flairIcon),
+        postBackground:  resolve(eq.postBackground),
+        postFrame:       resolve(eq.postFrame),
+        threadHighlight: resolve(eq.threadHighlight),
+        memberTitleText: level.memberTitleText || '',
+        signatureText:   level.signatureText || '',
+      };
+    }
+
     res.json({
       thread: {
         ...thread.toObject(),
         authorReputation: authorMap[threadAuthorId]?.reputation || 0,
-        authorBadges: (authorMap[threadAuthorId]?.badges || []).slice(0, 5)
+        authorBadges: (authorMap[threadAuthorId]?.badges || []).slice(0, 5),
+        authorCosmetics: resolveAuthorCosmetics(threadAuthorId)
       },
       posts: flatPostsList.map(p => {
         const postAuthorId = p.authorId?._id?.toString() || p.authorId?.toString();
         return {
           ...p.toObject(),
           authorReputation: authorMap[postAuthorId]?.reputation || 0,
-          authorBadges: (authorMap[postAuthorId]?.badges || []).slice(0, 5)
+          authorBadges: (authorMap[postAuthorId]?.badges || []).slice(0, 5),
+          authorCosmetics: resolveAuthorCosmetics(postAuthorId)
         };
       }),
       pagination: {
@@ -340,6 +377,30 @@ router.post('/posts', verifyToken, requireAuth, checkMute, async (req, res) => {
 
     await post.populate('authorId', 'username displayName');
 
+    // Resolve equipped cosmetics for the post author
+    const postAuthorLevel = await ForumLevel.findOne({ userId: req.user._id })
+      .select('userId cosmetics memberTitleText signatureText').lean();
+    let postAuthorCosmetics = {};
+    if (postAuthorLevel) {
+      const eq = postAuthorLevel.cosmetics?.equipped || {};
+      const equippedIds = Object.values(eq).filter(Boolean);
+      const postCosmeticDocs = equippedIds.length > 0
+        ? await Cosmetic.find({ _id: { $in: equippedIds } }).lean()
+        : [];
+      const postCosmeticMap = Object.fromEntries(postCosmeticDocs.map(c => [c._id.toString(), c]));
+      const resolvePost = id => id ? (postCosmeticMap[id.toString()] || null) : null;
+      postAuthorCosmetics = {
+        titleColor:      resolvePost(eq.titleColor),
+        avatarBorder:    resolvePost(eq.avatarBorder),
+        flairIcon:       resolvePost(eq.flairIcon),
+        postBackground:  resolvePost(eq.postBackground),
+        postFrame:       resolvePost(eq.postFrame),
+        threadHighlight: resolvePost(eq.threadHighlight),
+        memberTitleText: postAuthorLevel.memberTitleText || '',
+        signatureText:   postAuthorLevel.signatureText || '',
+      };
+    }
+
     // Handle notifications asynchronously (don't block response)
     setImmediate(async () => {
       try {
@@ -380,7 +441,7 @@ router.post('/posts', verifyToken, requireAuth, checkMute, async (req, res) => {
       $inc: { reputation: 1, 'communityStats.postCount': 1 }
     }).then(() => checkAndAwardBadges(req.user._id, 'post_create')).catch(() => {});
 
-    res.status(201).json(post);
+    res.status(201).json({ ...post.toObject(), authorCosmetics: postAuthorCosmetics });
   } catch (error) {
     console.error('Create post error:', error);
     res.status(500).json({ message: error.message });
