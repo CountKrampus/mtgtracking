@@ -3025,38 +3025,86 @@ app.get('/api/scryfall/rulings', async (req, res) => {
   }
 });
 
-// Check card interactions (placeholder - in a real implementation, this would connect to a rules database)
+// POST /api/interactions/check — fetch real card data and rulings from Scryfall
 app.post('/api/interactions/check', async (req, res) => {
   try {
     const { card1, card2 } = req.body;
-    
+
     if (!card1 || !card2) {
       return res.status(400).json({ message: 'Both card1 and card2 are required' });
     }
 
-    // In a real implementation, this would connect to a rules database or API
-    // For now, we'll return a placeholder response
-    const interactionResult = {
-      card1: card1,
-      card2: card2,
-      how_they_interact: "This interaction has various effects depending on the game state.",
-      sequence_of_events: [
-        `${card1} enters the battlefield`,
-        `${card2}'s ability triggers`,
-        `The interaction resolves based on game state`
-      ],
-      notes: [
-        "Timing matters for this interaction",
-        "Other cards on the battlefield may affect the outcome",
-        "Check the official rules for edge cases"
-      ],
-      timestamp: new Date().toISOString()
+    const scryfallCard = async (name) => {
+      const r = await axios.get('https://api.scryfall.com/cards/named', {
+        params: { fuzzy: name },
+        timeout: 8000
+      });
+      return r.data;
     };
 
-    res.json(interactionResult);
+    const scryfallRulings = async (cardId) => {
+      const r = await axios.get(`https://api.scryfall.com/cards/${cardId}/rulings`, {
+        timeout: 8000
+      });
+      return r.data.data || [];
+    };
+
+    const [c1, c2] = await Promise.all([scryfallCard(card1), scryfallCard(card2)]);
+    const [rulings1, rulings2] = await Promise.all([
+      scryfallRulings(c1.id),
+      scryfallRulings(c2.id)
+    ]);
+
+    // Find shared keywords (case-insensitive intersection)
+    const kw1 = new Set((c1.keywords || []).map(k => k.toLowerCase()));
+    const kw2 = new Set((c2.keywords || []).map(k => k.toLowerCase()));
+    const sharedKeywords = [...kw1].filter(k => kw2.has(k));
+
+    // Also scan oracle text for MTG terms that appear in both cards
+    const oracleWords = (text) =>
+      (text || '').toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
+    const words1 = new Set(oracleWords(c1.oracle_text));
+    const words2 = new Set(oracleWords(c2.oracle_text));
+    const MTG_TERMS = new Set([
+      'flying','lifelink','deathtouch','vigilance','trample','haste',
+      'hexproof','indestructible','menace','reach','flash','defender',
+      'sacrifice','discard','counter','exile','destroy','enchant','equip','create',
+      'token','trigger','activated','graveyard','library','battlefield','hand',
+      'enters','leaves','dies','draw','search','shuffle','return','target','choose',
+      'proliferate','convoke','delve','annihilator','infect','wither','undying','persist'
+    ]);
+    const sharedOracleTerms = [...words1]
+      .filter(w => words2.has(w) && MTG_TERMS.has(w) && !sharedKeywords.includes(w));
+
+    const allShared = [...new Set([...sharedKeywords, ...sharedOracleTerms])];
+
+    res.json({
+      card1: {
+        name: c1.name,
+        oracle_text: c1.oracle_text || '',
+        keywords: c1.keywords || [],
+        type_line: c1.type_line || '',
+        image_uri: c1.image_uris?.normal || c1.card_faces?.[0]?.image_uris?.normal || null,
+        mana_cost: c1.mana_cost || '',
+      },
+      card2: {
+        name: c2.name,
+        oracle_text: c2.oracle_text || '',
+        keywords: c2.keywords || [],
+        type_line: c2.type_line || '',
+        image_uri: c2.image_uris?.normal || c2.card_faces?.[0]?.image_uris?.normal || null,
+        mana_cost: c2.mana_cost || '',
+      },
+      rulings1,
+      rulings2,
+      sharedKeywords: allShared,
+    });
   } catch (error) {
-    console.error('Error checking interaction:', error.message);
-    res.status(500).json({ message: error.message });
+    if (error.response?.status === 404) {
+      return res.status(404).json({ message: 'One or both card names not found on Scryfall. Check spelling.' });
+    }
+    console.error('Interaction check error:', error.message);
+    res.status(500).json({ message: 'Failed to fetch card data from Scryfall' });
   }
 });
 
