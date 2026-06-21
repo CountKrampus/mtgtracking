@@ -313,8 +313,8 @@ export default function UserProfile({ username }) {
                 <div key={i} className="bg-white/5 rounded-lg p-3">
                   <div className="text-white font-medium text-sm">{deck.name}</div>
                   {deck.format && <div className="text-white/40 text-xs mt-0.5">{deck.format}</div>}
-                  {deck.commander && (
-                    <div className="text-purple-300 text-xs mt-0.5">Commander: {deck.commander}</div>
+                  {deck.commander?.name && (
+                    <div className="text-purple-300 text-xs mt-0.5">Commander: {deck.commander.name}</div>
                   )}
                 </div>
               ))}
