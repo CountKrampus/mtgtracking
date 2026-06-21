@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { Search, Zap, Info, Clock } from 'lucide-react';
+import { Search, Zap, Info } from 'lucide-react';
+
+function highlightShared(text, shared) {
+  if (!text || !shared || shared.length === 0) return text;
+  const escaped = shared.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const pattern = new RegExp(`\\b(${escaped.join('|')})\\b`, 'gi');
+  const parts = text.split(pattern);
+  return parts.map((part, i) =>
+    pattern.test(part)
+      ? <strong key={i} className="text-yellow-300 font-semibold">{part}</strong>
+      : part
+  );
+}
 
 const InteractionChecker = () => {
   const [firstCard, setFirstCard] = useState('');
@@ -18,24 +30,19 @@ const InteractionChecker = () => {
     try {
       const response = await fetch('/api/interactions/check', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          card1: firstCard.trim(),
-          card2: secondCard.trim()
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ card1: firstCard.trim(), card2: secondCard.trim() })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to check interaction');
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || 'Failed to check interaction');
       }
 
       const data = await response.json();
       setInteractionResult(data);
     } catch (err) {
       setError(err.message);
-      console.error('Error checking interaction:', err);
     } finally {
       setLoading(false);
     }
@@ -53,9 +60,7 @@ const InteractionChecker = () => {
       <form onSubmit={handleCheckInteraction} className="mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              First Card
-            </label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">First Card</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input
@@ -68,9 +73,7 @@ const InteractionChecker = () => {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Second Card
-            </label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Second Card</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input
@@ -111,59 +114,73 @@ const InteractionChecker = () => {
       )}
 
       {interactionResult && (
-        <div className="bg-white/5 rounded-lg p-6 border border-white/10">
-          <div className="flex items-center gap-2 mb-4">
-            <Zap className="text-yellow-400" size={24} />
-            <h2 className="text-xl font-semibold text-white">
-              Interaction Result: {firstCard} + {secondCard}
-            </h2>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { card: interactionResult.card1, rulings: interactionResult.rulings1 },
+              { card: interactionResult.card2, rulings: interactionResult.rulings2 },
+            ].map(({ card, rulings }, idx) => (
+              <div key={idx} className="bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+                <div className="flex gap-3 p-4 border-b border-white/10">
+                  {card.image_uri && (
+                    <img
+                      src={card.image_uri}
+                      alt={card.name}
+                      className="w-16 h-auto rounded shadow"
+                    />
+                  )}
+                  <div>
+                    <h3 className="text-white font-semibold">{card.name}</h3>
+                    <p className="text-gray-400 text-xs mt-0.5">{card.type_line}</p>
+                    {card.mana_cost && (
+                      <p className="text-gray-400 text-xs">{card.mana_cost}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  <h4 className="text-purple-300 text-sm font-medium mb-2">Oracle Text</h4>
+                  <p className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">
+                    {highlightShared(card.oracle_text, interactionResult.sharedKeywords)}
+                  </p>
+
+                  {rulings.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="text-purple-300 text-sm font-medium mb-2">
+                        Official Rulings ({rulings.length})
+                      </h4>
+                      <ul className="space-y-2">
+                        {rulings.map((r, i) => (
+                          <li key={i} className="text-gray-300 text-xs border-l-2 border-purple-700 pl-3">
+                            <span className="text-gray-500 block mb-0.5">{r.published_at}</span>
+                            {r.comment}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-          
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-medium text-purple-300 mb-2">How They Interact</h3>
-              <p className="text-white leading-relaxed">
-                {interactionResult.how_they_interact || 'This interaction has various effects depending on the game state.'}
-              </p>
+
+          {interactionResult.sharedKeywords.length > 0 && (
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+              <h4 className="text-yellow-300 text-sm font-medium mb-2">Shared Mechanics</h4>
+              <div className="flex flex-wrap gap-2">
+                {interactionResult.sharedKeywords.map((kw, i) => (
+                  <span key={i} className="px-2 py-0.5 bg-yellow-500/20 text-yellow-200 text-xs rounded capitalize">
+                    {kw}
+                  </span>
+                ))}
+              </div>
             </div>
-            
-            <div>
-              <h3 className="text-lg font-medium text-purple-300 mb-2">Sequence of Events</h3>
-              <ol className="list-decimal list-inside space-y-2 text-white">
-                {interactionResult.sequence_of_events?.map((step, index) => (
-                  <li key={index} className="ml-4">{step}</li>
-                )) || (
-                  <>
-                    <li>1. {firstCard} enters the battlefield</li>
-                    <li>2. {secondCard}'s ability triggers</li>
-                    <li>3. The interaction resolves based on game state</li>
-                  </>
-                )}
-              </ol>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium text-purple-300 mb-2">Important Notes</h3>
-              <ul className="list-disc list-inside space-y-1 text-gray-300">
-                {interactionResult.notes?.map((note, index) => (
-                  <li key={index}>{note}</li>
-                )) || (
-                  <>
-                    <li>Timing matters for this interaction</li>
-                    <li>Other cards on the battlefield may affect the outcome</li>
-                    <li>Check the official rules for edge cases</li>
-                  </>
-                )}
-              </ul>
-            </div>
-            
-            <div className="flex items-center gap-2 text-sm text-gray-400 mt-6">
-              <Info size={16} />
-              <span>Information based on official Magic: The Gathering rules</span>
-              <Clock size={16} className="ml-auto" />
-              <span>Last updated: {new Date(interactionResult.timestamp || Date.now()).toLocaleString()}</span>
-            </div>
-          </div>
+          )}
+
+          <p className="text-gray-500 text-xs flex items-center gap-1">
+            <Info size={13} />
+            Card data and rulings from Scryfall
+          </p>
         </div>
       )}
 
@@ -172,7 +189,7 @@ const InteractionChecker = () => {
           <Zap className="mx-auto h-12 w-12 text-gray-600 mb-4" />
           <h3 className="text-lg font-medium text-gray-300 mb-2">Check Card Interactions</h3>
           <p className="text-gray-500 max-w-md mx-auto">
-            Enter two card names to understand how they interact with each other according to the rules of Magic: The Gathering.
+            Enter two card names to see their oracle text, official rulings, and shared mechanics side by side.
           </p>
         </div>
       )}
