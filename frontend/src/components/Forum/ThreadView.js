@@ -7,6 +7,17 @@ import UserAvatar from '../avatars/UserAvatar';
 import DeckImportButton from './DeckImportButton';
 import UserHoverCard from './UserHoverCard';
 
+const FOIL_STYLE = {
+  display: 'inline-block',
+  background: 'linear-gradient(90deg, #8a6a20 0%, #c0a060 15%, #ffe88a 30%, #fff 50%, #ffe88a 70%, #c0a060 85%, #8a6a20 100%)',
+  backgroundSize: '200% auto',
+  WebkitBackgroundClip: 'text',
+  backgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  color: 'transparent',
+  animation: 'foil-shimmer 3s linear infinite',
+};
+
 function renderBadgeIcon(iconStr) {
   if (!iconStr) return null;
   if (iconStr.startsWith('mana:')) {
@@ -87,11 +98,15 @@ function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost,
             <div className="font-semibold text-white flex items-center flex-wrap gap-x-1">
               {onViewProfile ? (
                 <span
-                  className={`font-medium text-sm cursor-pointer hover:text-purple-300 transition${ac.titleColor?.animationClass === 'text-foil' ? ' text-foil' : ac.titleColor?.color === 'rainbow' ? ' text-rainbow' : ''}`}
+                  className="font-medium text-sm cursor-pointer hover:text-purple-300 transition"
                   style={
-                    ac.titleColor?.animationClass === 'text-foil' || ac.titleColor?.color === 'rainbow'
-                      ? {}
-                      : ac.titleColor?.color ? { color: ac.titleColor.color } : {}
+                    ac.titleColor?.animationClass === 'text-foil'
+                      ? FOIL_STYLE
+                      : ac.titleColor?.color === 'rainbow'
+                        ? {}
+                        : ac.titleColor?.color
+                          ? { color: ac.titleColor.color }
+                          : {}
                   }
                   onMouseEnter={e => setHoverPos({ x: e.clientX, y: e.clientY, post })}
                   onMouseLeave={() => setHoverPos(null)}
@@ -101,11 +116,15 @@ function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost,
                 </span>
               ) : (
                 <span
-                  className={`font-medium text-sm cursor-pointer hover:text-purple-300 transition${ac.titleColor?.animationClass === 'text-foil' ? ' text-foil' : ac.titleColor?.color === 'rainbow' ? ' text-rainbow' : ''}`}
+                  className="font-medium text-sm cursor-pointer hover:text-purple-300 transition"
                   style={
-                    ac.titleColor?.animationClass === 'text-foil' || ac.titleColor?.color === 'rainbow'
-                      ? {}
-                      : ac.titleColor?.color ? { color: ac.titleColor.color } : {}
+                    ac.titleColor?.animationClass === 'text-foil'
+                      ? FOIL_STYLE
+                      : ac.titleColor?.color === 'rainbow'
+                        ? {}
+                        : ac.titleColor?.color
+                          ? { color: ac.titleColor.color }
+                          : {}
                   }
                   onMouseEnter={e => setHoverPos({ x: e.clientX, y: e.clientY, post })}
                   onMouseLeave={() => setHoverPos(null)}
