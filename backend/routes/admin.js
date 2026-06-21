@@ -14,6 +14,9 @@ const BanAppeal = require('../models/BanAppeal');
 const ModerationHistory = require('../models/ModerationHistory');
 const CollectionAudit = require('../models/CollectionAudit');
 const Badge = require('../models/Badge');
+const ForumPost = require('../models/ForumPost');
+const ForumThread = require('../models/ForumThread');
+const ForumCategory = require('../models/ForumCategory');
 const { verifyToken, requireAuth, requireAdmin, requireModerator, requireContentManager, requireSupport, isMultiUserEnabled } = require('../middleware/auth');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
 const { isStaffRole, ROLE_PERMISSIONS } = require('../utils/permissions');
@@ -381,7 +384,7 @@ router.post('/badges/:badgeId/grant/:userId', requireAdmin, async (req, res) => 
     if (alreadyHas) return res.status(409).json({ message: 'User already has this badge' });
 
     user.badges = user.badges || [];
-    user.badges.push({ name: badge.name, description: badge.description, earnedAt: new Date() });
+    user.badges.push({ name: badge.name, description: badge.description, icon: badge.icon || '', earnedAt: new Date() });
     await user.save();
 
     res.json({ message: `Badge "${badge.name}" granted to ${user.username}`, badges: user.badges });
@@ -403,6 +406,29 @@ router.delete('/badges/:badgeId/revoke/:userId', requireAdmin, async (req, res) 
 
     await user.save();
     res.json({ message: `Badge "${badge.name}" revoked from ${user.username}`, badges: user.badges });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// POST /api/admin/badges/sync-icons — backfill icon field on all user badge entries
+router.post('/badges/sync-icons', requireAdmin, async (req, res) => {
+  try {
+    const badges = await Badge.find({}).lean();
+    const iconMap = {};
+    badges.forEach(b => { iconMap[b.name] = b.icon || ''; });
+
+    const users = await User.find({ 'badges.0': { $exists: true } });
+    let updated = 0;
+    for (const user of users) {
+      let changed = false;
+      user.badges.forEach(b => {
+        if (!b.icon && iconMap[b.name] !== undefined) {
+          b.icon = iconMap[b.name];
+          changed = true;
+        }
+      });
+      if (changed) { await user.save(); updated++; }
+    }
+    res.json({ message: `Synced badge icons for ${updated} users` });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
@@ -2032,6 +2058,94 @@ router.post('/cleanup', requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Cleanup error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// GET /api/admin/forum-content - list hidden/flagged forum content
+router.get('/forum-content', requireAdmin, async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+
+    const [hiddenPosts, hiddenThreads] = await Promise.all([
+      ForumPost.find({ isHidden: true })
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .populate('authorId', 'username displayName')
+        .populate('threadId', 'title')
+        .lean(),
+      ForumThread.find({ isHidden: true })
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .populate('authorId', 'username displayName')
+        .lean()
+    ]);
+
+    const items = [
+      ...hiddenPosts.map(p => ({
+        _id: p._id,
+        type: 'post',
+        content: p.body,
+        author: p.authorId,
+        thread: p.threadId,
+        createdAt: p.createdAt,
+        flagReason: p.flagReason || null,
+        flaggedAt: p.flaggedAt || p.updatedAt,
+      })),
+      ...hiddenThreads.map(t => ({
+        _id: t._id,
+        type: 'thread',
+        content: t.content,
+        title: t.title,
+        author: t.authorId,
+        createdAt: t.createdAt,
+        flagReason: t.flagReason || null,
+        flaggedAt: t.flaggedAt || t.updatedAt,
+      }))
+    ].sort((a, b) => new Date(b.flaggedAt) - new Date(a.flaggedAt));
+
+    res.json({ items, total: items.length });
+  } catch (error) {
+    console.error('Forum content moderation error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// DELETE /api/admin/forum-posts/:id - hard-delete a forum post
+router.delete('/forum-posts/:id', requireAdmin, async (req, res) => {
+  try {
+    const post = await ForumPost.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+
+    await ForumPost.findByIdAndDelete(req.params.id);
+
+    await ForumThread.findByIdAndUpdate(post.threadId, {
+      $inc: { postCount: -1 }
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Admin delete post error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// DELETE /api/admin/forum-threads/:id - hard-delete a thread and all its posts
+router.delete('/forum-threads/:id', requireAdmin, async (req, res) => {
+  try {
+    const thread = await ForumThread.findById(req.params.id);
+    if (!thread) return res.status(404).json({ message: 'Thread not found' });
+
+    await ForumPost.deleteMany({ threadId: req.params.id });
+    await ForumThread.findByIdAndDelete(req.params.id);
+
+    await ForumCategory.findByIdAndUpdate(thread.categoryId, {
+      $inc: { threadCount: -1 }
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Admin delete thread error:', error);
+    res.status(500).json({ message: error.message });
   }
 });
 
