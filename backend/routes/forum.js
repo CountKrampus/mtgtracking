@@ -205,6 +205,42 @@ router.get('/leaderboard', async (req, res) => {
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
+// GET /api/forum/threads - list all threads across all categories (admin/moderation use)
+router.get('/threads', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const skip = (page - 1) * limit;
+    const sort = req.query.sort === 'top'
+      ? { postCount: -1, createdAt: -1 }
+      : { createdAt: -1 };
+
+    const [threads, total] = await Promise.all([
+      ForumThread.find({})
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .populate('authorId', 'username displayName avatarUrl')
+        .populate('categoryId', 'name slug')
+        .lean(),
+      ForumThread.countDocuments()
+    ]);
+
+    res.json({
+      threads: threads.map(t => ({
+        ...t,
+        author: t.authorId,
+      })),
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    console.error('List threads error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // GET /api/forum/threads/:threadId - Get single thread with posts
 router.get('/threads/:threadId', async (req, res) => {
   try {
@@ -1748,7 +1784,7 @@ router.get('/admin/cosmetics', verifyToken, requireAuth, requireAdmin, async (re
 // POST /api/forum/admin/cosmetics - create new cosmetic
 router.post('/admin/cosmetics', verifyToken, requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { name, category, cost, description, rarity, color, icon } = req.body;
+    const { name, category, cost, description, rarity, color, icon, animationClass, cssProperties, imageUrl, availableUntil } = req.body;
 
     if (!name || !category || cost === undefined) {
       return res.status(400).json({ message: 'Missing required fields: name, category, cost' });
@@ -1761,7 +1797,11 @@ router.post('/admin/cosmetics', verifyToken, requireAuth, requireAdmin, async (r
       description,
       rarity,
       color,
-      icon
+      icon,
+      animationClass: animationClass || null,
+      cssProperties: cssProperties || null,
+      imageUrl: imageUrl || null,
+      availableUntil: availableUntil || null,
     });
 
     res.status(201).json({ cosmetic });
@@ -1774,7 +1814,7 @@ router.post('/admin/cosmetics', verifyToken, requireAuth, requireAdmin, async (r
 // PUT /api/forum/admin/cosmetics/:cosmeticId - update cosmetic
 router.put('/admin/cosmetics/:cosmeticId', verifyToken, requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { name, category, cost, description, rarity, color, icon, isActive } = req.body;
+    const { name, category, cost, description, rarity, color, icon, isActive, animationClass, cssProperties, imageUrl, availableUntil } = req.body;
 
     const cosmetic = await Cosmetic.findByIdAndUpdate(
       req.params.cosmeticId,
@@ -1786,7 +1826,11 @@ router.put('/admin/cosmetics/:cosmeticId', verifyToken, requireAuth, requireAdmi
         rarity,
         color,
         icon,
-        isActive: isActive !== undefined ? isActive : undefined
+        isActive: isActive !== undefined ? isActive : undefined,
+        animationClass: animationClass !== undefined ? (animationClass || null) : undefined,
+        cssProperties: cssProperties !== undefined ? (cssProperties || null) : undefined,
+        imageUrl: imageUrl !== undefined ? (imageUrl || null) : undefined,
+        availableUntil: availableUntil !== undefined ? (availableUntil || null) : undefined,
       },
       { new: true }
     );
