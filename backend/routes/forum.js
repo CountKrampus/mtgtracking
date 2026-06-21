@@ -482,6 +482,17 @@ router.post('/posts', verifyToken, requireAuth, checkMute, async (req, res) => {
       $inc: { reputation: 1, 'communityStats.postCount': 1 }
     }).then(() => checkAndAwardBadges(req.user._id, 'post_create')).catch(() => {});
 
+    // Milestone badge check for post count thresholds (non-blocking)
+    setImmediate(async () => {
+      try {
+        const { checkPostMilestones } = require('../utils/milestoneAwards');
+        const postCount = await ForumPost.countDocuments({ authorId: req.user._id });
+        await checkPostMilestones(req.user._id, postCount);
+      } catch (milestoneErr) {
+        console.error('Post milestone check error (posts route):', milestoneErr);
+      }
+    });
+
     res.status(201).json({ ...post.toObject(), authorCosmetics: postAuthorCosmetics });
   } catch (error) {
     console.error('Create post error:', error);
@@ -801,6 +812,17 @@ router.post('/threads/:threadId/posts', verifyToken, requireAuth, checkMute, asy
         await level.save();
       } catch (xpErr) {
         console.error('XP/coin award error (nested post creation):', xpErr);
+      }
+    });
+
+    // Milestone badge check for post count thresholds (non-blocking)
+    setImmediate(async () => {
+      try {
+        const { checkPostMilestones } = require('../utils/milestoneAwards');
+        const postCount = await ForumPost.countDocuments({ authorId: req.user._id });
+        await checkPostMilestones(req.user._id, postCount);
+      } catch (milestoneErr) {
+        console.error('Post milestone check error (threads route):', milestoneErr);
       }
     });
 

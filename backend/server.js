@@ -1035,6 +1035,11 @@ app.post('/api/cards/bulk-import', requireAuth, requireEditor, activityLoggers.c
     // Clear cache if any cards were added or merged
     if (results.added.length > 0 || results.merged.length > 0 || results.offline.length > 0) {
       clearCache(userId);
+      // Non-blocking milestone check once after all cards are imported
+      if (userId) {
+        const { checkCollectionMilestones } = require('./utils/milestoneAwards');
+        checkCollectionMilestones(userId, Card).catch(() => {});
+      }
     }
 
     res.json(results);
@@ -1221,6 +1226,11 @@ app.post('/api/cards', requireAuth, requireEditor, activityLoggers.cardCreate, a
       existingCard.quantity += quantity || 1;
       const updatedCard = await existingCard.save();
       clearCache(userId);
+      // Non-blocking milestone check after merge
+      if (userId) {
+        const { checkCollectionMilestones } = require('./utils/milestoneAwards');
+        checkCollectionMilestones(userId, Card).catch(() => {});
+      }
       return res.status(200).json({
         ...updatedCard.toObject(),
         merged: true,
@@ -1234,6 +1244,11 @@ app.post('/api/cards', requireAuth, requireEditor, activityLoggers.cardCreate, a
     const card = new Card(cardData);
     const newCard = await card.save();
     clearCache(userId);
+    // Non-blocking milestone check after card creation
+    if (newCard.userId) {
+      const { checkCollectionMilestones } = require('./utils/milestoneAwards');
+      checkCollectionMilestones(newCard.userId, Card).catch(() => {});
+    }
     res.status(201).json(newCard);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -1267,6 +1282,11 @@ app.put('/api/cards/:id', requireAuth, requireEditor, activityLoggers.cardUpdate
     }
 
     clearCache(userId);
+    // Non-blocking milestone check after card update (quantity may have changed)
+    if (updatedCard.userId) {
+      const { checkCollectionMilestones } = require('./utils/milestoneAwards');
+      checkCollectionMilestones(updatedCard.userId, Card).catch(() => {});
+    }
     res.json(updatedCard);
   } catch (error) {
     res.status(400).json({ message: error.message });
