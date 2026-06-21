@@ -58,8 +58,15 @@ function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost,
     ...(ac.postFrame?.cssProperties || {}),
   };
 
+  const upvoteCount = post.upvotes?.length || post.upvoteCount || 0;
+  const displayName = post.authorId?.displayName || 'Unknown';
+
   return (
-    <div key={post._id} className="bg-slate-800 p-4 rounded border border-slate-700" style={postWrapperStyle}>
+    <div
+      key={post._id}
+      className={`bg-slate-800 p-4 rounded border border-slate-700${isOP ? ' post-op-spotlight' : ''}${upvoteCount >= 10 ? ' post-upvote-glow' : ''}`}
+      style={postWrapperStyle}
+    >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-start gap-2">
           <UserAvatar
@@ -69,28 +76,44 @@ function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost,
             borderColor={ac.avatarBorder?.color || null}
             animationClass={ac.avatarBorder?.animationClass || null}
           />
-          <div>
+          <div
+            className="post-nameplate"
+            style={ac.nameplateBackground?.color
+              ? { backgroundColor: hexWithAlpha(ac.nameplateBackground.color, 0.25) }
+              : ac.nameplateBackground?.cssProperties
+              ? ac.nameplateBackground.cssProperties
+              : {}}
+          >
             <div className="font-semibold text-white flex items-center flex-wrap gap-x-1">
               {onViewProfile ? (
                 <span
-                  className={`font-medium text-sm cursor-pointer hover:text-purple-300 transition${ac.titleColor?.color === 'rainbow' ? ' text-rainbow' : ''}`}
-                  style={ac.titleColor?.color && ac.titleColor.color !== 'rainbow' ? { color: ac.titleColor.color } : {}}
+                  className={`font-medium text-sm cursor-pointer hover:text-purple-300 transition${ac.titleColor?.animationClass === 'text-foil' ? ' text-foil' : ac.titleColor?.color === 'rainbow' ? ' text-rainbow' : ''}`}
+                  style={
+                    ac.titleColor?.animationClass === 'text-foil' || ac.titleColor?.color === 'rainbow'
+                      ? {}
+                      : ac.titleColor?.color ? { color: ac.titleColor.color } : {}
+                  }
                   onMouseEnter={e => setHoverPos({ x: e.clientX, y: e.clientY, post })}
                   onMouseLeave={() => setHoverPos(null)}
                   onClick={() => onViewProfile(post.authorId?.username)}
                 >
-                  {post.authorId?.displayName || 'Unknown'}
+                  {displayName}
                 </span>
               ) : (
                 <span
-                  className={`font-medium text-sm cursor-pointer hover:text-purple-300 transition${ac.titleColor?.color === 'rainbow' ? ' text-rainbow' : ''}`}
-                  style={ac.titleColor?.color && ac.titleColor.color !== 'rainbow' ? { color: ac.titleColor.color } : {}}
+                  className={`font-medium text-sm cursor-pointer hover:text-purple-300 transition${ac.titleColor?.animationClass === 'text-foil' ? ' text-foil' : ac.titleColor?.color === 'rainbow' ? ' text-rainbow' : ''}`}
+                  style={
+                    ac.titleColor?.animationClass === 'text-foil' || ac.titleColor?.color === 'rainbow'
+                      ? {}
+                      : ac.titleColor?.color ? { color: ac.titleColor.color } : {}
+                  }
                   onMouseEnter={e => setHoverPos({ x: e.clientX, y: e.clientY, post })}
                   onMouseLeave={() => setHoverPos(null)}
                 >
-                  {post.authorId?.displayName || 'Unknown'}
+                  {displayName}
                 </span>
               )}
+              {isOP && <span className="text-amber-400 text-xs ml-1" title="Thread starter">👑</span>}
               {ac.flairIcon?.icon && (
                 <span className="ml-1">{renderBadgeIcon(ac.flairIcon.icon)}</span>
               )}
@@ -117,6 +140,22 @@ function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost,
             </div>
             {ac.memberTitleText && (
               <div className="text-xs text-slate-500 italic">{ac.memberTitleText}</div>
+            )}
+            {(ac.formatBadge?.icon || ac.formatBadge?.name) && (
+              <div className="text-xs mt-0.5" style={ac.formatBadge.color ? { color: ac.formatBadge.color } : { color: '#94a3b8' }}>
+                {ac.formatBadge.icon || ac.formatBadge.name}
+              </div>
+            )}
+            {ac.manaIdentity && ac.manaIdentity.length > 0 && (
+              <div className="flex gap-0.5 mt-1">
+                {ac.manaIdentity.map(color => (
+                  <div
+                    key={color}
+                    className={`w-3 h-3 rounded-full mana-pip-${color}`}
+                    title={color}
+                  />
+                ))}
+              </div>
             )}
             <div className="text-xs text-slate-500">
               {new Date(post.createdAt).toLocaleString()}

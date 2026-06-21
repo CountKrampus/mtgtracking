@@ -244,7 +244,7 @@ router.get('/threads/:threadId', async (req, res) => {
 
     // Fetch ForumLevel for each author to resolve equipped cosmetics
     const authorLevels = await ForumLevel.find({ userId: { $in: authorIds } })
-      .select('userId cosmetics memberTitleText signatureText').lean();
+      .select('userId cosmetics memberTitleText signatureText manaIdentity').lean();
 
     // Collect all equipped cosmetic IDs (across all slots)
     const allEquippedIds = [...new Set(
@@ -266,14 +266,17 @@ router.get('/threads/:threadId', async (req, res) => {
       const eq = level.cosmetics?.equipped || {};
       const resolve = id => id ? (cosmeticMap[id.toString()] || null) : null;
       return {
-        titleColor:      resolve(eq.titleColor),
-        avatarBorder:    resolve(eq.avatarBorder),
-        flairIcon:       resolve(eq.flairIcon),
-        postBackground:  resolve(eq.postBackground),
-        postFrame:       resolve(eq.postFrame),
-        threadHighlight: resolve(eq.threadHighlight),
-        memberTitleText: level.memberTitleText || '',
-        signatureText:   level.signatureText || '',
+        titleColor:           resolve(eq.titleColor),
+        avatarBorder:         resolve(eq.avatarBorder),
+        flairIcon:            resolve(eq.flairIcon),
+        postBackground:       resolve(eq.postBackground),
+        postFrame:            resolve(eq.postFrame),
+        threadHighlight:      resolve(eq.threadHighlight),
+        nameplateBackground:  resolve(eq.nameplateBackground),
+        formatBadge:          resolve(eq.formatBadge),
+        memberTitleText:      level.memberTitleText || '',
+        signatureText:        level.signatureText || '',
+        manaIdentity:         level.manaIdentity || [],
       };
     }
 
