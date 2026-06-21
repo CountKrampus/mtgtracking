@@ -346,6 +346,7 @@ function App() {
   const [showSpamFilterAdmin, setShowSpamFilterAdmin] = useState(false);
   const [showMuteManager, setShowMuteManager] = useState(false);
   const [showForumShop, setShowForumShop] = useState(false);
+  const [cosmeticVersion, setCosmeticVersion] = useState(0);
   const [selectedForumProfileUsername, setSelectedForumProfileUsername] = useState(null);
   const [forumProfileView, setForumProfileView] = useState(false);
   const [showForumLeaderboard, setShowForumLeaderboard] = useState(false);
@@ -5566,6 +5567,7 @@ function App() {
                 threadId={selectedThreadId}
                 apiUrl={API_URL}
                 user={authUser}
+                refreshKey={cosmeticVersion}
                 onBack={() => {
                   setSelectedThreadId(null);
                   localStorage.removeItem('forumSelectedThread');
@@ -5680,6 +5682,7 @@ function App() {
           user={authUser}
           isOpen={showForumShop}
           onClose={() => setShowForumShop(false)}
+          onEquip={() => setCosmeticVersion(v => v + 1)}
         />
       )}
 

@@ -2,6 +2,21 @@ import React, { useState, useEffect } from 'react';
 import {
   ShoppingCart, Coins, Check, X, Search, Palette, Shield, Sparkles
 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
+
+function renderItemIcon(icon) {
+  if (!icon) return null;
+  if (icon.startsWith('mana:')) {
+    const key = icon.slice(5);
+    return <i className={`ms ms-${key} ms-cost ms-shadow`} style={{ fontSize: 22 }} />;
+  }
+  if (icon.startsWith('lucide:')) {
+    const name = icon.slice(7);
+    const Icon = LucideIcons[name];
+    return Icon ? <Icon size={22} /> : <span className="text-xl">{icon}</span>;
+  }
+  return <span style={{ fontSize: 22, lineHeight: 1 }}>{icon}</span>;
+}
 
 const COSMETICS_CATALOG = [
   // Title Colors
@@ -81,7 +96,7 @@ function RainbowSwatch() {
   );
 }
 
-export default function ForumShop({ apiUrl, user, isOpen, onClose }) {
+export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
   const [userLevel, setUserLevel] = useState(null);
   const [coins, setCoins] = useState(0);
   const [purchased, setPurchased] = useState([]);
@@ -180,6 +195,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose }) {
       } else {
         setEquipped(data.newEquipped || {});
         showAlert('success', `${item.name} equipped!`);
+        if (onEquip) onEquip();
       }
     } catch (error) {
       showAlert('error', 'Network error. Please try again.');
@@ -312,8 +328,12 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose }) {
                         {/* Swatch/icon + name row */}
                         <div className="flex items-center gap-3">
                           {isUnlock ? (
-                            <div className="rounded-full flex-shrink-0 bg-slate-700 flex items-center justify-center" style={{ width: 40, height: 40 }}>
-                              <Sparkles size={20} className="text-purple-400" />
+                            <div className="rounded-full flex-shrink-0 bg-slate-700 flex items-center justify-center text-purple-400" style={{ width: 40, height: 40 }}>
+                              {item.icon ? renderItemIcon(item.icon) : <Sparkles size={20} />}
+                            </div>
+                          ) : item.icon ? (
+                            <div className="rounded-full flex-shrink-0 bg-slate-700/60 flex items-center justify-center text-white" style={{ width: 40, height: 40 }}>
+                              {renderItemIcon(item.icon)}
                             </div>
                           ) : item.color === 'rainbow' ? (
                             <RainbowSwatch />

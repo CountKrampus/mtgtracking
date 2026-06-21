@@ -235,7 +235,7 @@ function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost,
   );
 }
 
-export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpdated, onViewProfile }) {
+export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpdated, onViewProfile, refreshKey = 0 }) {
   const [thread, setThread] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -271,7 +271,7 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
     };
 
     fetchThread();
-  }, [threadId, page, apiUrl]);
+  }, [threadId, page, apiUrl, refreshKey]);
 
   useEffect(() => {
     const fetchCategories = async () => {
