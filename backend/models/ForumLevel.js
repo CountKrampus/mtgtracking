@@ -103,7 +103,6 @@ const forumLevelSchema = new mongoose.Schema({
   }
 });
 
-forumLevelSchema.index({ userId: 1 });
 forumLevelSchema.index({ level: -1, coins: -1 });
 
 forumLevelSchema.virtual('nextLevelExperience').get(function() {
