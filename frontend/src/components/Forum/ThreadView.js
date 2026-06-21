@@ -8,14 +8,7 @@ import DeckImportButton from './DeckImportButton';
 import UserHoverCard from './UserHoverCard';
 
 const FOIL_STYLE = {
-  display: 'inline-block',
-  background: 'linear-gradient(90deg, #8a6a20 0%, #c0a060 15%, #ffe88a 30%, #fff 50%, #ffe88a 70%, #c0a060 85%, #8a6a20 100%)',
-  backgroundSize: '200% auto',
-  WebkitBackgroundClip: 'text',
-  backgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  color: 'transparent',
-  animation: 'foil-shimmer 3s linear infinite',
+  animation: 'foil-shimmer 2.5s ease-in-out infinite',
 };
 
 function renderBadgeIcon(iconStr) {

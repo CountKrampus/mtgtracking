@@ -40,28 +40,16 @@ body {
 .border-anim-diamond   { animation: border-diamond 3s linear infinite; }
 .text-rainbow          { animation: rainbow-text 3s linear infinite; }
 
-/* Foil shimmer — sweeps a bright glare across the username */
+/* Foil shimmer — cycles username through gold/white shimmer */
 @keyframes foil-shimmer {
-  0%   { background-position: 0% center; }
-  100% { background-position: 100% center; }
+  0%   { color: #c0a060; text-shadow: 0 0 4px rgba(255, 232, 138, 0.4); }
+  30%  { color: #ffe88a; text-shadow: 0 0 8px rgba(255, 255, 255, 0.6); }
+  50%  { color: #ffffff; text-shadow: 0 0 12px rgba(255, 215, 0, 0.8); }
+  70%  { color: #ffe88a; text-shadow: 0 0 8px rgba(255, 255, 255, 0.6); }
+  100% { color: #c0a060; text-shadow: 0 0 4px rgba(255, 232, 138, 0.4); }
 }
 .text-foil {
-  background: linear-gradient(
-    90deg,
-    #8a6a20 0%,
-    #c0a060 15%,
-    #ffe88a 30%,
-    #ffffff 50%,
-    #ffe88a 70%,
-    #c0a060 85%,
-    #8a6a20 100%
-  );
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  animation: foil-shimmer 3s linear infinite;
+  animation: foil-shimmer 2.5s ease-in-out infinite;
 }
 
 /* Upvote milestone glow — golden ambient glow on highly-upvoted posts */
