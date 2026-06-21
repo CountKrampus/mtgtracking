@@ -1353,7 +1353,14 @@ const COSMETICS_PRICES = Object.fromEntries(COSMETICS_CATALOG.map(c => [c.id, c.
 // GET /api/forum/cosmetics - list available cosmetics with user's purchased/equipped state
 router.get('/cosmetics', verifyToken, async (req, res) => {
   try {
-    const cosmetics = await Cosmetic.find({ isActive: true }).lean();
+    const now = new Date();
+    const cosmetics = await Cosmetic.find({
+      isActive: true,
+      $or: [
+        { availableUntil: null },
+        { availableUntil: { $gt: now } },
+      ],
+    }).lean();
 
     if (!req.user) return res.json({ cosmetics, purchased: [], equipped: {} });
 

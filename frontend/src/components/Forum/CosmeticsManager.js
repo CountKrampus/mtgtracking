@@ -3,16 +3,17 @@ import { Plus, Edit2, Trash2, X } from 'lucide-react';
 import { API_URL } from '../../config';
 import { useAuthContext } from '../../contexts/AuthContext';
 
-const COLOR_CATEGORIES = ['titleColor', 'profileBorderColor', 'flairIcon', 'postBackground', 'threadHighlight'];
+const COLOR_CATEGORIES = ['titleColor', 'profileBorderColor', 'flairIcon', 'postBackground', 'threadHighlight', 'nameplateBackground', 'formatBadge'];
 const BORDER_ANIMATION_CATEGORIES = ['avatarBorder'];
-const CSS_GRADIENT_CATEGORIES = ['profileBackground', 'profileTheme', 'postFrame'];
+const CSS_GRADIENT_CATEGORIES = ['profileBackground', 'profileTheme', 'postFrame', 'nameplateBackground'];
 const BANNER_CATEGORIES = ['profileBanner'];
-const UNLOCK_CATEGORIES = ['memberTitle', 'signature', 'achievementShowcase', 'favoriteCardsShowcase', 'deckShowcase', 'collectionStatsWidget', 'wishlistPreview'];
+const UNLOCK_CATEGORIES = ['memberTitle', 'signature', 'achievementShowcase', 'favoriteCardsShowcase', 'deckShowcase', 'collectionStatsWidget', 'wishlistPreview', 'aboutMe', 'personalLinks'];
 
 const defaultForm = {
   name: '', category: 'titleColor', cost: 0, description: '',
   rarity: 'common', color: '#9B59B6', icon: null,
   cssProperties: null, cssPropertiesRaw: '', imageUrl: null, animationClass: null,
+  availableUntil: null,
 };
 
 const getPreview = (c) => {
@@ -111,6 +112,7 @@ export default function CosmeticsManager() {
       imageUrl: formData.imageUrl || null,
       icon: formData.icon || null,
       isActive: true,
+      availableUntil: formData.availableUntil || null,
     };
 
     try {
@@ -244,6 +246,9 @@ export default function CosmeticsManager() {
                   <option value="postBackground">Post Background Tint</option>
                   <option value="postFrame">Post Frame</option>
                   <option value="threadHighlight">Thread Highlight</option>
+                  <option value="nameplateBackground">Nameplate Background</option>
+                  <option value="formatBadge">Format Badge</option>
+                  <option value="setSymbolFlair">Set Symbol Flair</option>
                 </optgroup>
                 <optgroup label="Forum Profile">
                   <option value="profileBorderColor">Profile Border Color</option>
@@ -259,6 +264,8 @@ export default function CosmeticsManager() {
                   <option value="deckShowcase">Deck Showcase</option>
                   <option value="collectionStatsWidget">Collection Stats Widget</option>
                   <option value="wishlistPreview">Wishlist Preview</option>
+                  <option value="aboutMe">About Me</option>
+                  <option value="personalLinks">Personal Links</option>
                 </optgroup>
               </select>
             </div>
@@ -311,6 +318,24 @@ export default function CosmeticsManager() {
               className="w-full p-2 bg-slate-900 border border-slate-600 rounded text-white text-sm"
               rows={2}
             />
+
+            {/* Available Until — seasonal items */}
+            <div>
+              <label className="text-xs text-slate-400 block mb-1">
+                Available Until <span className="text-slate-500">(leave empty for permanent)</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={formData.availableUntil
+                  ? new Date(formData.availableUntil).toISOString().slice(0, 16)
+                  : ''}
+                onChange={e => setFormData({
+                  ...formData,
+                  availableUntil: e.target.value ? new Date(e.target.value).toISOString() : null,
+                })}
+                className="w-full p-2 bg-slate-900 border border-slate-600 rounded text-white text-sm"
+              />
+            </div>
 
             {/* ── Visual fields — conditional on category ── */}
 
@@ -454,6 +479,11 @@ export default function CosmeticsManager() {
                 <div className="font-semibold text-white text-sm truncate">{cosmetic.name}</div>
                 <div className="text-xs text-slate-400">
                   {cosmetic.category} • {cosmetic.rarity} • {cosmetic.cost} coins
+                  {cosmetic.availableUntil && (
+                    <span className="text-xs text-amber-400 ml-1">
+                      ⏰ Until {new Date(cosmetic.availableUntil).toLocaleDateString()}
+                    </span>
+                  )}
                 </div>
                 {cosmetic.animationClass && (
                   <div className="text-xs text-slate-500 mt-0.5">anim: {cosmetic.animationClass}</div>

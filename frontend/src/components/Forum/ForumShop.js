@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ShoppingCart, Coins, Check, X, Search, Crown, Palette, Shield,
-  Star, Layers, Image, Trophy, PenLine, BadgeCheck, Heart, BarChart2,
-  Paintbrush, Sparkles
+  ShoppingCart, Coins, Check, X, Search, Palette, Shield, Sparkles
 } from 'lucide-react';
 
 const COSMETICS_CATALOG = [
@@ -23,34 +21,44 @@ const COSMETICS_CATALOG = [
   { id: 'profileBorderColor_royal', name: 'Royal Blue Profile Border', category: 'profileBorderColor', cost: 800, color: '#4169E1', description: 'Royal blue profile border', rarity: 'uncommon' },
 ];
 
-const CATEGORY_TABS = [
-  { id: 'all', label: 'All', icon: ShoppingCart },
-  // Post Appearance
-  { id: 'titleColor', label: 'Title Colors', icon: Crown },
-  { id: 'avatarBorder', label: 'Avatar Borders', icon: Palette },
-  { id: 'flairIcon', label: 'Flair Icons', icon: Star },
-  { id: 'postBackground', label: 'Post Tints', icon: Layers },
-  { id: 'postFrame', label: 'Post Frames', icon: Layers },
-  { id: 'threadHighlight', label: 'Thread Color', icon: Sparkles },
-  // Forum Profile
-  { id: 'profileBorderColor', label: 'Profile Borders', icon: Shield },
-  { id: 'profileBackground', label: 'Profile BG', icon: Image },
-  { id: 'profileBanner', label: 'Banners', icon: Image },
-  { id: 'profileTheme', label: 'Profile Theme', icon: Paintbrush },
-  // Unlocks (user-typed content)
-  { id: 'memberTitle', label: 'Member Title', icon: BadgeCheck },
-  { id: 'signature', label: 'Signature', icon: PenLine },
-  { id: 'achievementShowcase', label: 'Achievement Pin', icon: Trophy },
-  // Main Profile Unlocks
-  { id: 'favoriteCardsShowcase', label: 'Card Showcase', icon: Sparkles },
-  { id: 'deckShowcase', label: 'Deck Showcase', icon: Layers },
-  { id: 'collectionStatsWidget', label: 'Stats Widget', icon: BarChart2 },
-  { id: 'wishlistPreview', label: 'Wishlist Preview', icon: Heart },
+const GROUP_TABS = [
+  { id: 'all',         label: 'All',            icon: ShoppingCart },
+  { id: 'post',        label: 'Post Appearance', icon: Palette },
+  { id: 'profile',     label: 'Forum Profile',   icon: Shield },
+  { id: 'unlocks',     label: 'Unlocks',         icon: Sparkles },
 ];
+
+const CATEGORY_GROUP = {
+  titleColor: 'post', avatarBorder: 'post', flairIcon: 'post',
+  postBackground: 'post', postFrame: 'post', threadHighlight: 'post',
+  nameplateBackground: 'post', formatBadge: 'post', setSymbolFlair: 'post',
+  profileBorderColor: 'profile', profileBackground: 'profile',
+  profileBanner: 'profile', profileTheme: 'profile',
+  memberTitle: 'unlocks', signature: 'unlocks', achievementShowcase: 'unlocks',
+  favoriteCardsShowcase: 'unlocks', deckShowcase: 'unlocks',
+  collectionStatsWidget: 'unlocks', wishlistPreview: 'unlocks',
+  aboutMe: 'unlocks', personalLinks: 'unlocks',
+};
+
+const SUBCATEGORY_LABELS = {
+  titleColor: 'Title Colors', avatarBorder: 'Avatar Borders',
+  flairIcon: 'Flair Icons', postBackground: 'Post Tints',
+  postFrame: 'Post Frames', threadHighlight: 'Thread Highlight',
+  nameplateBackground: 'Nameplate Background', formatBadge: 'Format Badge',
+  setSymbolFlair: 'Set Symbol Flair',
+  profileBorderColor: 'Profile Borders', profileBackground: 'Profile Background',
+  profileBanner: 'Banners', profileTheme: 'Profile Theme',
+  memberTitle: 'Member Title', signature: 'Signature',
+  achievementShowcase: 'Achievement Showcase', favoriteCardsShowcase: 'Card Showcase',
+  deckShowcase: 'Deck Showcase', collectionStatsWidget: 'Stats Widget',
+  wishlistPreview: 'Wishlist Preview', aboutMe: 'About Me',
+  personalLinks: 'Personal Links',
+};
 
 const UNLOCK_CATEGORIES = [
   'memberTitle', 'signature', 'achievementShowcase',
-  'favoriteCardsShowcase', 'deckShowcase', 'collectionStatsWidget', 'wishlistPreview'
+  'favoriteCardsShowcase', 'deckShowcase', 'collectionStatsWidget', 'wishlistPreview',
+  'aboutMe', 'personalLinks',
 ];
 
 const RARITY_STYLES = {
@@ -181,10 +189,25 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose }) {
   };
 
   const filteredItems = catalogItems.filter(item => {
-    const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
+    const matchesGroup = activeCategory === 'all' || CATEGORY_GROUP[item.category] === activeCategory;
     const matchesSearch = !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesGroup && matchesSearch;
   });
+
+  // Group filtered items by subcategory, preserving a stable order
+  const SUBCATEGORY_ORDER = [
+    'titleColor', 'avatarBorder', 'flairIcon', 'postBackground', 'postFrame', 'threadHighlight',
+    'nameplateBackground', 'formatBadge', 'setSymbolFlair',
+    'profileBorderColor', 'profileBackground', 'profileBanner', 'profileTheme',
+    'memberTitle', 'signature', 'achievementShowcase',
+    'favoriteCardsShowcase', 'deckShowcase', 'collectionStatsWidget', 'wishlistPreview',
+    'aboutMe', 'personalLinks',
+  ];
+  const groupedItems = SUBCATEGORY_ORDER.reduce((acc, cat) => {
+    const items = filteredItems.filter(i => i.category === cat);
+    if (items.length > 0) acc.push({ category: cat, items });
+    return acc;
+  }, []);
 
   if (!isOpen || !user) return null;
 
@@ -227,14 +250,14 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose }) {
         )}
 
         {/* Category Tabs */}
-        <div className="flex gap-1 px-5 pt-4 flex-shrink-0 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-slate-600">
-          {CATEGORY_TABS.map(tab => {
+        <div className="flex gap-1 px-5 pt-4 flex-shrink-0">
+          {GROUP_TABS.map(tab => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveCategory(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   activeCategory === tab.id
                     ? 'bg-purple-700 text-white'
                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
@@ -262,115 +285,118 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose }) {
         </div>
 
         {/* Items Grid */}
-        <div className="overflow-y-auto flex-1 p-5">
-          {filteredItems.length === 0 ? (
+        <div className="overflow-y-auto flex-1 p-5 space-y-6">
+          {groupedItems.length === 0 ? (
             <div className="text-center text-slate-500 py-12">No cosmetics found.</div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {filteredItems.map(item => {
-                const isOwned = purchased.includes(item.id);
-                const isEquipped = equipped[item.category] === item.id;
-                const canAfford = coins >= item.cost;
-                const isLoading = loadingId === item.id;
-                const isUnlock = UNLOCK_CATEGORIES.includes(item.category);
-                const categoryTab = CATEGORY_TABS.find(t => t.id === item.category);
-                const CategoryIcon = categoryTab?.icon || ShoppingCart;
+            groupedItems.map(({ category, items }) => (
+              <div key={category}>
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                  {SUBCATEGORY_LABELS[category]}
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {items.map(item => {
+                    const isOwned = purchased.includes(item.id);
+                    const isEquipped = equipped[item.category] === item.id;
+                    const canAfford = coins >= item.cost;
+                    const isLoading = loadingId === item.id;
+                    const isUnlock = UNLOCK_CATEGORIES.includes(item.category);
 
-                return (
-                  <div
-                    key={item.id}
-                    className={`p-4 rounded-lg border-2 bg-slate-900 flex flex-col gap-3 ${
-                      isOwned
-                        ? 'border-blue-700'
-                        : 'border-slate-700'
-                    }`}
-                  >
-                    {/* Swatch/icon + name row */}
-                    <div className="flex items-center gap-3">
-                      {isUnlock ? (
-                        <div className="rounded-full flex-shrink-0 bg-slate-700 flex items-center justify-center" style={{ width: 48, height: 48 }}>
-                          <CategoryIcon size={24} className="text-purple-400" />
-                        </div>
-                      ) : item.color === 'rainbow' ? (
-                        <RainbowSwatch />
-                      ) : (
-                        <div
-                          className="rounded-full flex-shrink-0"
-                          style={{ width: 48, height: 48, backgroundColor: item.color }}
-                        />
-                      )}
-                      <div className="min-w-0">
-                        <div className="font-semibold text-white text-sm leading-tight">{item.name}</div>
-                        <div className="text-xs text-slate-400 mt-0.5 line-clamp-2">{item.description}</div>
-                      </div>
-                    </div>
-
-                    {/* Rarity + cost row */}
-                    <div className="flex items-center justify-between">
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${RARITY_STYLES[item.rarity] || RARITY_STYLES.common}`}>
-                        {item.rarity}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <Coins size={13} className="text-yellow-400" />
-                        <span className="text-yellow-400 font-bold text-sm">{item.cost.toLocaleString()}</span>
-                      </div>
-                    </div>
-
-                    {/* Action button */}
-                    {isUnlock ? (
-                      isOwned ? (
-                        <div className="flex flex-col gap-1.5">
-                          <div className="flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-blue-900 border border-blue-700 text-blue-200 text-sm font-medium">
-                            <Check size={14} />
-                            Owned ✓
-                          </div>
-                          {(item.category === 'memberTitle' || item.category === 'signature') && (
-                            <div className="text-xs text-slate-400 text-center">Set in your profile settings</div>
-                          )}
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => handlePurchase(item)}
-                          disabled={!canAfford || isLoading}
-                          className={`py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                            canAfford && !isLoading
-                              ? 'bg-purple-700 hover:bg-purple-600 text-white'
-                              : 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                          }`}
-                        >
-                          {isLoading ? 'Purchasing...' : !canAfford ? 'Not enough coins' : 'Unlock'}
-                        </button>
-                      )
-                    ) : isEquipped ? (
-                      <div className="flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-green-800 border border-green-600 text-green-200 text-sm font-medium">
-                        <Check size={14} />
-                        Equipped
-                      </div>
-                    ) : isOwned ? (
-                      <button
-                        onClick={() => handleEquip(item)}
-                        disabled={isLoading}
-                        className="py-1.5 rounded-lg bg-blue-700 hover:bg-blue-600 text-white text-sm font-medium transition-colors disabled:opacity-60"
-                      >
-                        {isLoading ? 'Equipping...' : 'Equip'}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handlePurchase(item)}
-                        disabled={!canAfford || isLoading}
-                        className={`py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                          canAfford && !isLoading
-                            ? 'bg-purple-700 hover:bg-purple-600 text-white'
-                            : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                    return (
+                      <div
+                        key={item.id}
+                        className={`p-4 rounded-lg border-2 bg-slate-900 flex flex-col gap-3 ${
+                          isEquipped ? 'border-green-600' : isOwned ? 'border-blue-700' : 'border-slate-700'
                         }`}
                       >
-                        {isLoading ? 'Purchasing...' : !canAfford ? 'Not enough coins' : 'Purchase'}
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                        {/* Swatch/icon + name row */}
+                        <div className="flex items-center gap-3">
+                          {isUnlock ? (
+                            <div className="rounded-full flex-shrink-0 bg-slate-700 flex items-center justify-center" style={{ width: 40, height: 40 }}>
+                              <Sparkles size={20} className="text-purple-400" />
+                            </div>
+                          ) : item.color === 'rainbow' ? (
+                            <RainbowSwatch />
+                          ) : item.color ? (
+                            <div className="rounded-full flex-shrink-0" style={{ width: 40, height: 40, backgroundColor: item.color }} />
+                          ) : null}
+                          <div className="min-w-0">
+                            <div className="font-semibold text-white text-sm leading-tight">{item.name}</div>
+                            <div className="text-xs text-slate-400 mt-0.5 line-clamp-2">{item.description}</div>
+                          </div>
+                        </div>
+
+                        {/* Rarity + cost row */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${RARITY_STYLES[item.rarity] || RARITY_STYLES.common}`}>
+                              {item.rarity}
+                            </span>
+                            {item.availableUntil && (
+                              <span className="text-xs bg-amber-800/60 border border-amber-600/40 text-amber-300 px-1.5 py-0.5 rounded-full">
+                                Limited
+                              </span>
+                            )}
+                            {item.availableUntil && (() => {
+                              const daysLeft = Math.ceil((new Date(item.availableUntil) - Date.now()) / (1000 * 60 * 60 * 24));
+                              return daysLeft <= 7 ? (
+                                <span className="text-xs text-amber-400">{daysLeft}d left</span>
+                              ) : null;
+                            })()}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Coins size={13} className="text-yellow-400" />
+                            <span className="text-yellow-400 font-bold text-sm">{item.cost.toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        {/* Action button */}
+                        {isUnlock ? (
+                          isOwned ? (
+                            <div className="flex flex-col gap-1.5">
+                              <div className="flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-blue-900 border border-blue-700 text-blue-200 text-sm font-medium">
+                                <Check size={14} /> Owned
+                              </div>
+                              {(item.category === 'memberTitle' || item.category === 'signature') && (
+                                <div className="text-xs text-slate-400 text-center">Set in your profile settings</div>
+                              )}
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handlePurchase(item)}
+                              disabled={!canAfford || isLoading}
+                              className={`py-1.5 rounded-lg text-sm font-medium transition-colors ${canAfford && !isLoading ? 'bg-purple-700 hover:bg-purple-600 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
+                            >
+                              {isLoading ? 'Purchasing...' : !canAfford ? 'Not enough coins' : 'Unlock'}
+                            </button>
+                          )
+                        ) : isEquipped ? (
+                          <div className="flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-green-800 border border-green-600 text-green-200 text-sm font-medium">
+                            <Check size={14} /> Equipped
+                          </div>
+                        ) : isOwned ? (
+                          <button
+                            onClick={() => handleEquip(item)}
+                            disabled={isLoading}
+                            className="py-1.5 rounded-lg bg-blue-700 hover:bg-blue-600 text-white text-sm font-medium transition-colors disabled:opacity-60"
+                          >
+                            {isLoading ? 'Equipping...' : 'Equip'}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handlePurchase(item)}
+                            disabled={!canAfford || isLoading}
+                            className={`py-1.5 rounded-lg text-sm font-medium transition-colors ${canAfford && !isLoading ? 'bg-purple-700 hover:bg-purple-600 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
+                          >
+                            {isLoading ? 'Purchasing...' : !canAfford ? 'Not enough coins' : 'Purchase'}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
           )}
         </div>
 
