@@ -39,3 +39,74 @@ body {
 .border-anim-lightning { animation: border-lightning 0.8s ease-in-out infinite; }
 .border-anim-diamond   { animation: border-diamond 3s linear infinite; }
 .text-rainbow          { animation: rainbow-text 3s linear infinite; }
+
+/* Foil shimmer — sweeps a light glare across the username */
+@keyframes foil-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+.text-foil {
+  background: linear-gradient(
+    105deg,
+    #c0a060 0%,
+    #ffe88a 30%,
+    #ffffff 45%,
+    #ffe88a 55%,
+    #b07030 80%,
+    #c0a060 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: foil-shimmer 2.5s linear infinite;
+}
+
+/* Upvote milestone glow — golden ambient glow on highly-upvoted posts */
+@keyframes upvote-glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px 2px rgba(251, 191, 36, 0.25); }
+  50%       { box-shadow: 0 0 18px 5px rgba(251, 191, 36, 0.45); }
+}
+.post-upvote-glow {
+  animation: upvote-glow-pulse 3s ease-in-out infinite;
+}
+
+/* OP spotlight — subtle top border treatment on thread-starter's own post */
+.post-op-spotlight {
+  border-top: 2px solid rgba(251, 191, 36, 0.6) !important;
+}
+
+/* Online status dot animations */
+@keyframes online-pulse {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%       { opacity: 0.6; transform: scale(1.15); }
+}
+.online-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid rgba(15, 23, 42, 0.8);
+  animation: online-pulse 2s ease-in-out infinite;
+}
+.online-dot-static {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid rgba(15, 23, 42, 0.8);
+}
+
+/* Nameplate background — sits behind the author info block in posts */
+.post-nameplate {
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+/* Mana identity pips — small colored circles for W/U/B/R/G/C */
+.mana-pip-W { background: #f9fafb; border: 1px solid #d1d5db; }
+.mana-pip-U { background: #3b82f6; }
+.mana-pip-B { background: #1f2937; border: 1px solid #6b7280; }
+.mana-pip-R { background: #ef4444; }
+.mana-pip-G { background: #22c55e; }
+.mana-pip-C { background: #9ca3af; }
