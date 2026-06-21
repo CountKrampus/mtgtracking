@@ -31,6 +31,11 @@ export default function ForumProfilePage({ user, apiUrl }) {
   const [wardrobeItems, setWardrobeItems] = useState([]);
   const [wardrobeOpen, setWardrobeOpen] = useState(false);
   const [equipLoading, setEquipLoading] = useState(null);
+  const [aboutMeInput, setAboutMeInput] = useState('');
+  const [personalLinksInput, setPersonalLinksInput] = useState([]);
+  const [manaIdentityInput, setManaIdentityInput] = useState([]);
+  const [commanderSearch, setCommanderSearch] = useState('');
+  const [commanderPreview, setCommanderPreview] = useState(null);
 
   useEffect(() => {
     fetchProfileData();
@@ -50,6 +55,9 @@ export default function ForumProfilePage({ user, apiUrl }) {
       setSelectedPins(levelInfo?.pinnedAchievements || []);
       if (levelInfo?.memberTitleText !== undefined) setMemberTitleInput(levelInfo.memberTitleText);
       if (levelInfo?.signatureText !== undefined) setSignatureInput(levelInfo.signatureText);
+      if (levelInfo?.aboutMeText !== undefined) setAboutMeInput(levelInfo.aboutMeText);
+      if (levelInfo?.personalLinks) setPersonalLinksInput(levelInfo.personalLinks);
+      if (levelInfo?.manaIdentity) setManaIdentityInput(levelInfo.manaIdentity);
 
       // Fetch activity/stats (current authenticated user)
       const activityRes = await fetch(`${apiUrl}/forum/users/${user.username}/activity`, {
@@ -129,6 +137,42 @@ export default function ForumProfilePage({ user, apiUrl }) {
     });
   };
 
+  const saveAboutMe = async () => {
+    const token = localStorage.getItem('mtg_access_token');
+    await fetch(`${apiUrl}/forum/level/about-me`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ text: aboutMeInput }),
+    });
+  };
+
+  const savePersonalLinks = async () => {
+    const token = localStorage.getItem('mtg_access_token');
+    await fetch(`${apiUrl}/forum/level/personal-links`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ links: personalLinksInput.filter(l => l.url) }),
+    });
+  };
+
+  const saveManaIdentity = async () => {
+    const token = localStorage.getItem('mtg_access_token');
+    await fetch(`${apiUrl}/forum/level/mana-identity`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ colors: manaIdentityInput }),
+    });
+  };
+
   if (loading) return <div className="text-center py-12 text-white">Loading profile...</div>;
   if (error) return <div className="text-center py-12 text-red-400">{error}</div>;
 
@@ -173,12 +217,30 @@ export default function ForumProfilePage({ user, apiUrl }) {
         )}
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
-            <UserAvatar avatarUrl={user.avatarUrl} username={user.username} size="lg" />
+            {(() => {
+              const isOnline = stats?.lastSeenAt
+                ? (Date.now() - new Date(stats.lastSeenAt).getTime()) < 5 * 60 * 1000
+                : false;
+              return (
+                <UserAvatar avatarUrl={user.avatarUrl} username={user.username} size="lg" isOnline={isOnline} />
+              );
+            })()}
             <div>
               <h1 className="text-3xl font-bold text-white mb-1">@{user.username}</h1>
               <p className="text-slate-400">
                 {stats?.stats?.memberSince && `Member since ${new Date(stats.stats.memberSince).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
               </p>
+              {stats?.manaIdentity && stats.manaIdentity.length > 0 && (
+                <div className="flex gap-1.5 mt-2">
+                  {stats.manaIdentity.map(color => (
+                    <div
+                      key={color}
+                      className={`w-4 h-4 rounded-full mana-pip-${color}`}
+                      title={{ W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green', C: 'Colorless' }[color]}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -267,6 +329,59 @@ export default function ForumProfilePage({ user, apiUrl }) {
           </div>
         )}
       </div>
+
+      {/* About Me */}
+      {(stats?.aboutMeText || levelData?.ownsAboutMe) && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
+          {stats?.aboutMeText ? (
+            <>
+              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">About</h3>
+              <p className="text-slate-300 text-sm leading-relaxed">{stats.aboutMeText}</p>
+            </>
+          ) : (
+            <p className="text-slate-500 text-sm italic">No bio yet.</p>
+          )}
+        </div>
+      )}
+
+      {/* Personal Links */}
+      {stats?.personalLinks && stats.personalLinks.length > 0 && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
+          <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Links</h3>
+          <div className="flex flex-wrap gap-2">
+            {stats.personalLinks.map((link, i) => (
+              <a
+                key={i}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white px-3 py-1.5 rounded-full transition-colors"
+              >
+                🔗 {link.label || link.url}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Commander Showcase */}
+      {stats?.commanderCard?.imageUrl && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
+          <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Commander</h3>
+          <div className="flex items-center gap-4">
+            <img
+              src={stats.commanderCard.imageUrl}
+              alt={stats.commanderCard.name}
+              className="rounded-lg shadow-lg"
+              style={{ width: 80, height: 112 }}
+            />
+            <div>
+              <div className="text-white font-semibold">{stats.commanderCard.name}</div>
+              <div className="text-slate-400 text-xs mt-1">Featured Commander</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Forum Stats Grid */}
       {stats && (
@@ -403,12 +518,12 @@ export default function ForumProfilePage({ user, apiUrl }) {
         </div>
       )}
 
-      {/* Account Settings — member title and signature */}
-      {(levelData?.ownsMemberTitle || levelData?.ownsSignature) && (
+      {/* Account Settings — member title, signature, and new profile fields */}
+      {(levelData?.ownsMemberTitle || levelData?.ownsSignature || levelData?.ownsAboutMe || levelData?.ownsPersonalLinks || levelData) && (
         <div id="account-settings" className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
           <h3 className="text-lg font-bold text-white mb-4">Profile Customization</h3>
 
-          {levelData.ownsMemberTitle && (
+          {levelData?.ownsMemberTitle && (
             <div className="mb-4">
               <label className="block text-sm text-slate-400 mb-1">
                 Member Title <span className="text-slate-500 text-xs">(max 40 chars)</span>
@@ -432,8 +547,8 @@ export default function ForumProfilePage({ user, apiUrl }) {
             </div>
           )}
 
-          {levelData.ownsSignature && (
-            <div>
+          {levelData?.ownsSignature && (
+            <div className="mb-4">
               <label className="block text-sm text-slate-400 mb-1">
                 Forum Signature <span className="text-slate-500 text-xs">(max 120 chars)</span>
               </label>
@@ -455,6 +570,148 @@ export default function ForumProfilePage({ user, apiUrl }) {
               </div>
             </div>
           )}
+
+          {/* Mana Identity — free, always shown */}
+          <div className="mt-4">
+            <label className="block text-sm text-slate-400 mb-2">Mana Identity</label>
+            <div className="flex gap-2 flex-wrap">
+              {['W', 'U', 'B', 'R', 'G', 'C'].map(color => {
+                const selected = manaIdentityInput.includes(color);
+                return (
+                  <button
+                    key={color}
+                    onClick={() => {
+                      setManaIdentityInput(prev =>
+                        prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color]
+                      );
+                    }}
+                    className={`w-8 h-8 rounded-full font-bold text-xs transition-all mana-pip-${color} ${selected ? 'ring-2 ring-white ring-offset-1 ring-offset-slate-800 opacity-100' : 'opacity-40'}`}
+                    title={color}
+                  >
+                    {color}
+                  </button>
+                );
+              })}
+              <button
+                onClick={saveManaIdentity}
+                className="ml-2 text-xs bg-purple-700 hover:bg-purple-600 text-white px-2.5 py-1 rounded"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+
+          {/* About Me — shown if owned */}
+          {levelData?.ownsAboutMe && (
+            <div className="mt-4">
+              <label className="block text-sm text-slate-400 mb-1">
+                About Me <span className="text-slate-500 text-xs">(max 300 chars)</span>
+              </label>
+              <div className="flex gap-2">
+                <textarea
+                  maxLength={300}
+                  rows={3}
+                  value={aboutMeInput}
+                  onChange={e => setAboutMeInput(e.target.value)}
+                  placeholder="Tell the community about yourself..."
+                  className="flex-1 bg-slate-700 border border-slate-600 text-white rounded px-3 py-1.5 text-sm focus:outline-none focus:border-purple-500 resize-none"
+                />
+                <button onClick={saveAboutMe} className="self-start bg-purple-600 hover:bg-purple-500 text-white text-sm px-3 py-1.5 rounded">Save</button>
+              </div>
+            </div>
+          )}
+
+          {/* Personal Links — shown if owned */}
+          {levelData?.ownsPersonalLinks && (
+            <div className="mt-4">
+              <label className="block text-sm text-slate-400 mb-2">
+                Personal Links <span className="text-slate-500 text-xs">(up to 5)</span>
+              </label>
+              <div className="space-y-2">
+                {personalLinksInput.map((link, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input
+                      type="text"
+                      maxLength={30}
+                      placeholder="Label"
+                      value={link.label}
+                      onChange={e => setPersonalLinksInput(prev => prev.map((l, j) => j === i ? { ...l, label: e.target.value } : l))}
+                      className="w-24 bg-slate-700 border border-slate-600 text-white rounded px-2 py-1 text-sm focus:outline-none focus:border-purple-500"
+                    />
+                    <input
+                      type="url"
+                      maxLength={200}
+                      placeholder="https://..."
+                      value={link.url}
+                      onChange={e => setPersonalLinksInput(prev => prev.map((l, j) => j === i ? { ...l, url: e.target.value } : l))}
+                      className="flex-1 bg-slate-700 border border-slate-600 text-white rounded px-2 py-1 text-sm focus:outline-none focus:border-purple-500"
+                    />
+                    <button
+                      onClick={() => setPersonalLinksInput(prev => prev.filter((_, j) => j !== i))}
+                      className="text-red-400 hover:text-red-300 text-sm px-1"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                {personalLinksInput.length < 5 && (
+                  <button
+                    onClick={() => setPersonalLinksInput(prev => [...prev, { label: '', url: '' }])}
+                    className="text-xs text-purple-400 hover:text-purple-300"
+                  >
+                    + Add link
+                  </button>
+                )}
+              </div>
+              <button onClick={savePersonalLinks} className="mt-2 bg-purple-600 hover:bg-purple-500 text-white text-sm px-3 py-1.5 rounded">Save Links</button>
+            </div>
+          )}
+
+          {/* Commander picker */}
+          <div className="mt-4">
+            <label className="block text-sm text-slate-400 mb-1">Featured Commander</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Search Scryfall for a card..."
+                value={commanderSearch}
+                onChange={e => setCommanderSearch(e.target.value)}
+                onKeyDown={async e => {
+                  if (e.key === 'Enter' && commanderSearch.trim()) {
+                    const res = await fetch(`${apiUrl}/scryfall/search?name=${encodeURIComponent(commanderSearch)}`);
+                    if (res.ok) {
+                      const data = await res.json();
+                      if (data.imageUrl) {
+                        setCommanderPreview(data);
+                      }
+                    }
+                  }
+                }}
+                className="flex-1 bg-slate-700 border border-slate-600 text-white rounded px-3 py-1.5 text-sm focus:outline-none focus:border-purple-500"
+              />
+              {commanderPreview && (
+                <button
+                  onClick={async () => {
+                    const token = localStorage.getItem('mtg_access_token');
+                    await fetch(`${apiUrl}/forum/level/commander`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+                      body: JSON.stringify({ scryfallId: commanderPreview.scryfallId || '', name: commanderPreview.name, imageUrl: commanderPreview.imageUrl }),
+                    });
+                    fetchProfileData();
+                    setCommanderSearch('');
+                    setCommanderPreview(null);
+                  }}
+                  className="bg-purple-600 hover:bg-purple-500 text-white text-sm px-3 py-1.5 rounded whitespace-nowrap"
+                >
+                  Set "{commanderPreview.name}"
+                </button>
+              )}
+            </div>
+            {commanderPreview?.imageUrl && (
+              <img src={commanderPreview.imageUrl} alt={commanderPreview.name} className="mt-2 rounded" style={{ height: 80 }} />
+            )}
+          </div>
         </div>
       )}
 

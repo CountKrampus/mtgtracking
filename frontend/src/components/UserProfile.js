@@ -196,7 +196,12 @@ export default function UserProfile({ username }) {
         {/* Profile Header */}
         <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6">
           <div className="flex items-center gap-5">
-            <UserAvatar avatarUrl={profile.avatarUrl} username={profile.username} size="xl" />
+            {(() => {
+              const isOnline = forumActivity?.lastSeenAt
+                ? (Date.now() - new Date(forumActivity.lastSeenAt).getTime()) < 5 * 60 * 1000
+                : false;
+              return <UserAvatar avatarUrl={profile.avatarUrl} username={profile.username} size="xl" isOnline={isOnline} />;
+            })()}
             <div>
               <h1 className="text-2xl font-bold text-white">{profile.displayName || profile.username}</h1>
               <div className="text-white/50 text-sm">@{profile.username}</div>
@@ -229,6 +234,34 @@ export default function UserProfile({ username }) {
             </div>
           )}
         </div>
+
+        {/* About Me */}
+        {publicProfile?.aboutMeText && (
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-bold text-white mb-3">About</h2>
+            <p className="text-white/70 text-sm leading-relaxed">{publicProfile.aboutMeText}</p>
+          </div>
+        )}
+
+        {/* Personal Links */}
+        {publicProfile?.personalLinks?.length > 0 && (
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-bold text-white mb-3">Links</h2>
+            <div className="flex flex-wrap gap-2">
+              {publicProfile.personalLinks.map((link, i) => (
+                <a
+                  key={i}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm bg-white/10 hover:bg-white/20 text-white/80 hover:text-white px-3 py-1.5 rounded-full transition-colors"
+                >
+                  🔗 {link.label || link.url}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Forum Activity Section */}
         {profile.privacy?.showForum && forumActivity && (

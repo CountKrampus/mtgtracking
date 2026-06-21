@@ -2,7 +2,7 @@ import React from 'react';
 import { AVATAR_PRESETS } from './presets';
 import { API_URL } from '../../config';
 
-export default function UserAvatar({ avatarUrl, username, size = 'md', borderColor = null, animationClass = null }) {
+export default function UserAvatar({ avatarUrl, username, size = 'md', borderColor = null, animationClass = null, isOnline = false }) {
   const sizeClass = {
     sm: 'w-6 h-6 text-xs',
     md: 'w-8 h-8 text-sm',
@@ -15,13 +15,25 @@ export default function UserAvatar({ avatarUrl, username, size = 'md', borderCol
     : {};
 
   function wrapWithBorder(avatarEl) {
-    if (!borderColor && !animationClass) return avatarEl;
-    return (
+    if (!borderColor && !animationClass && !isOnline) return avatarEl;
+    const needsBorderWrapper = borderColor || animationClass;
+    const inner = needsBorderWrapper ? (
       <div
         className={`rounded-full inline-flex flex-shrink-0 ${animationClass || ''}`}
         style={animationClass ? {} : ringStyle}
       >
         {avatarEl}
+      </div>
+    ) : avatarEl;
+    return (
+      <div className="relative inline-flex flex-shrink-0">
+        {inner}
+        {isOnline && (
+          <span
+            className="online-dot absolute bottom-0 right-0"
+            style={{ width: 10, height: 10 }}
+          />
+        )}
       </div>
     );
   }
