@@ -241,6 +241,41 @@ router.get('/threads', async (req, res) => {
   }
 });
 
+// GET /api/forum/posts - list all posts across all threads (admin/moderation use)
+router.get('/posts', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const skip = (page - 1) * limit;
+
+    const [posts, total] = await Promise.all([
+      ForumPost.find({})
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('authorId', 'username displayName avatarUrl')
+        .populate('threadId', 'title')
+        .lean(),
+      ForumPost.countDocuments()
+    ]);
+
+    res.json({
+      posts: posts.map(p => ({
+        ...p,
+        author: p.authorId,
+        thread: p.threadId,
+        content: p.body,
+      })),
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    console.error('List posts error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // GET /api/forum/threads/:threadId - Get single thread with posts
 router.get('/threads/:threadId', async (req, res) => {
   try {
