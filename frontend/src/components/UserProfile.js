@@ -133,7 +133,7 @@ export default function UserProfile({ username }) {
   useEffect(() => {
     if (!username) return;
     setLoading(true);
-    fetch(`${API_URL}/forum/users/${username}/profile`, { credentials: 'include' })
+    fetch(`${API_URL}/forum/users/${username}/profile`)
       .then(r => {
         if (!r.ok) throw new Error(r.status === 404 ? 'Profile not found or private' : 'Failed to load profile');
         return r.json();
@@ -150,12 +150,12 @@ export default function UserProfile({ username }) {
 
   useEffect(() => {
     if (!profile) return;
-    fetch(`${API_URL}/forum/users/${username}/activity`, { credentials: 'include' })
+    fetch(`${API_URL}/forum/users/${username}/activity`)
       .then(r => r.ok ? r.json() : null)
       .then(data => setForumActivity(data))
       .catch(() => {});
 
-    fetch(`${API_URL}/users/${username}/public-profile`, { credentials: 'include' })
+    fetch(`${API_URL}/users/${username}/public-profile`)
       .then(r => r.ok ? r.json() : null)
       .then(data => setPublicProfile(data))
       .catch(() => {});

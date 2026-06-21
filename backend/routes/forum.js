@@ -1223,6 +1223,31 @@ router.post('/shop/purchase', verifyToken, requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/forum/users/:username/profile — public forum profile (reputation, badges, privacy flag)
+router.get('/users/:username/profile', async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.params.username, isActive: true })
+      .select('username displayName avatarUrl reputation badges createdAt privacy')
+      .lean();
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user.privacy?.isPublic) return res.status(404).json({ message: 'Profile is private' });
+
+    res.json({
+      username:    user.username,
+      displayName: user.displayName || user.username,
+      avatarUrl:   user.avatarUrl || null,
+      reputation:  user.reputation || 0,
+      badges:      user.badges || [],
+      createdAt:   user.createdAt,
+      privacy:     { showForum: Boolean(user.privacy?.showForum) },
+    });
+  } catch (e) {
+    console.error('forum user profile error:', e);
+    res.status(500).json({ message: e.message });
+  }
+});
+
 // GET /api/forum/users/:username/activity — public profile forum activity
 router.get('/users/:username/activity', async (req, res) => {
   try {
