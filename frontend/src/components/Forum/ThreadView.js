@@ -314,9 +314,10 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
       return;
     }
     try {
+      const token = localStorage.getItem('mtg_access_token');
       const response = await fetch(`${apiUrl}/forum/threads/${threadId}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
       });
       if (response.ok) {
         onBack();
@@ -390,9 +391,10 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
       return;
     }
     try {
+      const token = localStorage.getItem('mtg_access_token');
       const response = await fetch(`${apiUrl}/forum/posts/${postId}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
       });
       if (response.ok) {
         setPosts(posts.filter(p => p._id !== postId));
