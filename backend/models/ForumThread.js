@@ -93,6 +93,11 @@ const threadSchema = new mongoose.Schema({
     ref: 'ForumPost',
     default: null
   },
+  isHidden: {
+    type: Boolean,
+    default: false
+  },
+  hiddenReason: String,
   createdAt: {
     type: Date,
     default: Date.now,
@@ -108,6 +113,7 @@ threadSchema.index({ categoryId: 1, isPinned: -1, createdAt: -1 });
 threadSchema.index({ authorId: 1, createdAt: -1 });
 threadSchema.index({ lastPostAt: -1 });
 threadSchema.index({ tags: 1 });
+threadSchema.index({ isHidden: 1, createdAt: -1 });
 
 threadSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
