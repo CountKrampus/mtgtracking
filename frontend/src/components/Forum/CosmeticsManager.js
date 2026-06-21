@@ -283,6 +283,11 @@ const getPreview = (c) => {
   if (c.color) return (
     <div className={`w-8 h-8 rounded-full flex-shrink-0 ${c.animationClass || ''}`} style={{ backgroundColor: c.color }} />
   );
+  if (c.icon) return (
+    <div className="w-8 h-8 rounded-full flex-shrink-0 bg-slate-700 flex items-center justify-center text-white">
+      {renderIconPreview(c.icon)}
+    </div>
+  );
   if (c.cssProperties) return (
     <div className="w-8 h-8 rounded flex-shrink-0" style={c.cssProperties} />
   );
@@ -424,7 +429,7 @@ export default function CosmeticsManager() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this cosmetic?')) return;
+    if (!window.confirm('Delete this cosmetic? Users who have purchased it will lose access — their purchased count will show stale until cleaned up.')) return;
     try {
       const response = await authFetch(`${API_URL}/forum/admin/cosmetics/${id}`, { method: 'DELETE' });
       let data;
