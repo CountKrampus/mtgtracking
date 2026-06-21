@@ -45,12 +45,8 @@ export function AuthGuard({ children }) {
     };
   }, []);
 
-  // If multi-user is disabled, render children without auth check
-  if (!isMultiUserEnabled) {
-    return children;
-  }
-
-  // Show loading state
+  // Show loading state first — before checking isMultiUserEnabled to avoid race condition
+  // where isMultiUserEnabled is still false during the status check and bypasses auth entirely
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
@@ -60,6 +56,11 @@ export function AuthGuard({ children }) {
         </div>
       </div>
     );
+  }
+
+  // Status check complete — if multi-user is disabled, render children without auth
+  if (!isMultiUserEnabled) {
+    return children;
   }
 
   // Show forgot password form if hash indicates so
