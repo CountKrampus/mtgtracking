@@ -1,10 +1,270 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { API_URL } from '../../config';
 import { useAuthContext } from '../../contexts/AuthContext';
 
+// ── Icon Picker ────────────────────────────────────────────────────────────────
+
+const EMOJI_SECTIONS = [
+  { label: 'MTG / Fantasy', icons: ['⚔️','🛡️','🔮','💎','💀','🐉','🦅','🌿','🔥','⚡','❄️','🌊','☀️','🌙','⭐','🌟','✨','💫','🎭','👑','🗡️','🪄','🏰','🗺️'] },
+  { label: 'Stars & Trophies', icons: ['🏆','🥇','🏅','🎖️','🎯','🔯','🌠','🎪','♟️','🎀'] },
+  { label: 'Nature & Creatures', icons: ['🌿','🍃','🌸','🌺','🍄','🦋','🐍','🦊','🐺','🦁','🐲','🦚','🕊️','🌵','🍀'] },
+  { label: 'Elements & Energy', icons: ['🔥','⚡','💧','🌊','🌪️','❄️','☀️','🌙','⚙️','🔑','💥','🌈','🌑','⚗️','🧪'] },
+  { label: 'Symbols & Status', icons: ['✅','❌','⭐','🔺','🔻','🔷','🔶','🟣','🟢','🔴','🟡','⚪','⚫','🔘','💠'] },
+];
+
+const MANA_KEYS = [
+  'w','u','b','r','g','c',
+  '0','1','2','3','4','5','6','7','8','9','10','x',
+  'wu','ub','br','rg','gw','wb','ur','bg','rw','gu',
+  'pw','pu','pb','pr','pg',
+  's','e','t','q',
+];
+
+const LUCIDE_ICON_NAMES = [
+  'Star','Crown','Zap','Flame','Sparkles','Shield','Gem','Trophy',
+  'Award','Heart','Sword','Target','Layers','Tag','Package','Archive',
+  'Lock','Unlock','Eye','EyeOff','Bell','Bookmark',
+  'Flag','Compass','Map','Globe','Moon','Sun','Cloud','Wind',
+  'Droplet','Feather','Leaf','Bug','Fish','Bird',
+  'Mountain','Anchor','Key','Skull',
+];
+
+function renderIconPreview(val) {
+  if (!val) return <span className="text-slate-500 text-lg">+</span>;
+  if (val.startsWith('mana:')) {
+    return <i className={`ms ms-${val.slice(5)} ms-cost`} style={{ fontSize: 18 }} />;
+  }
+  if (val.startsWith('lucide:')) {
+    const Icon = LucideIcons[val.slice(7)];
+    return Icon ? <Icon size={18} /> : <span>{val}</span>;
+  }
+  return <span className="text-lg leading-none">{val}</span>;
+}
+
+function IconPicker({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState('emoji');
+  const [customInput, setCustomInput] = useState('');
+  const [popoverPos, setPopoverPos] = useState({ top: 0, left: 0 });
+  const triggerRef = useRef(null);
+  const popoverRef = useRef(null);
+
+  // Sync customInput with value when not matching other tabs
+  useEffect(() => {
+    if (value && !value.startsWith('mana:') && !value.startsWith('lucide:')) {
+      setCustomInput(value);
+    }
+  }, [value]);
+
+  // Close on outside click or Escape
+  useEffect(() => {
+    if (!open) return;
+    const handleMouseDown = (e) => {
+      if (
+        popoverRef.current && !popoverRef.current.contains(e.target) &&
+        triggerRef.current && !triggerRef.current.contains(e.target)
+      ) {
+        setOpen(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open]);
+
+  const openPicker = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const popoverWidth = 380;
+      let left = rect.left;
+      if (left + popoverWidth > window.innerWidth - 8) {
+        left = window.innerWidth - popoverWidth - 8;
+      }
+      setPopoverPos({ top: rect.bottom + 4, left });
+    }
+    setOpen(true);
+  };
+
+  const select = (val) => {
+    onChange(val);
+    setOpen(false);
+  };
+
+  const tabClass = (t) =>
+    `px-2.5 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+      tab === t ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-700'
+    }`;
+
+  const iconBtnClass = (val) =>
+    `p-1.5 rounded hover:bg-slate-700 text-lg leading-none flex items-center justify-center w-9 h-9 transition-colors ${
+      value === val ? 'bg-purple-700' : ''
+    }`;
+
+  return (
+    <>
+      <button
+        type="button"
+        ref={triggerRef}
+        onClick={openPicker}
+        className="bg-slate-800 border border-slate-600 rounded px-3 py-2 min-w-[60px] flex items-center gap-2 hover:border-purple-500 transition-colors"
+        title="Pick icon"
+      >
+        {renderIconPreview(value)}
+        {value && <span className="text-slate-400 text-xs truncate max-w-[80px]">{value}</span>}
+      </button>
+
+      {open && (
+        <div
+          ref={popoverRef}
+          style={{
+            position: 'fixed',
+            top: popoverPos.top,
+            left: popoverPos.left,
+            width: 380,
+            maxHeight: 320,
+            overflowY: 'auto',
+            zIndex: 9999,
+          }}
+          className="bg-slate-800 border border-slate-600 rounded-lg shadow-2xl"
+        >
+          {/* Tab bar */}
+          <div className="flex gap-1 p-2 border-b border-slate-700 sticky top-0 bg-slate-800 z-10">
+            <button type="button" className={tabClass('emoji')} onClick={() => setTab('emoji')}>Emoji</button>
+            <button type="button" className={tabClass('mana')} onClick={() => setTab('mana')}>Mana</button>
+            <button type="button" className={tabClass('lucide')} onClick={() => setTab('lucide')}>Lucide</button>
+            <button type="button" className={tabClass('custom')} onClick={() => setTab('custom')}>Custom</button>
+            <button
+              type="button"
+              className="ml-auto text-slate-500 hover:text-white transition-colors"
+              onClick={() => setOpen(false)}
+              title="Close"
+            >
+              <X size={14} />
+            </button>
+          </div>
+
+          {/* Emoji tab */}
+          {tab === 'emoji' && (
+            <div className="p-1">
+              {EMOJI_SECTIONS.map(section => (
+                <div key={section.label}>
+                  <div className="text-xs text-slate-500 uppercase tracking-wider px-2 pt-2 pb-1">
+                    {section.label}
+                  </div>
+                  <div className="grid grid-cols-8 gap-1">
+                    {section.icons.map(emoji => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        className={iconBtnClass(emoji)}
+                        onClick={() => select(emoji)}
+                        title={emoji}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Mana tab */}
+          {tab === 'mana' && (
+            <div className="p-2">
+              <div className="grid grid-cols-8 gap-1">
+                {MANA_KEYS.map(key => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={iconBtnClass(`mana:${key}`)}
+                    onClick={() => select(`mana:${key}`)}
+                    title={`mana:${key}`}
+                  >
+                    <i className={`ms ms-${key} ms-cost ms-shadow`} style={{ fontSize: 18 }} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Lucide tab */}
+          {tab === 'lucide' && (
+            <div className="p-2">
+              <div className="grid grid-cols-8 gap-1">
+                {LUCIDE_ICON_NAMES.map(name => {
+                  const Icon = LucideIcons[name];
+                  if (!Icon) return null;
+                  return (
+                    <button
+                      key={name}
+                      type="button"
+                      className={iconBtnClass(`lucide:${name}`)}
+                      onClick={() => select(`lucide:${name}`)}
+                      title={name}
+                    >
+                      <Icon size={18} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Custom tab */}
+          {tab === 'custom' && (
+            <div className="p-3 space-y-2">
+              <p className="text-xs text-slate-400">Enter any emoji or custom value:</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customInput}
+                  onChange={e => setCustomInput(e.target.value)}
+                  placeholder="✨ or lucide:Star or mana:w"
+                  className="flex-1 p-2 bg-slate-900 border border-slate-600 rounded text-white text-sm"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => { if (customInput) select(customInput); }}
+                  className="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded text-white text-sm"
+                >
+                  Set
+                </button>
+              </div>
+              {customInput && (
+                <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <span>Preview:</span>
+                  {renderIconPreview(customInput)}
+                </div>
+              )}
+              {value && (
+                <button
+                  type="button"
+                  onClick={() => select('')}
+                  className="text-xs text-red-400 hover:text-red-300"
+                >
+                  Clear icon
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
 const COLOR_CATEGORIES = ['titleColor', 'profileBorderColor', 'flairIcon', 'postBackground', 'threadHighlight', 'nameplateBackground', 'formatBadge'];
-const BORDER_ANIMATION_CATEGORIES = ['avatarBorder'];
+const BORDER_ANIMATION_CATEGORIES = ['avatarBorder', 'titleColor'];
 const CSS_GRADIENT_CATEGORIES = ['profileBackground', 'profileTheme', 'postFrame', 'nameplateBackground'];
 const BANNER_CATEGORIES = ['profileBanner'];
 const UNLOCK_CATEGORIES = ['memberTitle', 'signature', 'achievementShowcase', 'favoriteCardsShowcase', 'deckShowcase', 'collectionStatsWidget', 'wishlistPreview', 'aboutMe', 'personalLinks'];
@@ -298,14 +558,10 @@ export default function CosmeticsManager() {
                 </select>
               </div>
               <div>
-                <label className="text-xs text-slate-400 block mb-1">Icon (emoji)</label>
-                <input
-                  type="text"
-                  placeholder="✨"
+                <label className="text-xs text-slate-400 block mb-1">Icon</label>
+                <IconPicker
                   value={formData.icon || ''}
-                  onChange={e => setFormData({ ...formData, icon: e.target.value || null })}
-                  className="w-full p-2 bg-slate-900 border border-slate-600 rounded text-white text-sm"
-                  maxLength="4"
+                  onChange={val => setFormData({ ...formData, icon: val || null })}
                 />
               </div>
             </div>
@@ -366,7 +622,7 @@ export default function CosmeticsManager() {
               </label>
             )}
 
-            {/* Animation class — avatarBorder only */}
+            {/* Animation class — avatarBorder and titleColor */}
             {showAnimationClass && (
               <div>
                 <label className="text-xs text-slate-400 block mb-1">Animation</label>
@@ -376,9 +632,15 @@ export default function CosmeticsManager() {
                   className="w-full p-2 bg-slate-900 border border-slate-600 rounded text-white text-sm"
                 >
                   <option value="">None (solid color)</option>
-                  <option value="border-anim-fire">🔥 Fire</option>
-                  <option value="border-anim-lightning">⚡ Lightning</option>
-                  <option value="border-anim-diamond">💎 Diamond</option>
+                  {formData.category === 'titleColor' ? (
+                    <option value="text-foil">✨ Foil Shimmer</option>
+                  ) : (
+                    <>
+                      <option value="border-anim-fire">🔥 Fire</option>
+                      <option value="border-anim-lightning">⚡ Lightning</option>
+                      <option value="border-anim-diamond">💎 Diamond</option>
+                    </>
+                  )}
                 </select>
               </div>
             )}
