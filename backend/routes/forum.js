@@ -1143,7 +1143,7 @@ router.get('/user-level', async (req, res) => {
 
     // Compute whether the user owns unlock-type cosmetics (single query for all unlock categories)
     const unlockCosmetics = await Cosmetic.find({
-      category: { $in: ['achievementShowcase', 'memberTitle', 'signature'] }
+      category: { $in: ['achievementShowcase', 'memberTitle', 'signature', 'aboutMe', 'personalLinks'] }
     }).lean();
     const purchasedIds = (level.cosmetics?.purchased || []).map(String);
     data.ownsAchievementShowcase = unlockCosmetics
@@ -1155,8 +1155,18 @@ router.get('/user-level', async (req, res) => {
     data.ownsSignature = unlockCosmetics
       .filter(c => c.category === 'signature')
       .some(c => purchasedIds.includes(c._id.toString()));
+    data.ownsAboutMe = unlockCosmetics
+      .filter(c => c.category === 'aboutMe')
+      .some(c => purchasedIds.includes(c._id.toString()));
+    data.ownsPersonalLinks = unlockCosmetics
+      .filter(c => c.category === 'personalLinks')
+      .some(c => purchasedIds.includes(c._id.toString()));
     data.memberTitleText = level.memberTitleText || '';
     data.signatureText = level.signatureText || '';
+    data.aboutMeText = level.aboutMeText || '';
+    data.personalLinks = level.personalLinks || [];
+    data.manaIdentity = level.manaIdentity || [];
+    data.commanderCard = level.commanderCard || null;
 
     res.json(data);
   } catch (error) {
@@ -1192,7 +1202,7 @@ router.post('/shop/purchase', verifyToken, requireAuth, async (req, res) => {
 router.get('/users/:username/activity', async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username })
-      .select('username privacy reputation badges createdAt').lean();
+      .select('username privacy reputation badges createdAt lastSeenAt').lean();
 
     if (!user || !user.privacy?.isPublic || !user.privacy?.showForum) {
       return res.status(404).json({ message: 'Forum activity not available' });
@@ -1248,7 +1258,7 @@ router.get('/users/:username/activity', async (req, res) => {
 
     // Resolve profile-level equipped cosmetics for display
     const userLevel = await ForumLevel.findOne({ userId: user._id })
-      .select('cosmetics memberTitleText').lean();
+      .select('cosmetics memberTitleText signatureText aboutMeText personalLinks manaIdentity commanderCard').lean();
 
     let equippedCosmetics = {};
     if (userLevel) {
@@ -1275,6 +1285,7 @@ router.get('/users/:username/activity', async (req, res) => {
       username: user.username,
       reputation: user.reputation || 0,
       badges: user.badges || [],
+      lastSeenAt: user.lastSeenAt || null,
       stats: {
         posts: postCount,
         postCount,
@@ -1285,7 +1296,13 @@ router.get('/users/:username/activity', async (req, res) => {
       },
       recentPosts,
       topPosts,
-      equippedCosmetics
+      equippedCosmetics,
+      aboutMeText:     userLevel?.aboutMeText || '',
+      personalLinks:   userLevel?.personalLinks || [],
+      manaIdentity:    userLevel?.manaIdentity || [],
+      commanderCard:   userLevel?.commanderCard || null,
+      memberTitleText: userLevel?.memberTitleText || '',
+      signatureText:   userLevel?.signatureText || '',
     });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
@@ -1355,6 +1372,7 @@ router.post('/level/cosmetics/equip', verifyToken, requireAuth, async (req, res)
     'threadHighlight', 'profileBackground', 'profileBanner', 'profileTheme',
     'achievementShowcase', 'favoriteCardsShowcase', 'deckShowcase',
     'collectionStatsWidget', 'wishlistPreview',
+    'nameplateBackground', 'formatBadge', 'aboutMe', 'personalLinksUnlock', 'setSymbolFlair',
   ];
   if (!VALID_CATEGORIES.includes(category))
     return res.status(400).json({ message: 'Invalid category' });
@@ -1427,6 +1445,80 @@ router.put('/level/pinned-achievements', verifyToken, requireAuth, async (req, r
     level.pinnedAchievements = names.slice(0, 3);
     await level.save();
     res.json({ pinnedAchievements: level.pinnedAchievements });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// PUT /api/forum/level/about-me
+router.put('/level/about-me', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (typeof text !== 'string') return res.status(400).json({ message: 'text is required' });
+    const trimmed = text.trim().slice(0, 300);
+    const level = await ForumLevel.findOne({ userId: req.user._id });
+    if (!level) return res.status(404).json({ message: 'Level not found' });
+    // Check ownership of aboutMe cosmetic
+    const aboutMeCosmetics = await Cosmetic.find({ category: 'aboutMe' }).lean();
+    const owns = aboutMeCosmetics.some(c => level.cosmetics.purchased.map(String).includes(c._id.toString()));
+    if (!owns) return res.status(403).json({ message: 'About Me not unlocked' });
+    level.aboutMeText = trimmed;
+    await level.save();
+    res.json({ aboutMeText: level.aboutMeText });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// PUT /api/forum/level/personal-links
+router.put('/level/personal-links', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { links } = req.body;
+    if (!Array.isArray(links)) return res.status(400).json({ message: 'links must be an array' });
+    if (links.length > 5) return res.status(400).json({ message: 'Maximum 5 links' });
+    const level = await ForumLevel.findOne({ userId: req.user._id });
+    if (!level) return res.status(404).json({ message: 'Level not found' });
+    // Check ownership of personalLinks cosmetic
+    const plCosmetics = await Cosmetic.find({ category: 'personalLinks' }).lean();
+    const owns = plCosmetics.some(c => level.cosmetics.purchased.map(String).includes(c._id.toString()));
+    if (!owns) return res.status(403).json({ message: 'Personal Links not unlocked' });
+    // Validate and sanitize links
+    const sanitized = links
+      .filter(l => l.url && typeof l.url === 'string')
+      .map(l => ({
+        label: (l.label || '').toString().trim().slice(0, 30),
+        url: l.url.toString().trim().slice(0, 200),
+      }));
+    level.personalLinks = sanitized;
+    await level.save();
+    res.json({ personalLinks: level.personalLinks });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// PUT /api/forum/level/mana-identity
+router.put('/level/mana-identity', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { colors } = req.body;
+    if (!Array.isArray(colors)) return res.status(400).json({ message: 'colors must be an array' });
+    const VALID_COLORS = ['W', 'U', 'B', 'R', 'G', 'C'];
+    const filtered = [...new Set(colors.filter(c => VALID_COLORS.includes(c)))];
+    const level = await ForumLevel.findOne({ userId: req.user._id });
+    if (!level) return res.status(404).json({ message: 'Level not found' });
+    level.manaIdentity = filtered;
+    await level.save();
+    res.json({ manaIdentity: level.manaIdentity });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// PUT /api/forum/level/commander
+router.put('/level/commander', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { scryfallId, name, imageUrl } = req.body;
+    const level = await ForumLevel.findOne({ userId: req.user._id });
+    if (!level) return res.status(404).json({ message: 'Level not found' });
+    level.commanderCard = {
+      scryfallId: (scryfallId || '').toString().slice(0, 100),
+      name: (name || '').toString().slice(0, 100),
+      imageUrl: (imageUrl || '').toString().slice(0, 300),
+    };
+    await level.save();
+    res.json({ commanderCard: level.commanderCard });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 

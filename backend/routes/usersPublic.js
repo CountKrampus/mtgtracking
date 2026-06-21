@@ -60,9 +60,9 @@ router.get('/:username/public-profile', async (req, res) => {
 
     if (!user || !user.privacy?.isPublic) return res.status(404).json({ message: 'User not found' });
 
-    // Fetch ForumLevel to check purchased unlocks
+    // Fetch ForumLevel to check purchased unlocks and profile fields
     const level = await ForumLevel.findOne({ userId: user._id })
-      .select('cosmetics').lean();
+      .select('cosmetics aboutMeText personalLinks').lean();
 
     const purchased = (level?.cosmetics?.purchased || []).map(String);
 
@@ -140,6 +140,8 @@ router.get('/:username/public-profile', async (req, res) => {
       publicDecks,
       collectionStats,
       wishlistPreview,
+      aboutMeText: level?.aboutMeText || '',
+      personalLinks: level?.personalLinks || [],
     });
   } catch (e) {
     console.error('public-profile error:', e);

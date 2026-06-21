@@ -51,6 +51,9 @@ const verifyToken = async (req, res, next) => {
     req.user = user.toSafeObject();
     req.tokenPayload = decoded;
 
+    // Fire-and-forget lastSeenAt update (non-blocking)
+    User.findByIdAndUpdate(decoded.userId, { lastSeenAt: new Date() }).catch(() => {});
+
     next();
   } catch (error) {
     console.error('Token verification error:', error.message);
