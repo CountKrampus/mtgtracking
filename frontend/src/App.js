@@ -5601,9 +5601,7 @@ function App() {
                   setSelectedCategoryId(catId);
                   localStorage.setItem('forumSelectedCategory', catId);
                 }}
-                onNewThread={() => {
-                  // TODO: Open new thread modal
-                }}
+                onNewThread={() => {}}
                 onOpenAdmin={() => {
                   // Show forum-specific admin features (spam filter, mutes)
                   setShowSpamFilterAdmin(true);
