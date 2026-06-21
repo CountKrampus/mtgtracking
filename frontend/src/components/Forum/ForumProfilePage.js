@@ -448,7 +448,7 @@ export default function ForumProfilePage({ user, apiUrl }) {
               {[
                 {
                   label: 'Post Appearance',
-                  cats: ['titleColor', 'avatarBorder', 'flairIcon', 'postBackground', 'postFrame', 'threadHighlight'],
+                  cats: ['titleColor', 'avatarBorder', 'flairIcon', 'postBackground', 'postFrame', 'threadHighlight', 'nameplateBackground', 'formatBadge', 'setSymbolFlair'],
                 },
                 {
                   label: 'Forum Profile',
@@ -456,7 +456,7 @@ export default function ForumProfilePage({ user, apiUrl }) {
                 },
                 {
                   label: 'Unlocks',
-                  cats: ['memberTitle', 'signature', 'achievementShowcase', 'favoriteCardsShowcase', 'deckShowcase', 'collectionStatsWidget', 'wishlistPreview'],
+                  cats: ['memberTitle', 'signature', 'achievementShowcase', 'favoriteCardsShowcase', 'deckShowcase', 'collectionStatsWidget', 'wishlistPreview', 'aboutMe', 'personalLinks'],
                 },
               ].map(group => {
                 // Filter wardrobe items to ones the user owns AND in this group
@@ -481,6 +481,8 @@ export default function ForumProfilePage({ user, apiUrl }) {
                           ? <div className="w-6 h-6 rounded-full flex-shrink-0" style={{ background: 'linear-gradient(135deg, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff)' }} />
                           : item.color
                           ? <div className="w-6 h-6 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                          : item.icon
+                          ? <div className="w-6 h-6 rounded-full flex-shrink-0 bg-slate-600 flex items-center justify-center text-white">{renderBadgeIcon(item.icon)}</div>
                           : item.cssProperties
                           ? <div className="w-6 h-6 rounded flex-shrink-0" style={item.cssProperties} />
                           : <div className="w-6 h-6 rounded-full flex-shrink-0 bg-slate-600 flex items-center justify-center text-xs">✦</div>;
