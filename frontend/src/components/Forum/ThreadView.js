@@ -516,10 +516,10 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
                   onClick={() => onViewProfile(thread.authorId?.username)}
                   className="text-purple-400 hover:text-purple-300 transition"
                 >
-                  {thread.authorId?.displayName}
+                  {thread.authorId?.displayName || thread.authorId?.username || 'Unknown'}
                 </button>
               ) : (
-                thread.authorId?.displayName
+                thread.authorId?.displayName || thread.authorId?.username || 'Unknown'
               )}
               {thread.authorReputation > 0 && (
                 <span className="text-amber-400 text-xs font-semibold ml-1">⚡ {thread.authorReputation}</span>

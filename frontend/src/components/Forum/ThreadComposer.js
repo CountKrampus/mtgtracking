@@ -61,14 +61,17 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = A
       const threadData = response.data;
       const duplicates = threadData.suggestedDuplicates;
 
+      // The API returns { thread, suggestedDuplicates } — extract the thread object
+      const newThread = threadData.thread || threadData;
+
       if (duplicates && duplicates.length > 0) {
-        const threadId = threadData._id || threadData.thread?._id;
-        setCreatedThread(threadData);
+        const threadId = newThread._id;
+        setCreatedThread(newThread);
         setNewThreadId(threadId);
         setSuggestedDuplicates(duplicates);
         setShowDuplicateModal(true);
       } else {
-        onThreadCreated?.(threadData);
+        onThreadCreated?.(newThread);
         setTitle('');
         setContent('');
         setTags('');
@@ -83,6 +86,7 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = A
 
   const handleDuplicateModalClose = () => {
     setShowDuplicateModal(false);
+    // createdThread is already the unwrapped thread object
     onThreadCreated?.(createdThread);
     setTitle('');
     setContent('');
@@ -92,6 +96,7 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = A
 
   const handleMergeRequest = () => {
     setShowDuplicateModal(false);
+    // createdThread is already the unwrapped thread object
     onThreadCreated?.(createdThread);
     setTitle('');
     setContent('');
