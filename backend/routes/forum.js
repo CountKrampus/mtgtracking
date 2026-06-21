@@ -1445,6 +1445,29 @@ router.post('/level/cosmetics/equip', verifyToken, requireAuth, async (req, res)
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
+// POST /api/forum/level/cosmetics/unequip
+router.post('/level/cosmetics/unequip', verifyToken, requireAuth, async (req, res) => {
+  const { category } = req.body;
+  const VALID_CATEGORIES = [
+    'titleColor', 'profileBorderColor', 'avatarBorder',
+    'flairIcon', 'postBackground', 'postFrame', 'memberTitle', 'signature',
+    'threadHighlight', 'profileBackground', 'profileBanner', 'profileTheme',
+    'achievementShowcase', 'favoriteCardsShowcase', 'deckShowcase',
+    'collectionStatsWidget', 'wishlistPreview',
+    'nameplateBackground', 'formatBadge', 'aboutMe', 'personalLinksUnlock', 'setSymbolFlair',
+  ];
+  if (!VALID_CATEGORIES.includes(category))
+    return res.status(400).json({ message: 'Invalid category' });
+  try {
+    const level = await ForumLevel.findOne({ userId: req.user._id });
+    if (!level) return res.status(404).json({ message: 'Level not found' });
+    level.cosmetics.equipped[category] = null;
+    level.markModified('cosmetics.equipped');
+    await level.save();
+    res.json({ success: true, newEquipped: level.cosmetics.equipped });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
 // PUT /api/forum/level/member-title — set member title text (requires owning memberTitle cosmetic)
 router.put('/level/member-title', verifyToken, requireAuth, async (req, res) => {
   try {
@@ -1788,7 +1811,23 @@ router.delete('/admin/cosmetics/:cosmeticId', verifyToken, requireAuth, requireA
       return res.status(404).json({ message: 'Cosmetic not found' });
     }
 
-    res.json({ success: true, message: 'Cosmetic deleted' });
+    const cosmeticId = req.params.cosmeticId;
+    const category = cosmetic.category;
+
+    // Remove from all users' purchased lists
+    await ForumLevel.updateMany(
+      { 'cosmetics.purchased': cosmeticId },
+      { $pull: { 'cosmetics.purchased': cosmeticId } }
+    );
+
+    // Unequip from all users who had it equipped in this category slot
+    const equippedKey = `cosmetics.equipped.${category}`;
+    await ForumLevel.updateMany(
+      { [equippedKey]: cosmeticId },
+      { $set: { [equippedKey]: null } }
+    );
+
+    res.json({ success: true, message: 'Cosmetic deleted and removed from all user inventories' });
   } catch (error) {
     console.error('Delete cosmetic error:', error);
     res.status(500).json({ message: error.message });

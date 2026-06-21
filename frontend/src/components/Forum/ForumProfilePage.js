@@ -105,6 +105,24 @@ export default function ForumProfilePage({ user, apiUrl }) {
     } catch {}
   };
 
+  const handleWardrobeUnequip = async (category) => {
+    setEquipLoading(category);
+    try {
+      const token = localStorage.getItem('mtg_access_token');
+      const res = await fetch(`${apiUrl}/forum/level/cosmetics/unequip`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ category }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLevelData(prev => prev ? { ...prev, cosmetics: { ...prev.cosmetics, equipped: data.newEquipped } } : prev);
+        fetchProfileData();
+      }
+    } catch {}
+    setEquipLoading(null);
+  };
+
   const handleWardrobeEquip = async (cosmeticId, category) => {
     setEquipLoading(cosmeticId);
     try {
@@ -498,7 +516,14 @@ export default function ForumProfilePage({ user, apiUrl }) {
                               <div className="text-xs text-slate-500 capitalize">{item.category}</div>
                             </div>
                             {isEquipped ? (
-                              <span className="text-xs text-green-400 font-medium">Equipped</span>
+                              <button
+                                onClick={() => handleWardrobeUnequip(item.category)}
+                                disabled={equipLoading === item.category}
+                                className="text-xs bg-green-800 hover:bg-red-900 text-green-300 hover:text-red-300 border border-green-700 hover:border-red-700 px-2.5 py-1 rounded transition-colors disabled:opacity-50"
+                                title="Click to unequip"
+                              >
+                                {equipLoading === item.category ? '...' : '✓ Equipped'}
+                              </button>
                             ) : (
                               <button
                                 onClick={() => handleWardrobeEquip(item._id.toString(), item.category)}
