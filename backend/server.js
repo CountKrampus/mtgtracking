@@ -256,8 +256,6 @@ wishlistItemSchema.pre('save', function(next) {
 
 const WishlistItem = mongoose.model('WishlistItem', wishlistItemSchema);
 
-// ValueSnapshot and CardPriceSnapshot are loaded from ./models/ValueSnapshot and ./models/CardPriceSnapshot
-
 // Deck Value Snapshot Schema (for value history over time)
 const deckValueSnapshotSchema = new mongoose.Schema({
   deckId: { type: mongoose.Schema.Types.ObjectId, ref: 'Deck', required: true },
