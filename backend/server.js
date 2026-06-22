@@ -1471,6 +1471,9 @@ app.get('/api/stats/value-history', requireAuth, async (req, res) => {
     if (req.query.from && req.query.to) {
       from = new Date(req.query.from);
       to = new Date(req.query.to);
+      if (isNaN(from) || isNaN(to)) {
+        return res.status(400).json({ message: 'Invalid date format. Use YYYY-MM-DD.' });
+      }
       to.setHours(23, 59, 59, 999);
     } else {
       to = new Date();
@@ -1531,7 +1534,7 @@ app.get('/api/cards/:id/price-history', requireAuth, async (req, res) => {
     const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
 
-    const days = Math.min(parseInt(req.query.days) || 90, 365);
+    const days = Math.max(1, Math.min(parseInt(req.query.days) || 90, 365));
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
     const snapshots = await CardPriceSnapshot.find({

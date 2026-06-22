@@ -177,7 +177,7 @@ const Dashboard = ({
 
     fetch(`${API_URL}/stats/value-history`, { headers })
       .then(r => r.ok ? r.json() : [])
-      .then(data => setValueHistory(Array.isArray(data) ? data : []))
+      .then(data => setValueHistory(Array.isArray(data?.snapshots) ? data.snapshots : (Array.isArray(data) ? data : [])))
       .catch(() => setValueHistory([]));
 
     fetch(`${API_URL}/stats/price-changes`, { headers })
