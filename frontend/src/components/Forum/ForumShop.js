@@ -76,6 +76,12 @@ const UNLOCK_CATEGORIES = [
   'aboutMe', 'personalLinks',
 ];
 
+const POST_CATS = [
+  'titleColor', 'avatarBorder', 'flairIcon', 'postBackground', 'postFrame',
+  'threadHighlight', 'nameplateBackground', 'formatBadge', 'setSymbolFlair',
+];
+const PROFILE_CATS = ['profileBorderColor', 'profileBackground', 'profileBanner', 'profileTheme'];
+
 const RARITY_STYLES = {
   common: 'bg-slate-600 text-slate-200',
   uncommon: 'bg-green-700 text-green-100',
@@ -225,6 +231,13 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
     return acc;
   }, []);
 
+  const tabCounts = {
+    all: catalogItems.length,
+    post: catalogItems.filter(c => POST_CATS.includes(c.category)).length,
+    profile: catalogItems.filter(c => PROFILE_CATS.includes(c.category)).length,
+    unlocks: catalogItems.filter(c => UNLOCK_CATEGORIES.includes(c.category)).length,
+  };
+
   if (!isOpen || !user) return null;
 
   return (
@@ -238,9 +251,9 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
           </div>
           <div className="flex items-center gap-3">
             {userLevel && (
-              <div className="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-lg">
+              <div className="flex items-center gap-2 bg-amber-500/20 border border-amber-500/30 px-3 py-1.5 rounded-lg">
                 <Coins size={16} className="text-yellow-400" />
-                <span className="font-bold text-yellow-400">{coins.toLocaleString()}</span>
+                <span className="text-lg font-bold text-yellow-400">{coins.toLocaleString()}</span>
                 <span className="text-slate-400 text-sm">coins</span>
               </div>
             )}
@@ -269,6 +282,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
         <div className="flex gap-1 px-5 pt-4 flex-shrink-0">
           {GROUP_TABS.map(tab => {
             const Icon = tab.icon;
+            const count = tabCounts[tab.id] ?? 0;
             return (
               <button
                 key={tab.id}
@@ -280,7 +294,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
                 }`}
               >
                 <Icon size={14} />
-                {tab.label}
+                {tab.label} ({count})
               </button>
             );
           })}
@@ -310,7 +324,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
                 <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
                   {SUBCATEGORY_LABELS[category]}
                 </h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-2">
                   {items.map(item => {
                     const isOwned = purchased.includes(item.id);
                     const isEquipped = equipped[item.category] === item.id;
@@ -318,99 +332,116 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
                     const isLoading = loadingId === item.id;
                     const isUnlock = UNLOCK_CATEGORIES.includes(item.category);
 
+                    const borderClass = isEquipped
+                      ? 'border-green-500'
+                      : isOwned
+                        ? 'border-blue-500'
+                        : item.availableUntil
+                          ? 'border-amber-500'
+                          : !canAfford
+                            ? 'border-slate-700 opacity-60'
+                            : 'border-slate-700';
+
+                    const limitedCountdown = item.availableUntil ? (() => {
+                      const daysLeft = Math.ceil((new Date(item.availableUntil) - Date.now()) / (1000 * 60 * 60 * 24));
+                      return daysLeft > 0 ? `⏱ ${daysLeft}d left` : 'Expired';
+                    })() : null;
+
+                    const swatchEl = isUnlock ? (
+                      <div className="w-14 h-14 rounded-xl flex-shrink-0 bg-slate-700 flex items-center justify-center text-purple-400">
+                        {item.icon ? renderItemIcon(item.icon) : <Sparkles size={24} />}
+                      </div>
+                    ) : item.icon ? (
+                      <div className="w-14 h-14 rounded-xl flex-shrink-0 bg-slate-700/60 flex items-center justify-center text-white">
+                        {renderItemIcon(item.icon)}
+                      </div>
+                    ) : item.color === 'rainbow' ? (
+                      <div
+                        className="w-14 h-14 rounded-xl flex-shrink-0"
+                        style={{ background: 'linear-gradient(135deg, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff, #ff0088)' }}
+                      />
+                    ) : item.color ? (
+                      <div className="w-14 h-14 rounded-xl flex-shrink-0" style={{ backgroundColor: item.color }} />
+                    ) : (
+                      <div className="w-14 h-14 rounded-xl flex-shrink-0 bg-slate-700" />
+                    );
+
+                    const actionEl = isUnlock ? (
+                      isOwned ? (
+                        <div className="flex flex-col gap-1.5 items-end">
+                          <div className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-900 border border-blue-700 text-blue-200 text-sm font-medium">
+                            <Check size={14} /> Owned
+                          </div>
+                          {(item.category === 'memberTitle' || item.category === 'signature') && (
+                            <div className="text-xs text-slate-400 text-right">Set in your profile settings</div>
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handlePurchase(item)}
+                          disabled={!canAfford || isLoading}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${canAfford && !isLoading ? 'bg-purple-700 hover:bg-purple-600 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
+                        >
+                          {isLoading ? 'Purchasing...' : !canAfford ? 'Not enough coins' : 'Unlock'}
+                        </button>
+                      )
+                    ) : isEquipped ? (
+                      <div className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-800 border border-green-600 text-green-200 text-sm font-medium">
+                        <Check size={14} /> Equipped
+                      </div>
+                    ) : isOwned ? (
+                      <button
+                        onClick={() => handleEquip(item)}
+                        disabled={isLoading}
+                        className="px-3 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-600 text-white text-sm font-medium transition-colors disabled:opacity-60"
+                      >
+                        {isLoading ? 'Equipping...' : 'Equip'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handlePurchase(item)}
+                        disabled={!canAfford || isLoading}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${canAfford && !isLoading ? 'bg-purple-700 hover:bg-purple-600 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
+                      >
+                        {isLoading ? 'Purchasing...' : !canAfford ? 'Not enough coins' : 'Purchase'}
+                      </button>
+                    );
+
                     return (
                       <div
                         key={item.id}
-                        className={`p-4 rounded-lg border-2 bg-slate-900 flex flex-col gap-3 ${
-                          isEquipped ? 'border-green-600' : isOwned ? 'border-blue-700' : 'border-slate-700'
-                        }`}
+                        className={`flex items-center gap-4 p-4 rounded-xl border-2 bg-slate-900 transition-colors ${borderClass}`}
                       >
-                        {/* Swatch/icon + name row */}
-                        <div className="flex items-center gap-3">
-                          {isUnlock ? (
-                            <div className="rounded-full flex-shrink-0 bg-slate-700 flex items-center justify-center text-purple-400" style={{ width: 40, height: 40 }}>
-                              {item.icon ? renderItemIcon(item.icon) : <Sparkles size={20} />}
-                            </div>
-                          ) : item.icon ? (
-                            <div className="rounded-full flex-shrink-0 bg-slate-700/60 flex items-center justify-center text-white" style={{ width: 40, height: 40 }}>
-                              {renderItemIcon(item.icon)}
-                            </div>
-                          ) : item.color === 'rainbow' ? (
-                            <RainbowSwatch />
-                          ) : item.color ? (
-                            <div className="rounded-full flex-shrink-0" style={{ width: 40, height: 40, backgroundColor: item.color }} />
-                          ) : null}
-                          <div className="min-w-0">
-                            <div className="font-semibold text-white text-sm leading-tight">{item.name}</div>
-                            <div className="text-xs text-slate-400 mt-0.5 line-clamp-2">{item.description}</div>
-                          </div>
-                        </div>
+                        {/* Preview swatch — 56×56, rounded-xl */}
+                        {swatchEl}
 
-                        {/* Rarity + cost row */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${RARITY_STYLES[item.rarity] || RARITY_STYLES.common}`}>
+                        {/* Info — center */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                            <span className="text-white font-semibold text-sm">{item.name}</span>
+                            <span className={`text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0 capitalize ${RARITY_STYLES[item.rarity] || RARITY_STYLES.common}`}>
                               {item.rarity}
                             </span>
                             {item.availableUntil && (
-                              <span className="text-xs bg-amber-800/60 border border-amber-600/40 text-amber-300 px-1.5 py-0.5 rounded-full">
-                                Limited
-                              </span>
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-amber-900/50 text-amber-300 flex-shrink-0">LIMITED</span>
                             )}
-                            {item.availableUntil && (() => {
-                              const daysLeft = Math.ceil((new Date(item.availableUntil) - Date.now()) / (1000 * 60 * 60 * 24));
-                              return daysLeft <= 7 ? (
-                                <span className="text-xs text-amber-400">{daysLeft}d left</span>
-                              ) : null;
-                            })()}
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Coins size={13} className="text-yellow-400" />
-                            <span className="text-yellow-400 font-bold text-sm">{item.cost.toLocaleString()}</span>
-                          </div>
+                          <p className="text-slate-400 text-xs truncate">{item.description || item.category}</p>
+                          {limitedCountdown && (
+                            <p className="text-amber-400 text-xs mt-0.5">{limitedCountdown}</p>
+                          )}
                         </div>
 
-                        {/* Action button */}
-                        {isUnlock ? (
-                          isOwned ? (
-                            <div className="flex flex-col gap-1.5">
-                              <div className="flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-blue-900 border border-blue-700 text-blue-200 text-sm font-medium">
-                                <Check size={14} /> Owned
-                              </div>
-                              {(item.category === 'memberTitle' || item.category === 'signature') && (
-                                <div className="text-xs text-slate-400 text-center">Set in your profile settings</div>
-                              )}
+                        {/* Price + action — right */}
+                        <div className="flex-shrink-0 text-right flex flex-col items-end gap-1.5">
+                          {!isOwned && (
+                            <div className="flex items-center gap-1 justify-end">
+                              <Coins size={13} className="text-yellow-400" />
+                              <span className="text-yellow-400 font-bold text-sm">{item.cost.toLocaleString()}</span>
                             </div>
-                          ) : (
-                            <button
-                              onClick={() => handlePurchase(item)}
-                              disabled={!canAfford || isLoading}
-                              className={`py-1.5 rounded-lg text-sm font-medium transition-colors ${canAfford && !isLoading ? 'bg-purple-700 hover:bg-purple-600 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
-                            >
-                              {isLoading ? 'Purchasing...' : !canAfford ? 'Not enough coins' : 'Unlock'}
-                            </button>
-                          )
-                        ) : isEquipped ? (
-                          <div className="flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-green-800 border border-green-600 text-green-200 text-sm font-medium">
-                            <Check size={14} /> Equipped
-                          </div>
-                        ) : isOwned ? (
-                          <button
-                            onClick={() => handleEquip(item)}
-                            disabled={isLoading}
-                            className="py-1.5 rounded-lg bg-blue-700 hover:bg-blue-600 text-white text-sm font-medium transition-colors disabled:opacity-60"
-                          >
-                            {isLoading ? 'Equipping...' : 'Equip'}
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handlePurchase(item)}
-                            disabled={!canAfford || isLoading}
-                            className={`py-1.5 rounded-lg text-sm font-medium transition-colors ${canAfford && !isLoading ? 'bg-purple-700 hover:bg-purple-600 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
-                          >
-                            {isLoading ? 'Purchasing...' : !canAfford ? 'Not enough coins' : 'Purchase'}
-                          </button>
-                        )}
+                          )}
+                          {actionEl}
+                        </div>
                       </div>
                     );
                   })}
