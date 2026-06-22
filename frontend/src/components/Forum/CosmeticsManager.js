@@ -3,6 +3,7 @@ import { Plus, Edit2, Trash2, X } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { API_URL } from '../../config';
 import { useAuthContext } from '../../contexts/AuthContext';
+import ConfirmModal from '../shared/ConfirmModal';
 
 // ── Icon Picker ────────────────────────────────────────────────────────────────
 
@@ -304,6 +305,9 @@ export default function CosmeticsManager() {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
   const [formData, setFormData] = useState(defaultForm);
+  const [pendingDeleteCosmetic, setPendingDeleteCosmetic] = useState(null);
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
 
   useEffect(() => {
     fetchCosmetics();
@@ -336,6 +340,12 @@ export default function CosmeticsManager() {
   const showAnimationClass = BORDER_ANIMATION_CATEGORIES.includes(formData.category);
   const showCssProperties = CSS_GRADIENT_CATEGORIES.includes(formData.category);
   const showBannerOptions = BANNER_CATEGORIES.includes(formData.category);
+
+  const filteredCosmetics = cosmetics.filter(c => {
+    const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = !categoryFilter || c.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
   const handleCategoryChange = (e) => {
     const cat = e.target.value;
@@ -428,10 +438,17 @@ export default function CosmeticsManager() {
     setFormData(defaultForm);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this cosmetic? Users who have purchased it will lose access — their purchased count will show stale until cleaned up.')) return;
+  const handleDelete = (cosmetic) => {
+    setPendingDeleteCosmetic(cosmetic);
+  };
+
+  const confirmDeleteCosmetic = async () => {
+    const cosmetic = pendingDeleteCosmetic;
+    setPendingDeleteCosmetic(null);
+    if (!cosmetic) return;
+
     try {
-      const response = await authFetch(`${API_URL}/forum/admin/cosmetics/${id}`, { method: 'DELETE' });
+      const response = await authFetch(`${API_URL}/forum/admin/cosmetics/${cosmetic._id}`, { method: 'DELETE' });
       let data;
       try {
         data = await response.json();
@@ -453,7 +470,7 @@ export default function CosmeticsManager() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-bold text-white">Cosmetics Shop</h3>
+        <h3 className="text-lg font-bold text-white">Cosmetics Shop ({cosmetics.length})</h3>
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
@@ -463,6 +480,53 @@ export default function CosmeticsManager() {
           </button>
         )}
       </div>
+
+      {!showForm && (
+        <div className="flex gap-3 mb-4">
+          <input
+            type="text"
+            placeholder="Search cosmetics..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+          />
+          <select
+            value={categoryFilter}
+            onChange={e => setCategoryFilter(e.target.value)}
+            className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+          >
+            <option value="">All Categories</option>
+            <optgroup label="Post Appearance">
+              <option value="titleColor">Title Colors</option>
+              <option value="avatarBorder">Avatar Borders</option>
+              <option value="flairIcon">Flair Icons</option>
+              <option value="postBackground">Post Tints</option>
+              <option value="postFrame">Post Frames</option>
+              <option value="threadHighlight">Thread Highlight</option>
+              <option value="nameplateBackground">Nameplate Background</option>
+              <option value="formatBadge">Format Badges</option>
+              <option value="setSymbolFlair">Set Symbol Flair</option>
+            </optgroup>
+            <optgroup label="Forum Profile">
+              <option value="profileBorderColor">Profile Borders</option>
+              <option value="profileBackground">Profile Background</option>
+              <option value="profileBanner">Profile Banners</option>
+              <option value="profileTheme">Profile Themes</option>
+            </optgroup>
+            <optgroup label="Unlocks">
+              <option value="memberTitle">Member Title</option>
+              <option value="signature">Signature</option>
+              <option value="achievementShowcase">Achievement Showcase</option>
+              <option value="favoriteCardsShowcase">Card Showcase</option>
+              <option value="deckShowcase">Deck Showcase</option>
+              <option value="collectionStatsWidget">Stats Widget</option>
+              <option value="wishlistPreview">Wishlist Preview</option>
+              <option value="aboutMe">About Me</option>
+              <option value="personalLinks">Personal Links</option>
+            </optgroup>
+          </select>
+        </div>
+      )}
 
       {message && (
         <div className={`p-2 rounded text-sm ${message.type === 'success' ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
@@ -738,7 +802,7 @@ export default function CosmeticsManager() {
 
       {/* Cosmetics list */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {cosmetics.map(cosmetic => (
+        {filteredCosmetics.map(cosmetic => (
           <div key={cosmetic._id} className="bg-slate-800/50 p-3 rounded border border-slate-700 flex items-start justify-between">
             <div className="flex items-start gap-3 flex-1 min-w-0">
               {getPreview(cosmetic)}
@@ -769,7 +833,7 @@ export default function CosmeticsManager() {
                 <Edit2 size={16} />
               </button>
               <button
-                onClick={() => handleDelete(cosmetic._id)}
+                onClick={() => handleDelete(cosmetic)}
                 className="p-1 hover:bg-slate-700 rounded text-red-400"
                 title="Delete"
               >
@@ -780,10 +844,19 @@ export default function CosmeticsManager() {
         ))}
       </div>
 
-      {cosmetics.length === 0 && !showForm && (
+      {filteredCosmetics.length === 0 && !showForm && (
         <div className="text-center text-slate-400 py-8">
-          No cosmetics yet. Create your first one!
+          {cosmetics.length === 0 ? 'No cosmetics yet. Create your first one!' : 'No cosmetics match your search.'}
         </div>
+      )}
+
+      {pendingDeleteCosmetic && (
+        <ConfirmModal
+          title={`Delete "${pendingDeleteCosmetic.name}"?`}
+          message="Users who have purchased this cosmetic will lose access to it."
+          onConfirm={confirmDeleteCosmetic}
+          onCancel={() => setPendingDeleteCosmetic(null)}
+        />
       )}
     </div>
   );
