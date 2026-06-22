@@ -16,6 +16,7 @@ const { pipeline } = require('stream/promises');
 const { isMultiUserEnabled, verifyToken, requireAuth, requireEditor, checkMaintenanceMode } = require('./middleware/auth');
 const { buildUserQuery, getUserId } = require('./middleware/multiUser');
 const { activityLoggers } = require('./middleware/activityLogger');
+const { getPriceWithFallback } = require('./utils/pricing');
 const SystemSettings = require('./models/SystemSettings');
 const UserColumnPreferences = require('./models/UserColumnPreferences');
 const CardValueSnapshot = require('./models/CardValueSnapshot');
@@ -553,8 +554,6 @@ app.get('/api/scryfall/autocomplete', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
-const { getPriceWithFallback } = require('./utils/pricing');
 
 // Download and cache image from Scryfall, return local path or fallback to URL
 async function cacheCardImage(scryfallId, imageUrl) {

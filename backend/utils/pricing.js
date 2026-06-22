@@ -1,6 +1,13 @@
 const axios = require('axios');
 
+/**
+ * Fetch a card's price from Exor Games (primary) with Scryfall as fallback.
+ * @param {string} cardName - Card name to look up
+ * @param {boolean} isFoil - If true, uses Scryfall usd_foil price as backup
+ * @returns {{ cad: number, usd: number, source: string }}
+ */
 async function getPriceWithFallback(cardName, isFoil = false) {
+  // Try Exor Games first
   try {
     const searchUrl = `https://exorgames.com/a/search?type=product&q=${encodeURIComponent(cardName)}`;
     const response = await axios.get(searchUrl);
@@ -18,6 +25,7 @@ async function getPriceWithFallback(cardName, isFoil = false) {
     console.error('Exor Games price fetch failed:', error.message);
   }
 
+  // Fallback to Scryfall if Exor Games returns 0 or fails
   try {
     console.log('Falling back to Scryfall pricing for:', cardName);
     const response = await axios.get(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
@@ -31,6 +39,7 @@ async function getPriceWithFallback(cardName, isFoil = false) {
     console.error('Scryfall price fetch failed:', error.message);
   }
 
+  // If both fail, return 0
   return { cad: 0, usd: 0, source: 'None (not found)' };
 }
 
