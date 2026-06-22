@@ -108,8 +108,8 @@ async function runDailySnapshot() {
           createdAt: { $lt: todayStart }
         }).sort({ createdAt: -1 }).lean();
 
-        if (prevSnap && prevSnap.price <= targetPrice) {
-          // Price was already at or below target yesterday — not a new crossing
+        if (!prevSnap || prevSnap.price <= targetPrice) {
+          // No prior snapshot to confirm recovery, or price was already at or below target — not a new crossing
           continue;
         }
       }
