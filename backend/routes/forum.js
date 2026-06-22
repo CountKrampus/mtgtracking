@@ -673,10 +673,13 @@ router.post('/posts/:postId/upvote', verifyToken, requireAuth, async (req, res) 
     let awardedBestAnswer = false;
     const thread = await ForumThread.findById(post.threadId);
     if (thread && thread.isQA) {
-      const allPosts = await ForumPost.find({ threadId: thread._id })
-        .select('_id authorId upvotes').lean();
-      const topPost = allPosts.reduce((best, p) =>
-        p.upvotes.length > (best ? best.upvotes.length : 0) ? p : best, null);
+      const [topPost] = await ForumPost.aggregate([
+        { $match: { threadId: thread._id } },
+        { $addFields: { upvoteCount: { $size: '$upvotes' } } },
+        { $sort: { upvoteCount: -1 } },
+        { $limit: 1 },
+        { $project: { _id: 1, authorId: 1, upvotes: 1 } }
+      ]);
 
       const prevBestId = thread.bestAnswerPostId ? thread.bestAnswerPostId.toString() : null;
       const newBestId = topPost && topPost.upvotes.length >= 3 ? topPost._id.toString() : null;
