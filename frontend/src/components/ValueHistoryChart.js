@@ -24,7 +24,7 @@ export default function ValueHistoryChart() {
         headers: { Authorization: `Bearer ${localStorage.getItem('mtg_access_token')}` }
       });
       const { snapshots, earliest: e } = res.data;
-      if (e && !earliest) setEarliest(e);
+      if (e) setEarliest(prev => prev ?? e);
       const points = (snapshots || []).map(item => ({
         date: new Date(item.createdAt).toLocaleDateString(),
         value: item.value,
@@ -98,8 +98,9 @@ export default function ValueHistoryChart() {
 
       {/* Date range picker */}
       <div className="flex items-center gap-3 mb-4">
-        <label className="text-slate-400 text-sm">From</label>
+        <label htmlFor="vh-from" className="text-slate-400 text-sm">From</label>
         <input
+          id="vh-from"
           type="date"
           value={from}
           min={earliest || undefined}
@@ -107,8 +108,9 @@ export default function ValueHistoryChart() {
           onChange={e => setFrom(e.target.value)}
           className="px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
         />
-        <label className="text-slate-400 text-sm">To</label>
+        <label htmlFor="vh-to" className="text-slate-400 text-sm">To</label>
         <input
+          id="vh-to"
           type="date"
           value={to}
           min={from}
