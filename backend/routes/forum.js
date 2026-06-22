@@ -83,13 +83,10 @@ router.delete('/categories/:id', verifyToken, requireAuth, requireAdmin, async (
     const subcategories = await ForumCategory.find({ parentCategoryId: id }).lean();
     const categoryIds = [id, ...subcategories.map(s => s._id.toString())];
 
-    for (const catId of categoryIds) {
-      const threads = await ForumThread.find({ categoryId: catId });
-      for (const thread of threads) {
-        await ForumPost.deleteMany({ threadId: thread._id });
-      }
-      await ForumThread.deleteMany({ categoryId: catId });
-    }
+    const threads = await ForumThread.find({ categoryId: { $in: categoryIds } }).select('_id').lean();
+    const threadIds = threads.map(t => t._id);
+    await ForumPost.deleteMany({ threadId: { $in: threadIds } });
+    await ForumThread.deleteMany({ categoryId: { $in: categoryIds } });
 
     await ForumCategory.deleteMany({ parentCategoryId: id });
     await ForumCategory.findByIdAndDelete(id);
