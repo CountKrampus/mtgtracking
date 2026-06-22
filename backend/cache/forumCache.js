@@ -1,5 +1,6 @@
 const NodeCache = require('node-cache');
 
+// useClones: false avoids deep-copy overhead — callers must not mutate returned values
 const cache = new NodeCache({ useClones: false });
 
 module.exports = {
