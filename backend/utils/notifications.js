@@ -143,10 +143,37 @@ async function createUpvoteNotification(postAuthorId, fromUserId, postId, conten
   });
 }
 
+/**
+ * Create a price alert notification (system-generated, no fromUserId required)
+ *
+ * @param {string|ObjectId} userId - User who set the alert
+ * @param {string|ObjectId} cardId - Card that triggered the alert
+ * @param {string} cardName - Card name for display
+ * @param {number} targetPrice - The alert target price
+ * @param {number} actualPrice - The current price that triggered the alert
+ * @returns {object} Created notification or null on error
+ */
+async function createPriceAlertNotification(userId, cardId, cardName, targetPrice, actualPrice) {
+  try {
+    const content = `${cardName} dropped to $${actualPrice.toFixed(2)} (target: $${targetPrice.toFixed(2)})`;
+    const notification = await Notification.create({
+      userId,
+      type: 'price_alert',
+      cardId,
+      content: content.substring(0, 200)
+    });
+    return notification;
+  } catch (error) {
+    console.error('Error creating price alert notification:', error);
+    return null;
+  }
+}
+
 module.exports = {
   extractMentions,
   createNotification,
   createMentionNotifications,
   createReplyNotification,
-  createUpvoteNotification
+  createUpvoteNotification,
+  createPriceAlertNotification
 };

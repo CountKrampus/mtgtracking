@@ -181,7 +181,8 @@ const cardSchema = new mongoose.Schema({
   sellValue: { type: Number, default: 0 },
   priceAlert: {
     targetPrice: Number,
-    emailNotification: { type: Boolean, default: false }
+    emailNotification: { type: Boolean, default: false },
+    lastAlertFiredAt: { type: Date, default: null }
   },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

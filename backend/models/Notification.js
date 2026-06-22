@@ -9,13 +9,15 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['mention', 'reply', 'upvote', 'dm'],
+    enum: ['mention', 'reply', 'upvote', 'dm', 'price_alert'],
     required: [true, 'Notification type is required']
   },
   fromUserId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: [true, 'From User ID is required']
+    required: function() {
+      return this.type !== 'price_alert';
+    }
   },
   threadId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -28,6 +30,10 @@ const notificationSchema = new mongoose.Schema({
   messageId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'DirectMessage'
+  },
+  cardId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Card'
   },
   content: {
     type: String,
@@ -50,11 +56,9 @@ const notificationSchema = new mongoose.Schema({
   }
 });
 
-// Compound indexes for common queries
 notificationSchema.index({ userId: 1, isRead: 1 });
 notificationSchema.index({ userId: 1, createdAt: -1 });
 
-// Pre-save middleware: update readAt when isRead changes
 notificationSchema.pre('save', function(next) {
   if (this.isModified('isRead')) {
     if (this.isRead && !this.readAt) {
