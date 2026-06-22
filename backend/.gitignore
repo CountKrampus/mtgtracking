@@ -7,7 +7,7 @@ node_modules/
 .env.cloud
 
 # Image cache (too large for git)
-cache/
+cached-images/
 
 # User avatars (uploaded files)
 user-avatars/
