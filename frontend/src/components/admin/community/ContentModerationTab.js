@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { RefreshCw, Trash2, AlertTriangle, MessageSquare, Layers } from 'lucide-react';
+import { RefreshCw, Trash2, AlertTriangle, MessageSquare, Layers, Mail, ShieldAlert } from 'lucide-react';
 import { useAuthContext } from '../../../contexts/AuthContext';
 import { API_URL } from '../../../config';
+import ConfirmModal from '../../shared/ConfirmModal';
 
 // --- Module-scope helpers (never define inside render — causes DOM remount on every keystroke) ---
 
@@ -13,10 +14,11 @@ function LoadingSpinner() {
   );
 }
 
-function EmptyState({ message }) {
+function EmptyState({ message, icon: Icon }) {
   return (
-    <div className="flex items-center justify-center py-16 text-gray-400 text-sm">
-      {message}
+    <div className="flex flex-col items-center justify-center py-16 text-gray-400 text-sm gap-3">
+      {Icon && <Icon size={28} className="text-gray-600" />}
+      <span>{message}</span>
     </div>
   );
 }
@@ -63,6 +65,37 @@ function formatDate(dateStr) {
 function truncate(text, maxLen) {
   if (!text) return '—';
   return text.length > maxLen ? text.slice(0, maxLen) + '…' : text;
+}
+
+function formatRelative(dateStr) {
+  if (!dateStr) return '—';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+const AVATAR_COLORS = [
+  'bg-purple-600', 'bg-blue-600', 'bg-green-600',
+  'bg-pink-600',  'bg-amber-600', 'bg-red-600',
+];
+
+function AuthorCell({ author }) {
+  const name = author?.username || author?.displayName || '?';
+  const initial = name[0].toUpperCase();
+  const colorClass = AVATAR_COLORS[initial.charCodeAt(0) % AVATAR_COLORS.length];
+  return (
+    <div className="flex items-center gap-2">
+      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${colorClass}`}>
+        {initial}
+      </div>
+      <span className="text-sm text-gray-300 truncate">{name}</span>
+    </div>
+  );
 }
 
 // --- Flagged Content Tab ---
@@ -144,7 +177,7 @@ function FlaggedContentTab({ authFetch }) {
         {fallbackLoading ? (
           <LoadingSpinner />
         ) : fallbackPosts.length === 0 ? (
-          <EmptyState message="No recent posts found." />
+          <EmptyState icon={ShieldAlert} message="No recent posts found." />
         ) : (
           <div className="bg-gray-700/50 rounded-lg overflow-hidden">
             <table className="w-full">
@@ -182,7 +215,7 @@ function FlaggedContentTab({ authFetch }) {
   }
 
   if (flaggedItems.length === 0) {
-    return <EmptyState message="No flagged content found." />;
+    return <EmptyState icon={ShieldAlert} message="No flagged content." />;
   }
 
   return (
@@ -229,6 +262,8 @@ function RecentPostsTab({ authFetch }) {
   const [deleting, setDeleting] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [pendingDeletePost, setPendingDeletePost] = useState(null);
+  const [pendingBulkDelete, setPendingBulkDelete] = useState(false);
   const timerRef = useRef(null);
 
   const fetchPosts = useCallback(async () => {
@@ -267,12 +302,14 @@ function RecentPostsTab({ authFetch }) {
     timerRef.current = setTimeout(() => setSuccessMsg(null), 3000);
   }, []);
 
-  const handleDelete = async (post) => {
-    const preview = truncate(post.content || post.body, 60);
-    const confirmed = window.confirm(
-      `Delete this post by ${post.author?.username || 'unknown'}?\n\n"${preview}"\n\nThis action cannot be undone.`
-    );
-    if (!confirmed) return;
+  const handleDelete = (post) => {
+    setPendingDeletePost(post);
+  };
+
+  const confirmDeletePost = async () => {
+    const post = pendingDeletePost;
+    setPendingDeletePost(null);
+    if (!post) return;
 
     setDeletingId(post._id);
     try {
@@ -296,12 +333,15 @@ function RecentPostsTab({ authFetch }) {
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
+    if (selected.size === 0) return;
+    setPendingBulkDelete(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    setPendingBulkDelete(false);
     const count = selected.size;
     if (count === 0) return;
-
-    const confirmed = window.confirm(`Delete ${count} selected post${count > 1 ? 's' : ''}? This action cannot be undone.`);
-    if (!confirmed) return;
 
     setDeleting(true);
     let deletedCount = 0;
@@ -341,7 +381,7 @@ function RecentPostsTab({ authFetch }) {
 
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorState message={error} onRetry={fetchPosts} />;
-  if (posts.length === 0) return <EmptyState message="No posts found." />;
+  if (posts.length === 0) return <EmptyState icon={Mail} message="No posts yet." />;
 
   const allSelected = selected.size === posts.length && posts.length > 0;
 
@@ -400,8 +440,8 @@ function RecentPostsTab({ authFetch }) {
                     className="accent-purple-500 w-4 h-4 cursor-pointer"
                   />
                 </td>
-                <td className="px-4 py-3 text-white text-sm">
-                  {post.author?.username || post.author?.displayName || '—'}
+                <td className="px-4 py-3">
+                  <AuthorCell author={post.author} />
                 </td>
                 <td className="px-4 py-3 text-gray-300 text-sm max-w-xs">
                   <span title={post.content || post.body}>
@@ -429,6 +469,23 @@ function RecentPostsTab({ authFetch }) {
           </tbody>
         </table>
       </div>
+
+      {pendingDeletePost && (
+        <ConfirmModal
+          title="Delete post?"
+          message={`By ${pendingDeletePost.author?.username || 'unknown'} · "${truncate(pendingDeletePost.content || pendingDeletePost.body, 60)}"`}
+          onConfirm={confirmDeletePost}
+          onCancel={() => setPendingDeletePost(null)}
+        />
+      )}
+      {pendingBulkDelete && (
+        <ConfirmModal
+          title={`Delete ${selected.size} post${selected.size !== 1 ? 's' : ''}?`}
+          message="This will permanently remove the selected posts."
+          onConfirm={confirmBulkDelete}
+          onCancel={() => setPendingBulkDelete(false)}
+        />
+      )}
     </div>
   );
 }
@@ -439,13 +496,18 @@ function RecentThreadsTab({ authFetch }) {
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selected, setSelected] = useState(new Set());
+  const [deleting, setDeleting] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [pendingDeleteThread, setPendingDeleteThread] = useState(null);
+  const [pendingBulkDelete, setPendingBulkDelete] = useState(false);
   const timerRef = useRef(null);
 
   const fetchThreads = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setSelected(new Set());
     try {
       const res = await authFetch(`${API_URL}/forum/threads?limit=50&sort=new`);
       if (res.status === 404) {
@@ -478,17 +540,25 @@ function RecentThreadsTab({ authFetch }) {
     timerRef.current = setTimeout(() => setSuccessMsg(null), 3000);
   }, []);
 
-  const handleDelete = async (thread) => {
-    const confirmed = window.confirm(
-      `Delete thread "${thread.title || 'Untitled'}" by ${thread.author?.username || 'unknown'}?\n\nThis will also delete all replies. This action cannot be undone.`
-    );
-    if (!confirmed) return;
+  const handleDelete = (thread) => {
+    setPendingDeleteThread(thread);
+  };
+
+  const confirmDeleteThread = async () => {
+    const thread = pendingDeleteThread;
+    setPendingDeleteThread(null);
+    if (!thread) return;
 
     setDeletingId(thread._id);
     try {
       const res = await authFetch(`${API_URL}/admin/forum-threads/${thread._id}`, { method: 'DELETE' });
       if (res.ok) {
         setThreads((prev) => prev.filter((t) => t._id !== thread._id));
+        setSelected((prev) => {
+          const next = new Set(prev);
+          next.delete(thread._id);
+          return next;
+        });
         showSuccess('Thread deleted.');
       } else {
         const data = await res.json().catch(() => ({}));
@@ -501,15 +571,61 @@ function RecentThreadsTab({ authFetch }) {
     }
   };
 
+  const handleBulkDelete = () => {
+    if (selected.size === 0) return;
+    setPendingBulkDelete(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    setPendingBulkDelete(false);
+    const count = selected.size;
+    if (count === 0) return;
+
+    setDeleting(true);
+    let deletedCount = 0;
+    const ids = new Set(Array.from(selected));
+
+    for (const id of ids) {
+      try {
+        const res = await authFetch(`${API_URL}/admin/forum-threads/${id}`, { method: 'DELETE' });
+        if (res.ok) deletedCount++;
+      } catch {
+        // continue with remaining
+      }
+    }
+
+    setThreads((prev) => prev.filter((t) => !ids.has(t._id)));
+    setSelected(new Set());
+    setDeleting(false);
+    showSuccess(`Deleted ${deletedCount} thread${deletedCount !== 1 ? 's' : ''}.`);
+  };
+
+  const toggleSelect = (id) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selected.size === threads.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(threads.map((t) => t._id)));
+    }
+  };
+
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorState message={error} onRetry={fetchThreads} />;
-  if (threads.length === 0) return <EmptyState message="No threads found." />;
+  if (threads.length === 0) return <EmptyState icon={MessageSquare} message="No threads yet." />;
 
   return (
     <div className="space-y-3">
       {successMsg && <SuccessMessage message={successMsg} />}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <button
           onClick={fetchThreads}
           className="flex items-center gap-1 text-purple-400 hover:text-purple-300 text-sm transition-colors"
@@ -518,12 +634,30 @@ function RecentThreadsTab({ authFetch }) {
           Refresh
         </button>
         <span className="text-gray-400 text-sm">{threads.length} threads</span>
+        {selected.size > 0 && (
+          <button
+            onClick={handleBulkDelete}
+            disabled={deleting}
+            className="flex items-center gap-1.5 px-3 py-1 bg-red-700/40 hover:bg-red-700/60 text-red-300 text-sm rounded-lg transition-colors disabled:opacity-50"
+          >
+            <Trash2 size={14} />
+            {deleting ? 'Deleting…' : `Delete Selected (${selected.size})`}
+          </button>
+        )}
       </div>
 
       <div className="bg-gray-700/50 rounded-lg overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-700">
             <tr>
+              <th className="px-4 py-3 w-10">
+                <input
+                  type="checkbox"
+                  checked={selected.size === threads.length && threads.length > 0}
+                  onChange={toggleSelectAll}
+                  className="rounded border-gray-500"
+                />
+              </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Title</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Author</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Replies</th>
@@ -533,18 +667,29 @@ function RecentThreadsTab({ authFetch }) {
           </thead>
           <tbody className="divide-y divide-gray-600">
             {threads.map((thread, idx) => (
-              <tr key={thread._id || idx} className="hover:bg-gray-700/50 transition-colors">
+              <tr key={thread._id || idx} className={`hover:bg-gray-700/50 transition-colors ${selected.has(thread._id) ? 'bg-purple-900/20' : ''}`}>
+                <td className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selected.has(thread._id)}
+                    onChange={() => toggleSelect(thread._id)}
+                    className="rounded border-gray-500"
+                  />
+                </td>
                 <td className="px-4 py-3 text-white text-sm font-medium">
                   {thread.title || '(Untitled)'}
                 </td>
-                <td className="px-4 py-3 text-gray-300 text-sm">
-                  {thread.author?.username || thread.author?.displayName || '—'}
+                <td className="px-4 py-3">
+                  <AuthorCell author={thread.author} />
                 </td>
                 <td className="px-4 py-3 text-gray-400 text-sm">
                   {thread.replyCount ?? thread.postCount ?? '—'}
                 </td>
-                <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">
-                  {formatDate(thread.createdAt)}
+                <td
+                  className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap"
+                  title={formatDate(thread.createdAt)}
+                >
+                  {formatRelative(thread.createdAt)}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <button
@@ -561,6 +706,23 @@ function RecentThreadsTab({ authFetch }) {
           </tbody>
         </table>
       </div>
+
+      {pendingDeleteThread && (
+        <ConfirmModal
+          title="Delete thread?"
+          message={`"${pendingDeleteThread.title || 'Untitled'}" by ${pendingDeleteThread.author?.username || 'unknown'} · All replies will also be deleted.`}
+          onConfirm={confirmDeleteThread}
+          onCancel={() => setPendingDeleteThread(null)}
+        />
+      )}
+      {pendingBulkDelete && (
+        <ConfirmModal
+          title={`Delete ${selected.size} thread${selected.size !== 1 ? 's' : ''}?`}
+          message="All replies in these threads will also be permanently deleted."
+          onConfirm={confirmBulkDelete}
+          onCancel={() => setPendingBulkDelete(false)}
+        />
+      )}
     </div>
   );
 }
