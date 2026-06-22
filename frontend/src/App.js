@@ -42,6 +42,7 @@ import SharedDeckView from './components/CommunityDecks/SharedDeckView';
 import CommunityDecks from './components/CommunityDecks/CommunityDecks';
 import { API_URL } from './config';
 import NotificationBell from './components/NotificationBell';
+import CardDetailPanel from './components/CardDetailPanel';
 import DMPreview from './components/DMPreview';
 import UserMenu from './components/UserMenu';
 import MessagesPage from './components/MessagesPage';
@@ -287,6 +288,52 @@ function DeckFoldersTab() {
   );
 }
 
+function SparklinePopup({ sparkline }) {
+  if (!sparkline || sparkline.history.length < 2) return null;
+
+  const w = 200, h = 80, pad = 8;
+  const prices = sparkline.history.map(p => p.price);
+  const maxP = Math.max(...prices);
+  const minP = Math.min(...prices);
+  const range = maxP - minP || 1;
+  const xStep = (w - pad * 2) / (prices.length - 1);
+  const pt = (i, p) => ({
+    x: pad + i * xStep,
+    y: h - pad - ((p - minP) / range) * (h - pad * 2)
+  });
+  const linePath = prices.map((p, i) => {
+    const { x, y } = pt(i, p);
+    return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+  }).join(' ');
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: sparkline.pos.top - 100,
+        left: sparkline.pos.left - 100,
+        zIndex: 9999,
+        width: 200,
+        pointerEvents: 'none'
+      }}
+      className="bg-slate-800 border border-slate-600 rounded-lg shadow-xl p-2"
+    >
+      <div className="text-xs text-slate-400 mb-1 truncate">{sparkline.cardName} · 30d</div>
+      <svg viewBox={`0 0 ${w} ${h}`} className="w-full">
+        <path d={linePath} fill="none" stroke="#8b5cf6" strokeWidth="1.5" />
+        {prices.map((p, i) => {
+          const { x, y } = pt(i, p);
+          return <circle key={i} cx={x} cy={y} r="2" fill="#a78bfa" />;
+        })}
+      </svg>
+      <div className="flex justify-between text-xs text-slate-500 mt-1">
+        <span>${minP.toFixed(2)}</span>
+        <span>${maxP.toFixed(2)}</span>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   // Auth context - available when wrapped with AuthProvider
   const authContext = useAuthContext();
@@ -439,6 +486,11 @@ function App() {
   const [forceUpdate, setForceUpdate] = useState(false); // Force update cards even if they have data
   const [updateFullData, setUpdateFullData] = useState(false); // Update full card data (set, rarity, etc.)
   const [showPriceUpdateModal, setShowPriceUpdateModal] = useState(false);
+
+  // Card detail panel and sparkline
+  const [detailCard, setDetailCard] = useState(null);
+  const [sparkline, setSparkline] = useState(null);
+  const sparklineTimerRef = React.useRef(null);
 
   // QR Labels
   const [showQRPreview, setShowQRPreview] = useState(false);
@@ -750,6 +802,30 @@ function App() {
       console.error('Error saving card:', error);
       alert('Error saving card');
     }
+  };
+
+  const handlePriceCellEnter = (e, card) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    clearTimeout(sparklineTimerRef.current);
+    sparklineTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await axios.get(`${API_URL}/cards/${card._id}/price-history?days=30`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('mtg_access_token')}` }
+        });
+        const pts = (res.data || []).map(p => ({ price: p.price, date: p.date || p.createdAt }));
+        setSparkline({
+          cardId: card._id,
+          cardName: card.name,
+          pos: { top: rect.top - 10, left: rect.left + rect.width / 2 },
+          history: pts
+        });
+      } catch {}
+    }, 300);
+  };
+
+  const handlePriceCellLeave = () => {
+    clearTimeout(sparklineTimerRef.current);
+    setSparkline(null);
   };
 
   const handleEdit = (card) => {
@@ -3505,7 +3581,10 @@ function App() {
                   </tr>
                 ) : (
                   paginatedCards.map(card => (
-                    <tr key={card._id} className={`hover:bg-white/5 transition ${selectedCards.has(card._id) ? 'bg-purple-900/30' : ''}`}>
+                    <tr key={card._id} onClick={e => {
+                        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('a')) return;
+                        setDetailCard(card);
+                      }} className={`hover:bg-white/5 transition cursor-pointer ${selectedCards.has(card._id) ? 'bg-purple-900/30' : ''}`}>
                       <td className="px-3 py-4 text-center">
                         <button
                           onClick={() => toggleCardSelection(card._id)}
@@ -3633,7 +3712,11 @@ function App() {
                           {card.condition}
                         </span>
                       </td>}
-                      {isColumnVisible('price') && <td className="px-6 py-4 text-white/80">{formatPrice(card.price)}</td>}
+                      {isColumnVisible('price') && <td
+                        onMouseEnter={e => handlePriceCellEnter(e, card)}
+                        onMouseLeave={handlePriceCellLeave}
+                        className="px-6 py-4 text-white/80"
+                      >{formatPrice(card.price)}</td>}
                       {isColumnVisible('buylistValue') && <td className="px-6 py-4 text-white">${(card.buylistValue || 0).toFixed(2)}</td>}
                       {isColumnVisible('sellValue') && <td className="px-6 py-4 text-white">${(card.sellValue || 0).toFixed(2)}</td>}
                       {isColumnVisible('total') && <td className="px-6 py-4 text-white font-semibold">
@@ -5681,6 +5764,14 @@ function App() {
           isOpen={showForumShop}
           onClose={() => setShowForumShop(false)}
           onEquip={() => setCosmeticVersion(v => v + 1)}
+        />
+      )}
+
+      {sparkline && <SparklinePopup sparkline={sparkline} />}
+      {detailCard && (
+        <CardDetailPanel
+          card={detailCard}
+          onClose={() => setDetailCard(null)}
         />
       )}
 
