@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as LucideIcons from 'lucide-react';
 import { API_URL } from '../../../config';
+import ConfirmModal from '../../shared/ConfirmModal';
 
 // ─── Curated icon lists (module scope) ──────────────────────────────────────
 
@@ -192,14 +193,16 @@ function BadgesTab() {
   const [form, setForm] = useState({ name: '', description: '', icon: '' });
   const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [pendingDeleteBadge, setPendingDeleteBadge] = useState(null);
+  const [search, setSearch] = useState('');
 
   const token = localStorage.getItem('mtg_access_token');
   const authHeaders = { Authorization: `Bearer ${token}` };
 
-  // Fetch badges on mount
+  // Fetch badges on mount and sync icons into existing user badge entries
   useEffect(() => {
     fetchBadges();
+    fetch(`${API_URL}/admin/badges/sync-icons`, { method: 'POST', headers: authHeaders }).catch(() => {});
   }, []);
 
   async function fetchBadges() {
@@ -279,18 +282,22 @@ function BadgesTab() {
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setBadges(prev => prev.filter(b => b._id !== id));
-      setDeleteConfirm(null);
+      setPendingDeleteBadge(null);
     } catch (err) {
       setError(err.message);
     }
   }
+
+  const filteredBadges = badges.filter(b =>
+    b.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-white">Badges</h2>
+          <h2 className="text-xl font-bold text-white">Badges ({badges.length})</h2>
           <p className="text-sm text-gray-400 mt-1">Manage badge definitions awarded to users</p>
         </div>
         {!showForm && (
@@ -411,8 +418,27 @@ function BadgesTab() {
           No badges defined yet. Create one to get started.
         </div>
       ) : (
-        <div className="space-y-2">
-          {badges.map(badge => (
+        <>
+          {badges.length > 0 && (
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search badges..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+          )}
+
+          {filteredBadges.length === 0 && search && (
+            <div className="text-center text-gray-400 text-sm py-8">
+              No badges match "{search}"
+            </div>
+          )}
+
+          <div className="space-y-2">
+            {filteredBadges.map(badge => (
             <div
               key={badge._id}
               className="flex items-center gap-4 p-3 bg-gray-700/50 border border-gray-600/50 rounded-lg"
@@ -434,42 +460,32 @@ function BadgesTab() {
 
               {/* Actions */}
               <div className="flex items-center gap-2 flex-shrink-0">
-                {deleteConfirm === badge._id ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-red-400">Delete "{badge.name}"?</span>
-                    <button
-                      onClick={() => handleDelete(badge._id)}
-                      className="px-2 py-1 bg-red-700 hover:bg-red-600 text-white text-xs rounded transition"
-                    >
-                      Confirm
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(null)}
-                      className="px-2 py-1 bg-gray-600 hover:bg-gray-500 text-white text-xs rounded transition"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => openEdit(badge)}
-                      className="px-3 py-1 bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 text-xs rounded-lg transition"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(badge._id)}
-                      className="px-3 py-1 bg-red-600/30 hover:bg-red-600/50 text-red-300 text-xs rounded-lg transition"
-                    >
-                      Delete
-                    </button>
-                  </>
-                )}
+                <button
+                  onClick={() => openEdit(badge)}
+                  className="px-3 py-1 bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 text-xs rounded-lg transition"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => setPendingDeleteBadge(badge)}
+                  className="px-3 py-1 bg-red-600/30 hover:bg-red-600/50 text-red-300 text-xs rounded-lg transition"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        </>
+      )}
+
+      {pendingDeleteBadge && (
+        <ConfirmModal
+          title={`Delete "${pendingDeleteBadge.name}"?`}
+          message="This badge will be permanently removed."
+          onConfirm={() => handleDelete(pendingDeleteBadge._id)}
+          onCancel={() => setPendingDeleteBadge(null)}
+        />
       )}
     </div>
   );
