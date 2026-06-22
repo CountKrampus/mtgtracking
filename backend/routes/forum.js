@@ -105,11 +105,20 @@ router.get('/categories', async (req, res) => {
       .sort({ displayOrder: 1 })
       .lean();
 
-    const withChildren = await Promise.all(categories.map(async (cat) => {
-      const children = await ForumCategory.find({ parentCategoryId: cat._id, isActive: true })
-        .sort({ displayOrder: 1 })
-        .lean();
-      return { ...cat, children };
+    const categoryIds = categories.map(c => c._id);
+    const children = await ForumCategory.find({
+      parentCategoryId: { $in: categoryIds }, isActive: true
+    }).sort({ displayOrder: 1 }).lean();
+
+    const childrenByParent = children.reduce((acc, c) => {
+      const key = c.parentCategoryId.toString();
+      (acc[key] = acc[key] || []).push(c);
+      return acc;
+    }, {});
+
+    const withChildren = categories.map(c => ({
+      ...c,
+      children: childrenByParent[c._id.toString()] || []
     }));
 
     res.json(withChildren);
