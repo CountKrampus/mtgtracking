@@ -352,6 +352,127 @@ const ComboTutorials = () => {
         'Ad Nauseam variant draws into the whole deck mid-game'
       ],
       notes: 'ANT (Ad Nauseam Tendrils) and TES (The EPIC Storm) are the two main Legacy storm decks. Storm count needs to reach 9 to deal 20 damage with one Tendrils (2 × 10 copies = 20). One of the most skill-intensive decks in Magic.'
+    },
+    {
+      id: 16,
+      name: 'Flash + Protean Hulk',
+      cards: ['Flash', 'Protean Hulk'],
+      description: 'Put Protean Hulk into play for free via Flash, then sacrifice it to fetch any winning creature package',
+      format: 'Legacy',
+      difficulty: 'Expert',
+      prerequisites: ['Flash in hand', 'Protean Hulk in hand', '1U available', 'A winning creature package in library'],
+      steps: [
+        'Cast Flash (1U), targeting Protean Hulk in your hand',
+        'Hulk enters the battlefield via Flash\'s effect',
+        'Choose NOT to pay Protean Hulk\'s mana cost (5GG = 7 mana)',
+        'Flash\'s clause triggers: since you didn\'t pay, Hulk is sacrificed',
+        'Protean Hulk\'s death trigger fires: search your library for creatures with total mana value ≤ 6',
+        'Classic winning package: Viscera Seer (1) + Body Double (5) = 6 total',
+        'Body Double enters as a copy of Protean Hulk. Sacrifice it to Viscera Seer.',
+        'Second Hulk trigger: fetch the final win package (e.g., Thassa\'s Oracle + Nomads en-Kor + Cephalid Illusionist = 5)',
+        'Mill your library with the Nomads/Illusionist loop, then resolve Thassa\'s Oracle to win'
+      ],
+      variations: [
+        'Thassa\'s Oracle + Thought Scour can be the final package in some piles',
+        'In Commander, Hulk is often fetched via other sacrifice outlets for repeated use',
+        'Mikaeus, the Unhallowed + Walking Ballista = 5 total is another winning package'
+      ],
+      notes: 'Flash was banned in Legacy (and Commander) specifically because of this combo — a 1U instant assembling a turn-1 win. Both Flash and Protean Hulk are banned in Legacy. The combo remains relevant in older formats and discussions of ban history.'
+    },
+    {
+      id: 17,
+      name: 'Deadeye Navigator + Palinchron',
+      cards: ['Deadeye Navigator', 'Palinchron'],
+      description: 'Generate infinite mana by blinking Palinchron repeatedly to untap lands each time it enters',
+      format: 'Commander',
+      difficulty: 'Intermediate',
+      prerequisites: ['Deadeye Navigator in play soulbonded to Palinchron', 'At least 7 lands in play producing 9+ total mana'],
+      steps: [
+        'Soulbond Deadeye Navigator (5UU) and Palinchron (5UU) — they pair when either enters',
+        'Tap your lands for mana (need at least 9 mana sources from 7+ lands)',
+        'Pay 2U to activate Deadeye Navigator\'s soulbond ability: exile and return Palinchron',
+        'Palinchron re-enters the battlefield and untaps up to 7 lands',
+        'Your lands now produce more mana than you spent (net positive each loop)',
+        'Repeat for infinite mana of whatever colors your lands produce',
+        'Spend infinite mana on a win condition (Blue Sun\'s Zenith, Exsanguinate, etc.)'
+      ],
+      variations: [
+        'Peregrine Drake (5 mana, untaps 5 lands) works similarly with enough ramp',
+        'Great Whale is a budget-friendly Palinchron substitute (same effect)',
+        'Phantasmal Image can copy Palinchron while bonded to Deadeye for a 3-card version'
+      ],
+      notes: 'Requires lands producing 9+ total mana (2U for Deadeye activation, and the lands untapped by Palinchron must produce more than was spent). With 7 basic Islands, you produce 7 and spend 2U (3), netting 4 each cycle. A Commander staple in blue-heavy decks.'
+    },
+    {
+      id: 18,
+      name: 'The Gitrog Monster + Dakmor Salvage',
+      cards: ['The Gitrog Monster', 'Dakmor Salvage', 'Discard outlet (e.g., Putrid Imp)'],
+      description: 'Draw your entire library by repeatedly dredging Dakmor Salvage and triggering Gitrog Monster',
+      format: 'Commander',
+      difficulty: 'Expert',
+      prerequisites: ['The Gitrog Monster in play', 'Dakmor Salvage in hand', 'Any discard outlet in play', 'A win condition (Thassa\'s Oracle or Laboratory Maniac)'],
+      steps: [
+        'Activate your discard outlet (e.g., Putrid Imp) to discard Dakmor Salvage',
+        'Dakmor Salvage hits the graveyard — Gitrog Monster triggers "draw a card"',
+        'Instead of drawing, use Dakmor Salvage\'s Dredge 2 ability: mill 2 cards and return Salvage to hand',
+        'If either milled card is a land, Gitrog Monster triggers again: draw (or dredge) again',
+        'Discard Dakmor Salvage again to the discard outlet; repeat',
+        'Each pass mills 2 cards and draws 1 (net: slowly consume your library)',
+        'Continue until you\'ve drawn into your entire library',
+        'Win with Thassa\'s Oracle (draw trigger with empty library) or Laboratory Maniac'
+      ],
+      variations: [
+        'Nath of the Gilt-Leaf as commander lets you discard for value while assembling the combo',
+        'Kozilek, Butcher of Truth in the library prevents decking — shuffle on death',
+        'Once you have infinite draw loops, Exsanguinate or a large Walking Ballista wins'
+      ],
+      notes: 'The interaction is complex: Gitrog\'s draw trigger goes on the stack when a land hits the graveyard, and you can replace each draw with a dredge. The loop eventually draws your whole library. This is one of Commander\'s most intricate one-card-plus-outlet combos. Frequently paired with the Golgari commanders.'
+    },
+    {
+      id: 19,
+      name: 'Doomsday',
+      cards: ['Doomsday', 'Thassa\'s Oracle', 'Brainstorm or cycler'],
+      description: 'Search for a winning 5-card pile and draw through it to win immediately',
+      format: 'Legacy',
+      difficulty: 'Expert',
+      prerequisites: ['Doomsday in hand (BBB)', 'A draw spell available', 'Understanding of pile construction', 'Graveyard and exile not shut down'],
+      steps: [
+        'Cast Doomsday (BBB): you go to 1 or 2 life; search library + graveyard for 5 cards',
+        'Build your winning pile on top of your library in this order:',
+        'Classic pile (needing a draw after Doomsday): [Thassa\'s Oracle, Ponder, Brainstorm, Lotus Petal, Edge of Autumn]',
+        'Draw the top card (Thassa\'s Oracle) using your prepared draw spell',
+        'Thassa\'s Oracle enters; its trigger resolves — you look at 0 remaining cards in library, win'
+      ],
+      variations: [
+        'With a draw effect already in hand, you can build a simpler 2-3 card pile',
+        'Laboratory Maniac + Gitaxian Probe is a budget pile (draw on empty library)',
+        'Burning Wish can access a sideboard Doomsday in Vintage for a protected copy'
+      ],
+      notes: 'Doomsday is a highly skill-intensive combo — the "pile" you build changes based on what you have in hand, what mana is available, and what the opponent can interact with. Mastering pile construction is the core skill of playing the deck. The format player who casts Doomsday typically wins on the same turn or the next.'
+    },
+    {
+      id: 20,
+      name: 'Show and Tell + Omniscience',
+      cards: ['Show and Tell', 'Omniscience'],
+      description: 'Put Omniscience into play for free, then cast your entire hand for free',
+      format: 'Legacy',
+      difficulty: 'Intermediate',
+      prerequisites: ['Show and Tell in hand (2U)', 'Omniscience (or Emrakul, the Aeons Torn) in hand', 'A follow-up win condition in hand'],
+      steps: [
+        'Cast Show and Tell (2U): each player may put an artifact, creature, enchantment, or land from their hand onto the battlefield',
+        'Put Omniscience onto the battlefield (no mana cost paid)',
+        'Opponent also gets to put a card into play — the risk of the combo',
+        'With Omniscience in play, cast every spell in your hand for free',
+        'Common follow-ups: cast Enter the Infinite (draw entire library), then cast a win condition',
+        'Or: immediately cast Emrakul, the Aeons Torn for free — 15/15 flying plus take an extra turn',
+        'Win via combat damage or by casting your entire library for free'
+      ],
+      variations: [
+        'Emrakul, the Aeons Torn can be put in with Show and Tell directly (opponent sacrifices 6 permanents on attack)',
+        'Griselbrand is another powerful Show and Tell target (draw 7+ cards immediately)',
+        'Sneak Attack is used alongside Show and Tell to put creatures in play at instant speed for just 1R'
+      ],
+      notes: 'The opponent also gets to put a card into play, which is the risk — they could put in their own bomb. Legacy Show and Tell decks counter this by holding disruption (Force of Will) and winning fast enough that the opponent\'s card doesn\'t matter. Paired with Sneak Attack in the "Sneak and Show" archetype.'
     }
   ];
 
