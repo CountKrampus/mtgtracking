@@ -15,7 +15,8 @@ export default function NotificationBell({ apiUrl, user, openPanel, setOpenPanel
     mention: '💬',
     reply: '📝',
     upvote: '⬆️',
-    dm: '💌'
+    dm: '💌',
+    price_alert: '📉'
   };
 
   const fetchNotifications = async () => {
@@ -143,10 +144,19 @@ export default function NotificationBell({ apiUrl, user, openPanel, setOpenPanel
                 >
                   <span className="text-lg mt-1">{typeEmojis[notif.type] || '📢'}</span>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm text-white font-medium">
-                      {notif.fromUserId?.displayName || 'User'} · {notif.type}
-                    </div>
-                    <div className="text-xs text-slate-300 mt-0.5 truncate">{notif.content}</div>
+                    {notif.type === 'price_alert' ? (
+                      <>
+                        <div className="text-sm text-white font-medium">Price Alert</div>
+                        <div className="text-xs text-slate-300 mt-0.5 truncate">{notif.content}</div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-sm text-white font-medium">
+                          {notif.fromUserId?.displayName || 'User'} · {notif.type}
+                        </div>
+                        <div className="text-xs text-slate-300 mt-0.5 truncate">{notif.content}</div>
+                      </>
+                    )}
                     <div className="text-xs text-slate-500 mt-1">
                       {new Date(notif.createdAt).toLocaleDateString()}
                     </div>
