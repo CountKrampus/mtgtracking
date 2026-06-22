@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { Trash2 } from 'lucide-react';
 
@@ -14,9 +14,23 @@ import { Trash2 } from 'lucide-react';
  *   danger    boolean  — true (default) = red; false = blue
  */
 export default function ConfirmModal({ title, message, onConfirm, onCancel, danger = true }) {
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onCancel]);
+
   return ReactDOM.createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60">
-      <div className="bg-gray-800 border border-gray-600 rounded-xl shadow-2xl max-w-sm w-full mx-4 p-6 text-center">
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60"
+      onClick={onCancel}
+    >
+      <div
+        className="bg-gray-800 border border-gray-600 rounded-xl shadow-2xl max-w-sm w-full mx-4 p-6 text-center"
+        onClick={e => e.stopPropagation()}
+      >
         <div
           className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${
             danger ? 'bg-red-900/60' : 'bg-blue-900/60'
@@ -29,13 +43,13 @@ export default function ConfirmModal({ title, message, onConfirm, onCancel, dang
         <div className="flex gap-3 justify-center">
           <button
             onClick={onCancel}
-            className="px-5 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors"
+            className="px-5 py-1 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className={`px-5 py-2 text-white text-sm rounded-lg transition-colors ${
+            className={`px-5 py-1 text-white text-sm rounded-lg transition-colors ${
               danger ? 'bg-red-600 hover:bg-red-500' : 'bg-blue-600 hover:bg-blue-500'
             }`}
           >
