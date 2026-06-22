@@ -459,6 +459,125 @@ const KeywordGlossary = () => {
       description: 'Look at the top N cards of your library; put any number of them into your graveyard, the rest on top in any order.',
       example: 'Surveil 3: look at the top three cards, put any of them in your graveyard, keep the rest on top.',
       advanced: 'Surveil fills the graveyard while filtering your draws — more powerful than scry in decks using graveyard synergies. Common in Dimir (blue/black) decks.'
+    },
+    {
+      name: 'Exalted',
+      category: 'Triggered',
+      description: 'Whenever a creature you control attacks alone, it gets +1/+1 until end of turn for each instance of exalted among permanents you control.',
+      example: 'Attack with one creature while controlling three exalted permanents: that creature gets +3/+3 until end of turn.',
+      advanced: 'Multiple instances stack independently. Each exalted trigger fires separately on the stack. Attacking alone means being the only attacking creature — even one other attacker cancels all exalted triggers.'
+    },
+    {
+      name: 'Unearth',
+      category: 'Graveyard',
+      description: 'Pay the unearth cost: return this card from your graveyard to the battlefield. It gains haste. Exile it at the beginning of the next end step or if it would leave the battlefield.',
+      example: 'Pay 2B to reanimate a 3/3 creature from your graveyard. It attacks immediately this turn, then is exiled at end of turn.',
+      advanced: 'Unearthed creatures are exiled if they would leave the battlefield for ANY reason — sacrificing them does not prevent the exile. Great for ETB effects and immediate attackers. Cannot be re-unearthed.'
+    },
+    {
+      name: 'Enrage',
+      category: 'Triggered',
+      description: 'Triggers whenever this creature is dealt damage, regardless of the source.',
+      example: 'A creature with "Enrage — put a +1/+1 counter on it" gains a counter whenever it takes any damage, even 1 from a 1/1 blocker.',
+      advanced: 'You can deliberately deal 1 damage to your own enrage creatures to trigger them. Forerunner of the Empire is a classic enabler: it pings all Dinosaurs when a Dinosaur enters, chaining enrage triggers across the board.'
+    },
+    {
+      name: 'Delirium',
+      category: 'Card Advantage',
+      description: 'An ability word indicating a bonus that applies when you have four or more card types among cards in your graveyard.',
+      example: '"Delirium — if you have 4+ card types in your graveyard, this creature has deathtouch." With land, instant, creature, and artifact in the graveyard, the bonus is active.',
+      advanced: 'Card types are: artifact, creature, enchantment, instant, land, planeswalker, sorcery, tribal. Fetchlands help by adding lands to the graveyard naturally. Once achieved, delirium bonuses are persistent as long as the graveyard stays diverse.'
+    },
+    {
+      name: 'Threshold',
+      category: 'Card Advantage',
+      description: 'An ability word indicating a bonus that applies when you have seven or more cards in your graveyard.',
+      example: '"Threshold — as long as 7+ cards are in your graveyard, this creature gets +1/+1 and has first strike."',
+      advanced: 'From the Odyssey block (2001). Graveyard-filling strategies like fetchlands, cycling, and looters reach threshold quickly. Once active, threshold bonuses persist as long as the graveyard remains large enough.'
+    },
+    {
+      name: 'Morbid',
+      category: 'Triggered',
+      description: 'An ability word indicating a bonus that applies when a creature died this turn.',
+      example: '"Morbid — if a creature died this turn, draw a card." Any creature dying — yours, an opponent\'s, or a token — satisfies morbid.',
+      advanced: 'Your creatures trading in combat, being sacrificed, or being destroyed by removal all trigger your own morbid effects. From the Innistrad block. Works well with sacrifice outlets and combat-heavy strategies.'
+    },
+    {
+      name: 'Populate',
+      category: 'Triggered',
+      description: 'Create a token that\'s a copy of a creature token you control.',
+      example: 'Populate: if you control a 4/4 Angel token, create another 4/4 Angel token.',
+      advanced: 'Populate does nothing if you control no creature tokens. It copies the entire token including all its abilities. Very powerful with large valuable tokens. You choose which token to copy if you control multiple types.'
+    },
+    {
+      name: 'Spectacle',
+      category: 'Spells',
+      description: 'You may cast this spell for its spectacle cost if an opponent lost life this turn.',
+      example: 'Spectacle 1R: if any opponent lost life this turn from any source, cast this for 1R instead of its normal cost.',
+      advanced: 'Any life loss counts — even 1 damage from a 1/1 attacking into an opponent triggers spectacle for all your cards that turn. Once one opponent has lost life, all spectacle cards cost less for the rest of the turn.'
+    },
+    {
+      name: 'Riot',
+      category: 'Triggered',
+      description: 'This creature enters the battlefield with your choice of a +1/+1 counter on it or haste.',
+      example: 'A 3/3 with riot enters: choose whether it enters as a 4/4 OR enters as a 3/3 with haste and can attack immediately.',
+      advanced: 'The choice is made as the creature enters the battlefield. Haste is best when immediate aggression matters; the counter is better for long-term board presence. Some effects double counters placed this way.'
+    },
+    {
+      name: 'Amass',
+      category: 'Triggered',
+      description: 'Put X +1/+1 counters on an Army token you control. If you don\'t control one, first create a 0/0 black Zombie Army token.',
+      example: 'Amass 3: if you have no Army token, create a 0/0 Zombie Army, then put 3 counters on it, making it a 3/3.',
+      advanced: 'You can only control one Army at a time — all amass effects target the same Army. Multiple amass spells grow your single Army to large sizes. Proliferate also adds counters to your Army.'
+    },
+    {
+      name: 'Skulk',
+      category: 'Combat',
+      description: 'This creature can\'t be blocked by creatures with greater power.',
+      example: 'A 1/1 with skulk attacks; the opponent can only block it with creatures that have power 1 or less.',
+      advanced: 'Skulk rewards keeping the creature small — buffing its power lets it be blocked by more creatures. Most effective at 1 or 2 power. Auras and pump spells that raise power past blockers\' power actually hurt skulk. From Shadows over Innistrad.'
+    },
+    {
+      name: 'Mentor',
+      category: 'Triggered',
+      description: 'Whenever this creature attacks, put a +1/+1 counter on target attacking creature with lesser power.',
+      example: 'A 3/3 mentor attacks alongside a 1/1: put a +1/+1 counter on the 1/1, making it a 2/2.',
+      advanced: 'Mentor can only target creatures with strictly lesser power — it cannot target itself or a creature with equal or greater power. Multiple mentor creatures each trigger separately, potentially growing several attackers per turn.'
+    },
+    {
+      name: 'Extort',
+      category: 'Triggered',
+      description: 'Whenever you cast a spell, you may pay one white or black mana. If you do, each opponent loses 1 life and you gain that much life.',
+      example: 'Cast any spell; pay W or B to drain each opponent for 1 life and gain 1 per opponent.',
+      advanced: 'Extort triggers for each spell cast, so a spell-heavy turn multiplies the drain. In multiplayer, draining all opponents multiplies the life swing — you drain 3 and gain 3 against three opponents. Multiple extort triggers stack independently.'
+    },
+    {
+      name: 'Bloodrush',
+      category: 'Activated',
+      description: 'Pay the bloodrush cost and discard this creature card: target attacking creature gets the listed power/toughness bonus until end of turn.',
+      example: 'Bloodrush 1R: discard this card to give target attacker +4/+2 until end of turn — acts as a combat trick.',
+      advanced: 'Bloodrush is activated at instant speed, making it a combat trick that also clears the card from hand. The discarded creature goes to the graveyard, enabling graveyard synergies like unearth or flashback.'
+    },
+    {
+      name: 'Scavenge',
+      category: 'Graveyard',
+      description: 'Pay the scavenge cost and exile this card from your graveyard: put a number of +1/+1 counters on target creature equal to this card\'s power.',
+      example: 'Scavenge 4G: exile this 3/3 from your graveyard to put 3 +1/+1 counters on a target creature.',
+      advanced: 'Scavenge is activated from the graveyard at sorcery speed only. The creature must already be in the graveyard. A high-power creature in the graveyard provides strong late-game counter distribution to your living creatures.'
+    },
+    {
+      name: 'Evolve',
+      category: 'Triggered',
+      description: 'Whenever a creature enters the battlefield under your control, if that creature has greater power or toughness than this creature, put a +1/+1 counter on this creature.',
+      example: 'A 1/1 with evolve gets a +1/+1 counter when a 3/3 enters alongside it, becoming a 2/2.',
+      advanced: 'Evolve checks power AND toughness separately — either being greater triggers it. A 1/4 evolves a 2/2 (because 4 > 2 toughness). After receiving a counter, re-check if the new creature still exceeds the evolved creature\'s stats.'
+    },
+    {
+      name: 'Battalion',
+      category: 'Triggered',
+      description: 'An ability word indicating a bonus that triggers when this creature and at least two other creatures attack.',
+      example: '"Battalion — whenever this creature and at least two other creatures attack, creatures you control get +1/+1 until end of turn." Requires 3+ total attackers.',
+      advanced: 'The battalion creature counts toward the three attackers. The bonus triggers even if some attackers are later removed before damage. Rewards wide, aggressive board states. From the Gatecrash set.'
     }
   ];
 
