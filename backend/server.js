@@ -21,6 +21,8 @@ const SystemSettings = require('./models/SystemSettings');
 const UserColumnPreferences = require('./models/UserColumnPreferences');
 const CardValueSnapshot = require('./models/CardValueSnapshot');
 const CardPriceHistory = require('./models/CardPriceHistory');
+const CardPriceSnapshot = require('./models/CardPriceSnapshot');
+const ValueSnapshot = require('./models/ValueSnapshot');
 const User = require('./models/User');
 
 // Try to load sharp for image hashing (optional dependency)
@@ -254,26 +256,7 @@ wishlistItemSchema.pre('save', function(next) {
 
 const WishlistItem = mongoose.model('WishlistItem', wishlistItemSchema);
 
-// Value Snapshot Schema (for collection value over time)
-const valueSnapshotSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
-  value: { type: Number, required: true },
-  cardCount: { type: Number, required: true },
-  createdAt: { type: Date, default: Date.now }
-});
-valueSnapshotSchema.index({ createdAt: 1 });
-
-const ValueSnapshot = mongoose.model('ValueSnapshot', valueSnapshotSchema);
-
-// Card Price Snapshot Schema (per-card price history)
-const cardPriceSnapshotSchema = new mongoose.Schema({
-  cardId: { type: mongoose.Schema.Types.ObjectId, ref: 'Card', required: true },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
-  price: { type: Number, required: true },
-  createdAt: { type: Date, default: Date.now }
-});
-cardPriceSnapshotSchema.index({ cardId: 1, createdAt: 1 });
-const CardPriceSnapshot = mongoose.model('CardPriceSnapshot', cardPriceSnapshotSchema);
+// ValueSnapshot and CardPriceSnapshot are loaded from ./models/ValueSnapshot and ./models/CardPriceSnapshot
 
 // Deck Value Snapshot Schema (for value history over time)
 const deckValueSnapshotSchema = new mongoose.Schema({
