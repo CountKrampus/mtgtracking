@@ -1455,15 +1455,34 @@ app.get('/api/stats', requireAuth, async (req, res) => {
   }
 });
 
-// Get collection value history (last 90 days)
+// Get collection value history with optional date range
 app.get('/api/stats/value-history', requireAuth, async (req, res) => {
   try {
-    const ninetyDaysAgo = new Date();
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    const userQ = buildUserQuery({}, req);
+
+    // Find earliest snapshot date for date picker clamping
+    const earliestSnap = await ValueSnapshot.findOne(userQ).sort({ createdAt: 1 }).lean();
+    const earliest = earliestSnap
+      ? new Date(earliestSnap.createdAt).toISOString().slice(0, 10)
+      : null;
+
+    // Parse optional from/to params; default to last 90 days
+    let from, to;
+    if (req.query.from && req.query.to) {
+      from = new Date(req.query.from);
+      to = new Date(req.query.to);
+      to.setHours(23, 59, 59, 999);
+    } else {
+      to = new Date();
+      from = new Date();
+      from.setDate(from.getDate() - 90);
+    }
+
     const snapshots = await ValueSnapshot.find(
-      buildUserQuery({ createdAt: { $gte: ninetyDaysAgo } }, req)
+      buildUserQuery({ createdAt: { $gte: from, $lte: to } }, req)
     ).sort({ createdAt: 1 });
-    res.json(snapshots);
+
+    res.json({ snapshots, earliest });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -1505,24 +1524,25 @@ app.get('/api/value-history', requireAuth, async (req, res) => {
   }
 });
 
-// Get price history for a specific card (last 90 days)
+// Get price history for a specific card
 app.get('/api/cards/:id/price-history', requireAuth, async (req, res) => {
   try {
     const query = buildUserQuery({ _id: req.params.id }, req);
     const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
 
-    const ninetyDaysAgo = new Date();
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    const days = Math.min(parseInt(req.query.days) || 90, 365);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
     const snapshots = await CardPriceSnapshot.find({
       cardId: card._id,
-      createdAt: { $gte: ninetyDaysAgo }
+      createdAt: { $gte: startDate }
     }).sort({ createdAt: 1 }).lean();
 
     // Also include points recorded via CardPriceHistory (e.g. on card edits)
     const historyPoints = await CardPriceHistory.find({
       cardId: card._id,
-      date: { $gte: ninetyDaysAgo }
+      date: { $gte: startDate }
     }).sort({ date: 1 }).lean();
 
     // Normalize to a unified { price, date } shape and merge chronologically
