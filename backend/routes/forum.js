@@ -21,6 +21,7 @@ const { extractDeckFromText } = require('../utils/deckExtractor');
 const ForumLevel = require('../models/ForumLevel');
 const Cosmetic = require('../models/Cosmetic');
 const { checkAndAwardBadges } = require('../utils/badgeManager');
+const forumCache = require('../cache/forumCache');
 
 // POST /api/forum/categories - Create category (admin only)
 router.post('/categories', verifyToken, requireAuth, requireAdmin, async (req, res) => {
@@ -39,6 +40,7 @@ router.post('/categories', verifyToken, requireAuth, requireAdmin, async (req, r
     });
 
     await category.save();
+    forumCache.del('categories:tree');
     res.status(201).json(category);
   } catch (error) {
     console.error('Create category error:', error);
@@ -62,6 +64,7 @@ router.put('/categories/:id', verifyToken, requireAuth, requireAdmin, async (req
       return res.status(404).json({ message: 'Category not found' });
     }
 
+    forumCache.del('categories:tree');
     res.json(category);
   } catch (error) {
     console.error('Update category error:', error);
@@ -91,6 +94,7 @@ router.delete('/categories/:id', verifyToken, requireAuth, requireAdmin, async (
     await ForumCategory.deleteMany({ parentCategoryId: id });
     await ForumCategory.findByIdAndDelete(id);
 
+    forumCache.del('categories:tree');
     res.json({ success: true, message: 'Category and all contents deleted' });
   } catch (error) {
     console.error('Delete category error:', error);
@@ -101,6 +105,9 @@ router.delete('/categories/:id', verifyToken, requireAuth, requireAdmin, async (
 // GET /api/forum/categories - List all categories with subcategories
 router.get('/categories', async (req, res) => {
   try {
+    const cached = forumCache.get('categories:tree');
+    if (cached) return res.json(cached);
+
     const categories = await ForumCategory.find({ parentCategoryId: null, isActive: true })
       .sort({ displayOrder: 1 })
       .lean();
@@ -121,6 +128,7 @@ router.get('/categories', async (req, res) => {
       children: childrenByParent[c._id.toString()] || []
     }));
 
+    forumCache.set('categories:tree', withChildren, 300);
     res.json(withChildren);
   } catch (error) {
     console.error('Get categories error:', error);
