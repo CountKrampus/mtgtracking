@@ -332,6 +332,7 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
       });
       if (response.ok) {
+        onThreadDeleted?.();
         onBack();
       } else {
         const data = await response.json();

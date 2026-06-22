@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Lock, Pin, ArrowLeft } from 'lucide-react';
 import ThreadComposer from './ThreadComposer';
 
-export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user, onBack, onViewProfile }) {
+export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user, onBack, onViewProfile, refreshKey = 0 }) {
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -24,7 +24,7 @@ export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user,
       }
     };
     fetchCategory();
-  }, [categoryId, apiUrl]);
+  }, [categoryId, apiUrl, refreshKey]);
 
   useEffect(() => {
     if (!categoryId) return;
@@ -46,7 +46,7 @@ export default function CategoryView({ categoryId, apiUrl, onThreadSelect, user,
     };
 
     fetchThreads();
-  }, [categoryId, page, apiUrl]);
+  }, [categoryId, page, apiUrl, refreshKey]);
 
   if (!categoryId) {
     return <div className="flex-1 p-6 text-slate-400">Select a category</div>;

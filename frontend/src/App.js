@@ -394,6 +394,7 @@ function App() {
   const [showMuteManager, setShowMuteManager] = useState(false);
   const [showForumShop, setShowForumShop] = useState(false);
   const [cosmeticVersion, setCosmeticVersion] = useState(0);
+  const [forumRefreshKey, setForumRefreshKey] = useState(0);
   const [selectedForumProfileUsername, setSelectedForumProfileUsername] = useState(null);
   const [forumProfileView, setForumProfileView] = useState(false);
   const [showForumLeaderboard, setShowForumLeaderboard] = useState(false);
@@ -5656,6 +5657,7 @@ function App() {
                   setSelectedThreadId(null);
                   localStorage.removeItem('forumSelectedThread');
                 }}
+                onThreadDeleted={() => setForumRefreshKey(k => k + 1)}
                 onViewProfile={(username) => {
                   setSelectedForumProfileUsername(username);
                   setCurrentView('forum-profile');
@@ -5678,6 +5680,7 @@ function App() {
                   setSelectedForumProfileUsername(username);
                   setCurrentView('forum-profile');
                 }}
+                refreshKey={forumRefreshKey}
               />
             ) : (
               <ForumHome
@@ -5693,6 +5696,7 @@ function App() {
                 authUser={authUser}
                 onForumProfile={() => setCurrentView('forum-profile-page')}
                 onLeaderboard={() => setShowForumLeaderboard(true)}
+                refreshKey={forumRefreshKey}
               />
             )}
             </div>

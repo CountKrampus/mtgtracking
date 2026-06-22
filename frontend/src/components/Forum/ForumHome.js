@@ -7,7 +7,7 @@ import ForumFeed from './ForumFeed';
 import ForumShop from './ForumShop';
 import { API_URL } from '../../config';
 
-export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, authUser, onForumProfile, onLeaderboard }) {
+export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, authUser, onForumProfile, onLeaderboard, refreshKey = 0 }) {
   const [showThreadComposer, setShowThreadComposer] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showShop, setShowShop] = useState(false);
@@ -37,7 +37,7 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
         console.error('Error fetching categories:', err);
         setLoading(false);
       });
-  }, []);
+  }, [refreshKey]);
 
   const parentCategories = categories.filter((cat) => !cat.parentCategoryId);
 
