@@ -554,48 +554,7 @@ app.get('/api/scryfall/autocomplete', async (req, res) => {
   }
 });
 
-// Helper function to fetch price from Exor Games with Scryfall backup
-async function getPriceWithFallback(cardName, isFoil = false) {
-  // Try Exor Games first
-  try {
-    const searchUrl = `https://exorgames.com/a/search?type=product&q=${encodeURIComponent(cardName)}`;
-    const response = await axios.get(searchUrl);
-    const html = response.data;
-
-    // Try to extract the first product's price
-    const priceMatch = html.match(/"price":\s*(\d+)/);
-    if (priceMatch) {
-      const priceInCents = parseInt(priceMatch[1]);
-      const priceCAD = priceInCents / 100;
-      // Rough CAD to USD conversion (approximately 0.73)
-      const priceUSD = Math.round(priceCAD * 0.73 * 100) / 100;
-
-      if (priceUSD > 0) {
-        return { cad: priceCAD, usd: priceUSD, source: 'Exor Games' };
-      }
-    }
-  } catch (error) {
-    console.error('Exor Games price fetch failed:', error.message);
-  }
-
-  // Fallback to Scryfall if Exor Games returns 0 or fails
-  try {
-    console.log('Falling back to Scryfall pricing for:', cardName);
-    const response = await axios.get(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
-    const scryfallPrice = isFoil
-      ? (response.data.prices.usd_foil ? parseFloat(response.data.prices.usd_foil) : 0)
-      : (response.data.prices.usd ? parseFloat(response.data.prices.usd) : 0);
-
-    if (scryfallPrice > 0) {
-      return { cad: 0, usd: scryfallPrice, source: 'Scryfall (backup)' };
-    }
-  } catch (error) {
-    console.error('Scryfall price fetch failed:', error.message);
-  }
-
-  // If both fail, return 0
-  return { cad: 0, usd: 0, source: 'None (not found)' };
-}
+const { getPriceWithFallback } = require('./utils/pricing');
 
 // Download and cache image from Scryfall, return local path or fallback to URL
 async function cacheCardImage(scryfallId, imageUrl) {
