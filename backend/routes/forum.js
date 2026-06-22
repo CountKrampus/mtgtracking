@@ -1473,13 +1473,17 @@ const COSMETICS_PRICES = Object.fromEntries(COSMETICS_CATALOG.map(c => [c.id, c.
 router.get('/cosmetics', verifyToken, async (req, res) => {
   try {
     const now = new Date();
-    const cosmetics = await Cosmetic.find({
-      isActive: true,
-      $or: [
-        { availableUntil: null },
-        { availableUntil: { $gt: now } },
-      ],
-    }).lean();
+    let cosmetics = forumCache.get('cosmetics:catalog');
+    if (!cosmetics) {
+      cosmetics = await Cosmetic.find({
+        isActive: true,
+        $or: [
+          { availableUntil: null },
+          { availableUntil: { $gt: now } },
+        ],
+      }).lean();
+      forumCache.set('cosmetics:catalog', cosmetics, 600);
+    }
 
     if (!req.user) return res.json({ cosmetics, purchased: [], equipped: {} });
 
@@ -1871,6 +1875,7 @@ router.post('/admin/cosmetics', verifyToken, requireAuth, requireAdmin, async (r
       availableUntil: availableUntil || null,
     });
 
+    forumCache.del('cosmetics:catalog');
     res.status(201).json({ cosmetic });
   } catch (error) {
     console.error('Create cosmetic error:', error);
@@ -1906,6 +1911,7 @@ router.put('/admin/cosmetics/:cosmeticId', verifyToken, requireAuth, requireAdmi
       return res.status(404).json({ message: 'Cosmetic not found' });
     }
 
+    forumCache.del('cosmetics:catalog');
     res.json({ cosmetic });
   } catch (error) {
     console.error('Update cosmetic error:', error);
@@ -1938,6 +1944,7 @@ router.delete('/admin/cosmetics/:cosmeticId', verifyToken, requireAuth, requireA
       { $set: { [equippedKey]: null } }
     );
 
+    forumCache.del('cosmetics:catalog');
     res.json({ success: true, message: 'Cosmetic deleted and removed from all user inventories' });
   } catch (error) {
     console.error('Delete cosmetic error:', error);
