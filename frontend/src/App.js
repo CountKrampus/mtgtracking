@@ -491,6 +491,7 @@ function App() {
   const [detailCard, setDetailCard] = useState(null);
   const [sparkline, setSparkline] = useState(null);
   const sparklineTimerRef = React.useRef(null);
+  useEffect(() => () => clearTimeout(sparklineTimerRef.current), []);
 
   // QR Labels
   const [showQRPreview, setShowQRPreview] = useState(false);
@@ -3582,7 +3583,7 @@ function App() {
                 ) : (
                   paginatedCards.map(card => (
                     <tr key={card._id} onClick={e => {
-                        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('a')) return;
+                        if (e.target.closest?.('button') || e.target.closest?.('input') || e.target.closest?.('a')) return;
                         setDetailCard(card);
                       }} className={`hover:bg-white/5 transition cursor-pointer ${selectedCards.has(card._id) ? 'bg-purple-900/30' : ''}`}>
                       <td className="px-3 py-4 text-center">
