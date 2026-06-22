@@ -70,7 +70,9 @@ function truncate(text, maxLen) {
 function formatRelative(dateStr) {
   if (!dateStr) return '—';
   const diff = Date.now() - new Date(dateStr).getTime();
+  if (diff < 0) return 'Just now';
   const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
   if (mins < 60) return `${mins}m ago`;
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
@@ -451,8 +453,11 @@ function RecentPostsTab({ authFetch }) {
                 <td className="px-4 py-3 text-gray-400 text-sm">
                   {post.thread?.title || post.threadTitle || '—'}
                 </td>
-                <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">
-                  {formatDate(post.createdAt)}
+                <td
+                  className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap"
+                  title={formatDate(post.createdAt)}
+                >
+                  {formatRelative(post.createdAt)}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <button
