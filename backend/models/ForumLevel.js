@@ -4,8 +4,7 @@ const forumLevelSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    unique: true
+    required: true
   },
   level: {
     type: Number,
@@ -104,6 +103,7 @@ const forumLevelSchema = new mongoose.Schema({
 });
 
 forumLevelSchema.index({ level: -1, coins: -1 });
+forumLevelSchema.index({ userId: 1 }, { unique: true });
 
 forumLevelSchema.virtual('nextLevelExperience').get(function() {
   return this.level * 500;
