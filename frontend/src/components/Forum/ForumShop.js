@@ -89,19 +89,6 @@ const RARITY_STYLES = {
   legendary: 'bg-amber-600 text-amber-100',
 };
 
-function RainbowSwatch() {
-  return (
-    <div
-      className="rounded-full flex-shrink-0"
-      style={{
-        width: 48,
-        height: 48,
-        background: 'linear-gradient(135deg, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff, #ff0088)',
-      }}
-    />
-  );
-}
-
 export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
   const [userLevel, setUserLevel] = useState(null);
   const [coins, setCoins] = useState(0);
