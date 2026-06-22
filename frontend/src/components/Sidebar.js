@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Home,
   Layers,
@@ -14,6 +14,7 @@ import {
   Camera,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Menu,
   X,
   Command,
@@ -65,6 +66,36 @@ const Sidebar = ({
   apiUrl
 }) => {
   const ft = featureToggles || {};
+
+  const [collapsedSections, setCollapsedSections] = useState({
+    navigation: false,
+    actions: false,
+    tools: false,
+    market: false,
+    learn: false,
+    gameplay: true,
+  });
+  const toggleSection = (key) => setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
+
+  // Returns a clickable section header; in icon-only mode returns null
+  const sectionHeader = (label, key, extraClass = 'mt-4') => {
+    if (sidebarCollapsed) return null;
+    const isCollapsed = collapsedSections[key];
+    return (
+      <button
+        onClick={() => toggleSection(key)}
+        className={`w-full flex items-center justify-between px-3 py-1 ${extraClass} mb-1 group`}
+      >
+        <span className="text-xs font-semibold text-white/40 uppercase tracking-wider group-hover:text-white/60 transition">
+          {label}
+        </span>
+        <ChevronDown
+          size={12}
+          className={`text-white/30 group-hover:text-white/50 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}
+        />
+      </button>
+    );
+  };
   const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'collection', label: 'Collection', icon: BookOpen },
@@ -212,14 +243,8 @@ const Sidebar = ({
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-2">
-        <div className="px-2 mb-1">
-          {!sidebarCollapsed && (
-            <span className="text-xs font-semibold text-white/40 uppercase tracking-wider px-2">
-              Navigation
-            </span>
-          )}
-        </div>
-        {navItems.map((item) => {
+        {sectionHeader('Navigation', 'navigation', '')}
+        {(sidebarCollapsed || !collapsedSections.navigation) && navItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentView === item.id;
           return (
@@ -240,21 +265,15 @@ const Sidebar = ({
         })}
 
         {/* Actions Section */}
-        <div className="mt-4 px-2 mb-1">
-          {!sidebarCollapsed && (
-            <span className="text-xs font-semibold text-white/40 uppercase tracking-wider px-2">
-              Actions
-            </span>
-          )}
-        </div>
-        {actionItems.map((item, index) => {
+        {sectionHeader('Actions', 'actions')}
+        {(sidebarCollapsed || !collapsedSections.actions) && actionItems.map((item, index) => {
           const Icon = item.icon;
           return (
             <button
               key={index}
               onClick={item.onClick}
               disabled={item.disabled}
-              className={`w-full flex items-center gap-3 px-4 py-2 mx-1 rounded-lg transition text-sm text-white/70 hover:bg-white/10 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed`}
+              className="w-full flex items-center gap-3 px-4 py-2 mx-1 rounded-lg transition text-sm text-white/70 hover:bg-white/10 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed"
               title={sidebarCollapsed ? item.label : undefined}
             >
               <Icon size={18} className="flex-shrink-0" />
@@ -264,62 +283,52 @@ const Sidebar = ({
         })}
 
         {/* Tools Section */}
-        <div className="mt-4 px-2 mb-1">
-          {!sidebarCollapsed && (
-            <span className="text-xs font-semibold text-white/40 uppercase tracking-wider px-2">
-              Tools
-            </span>
-          )}
-        </div>
-        {toolItems.map((item, index) => {
-          const Icon = item.icon;
-          return (
-            <button
-              key={index}
-              onClick={item.onClick}
-              className="w-full flex items-center gap-3 px-4 py-2 mx-1 rounded-lg transition text-sm text-white/70 hover:bg-white/10 hover:text-white"
-              title={sidebarCollapsed ? item.label : undefined}
-            >
-              <Icon size={18} className={`flex-shrink-0 ${item.color}`} />
-              {!sidebarCollapsed && <span>{item.label}</span>}
-            </button>
-          );
-        })}
-
-        {/* Additional Tools Section */}
-        {[
-          { id: 'reprint-tracker', label: 'Reprint Tracker', icon: TrendingDown },
-          { id: 'set-release-calendar', label: 'Set Release Calendar', icon: Calendar },
-          { id: 'spoiler-season', label: 'Spoiler Season', icon: Eye },
-        ].map((item) => {
-          const Icon = item.icon;
-          const isActive = currentView === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => handleNavClick(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-2 mx-1 rounded-lg transition text-sm font-medium ${
-                isActive
-                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
-                  : 'text-white/70 hover:bg-white/10 hover:text-white'
-              }`}
-              title={sidebarCollapsed ? item.label : undefined}
-            >
-              <Icon size={18} className="flex-shrink-0" />
-              {!sidebarCollapsed && <span>{item.label}</span>}
-            </button>
-          );
-        })}
+        {sectionHeader('Tools', 'tools')}
+        {(sidebarCollapsed || !collapsedSections.tools) && (
+          <>
+            {toolItems.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={index}
+                  onClick={item.onClick}
+                  className="w-full flex items-center gap-3 px-4 py-2 mx-1 rounded-lg transition text-sm text-white/70 hover:bg-white/10 hover:text-white"
+                  title={sidebarCollapsed ? item.label : undefined}
+                >
+                  <Icon size={18} className={`flex-shrink-0 ${item.color}`} />
+                  {!sidebarCollapsed && <span>{item.label}</span>}
+                </button>
+              );
+            })}
+            {[
+              { id: 'reprint-tracker', label: 'Reprint Tracker', icon: TrendingDown },
+              { id: 'set-release-calendar', label: 'Set Release Calendar', icon: Calendar },
+              { id: 'spoiler-season', label: 'Spoiler Season', icon: Eye },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = currentView === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavClick(item.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-2 mx-1 rounded-lg transition text-sm font-medium ${
+                    isActive
+                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  }`}
+                  title={sidebarCollapsed ? item.label : undefined}
+                >
+                  <Icon size={18} className="flex-shrink-0" />
+                  {!sidebarCollapsed && <span>{item.label}</span>}
+                </button>
+              );
+            })}
+          </>
+        )}
 
         {/* Learning Section */}
-        <div className="mt-4 px-2 mb-1">
-          {!sidebarCollapsed && (
-            <span className="text-xs font-semibold text-white/40 uppercase tracking-wider px-2">
-              Learn
-            </span>
-          )}
-        </div>
-        {learningItems.map((item) => {
+        {sectionHeader('Learn', 'learn')}
+        {(sidebarCollapsed || !collapsedSections.learn) && learningItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentView === item.id;
           return (
@@ -340,14 +349,8 @@ const Sidebar = ({
         })}
 
         {/* Gameplay Section */}
-        <div className="mt-4 px-2 mb-1">
-          {!sidebarCollapsed && (
-            <span className="text-xs font-semibold text-white/40 uppercase tracking-wider px-2">
-              Gameplay
-            </span>
-          )}
-        </div>
-        {[
+        {sectionHeader('Gameplay', 'gameplay')}
+        {(sidebarCollapsed || !collapsedSections.gameplay) && [
           { id: 'planechase-mode', label: 'Planechase Mode', icon: MapPin },
           { id: 'archenemy-mode', label: 'Archenemy Mode', icon: Shield },
           { id: 'kingdoms-variant', label: 'Kingdoms Variant', icon: Crown },
