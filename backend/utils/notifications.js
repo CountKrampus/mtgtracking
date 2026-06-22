@@ -34,6 +34,9 @@ function extractMentions(text) {
  * @returns {object} Created notification or null if duplicate prevented
  */
 async function createNotification(userId, type, fromUserId, data = {}) {
+  if (type === 'price_alert') {
+    throw new Error('Use createPriceAlertNotification for price_alert notifications');
+  }
   try {
     // Don't create notification if user is notifying themselves
     if (userId.toString() === fromUserId.toString()) {

@@ -56,9 +56,11 @@ const notificationSchema = new mongoose.Schema({
   }
 });
 
+// Compound indexes for common queries
 notificationSchema.index({ userId: 1, isRead: 1 });
 notificationSchema.index({ userId: 1, createdAt: -1 });
 
+// Pre-save middleware: update readAt when isRead changes
 notificationSchema.pre('save', function(next) {
   if (this.isModified('isRead')) {
     if (this.isRead && !this.readAt) {
