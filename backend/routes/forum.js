@@ -210,12 +210,18 @@ router.get('/categories/:categoryId/threads', async (req, res) => {
 // GET /api/forum/leaderboard — top 10 users by reputation
 router.get('/leaderboard', async (req, res) => {
   try {
+    const cached = forumCache.get('leaderboard:reputation');
+    if (cached) return res.json(cached);
+
     const leaders = await User.find({ reputation: { $gt: 0 }, isActive: true })
       .sort({ reputation: -1 })
       .limit(10)
       .select('username displayName reputation badges')
       .lean();
-    res.json({ leaderboard: leaders });
+
+    const result = { leaderboard: leaders };
+    forumCache.set('leaderboard:reputation', result, 120);
+    res.json(result);
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
@@ -1728,6 +1734,11 @@ router.get('/level/:userId', async (req, res) => {
 router.get('/leaderboard-levels', async (req, res) => {
   try {
     const { page = 1, limit = 100 } = req.query;
+    const cacheKey = `leaderboard:levels:${page}:${limit}`;
+
+    const cached = forumCache.get(cacheKey);
+    if (cached) return res.json(cached);
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     // Only include users who have opted into public forum visibility
@@ -1741,7 +1752,8 @@ router.get('/leaderboard-levels', async (req, res) => {
       .populate('userId', 'username displayName')
       .lean();
     const total = await ForumLevel.countDocuments({ userId: { $in: publicUserIdSet } });
-    res.json({
+
+    const result = {
       leaderboard: entries,
       pagination: {
         page: parseInt(page),
@@ -1749,7 +1761,10 @@ router.get('/leaderboard-levels', async (req, res) => {
         total,
         pages: Math.ceil(total / parseInt(limit))
       }
-    });
+    };
+
+    forumCache.set(cacheKey, result, 120);
+    res.json(result);
   } catch (error) {
     console.error('Leaderboard error:', error);
     res.status(500).json({ message: error.message });
