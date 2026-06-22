@@ -17,6 +17,7 @@ const { isMultiUserEnabled, verifyToken, requireAuth, requireEditor, checkMainte
 const { buildUserQuery, getUserId } = require('./middleware/multiUser');
 const { activityLoggers } = require('./middleware/activityLogger');
 const { getPriceWithFallback } = require('./utils/pricing');
+const { registerDailySnapshotJob } = require('./jobs/dailyPriceSnapshot');
 const SystemSettings = require('./models/SystemSettings');
 const UserColumnPreferences = require('./models/UserColumnPreferences');
 const CardValueSnapshot = require('./models/CardValueSnapshot');
@@ -3174,3 +3175,5 @@ setInterval(async () => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+registerDailySnapshotJob();
