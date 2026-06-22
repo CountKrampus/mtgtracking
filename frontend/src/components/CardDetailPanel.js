@@ -58,7 +58,8 @@ export default function CardDetailPanel({ card, onClose }) {
   const [days, setDays] = useState(30);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
-  const panelRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
 
   useEffect(() => {
     if (!card) return;
@@ -78,12 +79,12 @@ export default function CardDetailPanel({ card, onClose }) {
       .finally(() => setLoading(false));
   }, [card, days]);
 
-  // Dismiss on Escape
+  // Dismiss on Escape — stable listener, never re-registers on parent re-render
   useEffect(() => {
-    const handleKey = e => { if (e.key === 'Escape') onClose(); };
+    const handleKey = e => { if (e.key === 'Escape') onCloseRef.current(); };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [onClose]);
+  }, []);
 
   if (!card) return null;
 
