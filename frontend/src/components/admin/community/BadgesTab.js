@@ -439,10 +439,10 @@ function BadgesTab() {
 
           <div className="space-y-2">
             {filteredBadges.map(badge => (
-            <div
-              key={badge._id}
-              className="flex items-center gap-4 p-3 bg-gray-700/50 border border-gray-600/50 rounded-lg"
-            >
+              <div
+                key={badge._id}
+                className="flex items-center gap-4 p-3 bg-gray-700/50 border border-gray-600/50 rounded-lg"
+              >
               {/* Icon */}
               <div className="w-10 h-10 flex items-center justify-center bg-gray-800 rounded-lg text-purple-300 flex-shrink-0">
                 {badge.icon ? renderBadgeIcon(badge.icon, 22) : (
