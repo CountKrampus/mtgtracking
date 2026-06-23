@@ -1,0 +1,7 @@
+mtgtracker.store {
+    # Proxy API calls to the backend
+    reverse_proxy /api/* localhost:5000
+
+    # Proxy everything else to the React dev server
+    reverse_proxy localhost:3000
+}

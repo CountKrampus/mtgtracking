@@ -15,9 +15,13 @@ cd frontend
 start "MTG Tracker Frontend" cmd /k "npm start"
 cd ..
 
-echo Both servers started.
+REM Start Caddy
+start "Caddy" cmd /k "caddy_windows_amd64.exe run"
+
+echo All servers started.
 echo Backend: http://localhost:5000
 echo Frontend: http://localhost:3000
+echo Site: https://mtgtracker.store
 echo.
 echo Press any key to exit...
 pause >nul

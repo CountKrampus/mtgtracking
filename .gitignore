@@ -35,3 +35,7 @@ Thumbs.db
 backend/combo-cache.json
 combo-cache.json
 docs/*.json
+
+# Caddy binary (install separately)
+caddy_windows_amd64.exe
+caddy
