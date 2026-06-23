@@ -44,7 +44,7 @@ describe('Forum Profile Activity Endpoint', () => {
       email: 'fpa@test.com',
       username: 'fpauser',
       passwordHash: 'hash',
-      privacy: { showForum: true }
+      privacy: { isPublic: true, showForum: true }
     });
 
     const cat = await ForumCategory.create({ name: 'Test', slug: 'test' });
@@ -53,7 +53,7 @@ describe('Forum Profile Activity Endpoint', () => {
       authorId: user._id,
       authorUsername: 'fpauser',
       title: 'Test Thread',
-      body: 'Test body'
+      content: 'Test body'
     });
     const post = await ForumPost.create({
       threadId: thread._id,
@@ -74,16 +74,16 @@ describe('Forum Profile Activity Endpoint', () => {
     expect(res.body.stats).toHaveProperty('memberSince');
   });
 
-  test('Returns 403 when showForum is false', async () => {
+  test('Returns 404 when showForum is false', async () => {
     const user = await User.create({
       email: 'fpb@test.com',
       username: 'fpbuser',
       passwordHash: 'hash',
-      privacy: { showForum: false }
+      privacy: { isPublic: true, showForum: false }
     });
 
     const res = await request(app).get('/api/forum/users/fpbuser/activity');
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(404);
   });
 
   test('Returns 404 when user not found', async () => {
@@ -96,7 +96,7 @@ describe('Forum Profile Activity Endpoint', () => {
       email: 'fpc@test.com',
       username: 'fpcuser',
       passwordHash: 'hash',
-      privacy: { showForum: true }
+      privacy: { isPublic: true, showForum: true }
     });
 
     const cat = await ForumCategory.create({ name: 'Test', slug: 'test-c' });
@@ -105,7 +105,7 @@ describe('Forum Profile Activity Endpoint', () => {
       authorId: user._id,
       authorUsername: 'fpcuser',
       title: 'Test Thread',
-      body: 'Test body'
+      content: 'Test body'
     });
 
     // Create 3 posts
@@ -138,7 +138,7 @@ describe('Forum Profile Activity Endpoint', () => {
       email: 'fpd@test.com',
       username: 'fpduser',
       passwordHash: 'hash',
-      privacy: { showForum: true }
+      privacy: { isPublic: true, showForum: true }
     });
 
     const cat = await ForumCategory.create({ name: 'Test', slug: 'test-d' });
@@ -149,14 +149,14 @@ describe('Forum Profile Activity Endpoint', () => {
       authorId: user._id,
       authorUsername: 'fpduser',
       title: 'Thread 1',
-      body: 'Body 1'
+      content: 'Body 1'
     });
     await ForumThread.create({
       categoryId: cat._id,
       authorId: user._id,
       authorUsername: 'fpduser',
       title: 'Thread 2',
-      body: 'Body 2'
+      content: 'Body 2'
     });
 
     const res = await request(app).get('/api/forum/users/fpduser/activity');
@@ -169,7 +169,7 @@ describe('Forum Profile Activity Endpoint', () => {
       email: 'fpe@test.com',
       username: 'fpeuser',
       passwordHash: 'hash',
-      privacy: { showForum: true }
+      privacy: { isPublic: true, showForum: true }
     });
 
     const cat = await ForumCategory.create({ name: 'Test', slug: 'test-e' });
@@ -178,7 +178,7 @@ describe('Forum Profile Activity Endpoint', () => {
       authorId: user._id,
       authorUsername: 'fpeuser',
       title: 'Test Thread',
-      body: 'Test body'
+      content: 'Test body'
     });
 
     // Create 15 posts

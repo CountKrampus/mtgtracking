@@ -1,28 +1,26 @@
 const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 const DirectMessage = require('../models/DirectMessage');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 
+let mongod;
+
+beforeAll(async () => {
+  mongod = await MongoMemoryServer.create();
+  await mongoose.connect(mongod.getUri());
+});
+
+afterAll(async () => {
+  await mongoose.disconnect();
+  await mongod.stop();
+});
+
 describe('DirectMessage Model and DM Routes', () => {
   let user1, user2, user3;
 
-  beforeAll(async () => {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/mtg-tracker-test';
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
-    }
-  });
-
-  afterAll(async () => {
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
-    }
-  });
-
   beforeEach(async () => {
-    await User.deleteMany({});
-    await DirectMessage.deleteMany({});
-    await Notification.deleteMany({});
+    await mongoose.connection.dropDatabase();
 
     // Create test users
     user1 = await User.create({

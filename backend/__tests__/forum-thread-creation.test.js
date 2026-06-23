@@ -1,26 +1,24 @@
 const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 const ForumCategory = require('../models/ForumCategory');
 const ForumThread = require('../models/ForumThread');
 const User = require('../models/User');
 
+let mongod;
+
+beforeAll(async () => {
+  mongod = await MongoMemoryServer.create();
+  await mongoose.connect(mongod.getUri());
+});
+
+afterAll(async () => {
+  await mongoose.disconnect();
+  await mongod.stop();
+});
+
 describe('Forum Thread Creation - Data Layer Tests', () => {
-  beforeAll(async () => {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/mtg-tracker-test';
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
-    }
-  });
-
-  afterAll(async () => {
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
-    }
-  });
-
-  beforeEach(async () => {
-    await User.deleteMany({});
-    await ForumCategory.deleteMany({});
-    await ForumThread.deleteMany({});
+  afterEach(async () => {
+    await mongoose.connection.dropDatabase();
   });
 
   test('Can create thread in parent category', async () => {

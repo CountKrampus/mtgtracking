@@ -1,30 +1,27 @@
 ﻿const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const ForumThread = require('../models/ForumThread');
 const ForumPost = require('../models/ForumPost');
 
+let mongod;
+
+beforeAll(async () => {
+  mongod = await MongoMemoryServer.create();
+  await mongoose.connect(mongod.getUri());
+});
+
+afterAll(async () => {
+  await mongoose.disconnect();
+  await mongod.stop();
+});
+
 describe('Notifications Model and API', () => {
   let user1, user2, thread, post;
 
-  beforeAll(async () => {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/mtg-tracker-test';
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
-    }
-  });
-
-  afterAll(async () => {
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
-    }
-  });
-
   beforeEach(async () => {
-    await User.deleteMany({});
-    await Notification.deleteMany({});
-    await ForumThread.deleteMany({});
-    await ForumPost.deleteMany({});
+    await mongoose.connection.dropDatabase();
 
     // Create test users
     user1 = await User.create({
@@ -395,20 +392,15 @@ describe('Notifications Model and API', () => {
   });
 
   test('Indexes are created for performance queries', async () => {
-    // This test verifies that indexes exist on the schema
+    // Ensure collection and indexes exist (dropDatabase in beforeEach removes them)
+    await Notification.ensureIndexes();
     const indexes = await Notification.collection.getIndexes();
+    const indexNames = Object.keys(indexes);
 
-    // Check for userId + isRead index (for fetching unread)
-    const hasUserIdIsReadIndex = Object.values(indexes).some(index =>
-      index.key && index.key.userId === 1 && index.key.isRead === 1
-    );
+    // Check for userId + isRead compound index
+    expect(indexNames).toContain('userId_1_isRead_1');
 
-    // Check for userId + createdAt index (for sorting)
-    const hasUserIdCreatedAtIndex = Object.values(indexes).some(index =>
-      index.key && index.key.userId === 1 && index.key.createdAt === -1
-    );
-
-    expect(hasUserIdIsReadIndex).toBe(true);
-    expect(hasUserIdCreatedAtIndex).toBe(true);
+    // Check for userId + createdAt compound index
+    expect(indexNames).toContain('userId_1_createdAt_-1');
   });
 });
