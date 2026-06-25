@@ -14,6 +14,7 @@ import useColumnVisibility from './hooks/useColumnVisibility';
 import ColumnContextMenu from './components/ColumnContextMenu';
 import { AuthProvider, useAuthContext } from './contexts/AuthContext';
 import { AuthGuard } from './components/auth/AuthGuard';
+import { ToastProvider, useToast } from './contexts/ToastContext';
 import { AccountSettings } from './components/auth/AccountSettings';
 import { AdminPanel } from './components/admin/AdminPanel';
 
@@ -48,6 +49,7 @@ import UserMenu from './components/UserMenu';
 import MessagesPage from './components/MessagesPage';
 import MyProfile from './components/MyProfile';
 import UserProfile from './components/UserProfile';
+import SettingsView from './components/SettingsView';
 
 const DeckBuilder = React.lazy(() => import('./components/DeckBuilder'));
 const CameraModal = React.lazy(() => import('./components/CameraModal'));
@@ -137,157 +139,6 @@ const standardTypes = [
   'Tribal'
 ];
 
-function DeckFoldersTab() {
-  const [folders, setFolders] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
-  const [editingId, setEditingId] = React.useState(null);
-  const [editingName, setEditingName] = React.useState('');
-  const [newFolderName, setNewFolderName] = React.useState('');
-  const [newFolderParent, setNewFolderParent] = React.useState('');
-
-  const fetchFolders = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/deck-folders`);
-      setFolders(res.data);
-    } catch {}
-    setLoading(false);
-  };
-
-  React.useEffect(() => { fetchFolders(); }, []);
-
-  const createFolder = async () => {
-    if (!newFolderName.trim()) return;
-    try {
-      await axios.post(`${API_URL}/deck-folders`, {
-        name: newFolderName.trim(),
-        parentId: newFolderParent || null
-      });
-      setNewFolderName('');
-      setNewFolderParent('');
-      fetchFolders();
-    } catch (err) {
-      alert('Failed to create folder: ' + (err.response?.data?.message || err.message));
-    }
-  };
-
-  const renameFolder = async (id) => {
-    if (!editingName.trim()) return;
-    try {
-      await axios.put(`${API_URL}/deck-folders/${id}`, { name: editingName.trim() });
-      setEditingId(null);
-      fetchFolders();
-    } catch (err) {
-      alert('Failed to rename: ' + (err.response?.data?.message || err.message));
-    }
-  };
-
-  const deleteFolder = async (id, name) => {
-    if (!window.confirm(`Deleting "${name}" will move its decks to root. Continue?`)) return;
-    try {
-      await axios.delete(`${API_URL}/deck-folders/${id}`);
-      fetchFolders();
-    } catch (err) {
-      alert('Failed to delete: ' + (err.response?.data?.message || err.message));
-    }
-  };
-
-  // Flat depth-first list for display
-  const flatList = React.useMemo(() => {
-    const result = [];
-    function walk(parentId, depth) {
-      folders
-        .filter(f => String(f.parentId || null) === String(parentId || null))
-        .forEach(f => { result.push({ folder: f, depth }); walk(f._id, depth + 1); });
-    }
-    walk(null, 0);
-    return result;
-  }, [folders]);
-
-  if (loading) return <div className="text-white/50 text-center py-8">Loading folders…</div>;
-
-  return (
-    <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
-      <h2 className="text-lg font-semibold text-white mb-4">Deck Folders</h2>
-
-      {flatList.length === 0 ? (
-        <p className="text-white/40 text-sm mb-4">No folders yet. Create one below.</p>
-      ) : (
-        <div className="space-y-0.5 mb-6">
-          {flatList.map(({ folder, depth }) => (
-            <div
-              key={folder._id}
-              className="flex items-center gap-2 py-1.5 text-sm"
-              style={{ paddingLeft: `${depth * 20}px` }}
-            >
-              <span className="text-white/50">📁</span>
-              {editingId === folder._id ? (
-                <>
-                  <input
-                    value={editingName}
-                    onChange={e => setEditingName(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') renameFolder(folder._id);
-                      if (e.key === 'Escape') setEditingId(null);
-                    }}
-                    className="flex-1 bg-white/10 border border-white/30 rounded px-2 py-0.5 text-white text-sm outline-none focus:border-purple-400"
-                    autoFocus
-                  />
-                  <button onClick={() => renameFolder(folder._id)} className="text-green-400 text-xs hover:text-green-300 px-1">Save</button>
-                  <button onClick={() => setEditingId(null)} className="text-white/40 text-xs hover:text-white px-1">✕</button>
-                </>
-              ) : (
-                <>
-                  <span className="flex-1 text-white">{folder.name}</span>
-                  <button
-                    onClick={() => { setEditingId(folder._id); setEditingName(folder.name); }}
-                    className="text-white/40 hover:text-white text-xs px-1 transition"
-                    title="Rename"
-                  >✏️</button>
-                  <button
-                    onClick={() => deleteFolder(folder._id, folder.name)}
-                    className="text-red-400/60 hover:text-red-400 text-xs px-1 transition"
-                    title="Delete"
-                  >🗑</button>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="border-t border-white/10 pt-4">
-        <h3 className="text-white/70 text-sm font-medium mb-3">New Folder</h3>
-        <input
-          value={newFolderName}
-          onChange={e => setNewFolderName(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') createFolder(); }}
-          placeholder="Folder name"
-          className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white text-sm outline-none placeholder-white/30 focus:border-white/40 mb-2"
-        />
-        <div className="flex gap-2">
-          <select
-            value={newFolderParent}
-            onChange={e => setNewFolderParent(e.target.value)}
-            className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white text-sm outline-none focus:border-white/40"
-          >
-            <option value="">Root (no parent)</option>
-            {folders.map(f => (
-              <option key={f._id} value={f._id}>{f.name}</option>
-            ))}
-          </select>
-          <button
-            onClick={createFolder}
-            disabled={!newFolderName.trim()}
-            className="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium disabled:opacity-40 transition"
-          >
-            Add
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function SparklinePopup({ sparkline }) {
   if (!sparkline || sparkline.history.length < 2) return null;
 
@@ -335,6 +186,9 @@ function SparklinePopup({ sparkline }) {
 }
 
 function App() {
+  // Toast notifications
+  const { addToast } = useToast();
+
   // Auth context - available when wrapped with AuthProvider
   const authContext = useAuthContext();
   const { user: authUser, isMultiUserEnabled, logout: authLogout } = authContext || {};
@@ -725,7 +579,7 @@ function App() {
       setAutocompleteResults([]);
     } catch (error) {
       console.error('Error fetching card details:', error);
-      alert('Card not found on Scryfall');
+      addToast('Card not found on Scryfall', 'error');
     } finally {
       setLoading(false);
     }
@@ -733,7 +587,7 @@ function App() {
 
   const searchScryfallManually = async () => {
     if (!formData.name) {
-      alert('Please enter a card name first');
+      addToast('Please enter a card name first', 'warning');
       return;
     }
     await selectAutocompleteCard(formData.name);
@@ -751,14 +605,14 @@ function App() {
     setShowCameraModal(false);
 
     if (!extractedData.name) {
-      alert('No card name extracted. Please try again or use manual entry.');
+      addToast('No card name extracted. Please try again or use manual entry.', 'warning');
       return;
     }
 
     // In offline mode or if we just want to populate the name
     if (offlineMode) {
       setFormData({...formData, name: extractedData.name});
-      alert(`Card name extracted: ${extractedData.name}\n(Offline mode - please fill in other details manually)`);
+      addToast(`Card name extracted: ${extractedData.name} (Offline mode - please fill in other details manually)`, 'info');
       return;
     }
 
@@ -768,12 +622,12 @@ function App() {
       await selectAutocompleteCard(extractedData.name);
 
       const confidenceText = extractedData.confidence ? ` (${Math.round(extractedData.confidence)}% confidence)` : '';
-      alert(`Card found: ${extractedData.name}${confidenceText}`);
+      addToast(`Card found: ${extractedData.name}${confidenceText}`, 'success');
     } catch (error) {
       // If Scryfall search fails, still populate the name
       setFormData({...formData, name: extractedData.name});
       const confidenceText = extractedData.confidence ? ` (${Math.round(extractedData.confidence)}% confidence)` : '';
-      alert(`Card name extracted: ${extractedData.name}${confidenceText}\nCould not find on Scryfall - please verify and search manually.`);
+      addToast(`Card name extracted: ${extractedData.name}${confidenceText} — could not find on Scryfall, please verify and search manually.`, 'warning');
     } finally {
       setLoading(false);
     }
@@ -781,7 +635,7 @@ function App() {
 
   const handleSubmit = async () => {
     if (!formData.name) {
-      alert('Card name is required');
+      addToast('Card name is required', 'warning');
       return;
     }
 
@@ -795,14 +649,14 @@ function App() {
 
       // Check if card was merged with existing entry
       if (response.data.merged) {
-        alert(`Card already exists! ${response.data.message}`);
+        addToast(`Card already exists! ${response.data.message}`, 'info');
       }
 
       fetchCards();
       handleCancel();
     } catch (error) {
       console.error('Error saving card:', error);
-      alert('Error saving card');
+      addToast('Error saving card', 'error');
     }
   };
 
@@ -898,10 +752,10 @@ function App() {
     try {
       await axios.post(`${API_URL}/cards/${id}/update-price`);
       fetchCards();
-      alert('Price updated successfully!');
+      addToast('Price updated successfully!', 'success');
     } catch (error) {
       console.error('Error updating price:', error);
-      alert('Error updating price');
+      addToast('Error updating price', 'error');
     }
   };
 
@@ -929,10 +783,10 @@ function App() {
       // Show detailed results
       const { updated, skipped, total } = response.data;
       const dataType = updateFullData ? 'full card data' : 'prices';
-      alert(`${dataType} updated: ${updated} cards updated, ${skipped} skipped, ${total} total`);
+      addToast(`${dataType} updated: ${updated} cards updated, ${skipped} skipped, ${total} total`, 'success');
     } catch (error) {
       console.error('Error updating prices:', error);
-      alert('Error updating prices');
+      addToast('Error updating prices', 'error');
     } finally {
       setLoading(false);
     }
@@ -949,7 +803,7 @@ function App() {
       fetchAvailableTags();
     } catch (error) {
       console.error('Error adding tag:', error);
-      alert('Error adding tag');
+      addToast('Error adding tag', 'error');
     }
   };
 
@@ -960,7 +814,7 @@ function App() {
       fetchAvailableTags();
     } catch (error) {
       console.error('Error removing tag:', error);
-      alert('Error removing tag');
+      addToast('Error removing tag', 'error');
     }
   };
 
@@ -971,10 +825,10 @@ function App() {
       setLoading(true);
       await axios.post(`${API_URL}/cards/update-all-oracle-text`);
       fetchCards();
-      alert('Oracle text updated successfully!');
+      addToast('Oracle text updated successfully!', 'success');
     } catch (error) {
       console.error('Error updating oracle text:', error);
-      alert('Error updating oracle text');
+      addToast('Error updating oracle text', 'error');
     } finally {
       setLoading(false);
     }
@@ -991,7 +845,7 @@ function App() {
       setShowFinancePanel(true);
     } catch (error) {
       console.error('Error fetching finance data:', error);
-      alert('Error fetching finance data');
+      addToast('Error fetching finance data', 'error');
     }
   };
 
@@ -1011,7 +865,7 @@ function App() {
 
   const handleCreateLocation = async () => {
     if (!newLocationName.trim()) {
-      alert('Location name is required');
+      addToast('Location name is required', 'warning');
       return;
     }
 
@@ -1025,7 +879,7 @@ function App() {
       fetchLocations();
     } catch (error) {
       console.error('Error creating location:', error);
-      alert(error.response?.data?.message || 'Error creating location');
+      addToast(error.response?.data?.message || 'Error creating location', 'error');
     }
   };
 
@@ -1044,7 +898,7 @@ function App() {
       fetchCards(); // Refresh cards in case location name changed
     } catch (error) {
       console.error('Error updating location:', error);
-      alert(error.response?.data?.message || 'Error updating location');
+      addToast(error.response?.data?.message || 'Error updating location', 'error');
     }
   };
 
@@ -1056,7 +910,7 @@ function App() {
       fetchLocations();
     } catch (error) {
       console.error('Error deleting location:', error);
-      alert(error.response?.data?.message || 'Error deleting location');
+      addToast(error.response?.data?.message || 'Error deleting location', 'error');
     }
   };
 
@@ -1074,14 +928,14 @@ function App() {
 
   const handleCreateTag = async () => {
     if (!newTagName.trim()) {
-      alert('Tag name is required');
+      addToast('Tag name is required', 'warning');
       return;
     }
 
     const normalizedTag = newTagName.trim().toLowerCase();
     // Check if tag exists (availableTags is now array of objects)
     if (availableTags.some(t => (t.name || t) === normalizedTag)) {
-      alert('Tag already exists');
+      addToast('Tag already exists', 'warning');
       return;
     }
 
@@ -1091,7 +945,7 @@ function App() {
       fetchAvailableTags();
     } catch (error) {
       console.error('Error creating tag:', error);
-      alert(error.response?.data?.message || 'Error creating tag');
+      addToast(error.response?.data?.message || 'Error creating tag', 'error');
     }
   };
 
@@ -1104,7 +958,7 @@ function App() {
       fetchCards(); // Refresh cards since tags may have been removed
     } catch (error) {
       console.error('Error deleting tag:', error);
-      alert(error.response?.data?.message || 'Error deleting tag');
+      addToast(error.response?.data?.message || 'Error deleting tag', 'error');
     }
   };
 
@@ -1114,7 +968,7 @@ function App() {
       fetchAvailableTags();
     } catch (error) {
       console.error('Error updating tag:', error);
-      alert(error.response?.data?.message || 'Error updating tag');
+      addToast(error.response?.data?.message || 'Error updating tag', 'error');
     }
   };
 
@@ -1124,7 +978,7 @@ function App() {
       fetchLocations();
     } catch (error) {
       console.error('Error updating location:', error);
-      alert(error.response?.data?.message || 'Error updating location');
+      addToast(error.response?.data?.message || 'Error updating location', 'error');
     }
   };
 
@@ -1173,7 +1027,7 @@ function App() {
       setWishlistAutocompleteResults([]);
     } catch (error) {
       console.error('Error fetching card details:', error);
-      alert('Card not found on Scryfall');
+      addToast('Card not found on Scryfall', 'error');
     } finally {
       setLoading(false);
     }
@@ -1181,7 +1035,7 @@ function App() {
 
   const handleWishlistSubmit = async () => {
     if (!wishlistFormData.name) {
-      alert('Card name is required');
+      addToast('Card name is required', 'warning');
       return;
     }
 
@@ -1195,7 +1049,7 @@ function App() {
       handleWishlistCancel();
     } catch (error) {
       console.error('Error saving wishlist item:', error);
-      alert('Error saving wishlist item');
+      addToast('Error saving wishlist item', 'error');
     }
   };
 
@@ -1256,12 +1110,12 @@ function App() {
       const response = await axios.post(`${API_URL}/wishlist/${id}/acquire`, {
         location: '' // Can add location selection later
       });
-      alert(response.data.message);
+      addToast(response.data.message, 'success');
       fetchWishlist();
       fetchCards();
     } catch (error) {
       console.error('Error acquiring wishlist item:', error);
-      alert('Error acquiring item');
+      addToast('Error acquiring item', 'error');
     }
   };
 
@@ -1272,10 +1126,10 @@ function App() {
       setLoading(true);
       const response = await axios.post(`${API_URL}/wishlist/update-all-prices`);
       fetchWishlist();
-      alert(`Updated ${response.data.updated} of ${response.data.total} wishlist items`);
+      addToast(`Updated ${response.data.updated} of ${response.data.total} wishlist prices`, 'success');
     } catch (error) {
       console.error('Error updating wishlist prices:', error);
-      alert('Error updating prices');
+      addToast('Error updating prices', 'error');
     } finally {
       setLoading(false);
     }
@@ -1329,13 +1183,13 @@ function App() {
         cardIds: Array.from(selectedCards),
         updates: { condition: bulkCondition }
       });
-      alert(response.data.message);
+      addToast(response.data.message, 'success');
       fetchCards();
       clearSelection();
       setBulkUpdateModal(null);
     } catch (error) {
       console.error('Error bulk updating condition:', error);
-      alert('Error updating cards');
+      addToast('Error updating cards', 'error');
     }
   };
 
@@ -1345,20 +1199,20 @@ function App() {
         cardIds: Array.from(selectedCards),
         updates: { location: bulkLocation }
       });
-      alert(response.data.message);
+      addToast(response.data.message, 'success');
       fetchCards();
       clearSelection();
       setBulkUpdateModal(null);
     } catch (error) {
       console.error('Error bulk updating location:', error);
-      alert('Error updating cards');
+      addToast('Error updating cards', 'error');
     }
   };
 
   const handleBulkAddTags = async () => {
     const tags = bulkTags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
     if (tags.length === 0) {
-      alert('Please enter at least one tag');
+      addToast('Please enter at least one tag', 'warning');
       return;
     }
 
@@ -1367,7 +1221,7 @@ function App() {
         cardIds: Array.from(selectedCards),
         updates: { addTags: tags }
       });
-      alert(response.data.message);
+      addToast(response.data.message, 'success');
       fetchCards();
       fetchAvailableTags();
       clearSelection();
@@ -1375,7 +1229,7 @@ function App() {
       setBulkTags('');
     } catch (error) {
       console.error('Error bulk adding tags:', error);
-      alert('Error adding tags');
+      addToast('Error adding tags', 'error');
     }
   };
 
@@ -2505,514 +2359,7 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shortcuts, settings.features]);
 
-  // Settings View Component (inline)
-  const SettingsView = ({
-    settings, updateSettings, resetSettings, formatPrice,
-    locations, availableTags, locationStats,
-    newLocationName, setNewLocationName, newLocationDesc, setNewLocationDesc,
-    editingLocation, handleCreateLocation, handleUpdateLocation, cancelEditLocation,
-    startEditLocation, handleDeleteLocation, handleToggleLocationIgnorePrice,
-    newTagName, setNewTagName, handleCreateTag, handleDeleteTag, handleToggleTagIgnorePrice,
-    generateQR, qrDataUrls, setQrDataUrls, setQRPreviewLocation, setShowQRPreview, setShowPrintLabels
-  }) => {
-    const [settingsTab, setSettingsTab] = React.useState('display');
-    const [clearCollectionConfirm, setClearCollectionConfirm] = React.useState(false);
-    const [clearCacheConfirm, setClearCacheConfirm] = React.useState(false);
-    const [statsData, setStatsData] = React.useState(null);
-
-    // Fetch stats on mount
-    React.useEffect(() => {
-      const fetchStats = async () => {
-        try {
-          const res = await axios.get(`${API_URL}/stats`);
-          setStatsData(res.data);
-        } catch (err) {
-          console.error('Failed to fetch stats:', err);
-        }
-      };
-      fetchStats();
-    }, []);
-
-    const handleClearCollection = async () => {
-      if (!clearCollectionConfirm) {
-        setClearCollectionConfirm(true);
-        return;
-      }
-      try {
-        await axios.delete(`${API_URL}/collection/clear-all`, { data: { confirmation: 'DELETE_ALL_CARDS' } });
-        setClearCollectionConfirm(false);
-        window.location.reload();
-      } catch (err) {
-        alert('Failed to clear collection: ' + err.message);
-      }
-    };
-
-    const handleClearCache = async () => {
-      if (!clearCacheConfirm) {
-        setClearCacheConfirm(true);
-        return;
-      }
-      try {
-        const res = await axios.delete(`${API_URL}/cache/clear`);
-        setClearCacheConfirm(false);
-        alert(`Cleared ${res.data.deletedCount} cached images`);
-        // Refresh stats
-        const statsRes = await axios.get(`${API_URL}/stats`);
-        setStatsData(statsRes.data);
-      } catch (err) {
-        alert('Failed to clear cache: ' + err.message);
-      }
-    };
-
-    return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Settings size={24} /> Settings
-        </h1>
-
-        {/* Tab Navigation */}
-        <div className="flex flex-wrap gap-2 border-b border-white/10 pb-2">
-          {[
-            { id: 'display', label: 'Display' },
-            { id: 'pricing', label: 'Pricing' },
-            { id: 'features', label: 'Features' },
-            { id: 'data', label: 'Data' },
-            { id: 'locations', label: 'Locations' },
-            { id: 'tags', label: 'Tags' },
-            { id: 'folders', label: 'Deck Folders' },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setSettingsTab(tab.id)}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                settingsTab === tab.id
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Display Settings */}
-        {settingsTab === 'display' && (
-          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Display Settings</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-white/80 text-sm mb-2">Items per page</label>
-                <select
-                  value={settings.pageSize}
-                  onChange={(e) => updateSettings({ pageSize: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white"
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-white/80 text-sm mb-2">Default sort</label>
-                <select
-                  value={settings.defaultSort}
-                  onChange={(e) => updateSettings({ defaultSort: e.target.value })}
-                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white"
-                >
-                  <option value="name">Name</option>
-                  <option value="price">Price</option>
-                  <option value="quantity">Quantity</option>
-                  <option value="totalValue">Total Value</option>
-                  <option value="type">Type</option>
-                  <option value="color">Color</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-white/80 text-sm mb-2">Default condition</label>
-                <select
-                  value={settings.defaultCondition}
-                  onChange={(e) => updateSettings({ defaultCondition: e.target.value })}
-                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white"
-                >
-                  <option value="NM">Near Mint (NM)</option>
-                  <option value="LP">Lightly Played (LP)</option>
-                  <option value="MP">Moderately Played (MP)</option>
-                  <option value="HP">Heavily Played (HP)</option>
-                  <option value="DMG">Damaged (DMG)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Pricing Settings */}
-        {settingsTab === 'pricing' && (
-          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Pricing Settings</h2>
-            <div className="space-y-6">
-              <div>
-                <label className="block text-white/80 text-sm mb-2">Display Currency</label>
-                <div className="flex gap-2">
-                  {['USD', 'CAD', 'EUR'].map(currency => (
-                    <button
-                      key={currency}
-                      onClick={() => updateSettings({ displayCurrency: currency })}
-                      className={`px-4 py-2 rounded-lg font-medium transition ${
-                        settings.displayCurrency === currency
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-white/20 text-white/70 hover:bg-white/30'
-                      }`}
-                    >
-                      {currency}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-white/80 text-sm mb-2">CAD to USD rate</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={settings.cadToUsdRate}
-                    onChange={(e) => updateSettings({ cadToUsdRate: parseFloat(e.target.value) || 0.73 })}
-                    className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-white/80 text-sm mb-2">USD to EUR rate</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={settings.usdToEurRate}
-                    onChange={(e) => updateSettings({ usdToEurRate: parseFloat(e.target.value) || 0.92 })}
-                    className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-white/80 text-sm mb-2">Condition Price Multipliers</label>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  {['NM', 'LP', 'MP', 'HP', 'DMG'].map(cond => (
-                    <div key={cond}>
-                      <label className="block text-white/60 text-xs mb-1">{cond}</label>
-                      <input
-                        type="number"
-                        step="0.05"
-                        min="0"
-                        max="1"
-                        value={settings.conditionMultipliers[cond]}
-                        onChange={(e) => updateSettings({
-                          conditionMultipliers: { [cond]: parseFloat(e.target.value) || 0 }
-                        })}
-                        className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white text-sm"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Feature Toggles */}
-        {settingsTab === 'features' && (
-          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Feature Toggles</h2>
-            <p className="text-white/60 text-sm mb-4">Enable or disable features to customize your experience.</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[
-                { id: 'deckBuilder', label: 'Deck Builder', icon: Layers },
-                { id: 'wishlist', label: 'Wishlist', icon: Heart },
-                { id: 'commanderRecs', label: 'Commander Recommendations', icon: Crown },
-                { id: 'setCompletion', label: 'Set Completion Tracker', icon: BarChart3 },
-                { id: 'comboFinder', label: 'Combo Finder', icon: Zap },
-              ].map(feature => {
-                const Icon = feature.icon;
-                const enabled = settings.features[feature.id] !== false;
-                return (
-                  <button
-                    key={feature.id}
-                    onClick={() => updateSettings({ features: { [feature.id]: !enabled } })}
-                    className={`flex items-center gap-3 p-4 rounded-lg transition ${
-                      enabled
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-white/10 text-white/50 hover:bg-white/20'
-                    }`}
-                  >
-                    <Icon size={20} />
-                    <span className="font-medium">{feature.label}</span>
-                    {enabled && <span className="ml-auto">✓</span>}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Data Management */}
-        {settingsTab === 'data' && (
-          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Data Management</h2>
-            {statsData && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-white/5 rounded-lg p-4">
-                  <div className="text-white/60 text-sm">Total Cards</div>
-                  <div className="text-2xl font-bold text-white">{statsData.totalCards?.toLocaleString() || 0}</div>
-                </div>
-                <div className="bg-white/5 rounded-lg p-4">
-                  <div className="text-white/60 text-sm">Unique Cards</div>
-                  <div className="text-2xl font-bold text-white">{statsData.uniqueCards?.toLocaleString() || 0}</div>
-                </div>
-                <div className="bg-white/5 rounded-lg p-4">
-                  <div className="text-white/60 text-sm">Collection Value</div>
-                  <div className="text-2xl font-bold text-white">{formatPrice(statsData.totalValue || 0)}</div>
-                </div>
-                <div className="bg-white/5 rounded-lg p-4">
-                  <div className="text-white/60 text-sm">Cached Images</div>
-                  <div className="text-2xl font-bold text-white">{statsData.cachedImageCount?.toLocaleString() || 0}</div>
-                </div>
-              </div>
-            )}
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={handleClearCollection}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
-                  clearCollectionConfirm
-                    ? 'bg-red-700 text-white animate-pulse'
-                    : 'bg-red-600 hover:bg-red-700 text-white'
-                }`}
-              >
-                {clearCollectionConfirm ? 'Click again to confirm' : 'Clear Collection'}
-              </button>
-              <button
-                onClick={handleClearCache}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
-                  clearCacheConfirm
-                    ? 'bg-orange-700 text-white animate-pulse'
-                    : 'bg-orange-600 hover:bg-orange-700 text-white'
-                }`}
-              >
-                {clearCacheConfirm ? 'Click again to confirm' : 'Clear Image Cache'}
-              </button>
-              <button
-                onClick={() => {
-                  resetSettings();
-                  alert('Settings reset to defaults');
-                }}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition"
-              >
-                Reset All Settings
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Locations Tab */}
-        {settingsTab === 'locations' && (
-          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Storage Locations</h2>
-            {/* Add/Edit Location Form */}
-            <div className="bg-white/5 rounded-lg p-4 mb-6">
-              <h3 className="text-md font-semibold text-white mb-3">
-                {editingLocation ? 'Edit Location' : 'Add New Location'}
-              </h3>
-              <div className="flex flex-col gap-3">
-                <input
-                  type="text"
-                  value={newLocationName}
-                  onChange={(e) => setNewLocationName(e.target.value)}
-                  placeholder="Location name (e.g., Binder A, Box 1)"
-                  className="px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                />
-                <input
-                  type="text"
-                  value={newLocationDesc}
-                  onChange={(e) => setNewLocationDesc(e.target.value)}
-                  placeholder="Description (optional)"
-                  className="px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                />
-                <div className="flex gap-2">
-                  {editingLocation ? (
-                    <>
-                      <button
-                        onClick={handleUpdateLocation}
-                        className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition"
-                      >
-                        Update Location
-                      </button>
-                      <button
-                        onClick={cancelEditLocation}
-                        className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg font-semibold transition"
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={handleCreateLocation}
-                      className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition"
-                    >
-                      <Plus size={18} className="inline mr-2" /> Add Location
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Existing Locations */}
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-md font-semibold text-white">Existing Locations ({locations.length})</h3>
-              {locations.length > 0 && (
-                <button
-                  onClick={async () => {
-                    const urls = {};
-                    for (const loc of locations) {
-                      urls[loc.name] = await generateQR(loc.name);
-                    }
-                    setQrDataUrls(urls);
-                    setShowPrintLabels(true);
-                  }}
-                  className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold flex items-center gap-1 transition"
-                >
-                  <Printer size={16} /> Print All Labels
-                </button>
-              )}
-            </div>
-            {locations.length === 0 ? (
-              <p className="text-white/60">No locations created yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {locations.map(location => (
-                  <div key={location._id} className="bg-white/5 rounded-lg p-4 flex items-center justify-between">
-                    <div>
-                      <div className="text-white font-medium flex items-center gap-2">
-                        <MapPin size={16} /> {location.name}
-                        {locationStats[location.name] && (
-                          <span className="text-white/50 text-sm ml-2">
-                            ({locationStats[location.name].cardCount} cards, {formatPrice(locationStats[location.name].totalValue)})
-                          </span>
-                        )}
-                      </div>
-                      {location.description && (
-                        <div className="text-white/60 text-sm mt-1">{location.description}</div>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleToggleLocationIgnorePrice(location._id, location.ignorePrice)}
-                        className={`px-2 py-2 rounded text-xs font-medium transition ${
-                          location.ignorePrice
-                            ? 'bg-orange-600 text-white'
-                            : 'bg-white/10 text-white/60 hover:bg-white/20'
-                        }`}
-                        title={location.ignorePrice ? 'Price is ignored in stats' : 'Click to ignore price in stats'}
-                      >
-                        {location.ignorePrice ? '$ off' : '$'}
-                      </button>
-                      <button
-                        onClick={async () => {
-                          const dataUrl = await generateQR(location.name);
-                          setQrDataUrls(prev => ({ ...prev, [location.name]: dataUrl }));
-                          setQRPreviewLocation(location);
-                          setShowQRPreview(true);
-                        }}
-                        className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded transition"
-                        title="Generate QR Label"
-                      >
-                        <QrCode size={16} />
-                      </button>
-                      <button
-                        onClick={() => startEditLocation(location)}
-                        className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteLocation(location._id)}
-                        className="p-2 bg-red-600 hover:bg-red-700 text-white rounded transition"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Tags Tab */}
-        {settingsTab === 'tags' && (
-          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Tags</h2>
-            {/* Add Tag Form */}
-            <div className="bg-white/5 rounded-lg p-4 mb-6">
-              <h3 className="text-md font-semibold text-white mb-3">Add New Tag</h3>
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  value={newTagName}
-                  onChange={(e) => setNewTagName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleCreateTag()}
-                  placeholder="Tag name (e.g., commander, trade)"
-                  className="flex-1 px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                />
-                <button
-                  onClick={handleCreateTag}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition"
-                >
-                  <Plus size={18} className="inline mr-1" /> Add
-                </button>
-              </div>
-            </div>
-
-            {/* Existing Tags */}
-            <h3 className="text-md font-semibold text-white mb-3">Existing Tags ({availableTags.length})</h3>
-            {availableTags.length === 0 ? (
-              <p className="text-white/60">No tags created yet. Tags are created when you add them to cards or create them here.</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {availableTags.map(tag => {
-                  const tagName = tag.name || tag;
-                  const ignorePrice = tag.ignorePrice || false;
-                  return (
-                    <div key={tagName} className="bg-white/10 rounded-lg px-3 py-2 flex items-center gap-2 group">
-                      <span className="text-white">{tagName}</span>
-                      <button
-                        onClick={() => handleToggleTagIgnorePrice(tagName, ignorePrice)}
-                        className={`px-1.5 py-0.5 rounded text-xs font-medium transition ${
-                          ignorePrice
-                            ? 'bg-orange-600 text-white'
-                            : 'bg-white/10 text-white/40 hover:bg-white/20'
-                        }`}
-                        title={ignorePrice ? 'Price is ignored in stats' : 'Click to ignore price in stats'}
-                      >
-                        {ignorePrice ? '$ off' : '$'}
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTag(tagName)}
-                        className="text-white/40 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
-                        title="Delete tag"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Deck Folders Tab */}
-        {settingsTab === 'folders' && (
-          <DeckFoldersTab />
-        )}
-      </div>
-    );
-  };
+  // Settings View Component extracted to ./components/SettingsView.js
 
   // URL routing: public shared deck view
   const sharedDeckMatch = window.location.pathname.match(/^\/shared\/deck\/([a-f0-9]+)$/i);
@@ -5788,11 +5135,13 @@ function App() {
 // Wrap App with AuthProvider and AuthGuard
 function AppWithAuth() {
   return (
-    <AuthProvider>
-      <AuthGuard>
-        <App />
-      </AuthGuard>
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <AuthGuard>
+          <App />
+        </AuthGuard>
+      </AuthProvider>
+    </ToastProvider>
   );
 }
 
