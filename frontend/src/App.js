@@ -15,6 +15,7 @@ import ColumnContextMenu from './components/ColumnContextMenu';
 import { AuthProvider, useAuthContext } from './contexts/AuthContext';
 import { AuthGuard } from './components/auth/AuthGuard';
 import { ToastProvider, useToast } from './contexts/ToastContext';
+import { CardCollectionProvider, useCardCollection } from './contexts/CardCollectionContext';
 import { AccountSettings } from './components/auth/AccountSettings';
 import { AdminPanel } from './components/admin/AdminPanel';
 
@@ -67,15 +68,6 @@ const CubeBuilder = React.lazy(() => import('./components/Gameplay/CubeBuilder')
 const ReprintTracker = React.lazy(() => import('./components/Tools/ReprintTracker'));
 const SetReleaseCalendar = React.lazy(() => import('./components/Tools/SetReleaseCalendar'));
 const SpoilerSeasonIntegration = React.lazy(() => import('./components/Tools/SpoilerSeasonIntegration'));
-
-// Helper to get auth headers for API calls
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('mtg_access_token');
-  if (token) {
-    return { Authorization: `Bearer ${token}` };
-  }
-  return {};
-};
 
 // Set up axios interceptor to add auth headers to all requests
 axios.interceptors.request.use((config) => {
@@ -151,7 +143,33 @@ function App() {
   // Settings must be first so other state can use its values
   const { settings, updateSettings, resetSettings } = useSettings();
 
-  const [cards, setCards] = useState([]);
+  // Card collection state and handlers from context
+  const {
+    cards, setCards,
+    loading, setLoading,
+    editingId, setEditingId,
+    hoveredCard, setHoveredCard,
+    hoveredCardPriceHistory, setHoveredCardPriceHistory,
+    detailCard, setDetailCard,
+    sparkline, setSparkline,
+    sparklineTimerRef,
+    fetchCards,
+    handleSubmit,
+    handleDelete,
+    updateCardPrice,
+    updateAllPrices,
+    updateAllOracleText,
+    handleAddTag,
+    handleRemoveTag,
+    handleCardHover,
+    handlePriceCellEnter,
+    handlePriceCellLeave,
+    handleBulkImport,
+  } = useCardCollection();
+
+  // Tags state — temporary home until Task 5 moves it to LocationTagContext
+  const [availableTags, setAvailableTags] = useState([]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCondition, setFilterCondition] = useState('all');
   const [filterColor, setFilterColor] = useState('all');
@@ -162,12 +180,8 @@ function App() {
   const [sortBy, setSortBy] = useState(settings.defaultSort);
   const [showAddForm, setShowAddForm] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
-  const [editingId, setEditingId] = useState(null);
   const [autocompleteResults, setAutocompleteResults] = useState([]);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [hoveredCard, setHoveredCard] = useState(null);
-  const [hoveredCardPriceHistory, setHoveredCardPriceHistory] = useState([]);
   const [showFinancePanel, setShowFinancePanel] = useState(false);
   const [financeData, setFinanceData] = useState(null);
   const [importResults, setImportResults] = useState(null);
@@ -288,7 +302,6 @@ function App() {
 
   const [showTagInput, setShowTagInput] = useState(null); // Card ID currently editing tags
   const [newTag, setNewTag] = useState('');
-  const [availableTags, setAvailableTags] = useState([]);
   const [searchIncludesOracleText, setSearchIncludesOracleText] = useState(true);
   const [typesInputValue, setTypesInputValue] = useState(''); // Temporary state for types input
   const [tagsInputValue, setTagsInputValue] = useState(''); // Temporary state for tags input
@@ -296,12 +309,6 @@ function App() {
   const [forceUpdate, setForceUpdate] = useState(false); // Force update cards even if they have data
   const [updateFullData, setUpdateFullData] = useState(false); // Update full card data (set, rarity, etc.)
   const [showPriceUpdateModal, setShowPriceUpdateModal] = useState(false);
-
-  // Card detail panel and sparkline
-  const [detailCard, setDetailCard] = useState(null);
-  const [sparkline, setSparkline] = useState(null);
-  const sparklineTimerRef = React.useRef(null);
-  useEffect(() => () => clearTimeout(sparklineTimerRef.current), []);
 
   // QR Labels
   const [showQRPreview, setShowQRPreview] = useState(false);
@@ -433,15 +440,7 @@ function App() {
     }
   };
 
-  const fetchCards = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/cards`);
-      setCards(response.data);
-    } catch (error) {
-      console.error('Error fetching cards:', error);
-    }
-  };
-
+  // Tags — temporary home until Task 5 moves this to LocationTagContext
   const fetchAvailableTags = async () => {
     try {
       const response = await axios.get(`${API_URL}/tags`);
@@ -588,57 +587,6 @@ function App() {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!formData.name) {
-      addToast('Card name is required', 'warning');
-      return;
-    }
-
-    try {
-      let response;
-      if (editingId) {
-        response = await axios.put(`${API_URL}/cards/${editingId}`, formData);
-      } else {
-        response = await axios.post(`${API_URL}/cards`, formData);
-      }
-
-      // Check if card was merged with existing entry
-      if (response.data.merged) {
-        addToast(`Card already exists! ${response.data.message}`, 'info');
-      }
-
-      fetchCards();
-      handleCancel();
-    } catch (error) {
-      console.error('Error saving card:', error);
-      addToast('Error saving card', 'error');
-    }
-  };
-
-  const handlePriceCellEnter = (e, card) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    clearTimeout(sparklineTimerRef.current);
-    sparklineTimerRef.current = setTimeout(async () => {
-      try {
-        const res = await axios.get(`${API_URL}/cards/${card._id}/price-history?days=30`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('mtg_access_token')}` }
-        });
-        const pts = (res.data || []).map(p => ({ price: p.price, date: p.date || p.createdAt }));
-        setSparkline({
-          cardId: card._id,
-          cardName: card.name,
-          pos: { top: rect.top - 10, left: rect.left + rect.width / 2 },
-          history: pts
-        });
-      } catch {}
-    }, 300);
-  };
-
-  const handlePriceCellLeave = () => {
-    clearTimeout(sparklineTimerRef.current);
-    setSparkline(null);
-  };
-
   const handleEdit = (card) => {
     setFormData({
       name: card.name,
@@ -659,17 +607,6 @@ function App() {
     setTagsInputValue(card.tags ? card.tags.join(', ') : '');
     setEditingId(card._id);
     setShowAddForm(true);
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this card?')) return;
-
-    try {
-      await axios.delete(`${API_URL}/cards/${id}`);
-      fetchCards();
-    } catch (error) {
-      console.error('Error deleting card:', error);
-    }
   };
 
   const handleCancel = () => {
@@ -703,92 +640,6 @@ function App() {
     });
   };
 
-  const updateCardPrice = async (id) => {
-    try {
-      await axios.post(`${API_URL}/cards/${id}/update-price`);
-      fetchCards();
-      addToast('Price updated successfully!', 'success');
-    } catch (error) {
-      console.error('Error updating price:', error);
-      addToast('Error updating price', 'error');
-    }
-  };
-
-  const updateAllPrices = async () => {
-    let message = 'This will update prices';
-    if (updateFullData) {
-      message += ' and full card data (set, rarity, collector number, colors, types, mana cost, images)';
-    }
-    message += forceUpdate
-      ? ' for ALL cards (even those with existing data). Continue?'
-      : ' only for cards missing data. Continue?';
-
-    if (!window.confirm(message)) return;
-
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (forceUpdate) params.append('force', 'true');
-      if (updateFullData) params.append('fullData', 'true');
-
-      const url = `${API_URL}/cards/update-all-prices${params.toString() ? '?' + params.toString() : ''}`;
-      const response = await axios.post(url);
-      fetchCards();
-
-      // Show detailed results
-      const { updated, skipped, total } = response.data;
-      const dataType = updateFullData ? 'full card data' : 'prices';
-      addToast(`${dataType} updated: ${updated} cards updated, ${skipped} skipped, ${total} total`, 'success');
-    } catch (error) {
-      console.error('Error updating prices:', error);
-      addToast('Error updating prices', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddTag = async (cardId) => {
-    if (!newTag.trim()) return;
-
-    try {
-      await axios.post(`${API_URL}/cards/${cardId}/tags`, { tag: newTag.trim() });
-      setNewTag('');
-      setShowTagInput(null);
-      fetchCards();
-      fetchAvailableTags();
-    } catch (error) {
-      console.error('Error adding tag:', error);
-      addToast('Error adding tag', 'error');
-    }
-  };
-
-  const handleRemoveTag = async (cardId, tag) => {
-    try {
-      await axios.delete(`${API_URL}/cards/${cardId}/tags/${encodeURIComponent(tag)}`);
-      fetchCards();
-      fetchAvailableTags();
-    } catch (error) {
-      console.error('Error removing tag:', error);
-      addToast('Error removing tag', 'error');
-    }
-  };
-
-  const updateAllOracleText = async () => {
-    if (!window.confirm('This will fetch oracle text for all cards from Scryfall. Continue?')) return;
-
-    try {
-      setLoading(true);
-      await axios.post(`${API_URL}/cards/update-all-oracle-text`);
-      fetchCards();
-      addToast('Oracle text updated successfully!', 'success');
-    } catch (error) {
-      console.error('Error updating oracle text:', error);
-      addToast('Error updating oracle text', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // ============================================
   // FINANCE FUNCTIONS
   // ============================================
@@ -801,16 +652,6 @@ function App() {
     } catch (error) {
       console.error('Error fetching finance data:', error);
       addToast('Error fetching finance data', 'error');
-    }
-  };
-
-  const handleCardHover = async (card) => {
-    try {
-      const res = await axios.get(`${API_URL}/cards/${card._id}/price-history`);
-      setHoveredCardPriceHistory(res.data);
-    } catch (err) {
-      console.error('Error fetching price history:', err);
-      setHoveredCardPriceHistory([]);
     }
   };
 
@@ -1926,117 +1767,6 @@ function App() {
     }
   };
 
-  const parseCSV = (text) => {
-    const lines = text.split('\n').filter(line => line.trim());
-    if (lines.length < 2) return []; // Need header + at least one data row
-
-    const header = lines[0].split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
-    const cards = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      const values = [];
-      let current = '';
-      let inQuotes = false;
-
-      // Parse CSV respecting quoted fields
-      for (const char of lines[i]) {
-        if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-          values.push(current.trim());
-          current = '';
-        } else {
-          current += char;
-        }
-      }
-      values.push(current.trim());
-
-      const card = {};
-      header.forEach((key, idx) => {
-        // Map CSV header names to card fields
-        const fieldMap = {
-          'name': 'name',
-          'set': 'set',
-          'quantity': 'quantity',
-          'condition': 'condition',
-          'price': 'price',
-          'colors': 'colors',
-          'types': 'types',
-          'mana cost': 'manaCost',
-          'manacost': 'manaCost',
-          'total value': null, // Skip calculated field
-          'totalvalue': null,
-          'setcode': 'setCode',
-          'set code': 'setCode',
-          'collectornumber': 'collectorNumber',
-          'collector number': 'collectorNumber',
-          'rarity': 'rarity',
-          'scryfallid': 'scryfallId',
-          'imageurl': 'imageUrl',
-          'isfoil': 'isFoil',
-          'istoken': 'isToken',
-          'oracletext': 'oracleText',
-          'tags': 'tags'
-        };
-        const field = fieldMap[key] || key;
-        if (field && values[idx] !== undefined) {
-          card[field] = values[idx];
-        }
-      });
-
-      if (card.name) cards.push(card);
-    }
-
-    return cards;
-  };
-
-  const handleBulkImport = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    try {
-      setIsImporting(true);
-      const text = await file.text();
-      const fileExtension = file.name.split('.').pop().toLowerCase();
-
-      let response;
-
-      if (fileExtension === 'json') {
-        // JSON import - parse and send full card objects
-        const cards = JSON.parse(text);
-        const cardArray = Array.isArray(cards) ? cards : [cards];
-        setImportProgress({ current: 0, total: cardArray.length, cardName: '' });
-        response = await axios.post(`${API_URL}/cards/bulk-import-full`, { cards: cardArray });
-
-      } else if (fileExtension === 'csv') {
-        // CSV import - parse and send full card objects
-        const cards = parseCSV(text);
-        setImportProgress({ current: 0, total: cards.length, cardName: '' });
-        response = await axios.post(`${API_URL}/cards/bulk-import-full`, { cards });
-
-      } else {
-        // TXT import - send as card list (existing behavior)
-        const cardList = text.split('\n').filter(line => line.trim());
-        setImportProgress({ current: 0, total: cardList.length, cardName: '' });
-        response = await axios.post(`${API_URL}/cards/bulk-import`, {
-          cardList,
-          offlineMode
-        });
-      }
-
-      setImportResults(response.data);
-      setShowImportResults(true);
-      fetchCards();
-    } catch (error) {
-      console.error('Error importing cards:', error);
-      alert('Error importing cards: ' + error.message);
-    } finally {
-      setIsImporting(false);
-      setImportProgress({ current: 0, total: 0, cardName: '' });
-      event.target.value = ''; // Reset file input
-    }
-  };
-
   const exportData = async (format) => {
     try {
       const response = await axios.get(`${API_URL}/export/${format}`, {
@@ -2386,7 +2116,7 @@ function App() {
         ref={fileInputRef}
         type="file"
         accept=".txt,.csv,.json"
-        onChange={handleBulkImport}
+        onChange={(e) => handleBulkImport(e, { offlineMode, setIsImporting, setImportProgress, setImportResults, setShowImportResults })}
         className="hidden"
         disabled={isImporting}
       />
@@ -2807,7 +2537,7 @@ function App() {
 
             <div className="flex gap-2">
               <button
-                onClick={handleSubmit}
+                onClick={() => handleSubmit(formData, handleCancel)}
                 className="flex-1 px-4 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition"
               >
                 <Save size={18} /> {editingId ? 'Update' : 'Save'}
@@ -2960,7 +2690,7 @@ function App() {
                             >
                               {tag}
                               <button
-                                onClick={() => handleRemoveTag(card._id, tag)}
+                                onClick={() => handleRemoveTag(card._id, tag, fetchAvailableTags)}
                                 className="hover:text-red-300 transition"
                                 title="Remove tag"
                               >
@@ -2976,7 +2706,7 @@ function App() {
                                 onChange={(e) => setNewTag(e.target.value)}
                                 onKeyPress={(e) => {
                                   if (e.key === 'Enter') {
-                                    handleAddTag(card._id);
+                                    handleAddTag(card._id, newTag, setNewTag, setShowTagInput, fetchAvailableTags);
                                   }
                                 }}
                                 placeholder="tag"
@@ -2984,7 +2714,7 @@ function App() {
                                 autoFocus
                               />
                               <button
-                                onClick={() => handleAddTag(card._id)}
+                                onClick={() => handleAddTag(card._id, newTag, setNewTag, setShowTagInput, fetchAvailableTags)}
                                 className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs"
                               >
                                 <Save size={12} />
@@ -4433,7 +4163,7 @@ function App() {
                 <button
                   onClick={() => {
                     setShowPriceUpdateModal(false);
-                    updateAllPrices();
+                    updateAllPrices(forceUpdate, updateFullData);
                   }}
                   className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition"
                 >
@@ -5092,9 +4822,11 @@ function AppWithAuth() {
   return (
     <ToastProvider>
       <AuthProvider>
-        <AuthGuard>
-          <App />
-        </AuthGuard>
+        <CardCollectionProvider>
+          <AuthGuard>
+            <App />
+          </AuthGuard>
+        </CardCollectionProvider>
       </AuthProvider>
     </ToastProvider>
   );
