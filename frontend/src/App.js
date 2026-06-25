@@ -16,6 +16,7 @@ import { AuthProvider, useAuthContext } from './contexts/AuthContext';
 import { AuthGuard } from './components/auth/AuthGuard';
 import { ToastProvider, useToast } from './contexts/ToastContext';
 import { CardCollectionProvider, useCardCollection } from './contexts/CardCollectionContext';
+import { LocationTagProvider, useLocationTag } from './contexts/LocationTagContext';
 import { AccountSettings } from './components/auth/AccountSettings';
 import { AdminPanel } from './components/admin/AdminPanel';
 
@@ -167,8 +168,16 @@ function App() {
     handleBulkImport,
   } = useCardCollection();
 
-  // Tags state — temporary home until Task 5 moves it to LocationTagContext
-  const [availableTags, setAvailableTags] = useState([]);
+  // Location and tag state and handlers from context
+  const {
+    locations, fetchLocations, locationStats,
+    newLocationName, setNewLocationName, newLocationDesc, setNewLocationDesc,
+    editingLocation, startEditLocation, cancelEditLocation,
+    handleCreateLocation, handleUpdateLocation, handleDeleteLocation, handleToggleLocationIgnorePrice,
+    availableTags, fetchAvailableTags,
+    newTagName, setNewTagName,
+    handleCreateTag, handleDeleteTag, handleToggleTagIgnorePrice,
+  } = useLocationTag();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCondition, setFilterCondition] = useState('all');
@@ -222,12 +231,7 @@ function App() {
   const [forumProfileView, setForumProfileView] = useState(false);
   const [showForumLeaderboard, setShowForumLeaderboard] = useState(false);
 
-  // Location management
-  const [locations, setLocations] = useState([]);
-  const [newLocationName, setNewLocationName] = useState('');
-  const [newLocationDesc, setNewLocationDesc] = useState('');
-  const [editingLocation, setEditingLocation] = useState(null);
-  const [newTagName, setNewTagName] = useState('');
+  // Location management state is now in LocationTagContext
 
   // Wishlist
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -382,22 +386,8 @@ function App() {
     return Array.from(locs).sort();
   }, [cards, locations]);
 
-  // Location stats for QR labels
-  const locationStats = useMemo(() => {
-    const stats = {};
-    locations.forEach(loc => {
-      const cardsInLoc = cards.filter(c => c.location === loc.name);
-      const cardCount = cardsInLoc.reduce((sum, c) => sum + c.quantity, 0);
-      const totalValue = cardsInLoc.reduce((sum, c) => sum + (c.price * c.quantity), 0);
-      stats[loc.name] = { cardCount, totalValue };
-    });
-    return stats;
-  }, [cards, locations]);
-
   useEffect(() => {
     fetchCards();
-    fetchAvailableTags();
-    fetchLocations();
     fetchWishlist();
   }, []);
 
@@ -437,25 +427,6 @@ function App() {
       console.error('Error fetching forum categories:', error);
     } finally {
       setLoadingForumCategories(false);
-    }
-  };
-
-  // Tags — temporary home until Task 5 moves this to LocationTagContext
-  const fetchAvailableTags = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/tags`);
-      setAvailableTags(response.data);
-    } catch (error) {
-      console.error('Error fetching tags:', error);
-    }
-  };
-
-  const fetchLocations = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/locations`);
-      setLocations(response.data);
-    } catch (error) {
-      console.error('Error fetching locations:', error);
     }
   };
 
@@ -652,129 +623,6 @@ function App() {
     } catch (error) {
       console.error('Error fetching finance data:', error);
       addToast('Error fetching finance data', 'error');
-    }
-  };
-
-  // ============================================
-  // LOCATION MANAGEMENT FUNCTIONS
-  // ============================================
-
-  const handleCreateLocation = async () => {
-    if (!newLocationName.trim()) {
-      addToast('Location name is required', 'warning');
-      return;
-    }
-
-    try {
-      await axios.post(`${API_URL}/locations`, {
-        name: newLocationName.trim(),
-        description: newLocationDesc.trim()
-      });
-      setNewLocationName('');
-      setNewLocationDesc('');
-      fetchLocations();
-    } catch (error) {
-      console.error('Error creating location:', error);
-      addToast(error.response?.data?.message || 'Error creating location', 'error');
-    }
-  };
-
-  const handleUpdateLocation = async () => {
-    if (!editingLocation || !newLocationName.trim()) return;
-
-    try {
-      await axios.put(`${API_URL}/locations/${editingLocation._id}`, {
-        name: newLocationName.trim(),
-        description: newLocationDesc.trim()
-      });
-      setEditingLocation(null);
-      setNewLocationName('');
-      setNewLocationDesc('');
-      fetchLocations();
-      fetchCards(); // Refresh cards in case location name changed
-    } catch (error) {
-      console.error('Error updating location:', error);
-      addToast(error.response?.data?.message || 'Error updating location', 'error');
-    }
-  };
-
-  const handleDeleteLocation = async (locationId) => {
-    if (!window.confirm('Are you sure you want to delete this location?')) return;
-
-    try {
-      await axios.delete(`${API_URL}/locations/${locationId}`);
-      fetchLocations();
-    } catch (error) {
-      console.error('Error deleting location:', error);
-      addToast(error.response?.data?.message || 'Error deleting location', 'error');
-    }
-  };
-
-  const startEditLocation = (location) => {
-    setEditingLocation(location);
-    setNewLocationName(location.name);
-    setNewLocationDesc(location.description || '');
-  };
-
-  const cancelEditLocation = () => {
-    setEditingLocation(null);
-    setNewLocationName('');
-    setNewLocationDesc('');
-  };
-
-  const handleCreateTag = async () => {
-    if (!newTagName.trim()) {
-      addToast('Tag name is required', 'warning');
-      return;
-    }
-
-    const normalizedTag = newTagName.trim().toLowerCase();
-    // Check if tag exists (availableTags is now array of objects)
-    if (availableTags.some(t => (t.name || t) === normalizedTag)) {
-      addToast('Tag already exists', 'warning');
-      return;
-    }
-
-    try {
-      await axios.post(`${API_URL}/tags`, { name: normalizedTag });
-      setNewTagName('');
-      fetchAvailableTags();
-    } catch (error) {
-      console.error('Error creating tag:', error);
-      addToast(error.response?.data?.message || 'Error creating tag', 'error');
-    }
-  };
-
-  const handleDeleteTag = async (tagName) => {
-    if (!window.confirm(`Delete tag "${tagName}"? This will remove it from all cards.`)) return;
-
-    try {
-      await axios.delete(`${API_URL}/tags/${encodeURIComponent(tagName)}`);
-      fetchAvailableTags();
-      fetchCards(); // Refresh cards since tags may have been removed
-    } catch (error) {
-      console.error('Error deleting tag:', error);
-      addToast(error.response?.data?.message || 'Error deleting tag', 'error');
-    }
-  };
-
-  const handleToggleTagIgnorePrice = async (tagName, currentValue) => {
-    try {
-      await axios.put(`${API_URL}/tags/${encodeURIComponent(tagName)}`, { ignorePrice: !currentValue });
-      fetchAvailableTags();
-    } catch (error) {
-      console.error('Error updating tag:', error);
-      addToast(error.response?.data?.message || 'Error updating tag', 'error');
-    }
-  };
-
-  const handleToggleLocationIgnorePrice = async (locationId, currentValue) => {
-    try {
-      await axios.put(`${API_URL}/locations/${locationId}`, { ignorePrice: !currentValue });
-      fetchLocations();
-    } catch (error) {
-      console.error('Error updating location:', error);
-      addToast(error.response?.data?.message || 'Error updating location', 'error');
     }
   };
 
@@ -4823,9 +4671,11 @@ function AppWithAuth() {
     <ToastProvider>
       <AuthProvider>
         <CardCollectionProvider>
-          <AuthGuard>
-            <App />
-          </AuthGuard>
+          <LocationTagProvider>
+            <AuthGuard>
+              <App />
+            </AuthGuard>
+          </LocationTagProvider>
         </CardCollectionProvider>
       </AuthProvider>
     </ToastProvider>
