@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
 import axios from 'axios';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Search, Plus, Download, RefreshCw, DollarSign, Upload, Camera, Settings, Heart, Layers, Zap, Crown, BarChart3, Users, Home, BookOpen, Trophy, User, MessageSquare } from 'lucide-react';
 import QRCode from 'qrcode';
 import './App.css';
@@ -18,44 +19,34 @@ import { WishlistProvider, useWishlist } from './contexts/WishlistContext';
 import { AccountSettings } from './components/auth/AccountSettings';
 import { AdminPanel } from './components/admin/AdminPanel';
 
-// Learning Components
-import CardRulingsBrowser from './components/Learn/CardRulingsBrowser';
-import InteractionChecker from './components/Learn/InteractionChecker';
-import NewPlayerGuide from './components/Learn/NewPlayerGuide';
-import KeywordGlossary from './components/Learn/KeywordGlossary';
-import ComboTutorials from './components/Learn/ComboTutorials';
-import FormatGuides from './components/Learn/FormatGuides';
-import SealedSimulator from './components/Gameplay/SealedSimulator';
-import ArchenemyMode from './components/Gameplay/ArchenemyMode';
-
-// Forum Components
-import ForumHome from './components/Forum/ForumHome';
-import CategoryView from './components/Forum/CategoryView';
-import ThreadView from './components/Forum/ThreadView';
-import SpamFilterAdmin from './components/Forum/SpamFilterAdmin';
-import MuteManager from './components/Forum/MuteManager';
-import ForumProfilePage from './components/Forum/ForumProfilePage';
-import ForumShop from './components/Forum/ForumShop';
-import ForumLeaderboard from './components/Forum/ForumLeaderboard';
+// Learning Components (kept as sync imports since they may be used lazily below)
 import SharedDeckView from './components/CommunityDecks/SharedDeckView';
 import CommunityDecks from './components/CommunityDecks/CommunityDecks';
+import ForumView from './components/ForumView';
 import { API_URL } from './config';
 import NotificationBell from './components/NotificationBell';
 import CardDetailPanel from './components/CardDetailPanel';
 import UserMenu from './components/UserMenu';
 import MessagesPage from './components/MessagesPage';
 import MyProfile from './components/MyProfile';
-import UserProfile from './components/UserProfile';
 import SettingsView from './components/SettingsView';
 import SparklinePopup from './components/SparklinePopup';
-import CollectionView from './components/CollectionView';
-import WishlistView from './components/WishlistView';
 
 const DeckBuilder = React.lazy(() => import('./components/DeckBuilder'));
 const LifeCounter = React.lazy(() => import('./components/LifeCounter/LifeCounter'));
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
 
+// Learning components (lazy)
+const CardRulingsBrowser = React.lazy(() => import('./components/Learn/CardRulingsBrowser'));
+const InteractionChecker = React.lazy(() => import('./components/Learn/InteractionChecker'));
+const NewPlayerGuide = React.lazy(() => import('./components/Learn/NewPlayerGuide'));
+const KeywordGlossary = React.lazy(() => import('./components/Learn/KeywordGlossary'));
+const ComboTutorials = React.lazy(() => import('./components/Learn/ComboTutorials'));
+const FormatGuides = React.lazy(() => import('./components/Learn/FormatGuides'));
+
 // Gameplay components
+const SealedSimulator = React.lazy(() => import('./components/Gameplay/SealedSimulator'));
+const ArchenemyMode = React.lazy(() => import('./components/Gameplay/ArchenemyMode'));
 const StarVariant = React.lazy(() => import('./components/Gameplay/StarVariant'));
 const PlanechaseMode = React.lazy(() => import('./components/Gameplay/PlanechaseMode'));
 const CustomFormatBuilder = React.lazy(() => import('./components/Gameplay/CustomFormatBuilder'));
@@ -65,6 +56,10 @@ const CubeBuilder = React.lazy(() => import('./components/Gameplay/CubeBuilder')
 const ReprintTracker = React.lazy(() => import('./components/Tools/ReprintTracker'));
 const SetReleaseCalendar = React.lazy(() => import('./components/Tools/SetReleaseCalendar'));
 const SpoilerSeasonIntegration = React.lazy(() => import('./components/Tools/SpoilerSeasonIntegration'));
+
+// View components (lazy)
+const CollectionView = React.lazy(() => import('./components/CollectionView'));
+const WishlistView = React.lazy(() => import('./components/WishlistView'));
 
 // Set up axios interceptor to add auth headers to all requests
 axios.interceptors.request.use((config) => {
@@ -117,6 +112,12 @@ axios.interceptors.response.use(
 );
 
 
+// Wrapper so SharedDeckView can read :shareCode from React Router params
+function SharedDeckViewRoute() {
+  const { shareCode } = useParams();
+  return <SharedDeckView shareCode={shareCode} />;
+}
+
 function App() {
   useToast(); // Required for context availability; individual components consume toast via useToast()
 
@@ -152,6 +153,9 @@ function App() {
   // Wishlist context - WishlistView handles UI; App.js only needs fetchWishlist for combo-to-wishlist
   const { fetchWishlist } = useWishlist();
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [showFinancePanel, setShowFinancePanel] = useState(false);
   const [financeData, setFinanceData] = useState(null);
   const [importResults, setImportResults] = useState(null);
@@ -160,9 +164,6 @@ function App() {
   const [isImporting, setIsImporting] = useState(false);
   const [offlineMode, setOfflineMode] = useState(false);
   const [openPanel, setOpenPanel] = useState(null); // null | 'notifications' | 'dms'
-  const [currentView, setCurrentView] = useState(() => {
-    return localStorage.getItem('currentView') || 'dashboard';
-  }); // 'dashboard', 'collection', 'decks', 'wishlist', 'forum', 'lifecounter', or 'settings'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
@@ -171,20 +172,6 @@ function App() {
   // Auth/Admin state
   const [showAccountSettings, setShowAccountSettings] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
-
-  // Forum state
-  const [forumCategories, setForumCategories] = useState([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
-  const [selectedThreadId, setSelectedThreadId] = useState(null);
-  const [loadingForumCategories, setLoadingForumCategories] = useState(false);
-  const [showSpamFilterAdmin, setShowSpamFilterAdmin] = useState(false);
-  const [showMuteManager, setShowMuteManager] = useState(false);
-  const [showForumShop, setShowForumShop] = useState(false);
-  const [cosmeticVersion, setCosmeticVersion] = useState(0);
-  const [forumRefreshKey, setForumRefreshKey] = useState(0);
-  const [selectedForumProfileUsername, setSelectedForumProfileUsername] = useState(null);
-  const [forumProfileView, setForumProfileView] = useState(false);
-  const [showForumLeaderboard, setShowForumLeaderboard] = useState(false);
 
   // Location management state is now in LocationTagContext
 
@@ -229,36 +216,8 @@ function App() {
   // Handle ?location= URL parameter (for QR code scanning)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('location')) setCurrentView('collection');
-  }, []);
-  // Save current view to localStorage
-  useEffect(() => {
-    localStorage.setItem('currentView', currentView);
-  }, [currentView]);
-
-  // Load forum categories when forum view is active and restore saved state
-  useEffect(() => {
-    if (currentView === 'forum') {
-      fetchForumCategories();
-      // Restore forum navigation state from localStorage
-      const savedCategory = localStorage.getItem('forumSelectedCategory');
-      const savedThread = localStorage.getItem('forumSelectedThread');
-      if (savedThread) setSelectedThreadId(savedThread);
-      else if (savedCategory) setSelectedCategoryId(savedCategory);
-    }
-  }, [currentView]);
-
-  const fetchForumCategories = async () => {
-    setLoadingForumCategories(true);
-    try {
-      const response = await axios.get(`${API_URL}/forum/categories`);
-      setForumCategories(response.data);
-    } catch (error) {
-      console.error('Error fetching forum categories:', error);
-    } finally {
-      setLoadingForumCategories(false);
-    }
-  };
+    if (params.get('location')) navigate('/collection');
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Generate QR code data URL for a location
   const generateQR = async (locationName) => {
@@ -669,14 +628,14 @@ function App() {
   // Redirect to dashboard if current view's feature is disabled
   useEffect(() => {
     const viewFeatureMap = {
-      decks: 'deckBuilder',
-      wishlist: 'wishlist',
+      '/decks': 'deckBuilder',
+      '/wishlist': 'wishlist',
     };
-    const feature = viewFeatureMap[currentView];
+    const feature = viewFeatureMap[location.pathname];
     if (feature && settings.features[feature] === false) {
-      setCurrentView('dashboard');
+      navigate('/dashboard');
     }
-  }, [currentView, settings.features]);
+  }, [location.pathname, settings.features]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keyboard shortcuts
   const paletteCommandsRef = useRef([]);
@@ -734,34 +693,34 @@ function App() {
     const ft = settings.features;
     const allCmds = [
       // Navigation
-      { id: 'nav-dashboard', label: 'Go to Dashboard', icon: Home, category: 'Navigation', action: () => setCurrentView('dashboard') },
-      { id: 'nav-collection', label: 'Go to Collection', icon: BookOpen, category: 'Navigation', action: () => setCurrentView('collection') },
-      { id: 'nav-decks', label: 'Go to Deck Builder', icon: Layers, category: 'Navigation', action: () => setCurrentView('decks'), feature: 'deckBuilder' },
-      { id: 'nav-wishlist', label: 'Go to Wishlist', icon: Heart, category: 'Navigation', action: () => setCurrentView('wishlist'), feature: 'wishlist' },
-      { id: 'nav-forum', label: 'Go to Forum', icon: MessageSquare, category: 'Navigation', action: () => setCurrentView('forum') },
-      { id: 'nav-lifecounter', label: 'Go to Life Counter', icon: Users, category: 'Navigation', action: () => setCurrentView('lifecounter') },
-      { id: 'nav-settings', label: 'Go to Settings', icon: Settings, category: 'Navigation', action: () => setCurrentView('settings') },
+      { id: 'nav-dashboard', label: 'Go to Dashboard', icon: Home, category: 'Navigation', action: () => navigate('/dashboard') },
+      { id: 'nav-collection', label: 'Go to Collection', icon: BookOpen, category: 'Navigation', action: () => navigate('/collection') },
+      { id: 'nav-decks', label: 'Go to Deck Builder', icon: Layers, category: 'Navigation', action: () => navigate('/decks'), feature: 'deckBuilder' },
+      { id: 'nav-wishlist', label: 'Go to Wishlist', icon: Heart, category: 'Navigation', action: () => navigate('/wishlist'), feature: 'wishlist' },
+      { id: 'nav-forum', label: 'Go to Forum', icon: MessageSquare, category: 'Navigation', action: () => navigate('/forum') },
+      { id: 'nav-lifecounter', label: 'Go to Life Counter', icon: Users, category: 'Navigation', action: () => navigate('/lifecounter') },
+      { id: 'nav-settings', label: 'Go to Settings', icon: Settings, category: 'Navigation', action: () => navigate('/settings') },
       // Actions
-      { id: 'act-add', label: 'Add New Card', icon: Plus, category: 'Actions', action: () => setCurrentView('collection') },
+      { id: 'act-add', label: 'Add New Card', icon: Plus, category: 'Actions', action: () => navigate('/collection') },
       { id: 'act-import', label: 'Import Cards', icon: Upload, category: 'Actions', action: () => fileInputRef.current?.click() },
       { id: 'act-export-json', label: 'Export as JSON', icon: Download, category: 'Actions', action: () => exportData('json') },
       { id: 'act-export-csv', label: 'Export as CSV', icon: Download, category: 'Actions', action: () => exportData('csv') },
       { id: 'act-prices', label: 'Update Prices', icon: RefreshCw, category: 'Actions', action: () => setShowPriceUpdateModal(true) },
       { id: 'act-text', label: 'Fetch Card Text', icon: RefreshCw, category: 'Actions', action: () => updateAllOracleText() },
       { id: 'act-finance', label: 'View Finance', icon: DollarSign, category: 'Actions', action: () => openFinancePanel() },
-      { id: 'act-search', label: 'Focus Search', icon: Search, category: 'Actions', action: () => setCurrentView('collection') },
+      { id: 'act-search', label: 'Focus Search', icon: Search, category: 'Actions', action: () => navigate('/collection') },
       // Tools
       { id: 'tool-commanders', label: 'Commander Recommendations', icon: Crown, category: 'Tools', action: () => getCommanderRecommendations(), feature: 'commanderRecs' },
       { id: 'tool-sets', label: 'Set Completion Tracker', icon: BarChart3, category: 'Tools', action: () => getSetCompletionData(), feature: 'setCompletion' },
       { id: 'tool-combos', label: 'Find Combos', icon: Zap, category: 'Tools', action: () => findCombos(), feature: 'comboFinder' },
-      { id: 'tool-camera', label: 'Scan Card with Camera', icon: Camera, category: 'Tools', action: () => setCurrentView('collection') },
+      { id: 'tool-camera', label: 'Scan Card with Camera', icon: Camera, category: 'Tools', action: () => navigate('/collection') },
       // Learning
-      { id: 'learn-rulings', label: 'Card Rulings Browser', icon: BookOpen, category: 'Learning', action: () => setCurrentView('card-rulings') },
-      { id: 'learn-interactions', label: 'Interaction Checker', icon: Zap, category: 'Learning', action: () => setCurrentView('interaction-checker') },
-      { id: 'learn-new-player', label: 'New Player Guide', icon: User, category: 'Learning', action: () => setCurrentView('new-player-guide') },
-      { id: 'learn-keywords', label: 'Keyword Glossary', icon: BookOpen, category: 'Learning', action: () => setCurrentView('keyword-glossary') },
-      { id: 'learn-combos', label: 'Combo Tutorials', icon: Zap, category: 'Learning', action: () => setCurrentView('combo-tutorials') },
-      { id: 'learn-formats', label: 'Format Guides', icon: Trophy, category: 'Learning', action: () => setCurrentView('format-guides') },
+      { id: 'learn-rulings', label: 'Card Rulings Browser', icon: BookOpen, category: 'Learning', action: () => navigate('/learn/card-rulings') },
+      { id: 'learn-interactions', label: 'Interaction Checker', icon: Zap, category: 'Learning', action: () => navigate('/learn/interaction-checker') },
+      { id: 'learn-new-player', label: 'New Player Guide', icon: User, category: 'Learning', action: () => navigate('/learn/new-player-guide') },
+      { id: 'learn-keywords', label: 'Keyword Glossary', icon: BookOpen, category: 'Learning', action: () => navigate('/learn/keyword-glossary') },
+      { id: 'learn-combos', label: 'Combo Tutorials', icon: Zap, category: 'Learning', action: () => navigate('/learn/combo-tutorials') },
+      { id: 'learn-formats', label: 'Format Guides', icon: Trophy, category: 'Learning', action: () => navigate('/learn/format-guides') },
     ];
     const cmds = allCmds
       .filter(cmd => !cmd.feature || ft[cmd.feature] !== false)
@@ -773,11 +732,9 @@ function App() {
 
   // Settings View Component extracted to ./components/SettingsView.js
 
-  // URL routing: public shared deck view
-  const sharedDeckMatch = window.location.pathname.match(/^\/shared\/deck\/([a-f0-9]+)$/i);
-  if (sharedDeckMatch) {
-    return <SharedDeckView shareCode={sharedDeckMatch[1]} />;
-  }
+  const LoadingFallback = () => (
+    <div className="flex items-center justify-center h-full text-white/50">Loading...</div>
+  );
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col overflow-hidden">
@@ -788,7 +745,7 @@ function App() {
           <div className="flex items-center gap-4">
             <NotificationBell apiUrl={API_URL} user={authUser} openPanel={openPanel} setOpenPanel={setOpenPanel} />
             <button
-              onClick={() => setCurrentView('messages')}
+              onClick={() => navigate('/messages')}
               className="relative p-2 hover:bg-white/10 rounded-lg transition text-white/70 hover:text-white"
               title="Messages"
             >
@@ -796,7 +753,7 @@ function App() {
             </button>
             <UserMenu
               user={authUser}
-              onProfile={() => setCurrentView('my-profile')}
+              onProfile={() => navigate('/profile')}
               onSettings={() => setShowAccountSettings(true)}
               onLogout={authLogout}
             />
@@ -808,8 +765,6 @@ function App() {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar Navigation */}
         <Sidebar
-        currentView={currentView}
-        setCurrentView={setCurrentView}
         sidebarCollapsed={sidebarCollapsed}
         setSidebarCollapsed={setSidebarCollapsed}
         sidebarOpen={sidebarOpen}
@@ -823,8 +778,8 @@ function App() {
         onSets={getSetCompletionData}
         onCombos={findCombos}
         onFinance={openFinancePanel}
-        onOpenSettings={() => setCurrentView('settings')}
-        onOpenCamera={() => setCurrentView('collection')}
+        onOpenSettings={() => navigate('/settings')}
+        onOpenCamera={() => navigate('/collection')}
         onCommandPalette={() => setShowCommandPalette(true)}
         fileInputRef={fileInputRef}
         isImporting={isImporting}
@@ -852,289 +807,189 @@ function App() {
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 mobile-content-offset sm:pt-6">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb */}
-          <Breadcrumb currentView={currentView} setCurrentView={setCurrentView} />
+          <Breadcrumb />
 
-          {/* Dashboard View */}
-          {currentView === 'dashboard' && (
-            <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-              <Dashboard
-                cards={cards}
-                totalCards={totalCards}
-                totalValue={totalValue}
-                ignoredValue={ignoredValue}
-                setCurrentView={setCurrentView}
-                onAddCard={() => setCurrentView('collection')}
-                onImport={() => fileInputRef.current?.click()}
-                onUpdatePrices={() => setShowPriceUpdateModal(true)}
-                fileInputRef={fileInputRef}
-                isImporting={isImporting}
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+            <Route path="/dashboard" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Dashboard
+                  cards={cards}
+                  totalCards={totalCards}
+                  totalValue={totalValue}
+                  ignoredValue={ignoredValue}
+                  onAddCard={() => navigate('/collection')}
+                  onImport={() => fileInputRef.current?.click()}
+                  onUpdatePrices={() => setShowPriceUpdateModal(true)}
+                  fileInputRef={fileInputRef}
+                  isImporting={isImporting}
+                  formatPrice={formatPrice}
+                />
+              </Suspense>
+            } />
+
+            <Route path="/collection" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <CollectionView
+                  fileInputRef={fileInputRef}
+                  showPriceUpdateModal={showPriceUpdateModal} setShowPriceUpdateModal={setShowPriceUpdateModal}
+                  forceUpdate={forceUpdate} setForceUpdate={setForceUpdate}
+                  updateFullData={updateFullData} setUpdateFullData={setUpdateFullData}
+                  isImporting={isImporting} setIsImporting={setIsImporting}
+                  importProgress={importProgress} setImportProgress={setImportProgress}
+                  importResults={importResults} setImportResults={setImportResults}
+                  showImportResults={showImportResults} setShowImportResults={setShowImportResults}
+                  showQRPreview={showQRPreview} setShowQRPreview={setShowQRPreview}
+                  qrPreviewLocation={qrPreviewLocation} setQRPreviewLocation={setQRPreviewLocation}
+                  qrDataUrls={qrDataUrls} setQrDataUrls={setQrDataUrls}
+                  showPrintLabels={showPrintLabels} setShowPrintLabels={setShowPrintLabels}
+                  generateQR={generateQR}
+                  showCommanderRecs={showCommanderRecs} setShowCommanderRecs={setShowCommanderRecs}
+                  commanderRecs={commanderRecs} setCommanderRecs={setCommanderRecs}
+                  loadingCommanders={loadingCommanders} setLoadingCommanders={setLoadingCommanders}
+                  commanderColorFilter={commanderColorFilter} setCommanderColorFilter={setCommanderColorFilter}
+                  commanderFinderMode={commanderFinderMode} setCommanderFinderMode={setCommanderFinderMode}
+                  finderColors={finderColors} setFinderColors={setFinderColors}
+                  finderThemes={finderThemes} setFinderThemes={setFinderThemes}
+                  finderCreatureType={finderCreatureType} setFinderCreatureType={setFinderCreatureType}
+                  getCommanderRecommendations={getCommanderRecommendations}
+                  searchCommandersByPreference={searchCommandersByPreference}
+                  addCommanderToCollection={addCommanderToCollection}
+                  showSetCompletion={showSetCompletion} setShowSetCompletion={setShowSetCompletion}
+                  completionData={completionData} setCompletionData={setCompletionData} loadingSetCompletion={loadingSetCompletion}
+                  getSetCompletionData={getSetCompletionData}
+                  showComboFinder={showComboFinder} setShowComboFinder={setShowComboFinder}
+                  comboResults={comboResults} setComboResults={setComboResults} loadingCombos={loadingCombos}
+                  comboTab={comboTab} setComboTab={setComboTab}
+                  findCombos={findCombos} addToWishlistFromCombo={addToWishlistFromCombo}
+                  showFinancePanel={showFinancePanel} setShowFinancePanel={setShowFinancePanel}
+                  financeData={financeData} openFinancePanel={openFinancePanel}
+                />
+              </Suspense>
+            } />
+
+            <Route path="/wishlist" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <WishlistView />
+              </Suspense>
+            } />
+
+            <Route path="/decks" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <DeckBuilder />
+              </Suspense>
+            } />
+
+            <Route path="/lifecounter" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <LifeCounter onBack={() => navigate('/dashboard')} />
+              </Suspense>
+            } />
+
+            <Route path="/settings" element={
+              <SettingsView
+                settings={settings}
+                updateSettings={updateSettings}
+                resetSettings={resetSettings}
                 formatPrice={formatPrice}
+                locations={locations}
+                availableTags={availableTags}
+                locationStats={locationStats}
+                newLocationName={newLocationName}
+                setNewLocationName={setNewLocationName}
+                newLocationDesc={newLocationDesc}
+                setNewLocationDesc={setNewLocationDesc}
+                editingLocation={editingLocation}
+                handleCreateLocation={handleCreateLocation}
+                handleUpdateLocation={handleUpdateLocation}
+                cancelEditLocation={cancelEditLocation}
+                startEditLocation={startEditLocation}
+                handleDeleteLocation={handleDeleteLocation}
+                handleToggleLocationIgnorePrice={handleToggleLocationIgnorePrice}
+                newTagName={newTagName}
+                setNewTagName={setNewTagName}
+                handleCreateTag={handleCreateTag}
+                handleDeleteTag={handleDeleteTag}
+                handleToggleTagIgnorePrice={handleToggleTagIgnorePrice}
+                generateQR={generateQR}
+                qrDataUrls={qrDataUrls}
+                setQrDataUrls={setQrDataUrls}
+                setQRPreviewLocation={setQRPreviewLocation}
+                setShowQRPreview={setShowQRPreview}
+                setShowPrintLabels={setShowPrintLabels}
               />
-            </Suspense>
-          )}
+            } />
 
+            <Route path="/messages" element={
+              authUser
+                ? <MessagesPage user={authUser} onBack={() => navigate('/dashboard')} />
+                : <Navigate to="/dashboard" replace />
+            } />
 
-          {/* Collection View */}
-          {currentView === 'collection' && (
-            <CollectionView
-              fileInputRef={fileInputRef}
-              setCurrentView={setCurrentView}
-              showPriceUpdateModal={showPriceUpdateModal} setShowPriceUpdateModal={setShowPriceUpdateModal}
-              forceUpdate={forceUpdate} setForceUpdate={setForceUpdate}
-              updateFullData={updateFullData} setUpdateFullData={setUpdateFullData}
-              isImporting={isImporting} setIsImporting={setIsImporting}
-              importProgress={importProgress} setImportProgress={setImportProgress}
-              importResults={importResults} setImportResults={setImportResults}
-              showImportResults={showImportResults} setShowImportResults={setShowImportResults}
-              showQRPreview={showQRPreview} setShowQRPreview={setShowQRPreview}
-              qrPreviewLocation={qrPreviewLocation} setQRPreviewLocation={setQRPreviewLocation}
-              qrDataUrls={qrDataUrls} setQrDataUrls={setQrDataUrls}
-              showPrintLabels={showPrintLabels} setShowPrintLabels={setShowPrintLabels}
-              generateQR={generateQR}
-              showCommanderRecs={showCommanderRecs} setShowCommanderRecs={setShowCommanderRecs}
-              commanderRecs={commanderRecs} setCommanderRecs={setCommanderRecs}
-              loadingCommanders={loadingCommanders} setLoadingCommanders={setLoadingCommanders}
-              commanderColorFilter={commanderColorFilter} setCommanderColorFilter={setCommanderColorFilter}
-              commanderFinderMode={commanderFinderMode} setCommanderFinderMode={setCommanderFinderMode}
-              finderColors={finderColors} setFinderColors={setFinderColors}
-              finderThemes={finderThemes} setFinderThemes={setFinderThemes}
-              finderCreatureType={finderCreatureType} setFinderCreatureType={setFinderCreatureType}
-              getCommanderRecommendations={getCommanderRecommendations}
-              searchCommandersByPreference={searchCommandersByPreference}
-              addCommanderToCollection={addCommanderToCollection}
-              showSetCompletion={showSetCompletion} setShowSetCompletion={setShowSetCompletion}
-              completionData={completionData} setCompletionData={setCompletionData} loadingSetCompletion={loadingSetCompletion}
-              getSetCompletionData={getSetCompletionData}
-              showComboFinder={showComboFinder} setShowComboFinder={setShowComboFinder}
-              comboResults={comboResults} setComboResults={setComboResults} loadingCombos={loadingCombos}
-              comboTab={comboTab} setComboTab={setComboTab}
-              findCombos={findCombos} addToWishlistFromCombo={addToWishlistFromCombo}
-              showFinancePanel={showFinancePanel} setShowFinancePanel={setShowFinancePanel}
-              financeData={financeData} openFinancePanel={openFinancePanel}
-            />
-          )}
+            <Route path="/profile" element={
+              authUser
+                ? <MyProfile user={authUser} onBack={() => navigate('/dashboard')} />
+                : <Navigate to="/dashboard" replace />
+            } />
 
+            <Route path="/forum/*" element={<ForumView />} />
 
-        {/* Wishlist View */}
-        {currentView === 'wishlist' && <WishlistView />}
+            <Route path="/community-decks" element={<CommunityDecks />} />
 
-        {/* Deck Builder View */}
-        {currentView === 'decks' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <DeckBuilder />
-          </Suspense>
-        )}
+            <Route path="/learn/card-rulings" element={
+              <Suspense fallback={<LoadingFallback />}><CardRulingsBrowser /></Suspense>
+            } />
+            <Route path="/learn/interaction-checker" element={
+              <Suspense fallback={<LoadingFallback />}><InteractionChecker /></Suspense>
+            } />
+            <Route path="/learn/new-player-guide" element={
+              <Suspense fallback={<LoadingFallback />}><NewPlayerGuide /></Suspense>
+            } />
+            <Route path="/learn/keyword-glossary" element={
+              <Suspense fallback={<LoadingFallback />}><KeywordGlossary /></Suspense>
+            } />
+            <Route path="/learn/combo-tutorials" element={
+              <Suspense fallback={<LoadingFallback />}><ComboTutorials /></Suspense>
+            } />
+            <Route path="/learn/format-guides" element={
+              <Suspense fallback={<LoadingFallback />}><FormatGuides /></Suspense>
+            } />
 
-        {/* Life Counter View */}
-        {currentView === 'lifecounter' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <LifeCounter onBack={() => setCurrentView('dashboard')} />
-          </Suspense>
-        )}
+            <Route path="/play/sealed-simulator" element={
+              <Suspense fallback={<LoadingFallback />}><SealedSimulator /></Suspense>
+            } />
+            <Route path="/play/archenemy" element={
+              <Suspense fallback={<LoadingFallback />}><ArchenemyMode /></Suspense>
+            } />
+            <Route path="/play/star-variant" element={
+              <Suspense fallback={<LoadingFallback />}><StarVariant /></Suspense>
+            } />
+            <Route path="/play/planechase" element={
+              <Suspense fallback={<LoadingFallback />}><PlanechaseMode /></Suspense>
+            } />
+            <Route path="/play/custom-format" element={
+              <Suspense fallback={<LoadingFallback />}><CustomFormatBuilder /></Suspense>
+            } />
 
-        {/* Settings View */}
-        {currentView === 'settings' && (
-          <SettingsView
-            settings={settings}
-            updateSettings={updateSettings}
-            resetSettings={resetSettings}
-            formatPrice={formatPrice}
-            locations={locations}
-            availableTags={availableTags}
-            locationStats={locationStats}
-            newLocationName={newLocationName}
-            setNewLocationName={setNewLocationName}
-            newLocationDesc={newLocationDesc}
-            setNewLocationDesc={setNewLocationDesc}
-            editingLocation={editingLocation}
-            handleCreateLocation={handleCreateLocation}
-            handleUpdateLocation={handleUpdateLocation}
-            cancelEditLocation={cancelEditLocation}
-            startEditLocation={startEditLocation}
-            handleDeleteLocation={handleDeleteLocation}
-            handleToggleLocationIgnorePrice={handleToggleLocationIgnorePrice}
-            newTagName={newTagName}
-            setNewTagName={setNewTagName}
-            handleCreateTag={handleCreateTag}
-            handleDeleteTag={handleDeleteTag}
-            handleToggleTagIgnorePrice={handleToggleTagIgnorePrice}
-            generateQR={generateQR}
-            qrDataUrls={qrDataUrls}
-            setQrDataUrls={setQrDataUrls}
-            setQRPreviewLocation={setQRPreviewLocation}
-            setShowQRPreview={setShowQRPreview}
-            setShowPrintLabels={setShowPrintLabels}
-          />
-        )}
+            <Route path="/tools/cube-builder" element={
+              <Suspense fallback={<LoadingFallback />}><CubeBuilder /></Suspense>
+            } />
+            <Route path="/tools/reprint-tracker" element={
+              <Suspense fallback={<LoadingFallback />}><ReprintTracker /></Suspense>
+            } />
+            <Route path="/tools/set-calendar" element={
+              <Suspense fallback={<LoadingFallback />}><SetReleaseCalendar /></Suspense>
+            } />
+            <Route path="/tools/spoilers" element={
+              <Suspense fallback={<LoadingFallback />}><SpoilerSeasonIntegration /></Suspense>
+            } />
 
-        {/* Messages View */}
-        {currentView === 'messages' && authUser && (
-          <MessagesPage user={authUser} onBack={() => setCurrentView('dashboard')} />
-        )}
+            {/* Public shared deck view */}
+            <Route path="/shared/deck/:shareCode" element={<SharedDeckViewRoute />} />
 
-        {/* My Profile View */}
-        {currentView === 'my-profile' && authUser && (
-          <MyProfile user={authUser} onBack={() => setCurrentView('dashboard')} />
-        )}
-
-        {/* Forum Profile View */}
-        {currentView === 'forum-profile' && selectedForumProfileUsername && (
-          <UserProfile
-            username={selectedForumProfileUsername}
-          />
-        )}
-
-        {/* Forum Profile Page (authenticated user's own forum profile) */}
-        {currentView === 'forum-profile-page' && authUser && (
-          <ForumProfilePage user={authUser} apiUrl={API_URL} />
-        )}
-
-        {/* Learning Components */}
-        {currentView === 'card-rulings' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <CardRulingsBrowser />
-          </Suspense>
-        )}
-        {currentView === 'interaction-checker' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <InteractionChecker />
-          </Suspense>
-        )}
-        {currentView === 'new-player-guide' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <NewPlayerGuide />
-          </Suspense>
-        )}
-        {currentView === 'keyword-glossary' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <KeywordGlossary />
-          </Suspense>
-        )}
-        {currentView === 'combo-tutorials' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <ComboTutorials />
-          </Suspense>
-        )}
-        {currentView === 'format-guides' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <FormatGuides />
-          </Suspense>
-        )}
-        {currentView === 'sealed-simulator' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <SealedSimulator />
-          </Suspense>
-        )}
-        {currentView === 'archenemy-mode' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <ArchenemyMode />
-          </Suspense>
-        )}
-        {currentView === 'star-variant' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <StarVariant />
-          </Suspense>
-        )}
-        {currentView === 'planechase-mode' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <PlanechaseMode />
-          </Suspense>
-        )}
-        {currentView === 'custom-format-builder' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <CustomFormatBuilder />
-          </Suspense>
-        )}
-        {currentView === 'cube-builder' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <CubeBuilder />
-          </Suspense>
-        )}
-        {currentView === 'reprint-tracker' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <ReprintTracker />
-          </Suspense>
-        )}
-        {currentView === 'set-release-calendar' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <SetReleaseCalendar />
-          </Suspense>
-        )}
-        {currentView === 'spoiler-season' && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20 text-white/50">Loading...</div>}>
-            <SpoilerSeasonIntegration />
-          </Suspense>
-        )}
-
-        {/* Forum View */}
-        {currentView === 'forum' && (
-          <div className="flex flex-col h-full">
-            <div className="flex flex-1 min-h-0">
-            {showForumLeaderboard ? (
-              <ForumLeaderboard
-                onBack={() => setShowForumLeaderboard(false)}
-              />
-            ) : selectedThreadId ? (
-              <ThreadView
-                threadId={selectedThreadId}
-                apiUrl={API_URL}
-                user={authUser}
-                refreshKey={cosmeticVersion}
-                onBack={() => {
-                  setSelectedThreadId(null);
-                  localStorage.removeItem('forumSelectedThread');
-                }}
-                onThreadDeleted={() => setForumRefreshKey(k => k + 1)}
-                onViewProfile={(username) => {
-                  setSelectedForumProfileUsername(username);
-                  setCurrentView('forum-profile');
-                }}
-              />
-            ) : selectedCategoryId ? (
-              <CategoryView
-                categoryId={selectedCategoryId}
-                apiUrl={API_URL}
-                onThreadSelect={(threadId) => {
-                  setSelectedThreadId(threadId);
-                  localStorage.setItem('forumSelectedThread', threadId);
-                }}
-                onBack={() => {
-                  setSelectedCategoryId(null);
-                  localStorage.removeItem('forumSelectedCategory');
-                }}
-                user={authUser}
-                onViewProfile={(username) => {
-                  setSelectedForumProfileUsername(username);
-                  setCurrentView('forum-profile');
-                }}
-                refreshKey={forumRefreshKey}
-              />
-            ) : (
-              <ForumHome
-                onSelectCategory={(catId) => {
-                  setSelectedCategoryId(catId);
-                  localStorage.setItem('forumSelectedCategory', catId);
-                }}
-                onNewThread={() => {}}
-                onOpenAdmin={() => {
-                  // Show forum-specific admin features (spam filter, mutes)
-                  setShowSpamFilterAdmin(true);
-                }}
-                authUser={authUser}
-                onForumProfile={() => setCurrentView('forum-profile-page')}
-                onLeaderboard={() => setShowForumLeaderboard(true)}
-                refreshKey={forumRefreshKey}
-              />
-            )}
-            </div>
-          </div>
-        )}
-
-        {/* Community Decks View */}
-        {currentView === 'community-decks' && (
-          <CommunityDecks />
-        )}
-
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
         </div>
       </main>
 
@@ -1156,36 +1011,7 @@ function App() {
       {showAdminPanel && (
         <AdminPanel
           onClose={() => setShowAdminPanel(false)}
-          onOpenSpamFilter={() => setShowSpamFilterAdmin(true)}
-          onOpenMuteManager={() => setShowMuteManager(true)}
           user={authUser}
-        />
-      )}
-
-      {/* Forum Admin Modals */}
-      {showSpamFilterAdmin && (
-        <SpamFilterAdmin
-          apiUrl={API_URL}
-          isOpen={showSpamFilterAdmin}
-          onClose={() => setShowSpamFilterAdmin(false)}
-        />
-      )}
-
-      {showMuteManager && (
-        <MuteManager
-          apiUrl={API_URL}
-          isOpen={showMuteManager}
-          onClose={() => setShowMuteManager(false)}
-        />
-      )}
-
-      {showForumShop && (
-        <ForumShop
-          apiUrl={API_URL}
-          user={authUser}
-          isOpen={showForumShop}
-          onClose={() => setShowForumShop(false)}
-          onEquip={() => setCosmeticVersion(v => v + 1)}
         />
       )}
 
@@ -1202,22 +1028,24 @@ function App() {
   );
 }
 
-// Wrap App with AuthProvider and AuthGuard
+// Wrap App with BrowserRouter, AuthProvider and AuthGuard
 function AppWithAuth() {
   return (
-    <ToastProvider>
-      <AuthProvider>
-        <CardCollectionProvider>
-          <LocationTagProvider>
-            <WishlistProvider>
-              <AuthGuard>
-                <App />
-              </AuthGuard>
-            </WishlistProvider>
-          </LocationTagProvider>
-        </CardCollectionProvider>
-      </AuthProvider>
-    </ToastProvider>
+    <BrowserRouter>
+      <ToastProvider>
+        <AuthProvider>
+          <CardCollectionProvider>
+            <LocationTagProvider>
+              <WishlistProvider>
+                <AuthGuard>
+                  <App />
+                </AuthGuard>
+              </WishlistProvider>
+            </LocationTagProvider>
+          </CardCollectionProvider>
+        </AuthProvider>
+      </ToastProvider>
+    </BrowserRouter>
   );
 }
 

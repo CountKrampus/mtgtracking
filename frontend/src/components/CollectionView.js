@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import {
   Search, Trash2, Edit2, Save, X, RefreshCw, DollarSign, Camera, Settings,
   CheckSquare, Square, MapPin, Layers, Zap, Crown, BarChart3, Heart, Plus
@@ -19,7 +20,6 @@ const CameraModal = React.lazy(() => import('./CameraModal'));
 
 function CollectionView({
   fileInputRef,
-  setCurrentView,
   showPriceUpdateModal, setShowPriceUpdateModal, forceUpdate, setForceUpdate, updateFullData, setUpdateFullData,
   isImporting, setIsImporting, importProgress, setImportProgress, importResults, setImportResults,
   showImportResults, setShowImportResults,
@@ -35,6 +35,8 @@ function CollectionView({
   findCombos, addToWishlistFromCombo,
   showFinancePanel, setShowFinancePanel, financeData, openFinancePanel,
 }) {
+  const navigate = useNavigate();
+
   const {
     cards, loading, setLoading, editingId, setEditingId, fetchCards,
     handleSubmit, handleDelete, updateCardPrice, updateAllPrices, updateAllOracleText,
@@ -656,7 +658,7 @@ function CollectionView({
                 {uniqueLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
               </select>
               <button
-                onClick={() => setCurrentView('settings')}
+                onClick={() => navigate('/settings')}
                 className="p-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition"
                 title="Manage Locations"
               >

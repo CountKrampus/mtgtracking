@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home,
   Layers,
@@ -35,13 +36,12 @@ import {
 } from 'lucide-react';
 
 const Sidebar = ({
-  currentView,
-  setCurrentView,
   sidebarCollapsed,
   setSidebarCollapsed,
   sidebarOpen,
   setSidebarOpen,
   onImport,
+  // currentView and setCurrentView are no longer needed — we use React Router
   onExportJSON,
   onExportCSV,
   onUpdatePrices,
@@ -66,6 +66,8 @@ const Sidebar = ({
   apiUrl
 }) => {
   const ft = featureToggles || {};
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [collapsedSections, setCollapsedSections] = useState({
     navigation: false,
@@ -96,6 +98,34 @@ const Sidebar = ({
       </button>
     );
   };
+  // Map view IDs to URL paths
+  const viewToPath = {
+    'dashboard': '/dashboard',
+    'collection': '/collection',
+    'decks': '/decks',
+    'wishlist': '/wishlist',
+    'forum': '/forum',
+    'community-decks': '/community-decks',
+    'lifecounter': '/lifecounter',
+    'settings': '/settings',
+    'card-rulings': '/learn/card-rulings',
+    'interaction-checker': '/learn/interaction-checker',
+    'new-player-guide': '/learn/new-player-guide',
+    'keyword-glossary': '/learn/keyword-glossary',
+    'combo-tutorials': '/learn/combo-tutorials',
+    'format-guides': '/learn/format-guides',
+    'sealed-simulator': '/play/sealed-simulator',
+    'archenemy-mode': '/play/archenemy',
+    'kingdoms-variant': '/dashboard',
+    'star-variant': '/play/star-variant',
+    'custom-format-builder': '/play/custom-format',
+    'cube-builder': '/tools/cube-builder',
+    'planechase-mode': '/play/planechase',
+    'reprint-tracker': '/tools/reprint-tracker',
+    'set-release-calendar': '/tools/set-calendar',
+    'spoiler-season': '/tools/spoilers',
+  };
+
   const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'collection', label: 'Collection', icon: BookOpen },
@@ -165,23 +195,31 @@ const Sidebar = ({
   ];
 
   const handleNavClick = (viewId) => {
-    setCurrentView(viewId);
+    const path = viewToPath[viewId] || '/' + viewId;
+    navigate(path);
     // Close mobile sidebar on navigation
     setSidebarOpen(false);
   };
 
   const handleLearningClick = (viewId) => {
-    // For learning components, we'll need to handle navigation differently
-    // For now, we'll just set the current view
-    setCurrentView(viewId);
+    const path = viewToPath[viewId] || '/learn/' + viewId;
+    navigate(path);
     // Close mobile sidebar on navigation
     setSidebarOpen(false);
   };
 
   const handleGameplayClick = (viewId) => {
-    setCurrentView(viewId);
+    const path = viewToPath[viewId] || '/play/' + viewId;
+    navigate(path);
     // Close mobile sidebar on navigation
     setSidebarOpen(false);
+  };
+
+  // Helper: check if a viewId is currently active based on URL
+  const isViewActive = (viewId) => {
+    const path = viewToPath[viewId] || '/' + viewId;
+    if (viewId === 'forum') return location.pathname.startsWith('/forum');
+    return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
   const getRoleBadgeColor = (role) => {
@@ -246,7 +284,7 @@ const Sidebar = ({
         {sectionHeader('Navigation', 'navigation', '')}
         {(sidebarCollapsed || !collapsedSections.navigation) && navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = currentView === item.id;
+          const isActive = isViewActive(item.id);
           return (
             <button
               key={item.id}
@@ -306,7 +344,7 @@ const Sidebar = ({
               { id: 'spoiler-season', label: 'Spoiler Season', icon: Eye },
             ].map((item) => {
               const Icon = item.icon;
-              const isActive = currentView === item.id;
+              const isActive = isViewActive(item.id);
               return (
                 <button
                   key={item.id}
@@ -330,7 +368,7 @@ const Sidebar = ({
         {sectionHeader('Learn', 'learn')}
         {(sidebarCollapsed || !collapsedSections.learn) && learningItems.map((item) => {
           const Icon = item.icon;
-          const isActive = currentView === item.id;
+          const isActive = isViewActive(item.id);
           return (
             <button
               key={item.id}
@@ -360,7 +398,7 @@ const Sidebar = ({
           { id: 'sealed-simulator', label: 'Sealed Simulator', icon: Package },
         ].map((item) => {
           const Icon = item.icon;
-          const isActive = currentView === item.id;
+          const isActive = isViewActive(item.id);
           return (
             <button
               key={item.id}

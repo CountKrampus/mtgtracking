@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Upload, RefreshCw, BookOpen, Star, Layers, TrendingUp, TrendingDown } from 'lucide-react';
 import { API_URL } from '../config';
 
@@ -157,7 +158,6 @@ const Dashboard = ({
   ignoredValue,
   portfolioGain = 0,
   portfolioCost = 0,
-  setCurrentView,
   onAddCard,
   onImport,
   onUpdatePrices,
@@ -165,6 +165,7 @@ const Dashboard = ({
   isImporting,
   formatPrice
 }) => {
+  const navigate = useNavigate();
   const fp = formatPrice || ((v) => `$${v.toFixed(2)}`);
   const avgValue = totalCards > 0 ? (totalValue / totalCards) : 0;
   const [valueHistory, setValueHistory] = useState([]);
@@ -384,7 +385,7 @@ const Dashboard = ({
             <RefreshCw size={18} /> Update Prices
           </button>
           <button
-            onClick={() => setCurrentView('collection')}
+            onClick={() => navigate('/collection')}
             className="flex items-center gap-2 px-4 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition text-sm"
           >
             <BookOpen size={18} /> View Collection
