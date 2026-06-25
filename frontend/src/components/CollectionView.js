@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+﻿import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
 import axios from 'axios';
 import {
   Search, Trash2, Edit2, Save, X, RefreshCw, DollarSign, Camera, Settings,
@@ -15,6 +15,8 @@ import ColumnContextMenu from './ColumnContextMenu';
 import ValueHistoryChart from './ValueHistoryChart';
 import { API_URL } from '../config';
 
+const CameraModal = React.lazy(() => import('./CameraModal'));
+
 function CollectionView({
   fileInputRef,
   setCurrentView,
@@ -28,7 +30,7 @@ function CollectionView({
   commanderFinderMode, setCommanderFinderMode, finderColors, setFinderColors,
   finderThemes, setFinderThemes, finderCreatureType, setFinderCreatureType,
   getCommanderRecommendations, searchCommandersByPreference, addCommanderToCollection,
-  showSetCompletion, setShowSetCompletion, setCompletionData, loadingSetCompletion, getSetCompletionData,
+  showSetCompletion, setShowSetCompletion, completionData, setCompletionData, loadingSetCompletion, getSetCompletionData,
   showComboFinder, setShowComboFinder, comboResults, setComboResults, loadingCombos, comboTab, setComboTab,
   findCombos, addToWishlistFromCombo,
   showFinancePanel, setShowFinancePanel, financeData, openFinancePanel,
@@ -2187,13 +2189,13 @@ function CollectionView({
                     <RefreshCw size={48} className="text-teal-500 animate-spin mb-4" />
                     <p className="text-white/60">Fetching set information...</p>
                   </div>
-                ) : setCompletionData.length === 0 ? (
+                ) : completionData.length === 0 ? (
                   <div className="text-center py-12">
                     <p className="text-white/60">No set data available. Make sure your cards have set codes.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {setCompletionData.map((set) => {
+                    {completionData.map((set) => {
                       const percentage = Math.round((set.ownedUnique / set.totalInSet) * 100);
                       return (
                         <div key={set.setCode} className="bg-white/5 rounded-lg p-4">
@@ -2658,6 +2660,16 @@ function CollectionView({
               </div>
             </div>
           </div>
+        )}
+        {/* Camera OCR Modal */}
+        {showCameraModal && (
+          <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 text-white/50">Loading camera...</div>}>
+            <CameraModal
+              isOpen={showCameraModal}
+              onClose={handleCameraClose}
+              onCardExtracted={handleCardExtracted}
+            />
+          </Suspense>
         )}
     </>
   );
