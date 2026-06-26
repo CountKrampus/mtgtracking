@@ -430,7 +430,7 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck
       {/* Create New Deck Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
-          <div className="bg-slate-900 rounded-t-2xl sm:rounded-lg border border-slate-700 w-full sm:max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+          <div className="bg-slate-900 rounded-t-2xl sm:rounded-xl border border-slate-700 w-full sm:max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-white">Create New Deck</h2>
               <button

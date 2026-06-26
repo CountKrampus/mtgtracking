@@ -229,7 +229,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-end sm:items-center justify-center z-50 sm:p-4">
-      <div className="bg-slate-800 rounded-t-2xl sm:rounded-lg w-full sm:max-w-2xl border border-slate-700 flex flex-col max-h-[90vh]">
+      <div className="bg-slate-800 rounded-t-2xl sm:rounded-xl w-full sm:max-w-2xl border border-slate-700 flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-slate-700 flex-shrink-0">
           <div className="flex items-center gap-2">

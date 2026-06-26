@@ -22,7 +22,7 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
-      <div className="bg-slate-900 rounded-t-2xl sm:rounded-lg border border-slate-700 w-full sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-slate-900 rounded-t-2xl sm:rounded-xl border border-slate-700 w-full sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-700 bg-slate-900">
           <h2 className="text-2xl font-bold text-white">Forum Admin</h2>

@@ -24,7 +24,7 @@ export default function ConfirmModal({ title, message, onConfirm, onCancel, dang
 
   return ReactDOM.createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60"
+      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60 sm:p-4"
       onClick={onCancel}
     >
       <div
