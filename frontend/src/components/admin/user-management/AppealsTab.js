@@ -16,8 +16,8 @@ function DenyModal({ appeal, onClose, onSubmit }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-full max-w-md shadow-xl">
+    <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 sm:p-4">
+      <div className="bg-gray-800 border border-gray-600 rounded-t-2xl sm:rounded-lg p-6 w-full sm:max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-semibold text-white mb-1">Deny Appeal</h3>
         <p className="text-sm text-gray-400 mb-4">
           Provide a reason for denying the appeal from{' '}

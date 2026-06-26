@@ -34,8 +34,8 @@ export default function DuplicateDetectionModal({ isOpen, onClose, suggestedDupl
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 rounded-lg border border-slate-700 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
+      <div className="bg-slate-900 rounded-t-2xl sm:rounded-lg border border-slate-700 w-full sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="sticky top-0 flex items-center justify-between p-6 border-b border-slate-700 bg-slate-900">
           <div className="flex items-center gap-3">
@@ -50,7 +50,7 @@ export default function DuplicateDetectionModal({ isOpen, onClose, suggestedDupl
           </button>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 overflow-y-auto flex-1">
           {/* Subtitle */}
           <p className="text-slate-400 text-sm">
             Your thread was created, but we found similar existing threads. Would you like to merge your thread into one of these?

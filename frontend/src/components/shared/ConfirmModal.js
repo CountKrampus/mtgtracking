@@ -24,11 +24,11 @@ export default function ConfirmModal({ title, message, onConfirm, onCancel, dang
 
   return ReactDOM.createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60"
+      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60"
       onClick={onCancel}
     >
       <div
-        className="bg-gray-800 border border-gray-600 rounded-xl shadow-2xl max-w-sm w-full mx-4 p-6 text-center"
+        className="bg-gray-800 border border-gray-600 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-sm w-full sm:mx-4 p-6 text-center max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         <div

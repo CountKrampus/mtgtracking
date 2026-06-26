@@ -186,8 +186,8 @@ function CreateBanModal({ onClose, onCreated, authFetch }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 sm:p-4">
+      <div className="bg-gray-800 border border-gray-700 rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-gray-700">
           <h3 className="text-lg font-semibold text-white flex items-center gap-2">
             <Shield size={18} className="text-red-400" />
@@ -321,8 +321,8 @@ function EditBanModal({ ban, onClose, onUpdated, authFetch }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 sm:p-4">
+      <div className="bg-gray-800 border border-gray-700 rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-gray-700">
           <h3 className="text-lg font-semibold text-white flex items-center gap-2">
             <Edit2 size={18} className="text-blue-400" />
