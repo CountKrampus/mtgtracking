@@ -162,8 +162,8 @@ export function UsersTab() {
         <span className="text-gray-400">{filteredUsers.length} users</span>
       </div>
 
-      <div className="bg-gray-700/50 rounded-lg overflow-hidden">
-        <table className="w-full">
+      <div className="bg-gray-700/50 rounded-lg overflow-x-auto">
+        <table className="w-full min-w-[600px]">
           <thead className="bg-gray-700">
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">User</th>
@@ -176,11 +176,11 @@ export function UsersTab() {
           <tbody className="divide-y divide-gray-600">
             {filteredUsers.map((user) => (
               <tr key={user._id} className="hover:bg-gray-700/50">
-                <td className="px-4 py-3">
-                  <div>
-                    <p className="text-white font-medium">{user.displayName || user.username}</p>
-                    <p className="text-gray-400 text-sm">{user.email}</p>
-                    <p className="text-gray-500 text-xs">@{user.username}</p>
+                <td className="px-4 py-3 min-w-0">
+                  <div className="min-w-0">
+                    <p className="text-white font-medium truncate">{user.displayName || user.username}</p>
+                    <p className="text-gray-400 text-sm truncate">{user.email}</p>
+                    <p className="text-gray-500 text-xs truncate">@{user.username}</p>
                   </div>
                 </td>
                 <td className="px-4 py-3">
