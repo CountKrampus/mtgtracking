@@ -1469,7 +1469,7 @@ function CollectionView({
         {/* Import Results Modal */}
         {showImportResults && importResults && (
           <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
-            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-2xl w-full max-h-[90vh] overflow-y-auto flex flex-col">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
               <div className="p-6 border-b border-white/10">
                 <h2 className="text-2xl font-bold text-white">Import Results</h2>
               </div>
@@ -1843,7 +1843,7 @@ function CollectionView({
         {/* Similar Cards Modal */}
         {showSimilarCards && (
           <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
-            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-4xl w-full max-h-[90vh] overflow-y-auto flex flex-col border-2 border-purple-500">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border-2 border-purple-500">
               <div className="p-6 border-b border-white/10 flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-bold text-white">Similar Cards</h2>
@@ -1935,7 +1935,7 @@ function CollectionView({
         {/* Card Synergies Modal */}
         {showSynergies && (
           <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
-            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-5xl w-full max-h-[90vh] overflow-y-auto flex flex-col border-2 border-yellow-500">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col border-2 border-yellow-500">
               <div className="p-6 border-b border-white/10 flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -2147,7 +2147,7 @@ function CollectionView({
         {/* Commander Recommendations Modal */}
         {showCommanderRecs && (
           <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
-            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-5xl w-full max-h-[90vh] overflow-y-auto flex flex-col border-2 border-amber-500">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col border-2 border-amber-500">
               <div className="p-6 border-b border-white/10 flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -2329,7 +2329,7 @@ function CollectionView({
         {/* Set Completion Tracker Modal */}
         {showSetCompletion && (
           <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
-            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-4xl w-full max-h-[90vh] overflow-y-auto flex flex-col border-2 border-teal-500">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border-2 border-teal-500">
               <div className="p-6 border-b border-white/10 flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -2411,7 +2411,7 @@ function CollectionView({
         {/* Combo Finder Modal */}
         {showComboFinder && (
           <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
-            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-5xl w-full max-h-[90vh] overflow-y-auto flex flex-col border-2 border-orange-500">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col border-2 border-orange-500">
               <div className="p-6 border-b border-white/10 flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-bold text-white flex items-center gap-2">
