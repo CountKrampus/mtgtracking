@@ -31,6 +31,7 @@ import MessagesPage from './components/MessagesPage';
 import MyProfile from './components/MyProfile';
 import SettingsView from './components/SettingsView';
 import SparklinePopup from './components/SparklinePopup';
+import BottomNav from './components/BottomNav';
 
 const DeckBuilder = React.lazy(() => import('./components/DeckBuilder'));
 const LifeCounter = React.lazy(() => import('./components/LifeCounter/LifeCounter'));
@@ -740,7 +741,7 @@ function App() {
     <div className="h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col overflow-hidden">
       {/* Top Header with Notifications and DMs */}
       {authUser && (
-        <div className="bg-slate-900/80 backdrop-blur border-b border-slate-700 px-6 py-3 flex items-center justify-between">
+        <div className="bg-slate-900/80 backdrop-blur border-b border-slate-700 px-3 sm:px-6 py-2 sm:py-3 flex items-center justify-between">
           <div className="flex-1"></div>
           <div className="flex items-center gap-4">
             <NotificationBell apiUrl={API_URL} user={authUser} openPanel={openPanel} setOpenPanel={setOpenPanel} />
@@ -804,7 +805,7 @@ function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 mobile-content-offset sm:pt-6">
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 mobile-content-offset sm:pt-6 pb-20 sm:pb-0">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb */}
           <Breadcrumb />
@@ -1023,6 +1024,7 @@ function App() {
         />
       )}
 
+      <BottomNav />
       </div>
     </div>
   );

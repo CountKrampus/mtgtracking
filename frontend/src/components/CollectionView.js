@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, Trash2, Edit2, Save, X, RefreshCw, DollarSign, Camera, Settings,
-  CheckSquare, Square, MapPin, Layers, Zap, Crown, BarChart3, Heart, Plus
+  CheckSquare, Square, MapPin, Layers, Zap, Crown, BarChart3, Heart, Plus, SlidersHorizontal
 } from 'lucide-react';
 import { standardTypes } from '../constants';
 import { useCardCollection } from '../contexts/CardCollectionContext';
@@ -14,9 +14,61 @@ import useColumnVisibility from '../hooks/useColumnVisibility';
 import { useToast } from '../contexts/ToastContext';
 import ColumnContextMenu from './ColumnContextMenu';
 import ValueHistoryChart from './ValueHistoryChart';
+import MobileFilterSheet from './MobileFilterSheet';
 import { API_URL } from '../config';
 
 const CameraModal = React.lazy(() => import('./CameraModal'));
+
+function MobileCardRow({ card, formatPrice, onEdit, onDelete, onUpdatePrice, onViewDetail }) {
+  return (
+    <div
+      className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10 active:bg-white/20 transition"
+      onClick={() => onViewDetail(card)}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-white font-semibold text-base leading-tight truncate">{card.name}</p>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            {card.set && <span className="text-white/50 text-xs">{card.set}</span>}
+            <span className="px-1.5 py-0.5 bg-white/10 text-white/70 text-[11px] rounded">{card.condition}</span>
+            {card.rarity && <span className="text-white/40 text-[11px]">{card.rarity}</span>}
+          </div>
+          {card.manaCost && (
+            <p className="text-white/40 text-xs mt-1 font-mono">{card.manaCost}</p>
+          )}
+        </div>
+        <div className="text-right flex-shrink-0">
+          <p className="text-green-400 font-semibold">{formatPrice(card.price)}</p>
+          <p className="text-white/40 text-xs mt-0.5">×{card.quantity}</p>
+          <p className="text-white/30 text-xs">{formatPrice(card.price * card.quantity)} total</p>
+        </div>
+      </div>
+      <div className="flex justify-end gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+        <button
+          onClick={() => onUpdatePrice(card._id)}
+          className="p-2.5 bg-indigo-600/50 hover:bg-indigo-600 active:bg-indigo-700 text-white rounded-lg transition min-h-[44px] min-w-[44px] flex items-center justify-center"
+          title="Update price"
+        >
+          <DollarSign size={15} />
+        </button>
+        <button
+          onClick={() => onEdit(card)}
+          className="p-2.5 bg-blue-600/50 hover:bg-blue-600 active:bg-blue-700 text-white rounded-lg transition min-h-[44px] min-w-[44px] flex items-center justify-center"
+          title="Edit"
+        >
+          <Edit2 size={15} />
+        </button>
+        <button
+          onClick={() => onDelete(card._id)}
+          className="p-2.5 bg-red-600/50 hover:bg-red-600 active:bg-red-700 text-white rounded-lg transition min-h-[44px] min-w-[44px] flex items-center justify-center"
+          title="Delete"
+        >
+          <Trash2 size={15} />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function CollectionView({
   fileInputRef,
@@ -93,6 +145,7 @@ function CollectionView({
   const [similarCardsSource, setSimilarCardsSource] = useState(null);
   const [similarCards, setSimilarCards] = useState([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [showSynergies, setShowSynergies] = useState(false);
   const [synergiesSource, setSynergiesSource] = useState(null);
   const [synergies, setSynergies] = useState({ tribal: [], keywords: [], mechanics: [] });
@@ -535,6 +588,34 @@ function CollectionView({
           <>
             {/* Search & Filter Bar - Collapseable */}
             <div className="mb-6">
+              {/* Mobile: inline search + filter button */}
+              <div className="flex sm:hidden gap-2 mb-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-3 text-white/60" size={18} />
+                  <input
+                    type="text"
+                    placeholder="Search cards..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2.5 bg-white/20 border border-white/30 rounded-xl text-white text-base placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400 min-h-[44px]"
+                  />
+                </div>
+                <button
+                  onClick={() => setShowMobileFilters(true)}
+                  className="relative flex items-center gap-2 px-4 py-2.5 bg-white/20 hover:bg-white/30 border border-white/30 rounded-xl text-white transition min-h-[44px] flex-shrink-0"
+                >
+                  <SlidersHorizontal size={16} />
+                  <span className="text-sm font-medium">Filters</span>
+                  {[filterCondition, filterColor, filterSet, filterType, filterSpecial, filterRarity, filterTag, filterLocation].filter(v => v !== 'all').length > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-purple-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white">
+                      {[filterCondition, filterColor, filterSet, filterType, filterSpecial, filterRarity, filterTag, filterLocation].filter(v => v !== 'all').length}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* Desktop: collapsible toggle */}
+              <div className="hidden sm:block">
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="w-full px-4 py-2 flex items-center justify-between text-white/70 hover:text-white font-semibold bg-white/5 rounded-t-lg transition"
@@ -935,10 +1016,70 @@ function CollectionView({
             </div>
           </div>
           )}
+              </div>{/* end hidden sm:block desktop filter */}
+
+              <MobileFilterSheet
+                isOpen={showMobileFilters}
+                onClose={() => setShowMobileFilters(false)}
+                searchTerm={searchTerm} setSearchTerm={setSearchTerm}
+                filterCondition={filterCondition} setFilterCondition={setFilterCondition}
+                filterSet={filterSet} setFilterSet={setFilterSet}
+                filterColor={filterColor} setFilterColor={setFilterColor}
+                filterType={filterType} setFilterType={setFilterType}
+                filterSpecial={filterSpecial} setFilterSpecial={setFilterSpecial}
+                filterRarity={filterRarity} setFilterRarity={setFilterRarity}
+                filterTag={filterTag} setFilterTag={setFilterTag}
+                filterLocation={filterLocation} setFilterLocation={setFilterLocation}
+                sets={uniqueSets}
+                availableTags={availableTags}
+                locations={locations}
+                onClear={() => {
+                  setSearchTerm(''); setFilterCondition('all'); setFilterSet('all');
+                  setFilterColor('all'); setFilterType('all'); setFilterSpecial('all');
+                  setFilterRarity('all'); setFilterTag('all'); setFilterLocation('all');
+                }}
+              />
         </div>
 
-        {/* Cards List */}
-        <div className="bg-white/10 backdrop-blur-md rounded-lg overflow-hidden shadow-xl">
+        {/* Mobile card grid */}
+        <div className="sm:hidden space-y-3 mb-4">
+          {paginatedCards.length === 0 ? (
+            <div className="text-center py-12 text-white/40">
+              {filteredAndSortedCards.length === 0 ? 'No cards in collection.' : 'No cards match your filters.'}
+            </div>
+          ) : (
+            paginatedCards.map((card) => (
+              <MobileCardRow
+                key={card._id}
+                card={card}
+                formatPrice={formatPrice}
+                onEdit={(c) => {
+                  setEditingId(c._id);
+                  setFormData({
+                    name: c.name, set: c.set || '', setCode: c.setCode || '',
+                    collectorNumber: c.collectorNumber || '', rarity: c.rarity || '',
+                    quantity: c.quantity, condition: c.condition,
+                    price: c.price, colors: c.colors || [], types: c.types || [],
+                    manaCost: c.manaCost || '', tags: c.tags || [], location: c.location || '',
+                    isToken: c.isToken || false, isFoil: c.isFoil || false,
+                    oracleText: c.oracleText || '', imageUrl: c.imageUrl || '',
+                    scryfallId: c.scryfallId || '',
+                  });
+                  setShowAddForm(true);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                onDelete={(id) => {
+                  if (window.confirm('Delete this card?')) handleDelete(id, fetchCards);
+                }}
+                onUpdatePrice={(id) => updateCardPrice(id, false, false, fetchCards)}
+                onViewDetail={setDetailCard}
+              />
+            ))
+          )}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden sm:block bg-white/10 backdrop-blur-md rounded-lg overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
             <table
               className="w-full"
@@ -1222,7 +1363,28 @@ function CollectionView({
               </div>
             </div>
           )}
-        </div>
+        </div>{/* end hidden sm:block desktop table */}
+
+        {/* Mobile pagination */}
+        {totalPages > 1 && (
+          <div className="sm:hidden flex items-center justify-between mt-4 px-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl disabled:opacity-40 transition min-h-[44px] font-medium"
+            >
+              ← Prev
+            </button>
+            <span className="text-white/60 text-sm">Page {currentPage} of {totalPages}</span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl disabled:opacity-40 transition min-h-[44px] font-medium"
+            >
+              Next →
+            </button>
+          </div>
+        )}
 
         {/* Collection Value History - Bottom */}
         <div className="mt-8 mb-6">
