@@ -69,7 +69,7 @@ export default function SettingsView({
         </h1>
 
         {/* Tab Navigation */}
-        <div className="flex flex-wrap gap-2 border-b border-white/10 pb-2">
+        <div className="flex gap-1 overflow-x-auto border-b border-white/20 pb-0 scrollbar-hide sm:flex-wrap">
           {[
             { id: 'display', label: 'Display' },
             { id: 'pricing', label: 'Pricing' },
@@ -82,7 +82,7 @@ export default function SettingsView({
             <button
               key={tab.id}
               onClick={() => setSettingsTab(tab.id)}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
+              className={`whitespace-nowrap flex-shrink-0 px-4 py-2 rounded-lg font-medium transition ${
                 settingsTab === tab.id
                   ? 'bg-purple-600 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
