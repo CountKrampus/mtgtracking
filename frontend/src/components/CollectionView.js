@@ -1430,8 +1430,8 @@ function CollectionView({
 
     {/* Import Progress Modal */}        {/* Import Progress Modal */}
         {isImporting && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-8 border-2 border-purple-500">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-8 border-2 border-purple-500 max-h-[90vh] overflow-y-auto">
               <h2 className="text-2xl font-bold text-white mb-6 text-center">Importing Cards</h2>
 
               {/* Progress Bar */}
@@ -1468,8 +1468,8 @@ function CollectionView({
 
         {/* Import Results Modal */}
         {showImportResults && importResults && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+          <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-2xl w-full max-h-[90vh] overflow-y-auto flex flex-col">
               <div className="p-6 border-b border-white/10">
                 <h2 className="text-2xl font-bold text-white">Import Results</h2>
               </div>
@@ -1610,8 +1610,8 @@ function CollectionView({
 
         {/* Bulk Update Modals */}
         {bulkUpdateModal === 'condition' && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6 border-2 border-purple-500">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-6 border-2 border-purple-500 max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-white mb-4">Update Condition</h2>
               <p className="text-white/60 mb-4">Set condition for {selectedCards.size} selected cards:</p>
               <select
@@ -1640,8 +1640,8 @@ function CollectionView({
         )}
 
         {bulkUpdateModal === 'location' && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6 border-2 border-purple-500">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-6 border-2 border-purple-500 max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-white mb-4">Update Location</h2>
               <p className="text-white/60 mb-4">Set location for {selectedCards.size} selected cards:</p>
               <select
@@ -1671,8 +1671,8 @@ function CollectionView({
         )}
 
         {bulkUpdateModal === 'addTags' && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6 border-2 border-purple-500">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-6 border-2 border-purple-500 max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-white mb-4">Add Tags</h2>
               <p className="text-white/60 mb-4">Add tags to {selectedCards.size} selected cards:</p>
               <input
@@ -1701,8 +1701,8 @@ function CollectionView({
         )}
 
         {bulkUpdateModal === 'removeTags' && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6 border-2 border-purple-500">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-6 border-2 border-purple-500 max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-white mb-4">Remove Tags</h2>
               <p className="text-white/60 mb-4">Remove tags from {selectedCards.size} selected cards:</p>
               <input
@@ -1731,8 +1731,8 @@ function CollectionView({
         )}
 
         {bulkUpdateModal === 'delete' && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6 border-2 border-red-500">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-6 border-2 border-red-500 max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-white mb-4">Delete Cards</h2>
               <p className="text-white/60 mb-4">
                 Are you sure you want to delete {selectedCards.size} selected cards? This action cannot be undone.
@@ -1842,8 +1842,8 @@ function CollectionView({
 
         {/* Similar Cards Modal */}
         {showSimilarCards && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col border-2 border-purple-500">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-4xl w-full max-h-[90vh] overflow-y-auto flex flex-col border-2 border-purple-500">
               <div className="p-6 border-b border-white/10 flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-bold text-white">Similar Cards</h2>
@@ -1934,8 +1934,8 @@ function CollectionView({
 
         {/* Card Synergies Modal */}
         {showSynergies && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col border-2 border-yellow-500">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-5xl w-full max-h-[90vh] overflow-y-auto flex flex-col border-2 border-yellow-500">
               <div className="p-6 border-b border-white/10 flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -2146,8 +2146,8 @@ function CollectionView({
 
         {/* Commander Recommendations Modal */}
         {showCommanderRecs && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col border-2 border-amber-500">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-5xl w-full max-h-[90vh] overflow-y-auto flex flex-col border-2 border-amber-500">
               <div className="p-6 border-b border-white/10 flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -2328,8 +2328,8 @@ function CollectionView({
 
         {/* Set Completion Tracker Modal */}
         {showSetCompletion && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border-2 border-teal-500">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-4xl w-full max-h-[90vh] overflow-y-auto flex flex-col border-2 border-teal-500">
               <div className="p-6 border-b border-white/10 flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -2410,8 +2410,8 @@ function CollectionView({
 
         {/* Combo Finder Modal */}
         {showComboFinder && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col border-2 border-orange-500">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-5xl w-full max-h-[90vh] overflow-y-auto flex flex-col border-2 border-orange-500">
               <div className="p-6 border-b border-white/10 flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -2671,8 +2671,8 @@ function CollectionView({
 
         {/* Price Update Options Modal */}
         {showPriceUpdateModal && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6 border-2 border-blue-500">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-6 border-2 border-blue-500 max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-white mb-4">Update All Prices</h2>
               <p className="text-white/60 mb-6">Choose update options:</p>
 
@@ -2727,8 +2727,8 @@ function CollectionView({
 
         {/* Finance Panel Modal */}
         {showFinancePanel && financeData && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-slate-900 rounded-lg border border-slate-700 max-w-md w-full p-6">
+          <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
+            <div className="bg-slate-900 rounded-t-2xl sm:rounded-lg border border-slate-700 sm:max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-white">Portfolio Finance</h2>
                 <button onClick={() => setShowFinancePanel(false)} className="text-slate-400 hover:text-white">
@@ -2762,8 +2762,8 @@ function CollectionView({
 
         {/* QR Preview Modal */}
         {showQRPreview && qrPreviewLocation && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-xl shadow-2xl max-w-sm w-full p-6 border-2 border-purple-500">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-sm w-full p-6 border-2 border-purple-500 max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-white">QR Label</h3>
                 <button onClick={() => setShowQRPreview(false)} className="text-white/60 hover:text-white">
