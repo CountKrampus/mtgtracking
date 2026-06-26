@@ -133,9 +133,9 @@ export function AdminPanel({ onClose, user }) {
         </div>
 
         {/* Body: sidebar + content */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col sm:flex-row flex-1 overflow-hidden">
           {/* Sidebar */}
-          <div className="w-56 bg-gray-900 border-r border-gray-700 overflow-y-auto flex-shrink-0">
+          <div className="w-full sm:w-56 bg-gray-900 border-b sm:border-b-0 sm:border-r border-gray-700 overflow-y-auto flex-shrink-0">
             {groups.filter(group => group.tabs.some(tab => canSeeTab(tab, user))).map(group => {
               const GroupIcon = group.icon;
               const isExpanded = expandedGroups[group.id];
@@ -175,7 +175,7 @@ export function AdminPanel({ onClose, user }) {
           </div>
 
           {/* Main content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 min-w-0 overflow-y-auto p-6">
             {renderContent(activeTab)}
           </div>
         </div>

@@ -255,7 +255,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
 
         {/* Alert */}
         {alert && (
-          <div className={`mx-5 mt-4 px-4 py-3 rounded-lg flex items-center justify-between flex-shrink-0 ${
+          <div className={`mx-3 sm:mx-5 mt-4 px-4 py-3 rounded-lg flex items-center justify-between flex-shrink-0 ${
             alert.type === 'success' ? 'bg-green-900 border border-green-700 text-green-200' : 'bg-red-900 border border-red-700 text-red-200'
           }`}>
             <span className="text-sm">{alert.message}</span>
@@ -266,7 +266,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
         )}
 
         {/* Category Tabs */}
-        <div className="flex gap-1 px-5 pt-4 flex-shrink-0">
+        <div className="flex gap-1 px-3 sm:px-5 pt-4 flex-shrink-0 overflow-x-auto scrollbar-hide">
           {GROUP_TABS.map(tab => {
             const Icon = tab.icon;
             const count = tabCounts[tab.id] ?? 0;
@@ -274,7 +274,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
               <button
                 key={tab.id}
                 onClick={() => setActiveCategory(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   activeCategory === tab.id
                     ? 'bg-purple-700 text-white'
                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
@@ -288,7 +288,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
         </div>
 
         {/* Search */}
-        <div className="px-5 pt-3 pb-1 flex-shrink-0">
+        <div className="px-3 sm:px-5 pt-3 pb-1 flex-shrink-0">
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
@@ -302,7 +302,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
         </div>
 
         {/* Items Grid */}
-        <div className="overflow-y-auto flex-1 p-5 space-y-6">
+        <div className="overflow-y-auto flex-1 p-3 sm:p-5 space-y-6">
           {groupedItems.length === 0 ? (
             <div className="text-center text-slate-500 py-12">No cosmetics found.</div>
           ) : (
@@ -439,7 +439,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-slate-700 flex-shrink-0">
+        <div className="p-3 sm:p-5 border-t border-slate-700 flex-shrink-0">
           <button
             onClick={onClose}
             className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white text-sm font-medium transition-colors"
