@@ -7,6 +7,58 @@ import { API_URL } from '../config';
 
 const conditions = ['NM', 'LP', 'MP', 'HP', 'DMG'];
 
+function MobileWishlistRow({ item, formatPrice, onAcquire, onEdit, onDelete }) {
+  const isDeal = item.targetPrice > 0 && item.currentPrice > 0 && item.currentPrice <= item.targetPrice;
+  const diff = item.currentPrice - item.targetPrice;
+  return (
+    <div className={`rounded-xl p-4 border transition ${isDeal ? 'bg-green-900/30 border-green-500/30' : 'bg-white/10 border-white/10'}`}>
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="flex-1 min-w-0">
+          <p className="text-white font-semibold truncate">{item.name}</p>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            {item.set && <span className="text-white/50 text-xs">{item.set}</span>}
+            <span className={`px-1.5 py-0.5 rounded text-[11px] font-semibold ${
+              item.priority === 'high' ? 'bg-red-600/50 text-white' :
+              item.priority === 'medium' ? 'bg-yellow-600/50 text-white' :
+              'bg-gray-600/50 text-white'
+            }`}>
+              {item.priority.charAt(0).toUpperCase() + item.priority.slice(1)}
+            </span>
+            {isDeal && <span className="px-1.5 py-0.5 bg-green-600 text-white text-[11px] font-bold rounded">DEAL!</span>}
+          </div>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <p className="text-white/80 text-sm">Target: {formatPrice(item.targetPrice)}</p>
+          <p className="text-white/60 text-xs">Current: {formatPrice(item.currentPrice)}</p>
+          {item.targetPrice > 0 && (
+            <p className={`text-xs font-semibold ${diff <= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {diff <= 0 ? '' : '+'}{formatPrice(diff)}
+            </p>
+          )}
+        </div>
+      </div>
+      {item.notes && <p className="text-white/40 text-xs mb-3 truncate">{item.notes}</p>}
+      <div className="flex gap-2 justify-end">
+        <button onClick={() => onAcquire(item._id)}
+          className="p-2.5 bg-green-600/60 hover:bg-green-600 text-white rounded-lg transition min-h-[44px] min-w-[44px] flex items-center justify-center"
+          title="Acquire">
+          <Plus size={15} />
+        </button>
+        <button onClick={() => onEdit(item)}
+          className="p-2.5 bg-blue-600/60 hover:bg-blue-600 text-white rounded-lg transition min-h-[44px] min-w-[44px] flex items-center justify-center"
+          title="Edit">
+          <Edit2 size={15} />
+        </button>
+        <button onClick={() => onDelete(item._id)}
+          className="p-2.5 bg-red-600/60 hover:bg-red-600 text-white rounded-lg transition min-h-[44px] min-w-[44px] flex items-center justify-center"
+          title="Delete">
+          <Trash2 size={15} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function WishlistView() {
   const {
     wishlistItems, wishlistFormData, setWishlistFormData,
@@ -157,8 +209,26 @@ function WishlistView() {
         </div>
       </div>
 
+      {/* Mobile Wishlist List */}
+      <div className="sm:hidden space-y-3">
+        {filteredWishlistItems.length === 0 ? (
+          <div className="text-center py-12 text-white/40">Your wishlist is empty. Add cards you want to acquire!</div>
+        ) : (
+          filteredWishlistItems.map(item => (
+            <MobileWishlistRow
+              key={item._id}
+              item={item}
+              formatPrice={formatPrice}
+              onAcquire={handleAcquireWishlistItem}
+              onEdit={handleWishlistEdit}
+              onDelete={handleWishlistDelete}
+            />
+          ))
+        )}
+      </div>
+
       {/* Wishlist Table */}
-      <div className="bg-white/10 backdrop-blur-md rounded-lg overflow-hidden shadow-xl">
+      <div className="hidden sm:block bg-white/10 backdrop-blur-md rounded-lg overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-white/20">
