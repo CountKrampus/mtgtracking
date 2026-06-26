@@ -122,8 +122,8 @@ export default function SessionsTab() {
             <p>No active users found</p>
           </div>
         ) : (
-          <div className="bg-gray-700/50 rounded-lg overflow-hidden">
-            <table className="w-full">
+          <div className="bg-gray-700/50 rounded-lg overflow-x-auto">
+            <table className="w-full min-w-[480px]">
               <thead className="bg-gray-700">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Username</th>

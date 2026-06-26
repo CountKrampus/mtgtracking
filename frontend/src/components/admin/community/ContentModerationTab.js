@@ -181,8 +181,8 @@ function FlaggedContentTab({ authFetch }) {
         ) : fallbackPosts.length === 0 ? (
           <EmptyState icon={ShieldAlert} message="No recent posts found." />
         ) : (
-          <div className="bg-gray-700/50 rounded-lg overflow-hidden">
-            <table className="w-full">
+          <div className="bg-gray-700/50 rounded-lg overflow-x-auto">
+            <table className="w-full min-w-[480px]">
               <thead className="bg-gray-700">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Author</th>
@@ -221,8 +221,8 @@ function FlaggedContentTab({ authFetch }) {
   }
 
   return (
-    <div className="bg-gray-700/50 rounded-lg overflow-hidden">
-      <table className="w-full">
+    <div className="bg-gray-700/50 rounded-lg overflow-x-auto">
+      <table className="w-full min-w-[480px]">
         <thead className="bg-gray-700">
           <tr>
             <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Author</th>
@@ -412,8 +412,8 @@ function RecentPostsTab({ authFetch }) {
         )}
       </div>
 
-      <div className="bg-gray-700/50 rounded-lg overflow-hidden">
-        <table className="w-full">
+      <div className="bg-gray-700/50 rounded-lg overflow-x-auto">
+        <table className="w-full min-w-[720px]">
           <thead className="bg-gray-700">
             <tr>
               <th className="px-4 py-3 text-left w-8">
@@ -651,8 +651,8 @@ function RecentThreadsTab({ authFetch }) {
         )}
       </div>
 
-      <div className="bg-gray-700/50 rounded-lg overflow-hidden">
-        <table className="w-full">
+      <div className="bg-gray-700/50 rounded-lg overflow-x-auto">
+        <table className="w-full min-w-[720px]">
           <thead className="bg-gray-700">
             <tr>
               <th className="px-4 py-3 w-10">
