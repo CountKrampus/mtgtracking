@@ -295,6 +295,38 @@ async function parseArchidektURL(url) {
   };
 }
 
+// Parse MTG Arena export format
+function parseArenaText(text) {
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  let commander = null;
+  let partnerCommander = null;
+  const mainDeck = [];
+  let currentSection = 'deck';
+
+  for (const trimmed of lines.map(l => l.trim())) {
+    if (!trimmed) continue;
+    if (/^Commander$/i.test(trimmed)) { currentSection = 'commander'; continue; }
+    if (/^Deck$/i.test(trimmed))      { currentSection = 'deck';      continue; }
+    if (/^Sideboard$/i.test(trimmed)) { currentSection = 'sideboard'; continue; }
+
+    const match = trimmed.match(/^(\d+)\s+(.+)$/);
+    if (!match) continue;
+
+    const quantity = parseInt(match[1]);
+    const cardName = stripSetCode(match[2].trim());
+
+    if (currentSection === 'commander') {
+      if (!commander) commander = cardName;
+      else if (!partnerCommander) partnerCommander = cardName;
+    } else if (currentSection === 'deck') {
+      mainDeck.push({ name: cardName, quantity });
+    }
+    // Sideboard intentionally skipped — not used in Commander format
+  }
+
+  return { commander, partnerCommander, mainDeck };
+}
+
 module.exports = {
   stripSetCode,
   parseCMC,
@@ -303,5 +335,6 @@ module.exports = {
   validateDeck,
   parseTextList,
   parseMoxfieldURL,
-  parseArchidektURL
+  parseArchidektURL,
+  parseArenaText
 };

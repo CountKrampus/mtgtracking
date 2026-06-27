@@ -8,7 +8,8 @@ const {
   validateDeck,
   parseTextList,
   parseMoxfieldURL,
-  parseArchidektURL
+  parseArchidektURL,
+  parseArenaText
 } = require('../utils/deckHelpers');
 const { requireAuth, requireEditor } = require('../middleware/auth');
 const { buildUserQuery, getUserId } = require('../middleware/multiUser');
@@ -231,6 +232,8 @@ router.post('/import', requireAuth, requireEditor, async (req, res) => {
       parsedData = await parseMoxfieldURL(data);
     } else if (source === 'archidekt') {
       parsedData = await parseArchidektURL(data);
+    } else if (source === 'arena') {
+      parsedData = parseArenaText(data);
     } else {
       return res.status(400).json({ message: 'Invalid source type' });
     }
