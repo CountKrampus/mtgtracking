@@ -1,5 +1,10 @@
 const axios = require('axios');
 
+// Strip set codes like "(MH2) 123" or "(PLST) C18-245" from card names
+function stripSetCode(name) {
+  return name.replace(/\s*\([A-Za-z0-9]{2,6}\)\s*[A-Za-z0-9\-]*\s*$/i, '').trim();
+}
+
 // Calculate mana cost from mana cost string
 function parseCMC(manaCost) {
   if (!manaCost) return 0;
@@ -162,11 +167,8 @@ function parseTextList(text) {
     if (!match) continue;
 
     const quantity = parseInt(match[1]) || 1;
-    let cardName = match[2].trim();
+    let cardName = stripSetCode(match[2].trim());  // strip BEFORE checking *CMDR*
     const isCommander = match[3] || isCommanderSection;
-
-    // Remove set codes
-    cardName = cardName.replace(/\s*\([A-Z0-9]+\)\s*[A-Z0-9\-]*$/i, '').trim();
 
     if (isCommander) {
       if (!commander) commander = cardName;
@@ -181,7 +183,7 @@ function parseTextList(text) {
 
 // Parse Moxfield URL
 async function parseMoxfieldURL(url) {
-  const deckId = url.match(/moxfield\.com\/decks\/([^\/\?]+)/)?.[1];
+  const deckId = url.match(/moxfield\.com\/decks\/([A-Za-z0-9_-]+)/)?.[1];
   if (!deckId) throw new Error('Invalid Moxfield URL');
 
   // Try the public download endpoint first (less likely to be blocked)
@@ -211,10 +213,7 @@ async function parseMoxfieldURL(url) {
 
       const match = line.match(/^(\d+)\s+(.+)$/);
       if (match) {
-        mainDeck.push({
-          name: match[2].trim(),
-          quantity: parseInt(match[1])
-        });
+        mainDeck.push({ name: stripSetCode(match[2].trim()), quantity: parseInt(match[1]) });
       }
     }
 
@@ -297,6 +296,7 @@ async function parseArchidektURL(url) {
 }
 
 module.exports = {
+  stripSetCode,
   parseCMC,
   extractColorsFromManaCost,
   calculateDeckStatistics,

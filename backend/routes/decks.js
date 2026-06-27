@@ -295,14 +295,19 @@ router.post('/import', requireAuth, requireEditor, async (req, res) => {
       }
     }
 
-    const mainDeck = allScryfallCards.map((scryfallCard, idx) => ({
+    const quantityMap = {};
+    for (const card of parsedData.mainDeck) {
+      quantityMap[card.name.toLowerCase()] = card.quantity;
+    }
+
+    const mainDeck = allScryfallCards.map((scryfallCard) => ({
       scryfallId: scryfallCard.id,
       name: scryfallCard.name,
       manaCost: scryfallCard.mana_cost,
       types: scryfallCard.type_line?.split('—')?.[0]?.trim().split(' ') || [],
       colors: scryfallCard.colors || [],
       imageUrl: scryfallCard.image_uris?.normal,
-      quantity: parsedData.mainDeck[idx]?.quantity || 1
+      quantity: quantityMap[scryfallCard.name.toLowerCase()] || 1,
     }));
 
     const deckData = {
