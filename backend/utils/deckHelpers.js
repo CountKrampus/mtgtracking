@@ -186,77 +186,30 @@ async function parseMoxfieldURL(url) {
   const deckId = url.match(/moxfield\.com\/decks\/([A-Za-z0-9_-]+)/)?.[1];
   if (!deckId) throw new Error('Invalid Moxfield URL');
 
-  // Try the public download endpoint first (less likely to be blocked)
+  // Use the JSON API directly. Note: Origin/Referer headers trigger their CORS block — omit them.
   try {
-    const downloadResponse = await axios.get(`https://www.moxfield.com/decks/${deckId}/download`, {
+    const response = await axios.get(`https://api2.moxfield.com/v2/decks/all/${deckId}`, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        'Accept': 'text/plain, */*',
-        'Accept-Language': 'en-US,en;q=0.9',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json',
       },
-      maxRedirects: 5
     });
+    const data = response.data;
 
-    // Parse the text format (each line is "quantity cardname")
-    const lines = downloadResponse.data.split('\n').filter(line => line.trim());
-    const mainDeck = [];
-    let deckName = 'Imported Moxfield Deck';
-
-    for (const line of lines) {
-      // Skip section headers like "// Commander" or "// Sideboard"
-      if (line.startsWith('//')) {
-        if (line.includes('Deck')) {
-          deckName = line.replace('//', '').trim();
-        }
-        continue;
-      }
-
-      const match = line.match(/^(\d+)\s+(.+)$/);
-      if (match) {
-        mainDeck.push({ name: stripSetCode(match[2].trim()), quantity: parseInt(match[1]) });
-      }
-    }
-
+    // commanders and mainboard are dicts keyed by Moxfield card ID
+    const commanderEntries = Object.values(data.commanders || {});
     return {
-      name: deckName,
-      description: '',
-      commander: null,
-      partnerCommander: null,
-      mainDeck
+      name: data.name || 'Imported Moxfield Deck',
+      description: data.description || '',
+      commander: commanderEntries[0]?.card?.name || null,
+      partnerCommander: commanderEntries[1]?.card?.name || null,
+      mainDeck: Object.values(data.mainboard || {}).map(entry => ({
+        name: entry.card.name,
+        quantity: entry.quantity,
+      })),
     };
-  } catch (downloadError) {
-    // If download fails, try the API (may be blocked by Cloudflare)
-    try {
-      const response = await axios.get(`https://api2.moxfield.com/v2/decks/all/${deckId}`, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-          'Accept': 'application/json, text/plain, */*',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Referer': 'https://www.moxfield.com/',
-          'Origin': 'https://www.moxfield.com',
-          'DNT': '1',
-          'Connection': 'keep-alive',
-          'Sec-Fetch-Dest': 'empty',
-          'Sec-Fetch-Mode': 'cors',
-          'Sec-Fetch-Site': 'same-site'
-        }
-      });
-      const data = response.data;
-
-      return {
-        name: data.name,
-        description: data.description || '',
-        commander: data.commanders?.[0]?.card?.name,
-        partnerCommander: data.commanders?.[1]?.card?.name,
-        mainDeck: Object.values(data.mainboard || {}).map(card => ({
-          name: card.card.name,
-          quantity: card.quantity
-        }))
-      };
-    } catch (apiError) {
-      throw new Error('Moxfield is blocking automated requests. Please export your deck from Moxfield (click Export → Text) and import using a .txt file instead.');
-    }
+  } catch (err) {
+    throw new Error('Could not fetch Moxfield deck. Make sure the deck is set to Public, or export it as text and use Text List import instead.');
   }
 }
 
