@@ -7,6 +7,7 @@ function CommanderSearch({ label, value, onChange, onSelect }) {
   const [query, setQuery] = useState(value?.name || '');
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [commanderError, setCommanderError] = useState('');
   const debounceRef = useRef(null);
 
   useEffect(() => {
@@ -34,6 +35,7 @@ function CommanderSearch({ label, value, onChange, onSelect }) {
   const selectSuggestion = async (name) => {
     setQuery(name);
     setSuggestions([]);
+    setCommanderError('');
     setLoading(true);
     try {
       // Call Scryfall directly for full commander data (CORS-enabled, no price lookup needed)
@@ -55,7 +57,7 @@ function CommanderSearch({ label, value, onChange, onSelect }) {
         toughness: card.toughness || '',
       });
     } catch {
-      alert(`Could not find card "${name}" on Scryfall`);
+      setCommanderError(`Could not find card "${name}" on Scryfall`);
     } finally {
       setLoading(false);
     }
@@ -87,6 +89,7 @@ function CommanderSearch({ label, value, onChange, onSelect }) {
           ))}
         </div>
       )}
+      {commanderError && <p className="text-red-400 text-xs mt-1">{commanderError}</p>}
       {value && (
         <div className="mt-2 flex items-center gap-2 text-xs text-green-400">
           <span>✓</span>
@@ -106,6 +109,7 @@ function DeckCreateForm({ onBack, onImportComplete }) {
   const [partner, setPartner] = useState(null);
   const [hasPartner, setHasPartner] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [createError, setCreateError] = useState('');
 
   const isCommanderFormat = format === 'commander';
   const canCreate = deckName.trim() && (!isCommanderFormat || commander);
@@ -113,6 +117,7 @@ function DeckCreateForm({ onBack, onImportComplete }) {
   const handleCreate = async () => {
     if (!canCreate) return;
     setLoading(true);
+    setCreateError('');
     try {
       await axios.post(`${API_URL}/decks`, {
         name: deckName.trim(),
@@ -124,7 +129,7 @@ function DeckCreateForm({ onBack, onImportComplete }) {
 
       onImportComplete();
     } catch (error) {
-      alert('Error creating deck: ' + (error.response?.data?.message || error.message));
+      setCreateError('Error creating deck: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
@@ -207,6 +212,8 @@ function DeckCreateForm({ onBack, onImportComplete }) {
         </div>
       )}
 
+      {createError && <ErrorBanner messages={[createError]} />}
+
       <button
         onClick={handleCreate}
         disabled={!canCreate || loading}
@@ -222,51 +229,84 @@ function DeckCreateForm({ onBack, onImportComplete }) {
   );
 }
 
+// ── Banner components ─────────────────────────────────────────────────────────
+function ErrorBanner({ messages }) {
+  if (!messages?.length) return null;
+  return (
+    <div className="bg-red-900/50 border border-red-500/50 rounded-lg p-3 mb-4">
+      <p className="text-red-300 font-semibold text-sm mb-1">Errors</p>
+      <ul className="list-disc list-inside space-y-1">
+        {messages.map((msg, i) => <li key={i} className="text-red-200 text-sm">{msg}</li>)}
+      </ul>
+    </div>
+  );
+}
+
+function WarningBanner({ messages }) {
+  if (!messages?.length) return null;
+  return (
+    <div className="bg-yellow-900/50 border border-yellow-500/50 rounded-lg p-3 mb-4">
+      <p className="text-yellow-300 font-semibold text-sm mb-1">Warnings</p>
+      <ul className="list-disc list-inside space-y-1">
+        {messages.map((msg, i) => <li key={i} className="text-yellow-200 text-sm">{msg}</li>)}
+      </ul>
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 function DeckImport({ onBack, onImportComplete }) {
-  const [mode, setMode] = useState('new'); // 'new' | 'text' | 'moxfield' | 'archidekt'
+  const [mode, setMode] = useState('new');
   const [importData, setImportData] = useState('');
   const [loading, setLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState([]);
+  const [validationWarnings, setValidationWarnings] = useState([]);
+  const [importPreview, setImportPreview] = useState(null); // { deckData, statistics, validation }
+  const [importError, setImportError] = useState('');
 
   const handleImport = async () => {
-    if (!importData.trim()) {
-      alert('Please enter a deck list or URL');
-      return;
-    }
-
+    if (!importData.trim()) return;
+    setImportError('');
+    setValidationErrors([]);
+    setValidationWarnings([]);
     setLoading(true);
     try {
       const response = await axios.post(`${API_URL}/decks/import`, {
         source: mode,
-        data: importData
+        data: importData,
       });
+      setImportPreview(response.data); // { deckData, statistics, validation }
+    } catch (error) {
+      setImportError(error.response?.data?.message || error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      const { deckData, statistics, validation } = response.data;
-
-      if (validation.errors.length > 0) {
-        alert('Deck validation errors:\n' + validation.errors.join('\n'));
-      }
-      if (validation.warnings.length > 0) {
-        alert('Deck validation warnings:\n' + validation.warnings.join('\n'));
-      }
-
-      await axios.post(`${API_URL}/decks`, { ...deckData, statistics });
-
-      alert('Deck imported successfully!');
+  const handleConfirmImport = async () => {
+    setLoading(true);
+    try {
+      await axios.post(`${API_URL}/decks`, {
+        ...importPreview.deckData,
+        statistics: importPreview.statistics,
+      });
       setImportData('');
       onImportComplete();
     } catch (error) {
-      alert('Error importing deck: ' + (error.response?.data?.message || error.message));
+      setImportError(error.response?.data?.message || error.message);
     } finally {
       setLoading(false);
     }
   };
 
   const tabs = [
-    { id: 'new',       label: '+ New Deck'   },
-    { id: 'text',      label: 'Text List'    },
-    { id: 'moxfield',  label: 'Moxfield'     },
-    { id: 'archidekt', label: 'Archidekt'    },
+    { id: 'new',         label: '+ New Deck'  },
+    { id: 'text',        label: 'Text List'   },
+    { id: 'arena',       label: 'MTG Arena'   },
+    { id: 'moxfield',    label: 'Moxfield'    },
+    { id: 'archidekt',   label: 'Archidekt'   },
+    { id: 'tappedout',   label: 'TappedOut'   },
+    { id: 'mtggoldfish', label: 'MTGGoldfish' },
   ];
 
   return (
@@ -282,7 +322,7 @@ function DeckImport({ onBack, onImportComplete }) {
       </div>
 
       {/* Mode tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-4">
         {tabs.map(tab => (
           <button
             key={tab.id}
@@ -306,29 +346,90 @@ function DeckImport({ onBack, onImportComplete }) {
       {/* Import forms */}
       {mode !== 'new' && (
         <>
-          <div className="mb-4">
-            <label className="block text-white/80 mb-2">
-              {mode === 'text' ? 'Paste Deck List' : 'Enter Deck URL'}
-            </label>
-            <textarea
-              value={importData}
-              onChange={(e) => setImportData(e.target.value)}
-              placeholder={
-                mode === 'text'
-                  ? "Commander:\n1 Atraxa, Praetors' Voice\n\nDeck:\n1 Sol Ring\n1 Command Tower\n..."
-                  : `https://${mode}.com/decks/...`
-              }
-              className="w-full h-64 px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400 font-mono text-sm"
-            />
-          </div>
+          {importPreview ? (
+            <div className="space-y-4">
+              <div className="bg-white/10 rounded-lg p-4">
+                <h3 className="text-white font-semibold text-lg mb-1">
+                  {importPreview.deckData?.name || 'Imported Deck'}
+                </h3>
+                {importPreview.deckData?.commander && (
+                  <p className="text-white/70 text-sm">
+                    Commander: {importPreview.deckData.commander.name}
+                  </p>
+                )}
+                <p className="text-white/70 text-sm">
+                  Cards: {importPreview.statistics?.totalCards || importPreview.deckData?.mainDeck?.length || 0}
+                </p>
+              </div>
+              <ErrorBanner messages={importPreview.validation?.errors} />
+              <WarningBanner messages={importPreview.validation?.warnings} />
+              {importError && <ErrorBanner messages={[importError]} />}
+              <div className="flex gap-3">
+                <button
+                  onClick={handleConfirmImport}
+                  disabled={loading}
+                  className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition disabled:bg-gray-600 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Saving...' : 'Confirm Import'}
+                </button>
+                <button
+                  onClick={() => { setImportPreview(null); setImportError(''); }}
+                  className="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-lg transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="mb-4">
+                <label className="block text-white/80 mb-2">
+                  {mode === 'text' || mode === 'arena' ? 'Paste Deck List' : 'Enter Deck URL'}
+                </label>
+                {(mode === 'text' || mode === 'arena') && (
+                  <label className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white/80 text-sm rounded-lg cursor-pointer transition mb-2 select-none">
+                    Upload .txt file
+                    <input
+                      type="file"
+                      accept=".txt"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = (evt) => setImportData(evt.target.result);
+                        reader.readAsText(file);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                )}
+                <textarea
+                  value={importData}
+                  onChange={(e) => setImportData(e.target.value)}
+                  placeholder={
+                    mode === 'text'
+                      ? "Commander:\n1 Atraxa, Praetors' Voice\n\nDeck:\n1 Sol Ring\n1 Command Tower\n..."
+                      : mode === 'arena'
+                      ? "Commander\n1 Atraxa, Praetors' Voice (NEO) 15\n\nDeck\n1 Sol Ring (AFC) 263\n..."
+                      : `https://${mode === 'mtggoldfish' ? 'mtggoldfish.com' : mode + '.com'}/decks/...`
+                  }
+                  className="w-full h-64 px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400 font-mono text-sm"
+                />
+              </div>
 
-          <button
-            onClick={handleImport}
-            disabled={loading}
-            className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition disabled:bg-gray-600"
-          >
-            {loading ? 'Importing...' : 'Import & Validate Deck'}
-          </button>
+              {importError && <ErrorBanner messages={[importError]} />}
+              {validationWarnings.length > 0 && <WarningBanner messages={validationWarnings} />}
+
+              <button
+                onClick={handleImport}
+                disabled={loading}
+                className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition disabled:bg-gray-600"
+              >
+                {loading ? 'Importing...' : 'Import & Validate Deck'}
+              </button>
+            </>
+          )}
         </>
       )}
     </div>
