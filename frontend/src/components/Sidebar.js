@@ -32,7 +32,8 @@ import {
   Eye,
   MessageSquare,
   DollarSign,
-  Globe
+  Globe,
+  ArrowLeftRight
 } from 'lucide-react';
 
 const Sidebar = ({
@@ -124,6 +125,7 @@ const Sidebar = ({
     'reprint-tracker': '/tools/reprint-tracker',
     'set-release-calendar': '/tools/set-calendar',
     'spoiler-season': '/tools/spoilers',
+    'trades': '/trades',
   };
 
   const allNavItems = [
@@ -131,6 +133,7 @@ const Sidebar = ({
     { id: 'collection', label: 'Collection', icon: BookOpen },
     { id: 'decks', label: 'Deck Builder', icon: Layers, feature: 'deckBuilder' },
     { id: 'wishlist', label: 'Wishlist', icon: Heart, feature: 'wishlist' },
+    { id: 'trades', label: 'Trading Board', icon: ArrowLeftRight },
     { id: 'forum', label: 'Forum', icon: MessageSquare },
     { id: 'community-decks', label: 'Community Decks', icon: Globe },
     { id: 'lifecounter', label: 'Life Counter', icon: Users },

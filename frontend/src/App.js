@@ -16,6 +16,7 @@ import { ToastProvider, useToast } from './contexts/ToastContext';
 import { CardCollectionProvider, useCardCollection } from './contexts/CardCollectionContext';
 import { LocationTagProvider, useLocationTag } from './contexts/LocationTagContext';
 import { WishlistProvider, useWishlist } from './contexts/WishlistContext';
+import { TradesProvider } from './contexts/TradesContext';
 import { AccountSettings } from './components/auth/AccountSettings';
 import { AdminPanel } from './components/admin/AdminPanel';
 
@@ -61,6 +62,7 @@ const SpoilerSeasonIntegration = React.lazy(() => import('./components/Tools/Spo
 // View components (lazy)
 const CollectionView = React.lazy(() => import('./components/CollectionView'));
 const WishlistView = React.lazy(() => import('./components/WishlistView'));
+const TradingBoard = React.lazy(() => import('./components/TradingBoard'));
 
 // Set up axios interceptor to add auth headers to all requests
 axios.interceptors.request.use((config) => {
@@ -876,6 +878,12 @@ function App() {
               </Suspense>
             } />
 
+            <Route path="/trades" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <TradingBoard />
+              </Suspense>
+            } />
+
             <Route path="/decks" element={
               <Suspense fallback={<LoadingFallback />}>
                 <DeckBuilder />
@@ -1039,9 +1047,11 @@ function AppWithAuth() {
           <CardCollectionProvider>
             <LocationTagProvider>
               <WishlistProvider>
-                <AuthGuard>
-                  <App />
-                </AuthGuard>
+                <TradesProvider>
+                  <AuthGuard>
+                    <App />
+                  </AuthGuard>
+                </TradesProvider>
               </WishlistProvider>
             </LocationTagProvider>
           </CardCollectionProvider>
