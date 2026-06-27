@@ -327,6 +327,45 @@ function parseArenaText(text) {
   return { commander, partnerCommander, mainDeck };
 }
 
+// Parse TappedOut URL
+async function parseTappedOutURL(url) {
+  const slug = url.match(/tappedout\.net\/mtg-decks\/([^\/\?]+)/)?.[1];
+  if (!slug) throw new Error('Invalid TappedOut URL — expected https://tappedout.net/mtg-decks/your-deck-name/');
+
+  const response = await axios.get(
+    `https://tappedout.net/mtg-decks/${slug}/?fmt=txt`,
+    {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Referer': 'https://tappedout.net/',
+        'Accept': 'text/plain, */*',
+      },
+      maxRedirects: 5,
+    }
+  );
+  return parseTextList(response.data);
+}
+
+// Parse MTGGoldfish URL
+async function parseMTGGoldfishURL(url) {
+  const deckId = url.match(/mtggoldfish\.com\/deck(?:\/download)?\/(\d+)/)?.[1];
+  if (!deckId) {
+    throw new Error('Invalid MTGGoldfish URL — expected https://www.mtggoldfish.com/deck/1234567');
+  }
+
+  const response = await axios.get(
+    `https://www.mtggoldfish.com/deck/download/${deckId}`,
+    {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/plain, */*',
+      },
+      maxRedirects: 5,
+    }
+  );
+  return parseTextList(response.data);
+}
+
 module.exports = {
   stripSetCode,
   parseCMC,
@@ -336,5 +375,7 @@ module.exports = {
   parseTextList,
   parseMoxfieldURL,
   parseArchidektURL,
-  parseArenaText
+  parseArenaText,
+  parseTappedOutURL,
+  parseMTGGoldfishURL
 };

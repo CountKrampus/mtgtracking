@@ -9,7 +9,9 @@ const {
   parseTextList,
   parseMoxfieldURL,
   parseArchidektURL,
-  parseArenaText
+  parseArenaText,
+  parseTappedOutURL,
+  parseMTGGoldfishURL
 } = require('../utils/deckHelpers');
 const { requireAuth, requireEditor } = require('../middleware/auth');
 const { buildUserQuery, getUserId } = require('../middleware/multiUser');
@@ -234,6 +236,10 @@ router.post('/import', requireAuth, requireEditor, async (req, res) => {
       parsedData = await parseArchidektURL(data);
     } else if (source === 'arena') {
       parsedData = parseArenaText(data);
+    } else if (source === 'tappedout') {
+      parsedData = await parseTappedOutURL(data);
+    } else if (source === 'mtggoldfish') {
+      parsedData = await parseMTGGoldfishURL(data);
     } else {
       return res.status(400).json({ message: 'Invalid source type' });
     }
