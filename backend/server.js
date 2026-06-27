@@ -152,6 +152,9 @@ app.use('/api/notifications', notificationsRouter);
 // Mount messages routes
 app.use('/api/messages', messagesRouter);
 
+// Mount trades routes
+app.use('/api/trades', require('./routes/trades'));
+
 // Check maintenance mode for all other routes
 app.use(checkMaintenanceMode);
 
