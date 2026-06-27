@@ -20,6 +20,7 @@ import BadgesTab from './community/BadgesTab';
 import ActivityLogTab from './system/ActivityLogTab';
 import SettingsTab from './system/SettingsTab';
 import SessionsTab from './system/SessionsTab';
+import PerformanceTab from './system/PerformanceTab';
 
 const groups = [
   {
@@ -67,7 +68,8 @@ const groups = [
     tabs: [
       { id: 'activity', label: 'Activity Log', icon: Activity, requiresRole: 'admin' },
       { id: 'settings', label: 'Settings', icon: Settings, requiresRole: 'admin' },
-      { id: 'sessions', label: 'Sessions', icon: Database, requiresRole: 'admin' }
+      { id: 'sessions', label: 'Sessions', icon: Database, requiresRole: 'admin' },
+      { id: 'performance', label: 'Performance', icon: Activity, requiresRole: 'admin' }
     ]
   }
 ];
@@ -94,10 +96,11 @@ function renderContent(activeTab) {
     case 'moderation': return <ContentModerationTab />;
     case 'feedback':   return <FeedbackTab />;
     case 'badges':     return <BadgesTab />;
-    case 'activity':   return <ActivityLogTab />;
-    case 'settings':   return <SettingsTab />;
-    case 'sessions':   return <SessionsTab />;
-    default:           return null;
+    case 'activity':     return <ActivityLogTab />;
+    case 'settings':     return <SettingsTab />;
+    case 'sessions':     return <SessionsTab />;
+    case 'performance':  return <PerformanceTab />;
+    default:             return null;
   }
 }
 
