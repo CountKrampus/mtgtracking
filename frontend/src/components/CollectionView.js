@@ -16,6 +16,7 @@ import ColumnContextMenu from './ColumnContextMenu';
 import ValueHistoryChart from './ValueHistoryChart';
 import MobileFilterSheet from './MobileFilterSheet';
 import { API_URL } from '../config';
+import Fuse from 'fuse.js';
 
 const CameraModal = React.lazy(() => import('./CameraModal'));
 
@@ -533,12 +534,24 @@ function CollectionView({
     } catch (error) { console.error('Error adding to wishlist:', error); alert('Error adding card to wishlist'); }
   };
 
+  const fuse = useMemo(() => new Fuse(cards, {
+    keys: ['name'],
+    threshold: 0.3,
+    distance: 100,
+    minMatchCharLength: 2,
+  }), [cards]);
+
+  const fuzzyMatchedIds = useMemo(() => {
+    if (!searchTerm || searchTerm.length < 2) return null;
+    return new Set(fuse.search(searchTerm).map(r => r.item._id));
+  }, [fuse, searchTerm]);
+
   const filteredAndSortedCards = useMemo(() => {
     let filtered = cards.filter(card => {
       let matchesSearch = false;
       if (searchTerm) {
         const sl = searchTerm.toLowerCase();
-        matchesSearch = card.name.toLowerCase().includes(sl) || card.set.toLowerCase().includes(sl);
+        matchesSearch = (fuzzyMatchedIds ? fuzzyMatchedIds.has(card._id) : card.name.toLowerCase().includes(sl)) || card.set.toLowerCase().includes(sl);
         if (searchIncludesOracleText && card.oracleText) matchesSearch = matchesSearch || card.oracleText.toLowerCase().includes(sl);
         if (card.tags?.some(tag => tag.includes(sl))) matchesSearch = true;
       } else { matchesSearch = true; }
