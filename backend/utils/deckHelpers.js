@@ -280,13 +280,13 @@ function parseArenaText(text) {
   return { commander, partnerCommander, mainDeck };
 }
 
-// Parse TappedOut URL
+// Parse TappedOut URL — uses CSV export to detect the commander correctly
 async function parseTappedOutURL(url) {
   const slug = url.match(/tappedout\.net\/mtg-decks\/([^\/\?]+)/)?.[1];
   if (!slug) throw new Error('Invalid TappedOut URL — expected https://tappedout.net/mtg-decks/your-deck-name/');
 
   const response = await axios.get(
-    `https://tappedout.net/mtg-decks/${slug}/?fmt=txt`,
+    `https://tappedout.net/mtg-decks/${slug}/?fmt=csv`,
     {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -296,7 +296,45 @@ async function parseTappedOutURL(url) {
       maxRedirects: 5,
     }
   );
-  return parseTextList(response.data);
+
+  // CSV columns: Board,Qty,Name,Printing,Foil,Alter,Signed,Condition,Language,Commander
+  const lines = response.data.split('\n');
+  let commander = null;
+  let partnerCommander = null;
+  const mainDeck = [];
+
+  const parseCSVLine = (line) => {
+    const cols = [];
+    let cur = '';
+    let inQuotes = false;
+    for (const ch of line) {
+      if (ch === '"') { inQuotes = !inQuotes; }
+      else if (ch === ',' && !inQuotes) { cols.push(cur.trim()); cur = ''; }
+      else { cur += ch; }
+    }
+    cols.push(cur.trim());
+    return cols;
+  };
+
+  for (const line of lines.slice(1)) { // skip header
+    if (!line.trim()) continue;
+    const cols = parseCSVLine(line);
+    const board = cols[0];
+    const qty = parseInt(cols[1]) || 1;
+    const name = cols[2];
+    const isCommander = cols[9]?.toLowerCase() === 'true';
+
+    if (!name || board === 'maybe') continue;
+
+    if (isCommander) {
+      if (!commander) commander = name;
+      else if (!partnerCommander) partnerCommander = name;
+    } else if (board === 'main') {
+      mainDeck.push({ name, quantity: qty });
+    }
+  }
+
+  return { commander, partnerCommander, mainDeck };
 }
 
 // Parse MTGGoldfish URL
