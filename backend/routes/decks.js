@@ -287,7 +287,11 @@ router.post('/import', requireAuth, requireEditor, async (req, res) => {
 
     // Fetch Scryfall data for main deck (batch using collection endpoint)
     // Scryfall limits to 75 cards per request, so we need to batch
-    const identifiers = parsedData.mainDeck.map(card => ({ name: card.name }));
+    // For split cards (e.g. "Warrant // Warden"), Scryfall collection endpoint only
+    // resolves by the first half of the name — use that as the identifier.
+    const identifiers = parsedData.mainDeck.map(card => ({
+      name: card.name.includes(' // ') ? card.name.split(' // ')[0] : card.name,
+    }));
     const batchSize = 75;
     const allScryfallCards = [];
 
