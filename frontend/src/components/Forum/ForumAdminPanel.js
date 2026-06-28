@@ -21,8 +21,8 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 rounded-lg border border-slate-700 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
+      <div className="bg-slate-900 rounded-t-2xl sm:rounded-xl border border-slate-700 w-full sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-700 bg-slate-900">
           <h2 className="text-2xl font-bold text-white">Forum Admin</h2>
@@ -35,10 +35,10 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-0 border-b border-slate-700 bg-slate-800">
+        <div className="flex gap-0 border-b border-slate-700 bg-slate-800 overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setActiveTab('categories')}
-            className={`flex-1 px-6 py-3 font-semibold transition ${
+            className={`whitespace-nowrap flex-shrink-0 px-6 py-3 font-semibold transition ${
               activeTab === 'categories'
                 ? 'bg-purple-600 text-white'
                 : 'text-slate-400 hover:text-white'
@@ -48,7 +48,7 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
           </button>
           <button
             onClick={() => setActiveTab('moderation')}
-            className={`flex-1 px-6 py-3 font-semibold transition ${
+            className={`whitespace-nowrap flex-shrink-0 px-6 py-3 font-semibold transition ${
               activeTab === 'moderation'
                 ? 'bg-purple-600 text-white'
                 : 'text-slate-400 hover:text-white'
@@ -58,7 +58,7 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
           </button>
           <button
             onClick={() => setActiveTab('spam')}
-            className={`flex-1 px-6 py-3 font-semibold transition ${
+            className={`whitespace-nowrap flex-shrink-0 px-6 py-3 font-semibold transition ${
               activeTab === 'spam'
                 ? 'bg-purple-600 text-white'
                 : 'text-slate-400 hover:text-white'
@@ -68,7 +68,7 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
           </button>
           <button
             onClick={() => setActiveTab('modmail')}
-            className={`flex-1 px-6 py-3 font-semibold transition ${
+            className={`whitespace-nowrap flex-shrink-0 px-6 py-3 font-semibold transition ${
               activeTab === 'modmail'
                 ? 'bg-purple-600 text-white'
                 : 'text-slate-400 hover:text-white'
@@ -78,7 +78,7 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
           </button>
           <button
             onClick={() => setActiveTab('mergeRequests')}
-            className={`flex-1 px-6 py-3 font-semibold transition ${
+            className={`whitespace-nowrap flex-shrink-0 px-6 py-3 font-semibold transition ${
               activeTab === 'mergeRequests'
                 ? 'bg-purple-600 text-white'
                 : 'text-slate-400 hover:text-white'
@@ -88,7 +88,7 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
           </button>
           <button
             onClick={() => setActiveTab('cosmetics')}
-            className={`flex-1 px-6 py-3 font-semibold transition ${
+            className={`whitespace-nowrap flex-shrink-0 px-6 py-3 font-semibold transition ${
               activeTab === 'cosmetics'
                 ? 'bg-purple-600 text-white'
                 : 'text-slate-400 hover:text-white'

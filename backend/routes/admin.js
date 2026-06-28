@@ -2149,4 +2149,71 @@ router.delete('/forum-threads/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// GET /api/admin/performance - MongoDB slow query analysis and index recommendations
+router.get('/performance', requireAdmin, async (req, res) => {
+  try {
+    const db = mongoose.connection.db;
+
+    // Enable profiling for slow queries (>100ms) if not already enabled
+    await db.command({ profile: 1, slowms: 100 });
+
+    // Read recent slow queries (last 50)
+    const profiles = await db.collection('system.profile')
+      .find({})
+      .sort({ ts: -1 })
+      .limit(50)
+      .toArray();
+
+    // Summarize queries
+    const queries = profiles.map(p => ({
+      ts: p.ts,
+      op: p.op,
+      ns: p.ns,
+      millis: p.millis,
+      docsExamined: p.docsExamined || 0,
+      docsReturned: p.nreturned || 0,
+      keysExamined: p.keysExamined || 0,
+      planSummary: p.planSummary || '',
+      query: p.command?.filter || p.query || {},
+    }));
+
+    // Generate index recommendations
+    // A query doing a COLLSCAN (collection scan) with many docs examined is a candidate
+    const recommendations = [];
+    const seen = new Set();
+    for (const p of profiles) {
+      if (p.planSummary && p.planSummary.includes('COLLSCAN') && p.docsExamined > 100) {
+        const filter = p.command?.filter || p.query || {};
+        const fields = Object.keys(filter).filter(k => k !== '$and' && k !== '$or');
+        if (fields.length > 0) {
+          const key = `${p.ns}:${fields.sort().join(',')}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            recommendations.push({
+              collection: p.ns,
+              fields,
+              reason: `COLLSCAN with ${p.docsExamined} docs examined`,
+              suggestion: `db.${p.ns.split('.').pop()}.createIndex({ ${fields.map(f => `${f}: 1`).join(', ')} })`,
+            });
+          }
+        }
+      }
+    }
+
+    // Get current indexes for all collections
+    const collections = await db.listCollections().toArray();
+    const indexes = {};
+    for (const col of collections) {
+      try {
+        indexes[col.name] = await db.collection(col.name).indexes();
+      } catch {}
+    }
+
+    res.json({ queries, recommendations, indexes });
+  } catch (error) {
+    console.error('Admin performance error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

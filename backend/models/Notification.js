@@ -9,7 +9,7 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['mention', 'reply', 'upvote', 'dm', 'price_alert'],
+    enum: ['mention', 'reply', 'upvote', 'dm', 'price_alert', 'trade_offer', 'trade_accepted', 'trade_rejected', 'trade_countered'],
     required: [true, 'Notification type is required']
   },
   fromUserId: {
@@ -34,6 +34,10 @@ const notificationSchema = new mongoose.Schema({
   cardId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Card'
+  },
+  tradeOfferId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'TradeOffer',
   },
   content: {
     type: String,

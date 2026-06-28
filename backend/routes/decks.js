@@ -8,7 +8,10 @@ const {
   validateDeck,
   parseTextList,
   parseMoxfieldURL,
-  parseArchidektURL
+  parseArchidektURL,
+  parseArenaText,
+  parseTappedOutURL,
+  parseMTGGoldfishURL
 } = require('../utils/deckHelpers');
 const { requireAuth, requireEditor } = require('../middleware/auth');
 const { buildUserQuery, getUserId } = require('../middleware/multiUser');
@@ -231,6 +234,12 @@ router.post('/import', requireAuth, requireEditor, async (req, res) => {
       parsedData = await parseMoxfieldURL(data);
     } else if (source === 'archidekt') {
       parsedData = await parseArchidektURL(data);
+    } else if (source === 'arena') {
+      parsedData = parseArenaText(data);
+    } else if (source === 'tappedout') {
+      parsedData = await parseTappedOutURL(data);
+    } else if (source === 'mtggoldfish') {
+      parsedData = await parseMTGGoldfishURL(data);
     } else {
       return res.status(400).json({ message: 'Invalid source type' });
     }
@@ -278,7 +287,11 @@ router.post('/import', requireAuth, requireEditor, async (req, res) => {
 
     // Fetch Scryfall data for main deck (batch using collection endpoint)
     // Scryfall limits to 75 cards per request, so we need to batch
-    const identifiers = parsedData.mainDeck.map(card => ({ name: card.name }));
+    // For split cards (e.g. "Warrant // Warden"), Scryfall collection endpoint only
+    // resolves by the first half of the name — use that as the identifier.
+    const identifiers = parsedData.mainDeck.map(card => ({
+      name: card.name.includes(' // ') ? card.name.split(' // ')[0] : card.name,
+    }));
     const batchSize = 75;
     const allScryfallCards = [];
 
@@ -295,14 +308,19 @@ router.post('/import', requireAuth, requireEditor, async (req, res) => {
       }
     }
 
-    const mainDeck = allScryfallCards.map((scryfallCard, idx) => ({
+    const quantityMap = {};
+    for (const card of parsedData.mainDeck) {
+      quantityMap[card.name.toLowerCase()] = card.quantity;
+    }
+
+    const mainDeck = allScryfallCards.map((scryfallCard) => ({
       scryfallId: scryfallCard.id,
       name: scryfallCard.name,
       manaCost: scryfallCard.mana_cost,
       types: scryfallCard.type_line?.split('—')?.[0]?.trim().split(' ') || [],
       colors: scryfallCard.colors || [],
       imageUrl: scryfallCard.image_uris?.normal,
-      quantity: parsedData.mainDeck[idx]?.quantity || 1
+      quantity: quantityMap[scryfallCard.name.toLowerCase()] || 1,
     }));
 
     const deckData = {

@@ -412,9 +412,9 @@ export function CollectionAuditsTab() {
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-full" style={{ minHeight: '480px' }}>
+    <div className="flex flex-col sm:flex-row h-full" style={{ minHeight: '480px' }}>
       {/* ── Left panel: History + Run button ───────────────────────────────────── */}
-      <div className="w-1/3 flex flex-col border-r border-gray-700/60 pr-4 mr-4">
+      <div className="w-full sm:w-1/3 flex flex-col border-b sm:border-b-0 sm:border-r border-gray-700/60 pb-4 mb-4 sm:pb-0 sm:mb-0 sm:pr-4 sm:mr-4">
         {/* Run Audit button */}
         <div className="flex-shrink-0 mb-4">
           <button
@@ -491,7 +491,7 @@ export function CollectionAuditsTab() {
       </div>
 
       {/* ── Right panel: Audit details ──────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col overflow-hidden rounded-lg bg-gray-800/30 border border-gray-700/50">
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden rounded-lg bg-gray-800/30 border border-gray-700/50">
         <AuditDetailPanel auditId={selectedAuditId} authFetch={authFetch} />
       </div>
     </div>

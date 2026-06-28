@@ -152,6 +152,9 @@ app.use('/api/notifications', notificationsRouter);
 // Mount messages routes
 app.use('/api/messages', messagesRouter);
 
+// Mount trades routes
+app.use('/api/trades', require('./routes/trades'));
+
 // Check maintenance mode for all other routes
 app.use(checkMaintenanceMode);
 
@@ -1929,9 +1932,17 @@ app.get('/api/images/:scryfallId', (req, res) => {
     return res.status(404).json({ message: 'Image not found in cache' });
   }
 
-  // Serve image with proper headers
-  res.setHeader('Content-Type', 'image/jpeg');
-  res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+  // Handle conditional requests - browser already has this immutable image
+  if (req.headers['if-none-match'] === scryfallId) {
+    return res.status(304).end();
+  }
+
+  // Serve image with aggressive cache headers
+  res.set({
+    'Content-Type': 'image/jpeg',
+    'Cache-Control': 'public, max-age=31536000, immutable',
+    'ETag': scryfallId
+  });
 
   const stream = fs.createReadStream(filepath);
   stream.pipe(res);

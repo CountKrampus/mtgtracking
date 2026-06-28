@@ -94,8 +94,8 @@ export default function DeckImportButton({ threadId, user }) {
       )}
 
       {showModal && deckData && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-lg p-6 max-w-lg w-full mx-4 max-h-[80vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 sm:p-4">
+          <div className="bg-slate-800 rounded-t-2xl sm:rounded-xl p-6 sm:max-w-lg w-full sm:mx-4 max-h-[90vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-white">
                 Import Deck ({deckData.total} cards)

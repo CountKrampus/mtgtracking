@@ -162,8 +162,8 @@ export function UsersTab() {
         <span className="text-gray-400">{filteredUsers.length} users</span>
       </div>
 
-      <div className="bg-gray-700/50 rounded-lg overflow-hidden">
-        <table className="w-full">
+      <div className="bg-gray-700/50 rounded-lg overflow-x-auto">
+        <table className="w-full min-w-[600px]">
           <thead className="bg-gray-700">
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">User</th>
@@ -176,11 +176,11 @@ export function UsersTab() {
           <tbody className="divide-y divide-gray-600">
             {filteredUsers.map((user) => (
               <tr key={user._id} className="hover:bg-gray-700/50">
-                <td className="px-4 py-3">
-                  <div>
-                    <p className="text-white font-medium">{user.displayName || user.username}</p>
-                    <p className="text-gray-400 text-sm">{user.email}</p>
-                    <p className="text-gray-500 text-xs">@{user.username}</p>
+                <td className="px-4 py-3 min-w-0">
+                  <div className="min-w-0">
+                    <p className="text-white font-medium truncate">{user.displayName || user.username}</p>
+                    <p className="text-gray-400 text-sm truncate">{user.email}</p>
+                    <p className="text-gray-500 text-xs truncate">@{user.username}</p>
                   </div>
                 </td>
                 <td className="px-4 py-3">
@@ -257,8 +257,8 @@ export function UsersTab() {
       </div>
 
       {badgeGrantState && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 sm:p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-t-2xl sm:rounded-xl p-6 w-full sm:max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-white font-bold text-lg mb-4">
               🏅 Manage Badges — @{badgeGrantState.username}
             </h3>

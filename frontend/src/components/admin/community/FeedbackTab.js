@@ -186,8 +186,8 @@ export default function FeedbackTab() {
         <span className="text-gray-400 text-sm">{feedback.length} feedback items</span>
       </div>
 
-      <div className="bg-gray-700/50 rounded-lg overflow-hidden">
-        <table className="w-full">
+      <div className="bg-gray-700/50 rounded-lg overflow-x-auto">
+        <table className="w-full min-w-[720px]">
           <thead className="bg-gray-700">
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Submitter</th>

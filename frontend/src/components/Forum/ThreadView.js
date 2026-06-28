@@ -72,7 +72,7 @@ function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost,
       style={postWrapperStyle}
     >
       <div className="flex items-start justify-between mb-2">
-        <div className="flex items-start gap-2">
+        <div className="flex items-start gap-3 min-w-0">
           <UserAvatar
             avatarUrl={post.authorId?.avatarUrl}
             username={post.authorId?.username}
@@ -81,7 +81,7 @@ function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost,
             animationClass={ac.avatarBorder?.animationClass || null}
           />
           <div
-            className="post-nameplate"
+            className="post-nameplate min-w-0"
             style={ac.nameplateBackground?.color
               ? { backgroundColor: hexWithAlpha(ac.nameplateBackground.color, 0.25) }
               : ac.nameplateBackground?.cssProperties
@@ -214,10 +214,10 @@ function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost,
           <textarea
             value={editBody}
             onChange={(e) => setEditBody(e.target.value)}
-            className="w-full p-2 bg-slate-900 border border-slate-600 rounded text-white mb-2"
+            className="w-full p-2 bg-slate-900 border border-slate-600 rounded text-white text-base mb-2"
             rows="4"
           />
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
             <button
               onClick={() => onEditPost(post._id)}
               className="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded text-sm"
@@ -234,7 +234,7 @@ function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost,
         </div>
       ) : (
         <>
-          <div className="text-slate-200">{post.body}</div>
+          <div className="text-slate-200 text-base leading-relaxed">{post.body}</div>
           {ac.signatureText && (
             <>
               <hr className="border-slate-700 my-2" />
@@ -247,7 +247,7 @@ function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost,
   );
 }
 
-export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpdated, onViewProfile, refreshKey = 0 }) {
+export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDeleted, onThreadUpdated, onViewProfile, refreshKey = 0 }) {
   const [thread, setThread] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -469,7 +469,7 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
   }
 
   return (
-    <div className="flex-1 p-6 overflow-y-auto">
+    <div className="flex-1 px-3 sm:px-6 py-4 sm:py-6 overflow-y-auto">
       <button
         onClick={onBack}
         className="mb-4 px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-sm"
@@ -559,7 +559,7 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
                   onChange={(e) => setNewTitle(e.target.value)}
                   className="w-full p-2 bg-slate-900 border border-slate-600 rounded text-white mb-4"
                 />
-                <div className="flex gap-2 justify-end">
+                <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
                   <button
                     onClick={() => setShowRenameModal(false)}
                     className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white"
@@ -598,7 +598,7 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadUpd
                     </optgroup>
                   ))}
                 </select>
-                <div className="flex gap-2 justify-end">
+                <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
                   <button
                     onClick={() => setShowMoveModal(false)}
                     className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white"

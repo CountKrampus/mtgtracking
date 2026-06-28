@@ -183,7 +183,7 @@ export function RoleManagement() {
   };
 
   return (
-    <div className="flex gap-4 h-full min-h-0">
+    <div className="flex flex-col sm:flex-row gap-4 h-full min-h-0">
       {/* Left panel: user table (~60%) */}
       <div className="flex-1 min-w-0 space-y-4">
         <div className="flex items-center justify-between">
@@ -207,7 +207,7 @@ export function RoleManagement() {
           </div>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-gray-700">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="bg-gray-700 text-gray-300 text-xs uppercase tracking-wider">
                   <th className="px-4 py-3 text-left">User</th>
@@ -293,7 +293,7 @@ export function RoleManagement() {
       </div>
 
       {/* Right panel: role history (~40%) */}
-      <div className="w-80 flex-shrink-0 bg-gray-800 border border-gray-700 rounded-lg p-4 overflow-y-auto">
+      <div className="w-full sm:w-72 flex-shrink-0 bg-gray-800 border border-gray-700 rounded-lg p-4 overflow-y-auto">
         <HistoryPanel
           selectedUser={selectedUser}
           history={roleHistory}

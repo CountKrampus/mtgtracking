@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Upload, RefreshCw, BookOpen, Star, Layers, TrendingUp, TrendingDown } from 'lucide-react';
 import { API_URL } from '../config';
 
@@ -157,7 +158,6 @@ const Dashboard = ({
   ignoredValue,
   portfolioGain = 0,
   portfolioCost = 0,
-  setCurrentView,
   onAddCard,
   onImport,
   onUpdatePrices,
@@ -165,6 +165,7 @@ const Dashboard = ({
   isImporting,
   formatPrice
 }) => {
+  const navigate = useNavigate();
   const fp = formatPrice || ((v) => `$${v.toFixed(2)}`);
   const avgValue = totalCards > 0 ? (totalValue / totalCards) : 0;
   const [valueHistory, setValueHistory] = useState([]);
@@ -363,29 +364,29 @@ const Dashboard = ({
       {/* Quick Actions */}
       <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 shadow-xl">
         <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="flex flex-col sm:flex-row gap-2">
           <button
             onClick={onAddCard}
-            className="flex items-center gap-2 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition text-sm"
+            className="flex items-center gap-2 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition text-sm w-full sm:w-auto"
           >
             <Plus size={18} /> Add Card
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isImporting}
-            className="flex items-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition text-sm disabled:bg-gray-600"
+            className="flex items-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition text-sm disabled:bg-gray-600 w-full sm:w-auto"
           >
             <Upload size={18} /> {isImporting ? 'Importing...' : 'Import Cards'}
           </button>
           <button
             onClick={onUpdatePrices}
-            className="flex items-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition text-sm"
+            className="flex items-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition text-sm w-full sm:w-auto"
           >
             <RefreshCw size={18} /> Update Prices
           </button>
           <button
-            onClick={() => setCurrentView('collection')}
-            className="flex items-center gap-2 px-4 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition text-sm"
+            onClick={() => navigate('/collection')}
+            className="flex items-center gap-2 px-4 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition text-sm w-full sm:w-auto"
           >
             <BookOpen size={18} /> View Collection
           </button>

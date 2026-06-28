@@ -1,5 +1,10 @@
 const axios = require('axios');
 
+// Strip set codes like "(MH2) 123" or "(PLST) C18-245" from card names
+function stripSetCode(name) {
+  return name.replace(/\s*\([A-Za-z0-9]{2,6}\)\s*[A-Za-z0-9\-]*\s*$/i, '').trim();
+}
+
 // Calculate mana cost from mana cost string
 function parseCMC(manaCost) {
   if (!manaCost) return 0;
@@ -162,11 +167,8 @@ function parseTextList(text) {
     if (!match) continue;
 
     const quantity = parseInt(match[1]) || 1;
-    let cardName = match[2].trim();
+    let cardName = stripSetCode(match[2].trim());  // strip BEFORE checking *CMDR*
     const isCommander = match[3] || isCommanderSection;
-
-    // Remove set codes
-    cardName = cardName.replace(/\s*\([A-Z0-9]+\)\s*[A-Z0-9\-]*$/i, '').trim();
 
     if (isCommander) {
       if (!commander) commander = cardName;
@@ -181,83 +183,33 @@ function parseTextList(text) {
 
 // Parse Moxfield URL
 async function parseMoxfieldURL(url) {
-  const deckId = url.match(/moxfield\.com\/decks\/([^\/\?]+)/)?.[1];
+  const deckId = url.match(/moxfield\.com\/decks\/([A-Za-z0-9_-]+)/)?.[1];
   if (!deckId) throw new Error('Invalid Moxfield URL');
 
-  // Try the public download endpoint first (less likely to be blocked)
+  // Use the JSON API directly. Note: Origin/Referer headers trigger their CORS block — omit them.
   try {
-    const downloadResponse = await axios.get(`https://www.moxfield.com/decks/${deckId}/download`, {
+    const response = await axios.get(`https://api2.moxfield.com/v2/decks/all/${deckId}`, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        'Accept': 'text/plain, */*',
-        'Accept-Language': 'en-US,en;q=0.9',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json',
       },
-      maxRedirects: 5
     });
+    const data = response.data;
 
-    // Parse the text format (each line is "quantity cardname")
-    const lines = downloadResponse.data.split('\n').filter(line => line.trim());
-    const mainDeck = [];
-    let deckName = 'Imported Moxfield Deck';
-
-    for (const line of lines) {
-      // Skip section headers like "// Commander" or "// Sideboard"
-      if (line.startsWith('//')) {
-        if (line.includes('Deck')) {
-          deckName = line.replace('//', '').trim();
-        }
-        continue;
-      }
-
-      const match = line.match(/^(\d+)\s+(.+)$/);
-      if (match) {
-        mainDeck.push({
-          name: match[2].trim(),
-          quantity: parseInt(match[1])
-        });
-      }
-    }
-
+    // commanders and mainboard are dicts keyed by Moxfield card ID
+    const commanderEntries = Object.values(data.commanders || {});
     return {
-      name: deckName,
-      description: '',
-      commander: null,
-      partnerCommander: null,
-      mainDeck
+      name: data.name || 'Imported Moxfield Deck',
+      description: data.description || '',
+      commander: commanderEntries[0]?.card?.name || null,
+      partnerCommander: commanderEntries[1]?.card?.name || null,
+      mainDeck: Object.values(data.mainboard || {}).map(entry => ({
+        name: entry.card.name,
+        quantity: entry.quantity,
+      })),
     };
-  } catch (downloadError) {
-    // If download fails, try the API (may be blocked by Cloudflare)
-    try {
-      const response = await axios.get(`https://api2.moxfield.com/v2/decks/all/${deckId}`, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-          'Accept': 'application/json, text/plain, */*',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Referer': 'https://www.moxfield.com/',
-          'Origin': 'https://www.moxfield.com',
-          'DNT': '1',
-          'Connection': 'keep-alive',
-          'Sec-Fetch-Dest': 'empty',
-          'Sec-Fetch-Mode': 'cors',
-          'Sec-Fetch-Site': 'same-site'
-        }
-      });
-      const data = response.data;
-
-      return {
-        name: data.name,
-        description: data.description || '',
-        commander: data.commanders?.[0]?.card?.name,
-        partnerCommander: data.commanders?.[1]?.card?.name,
-        mainDeck: Object.values(data.mainboard || {}).map(card => ({
-          name: card.card.name,
-          quantity: card.quantity
-        }))
-      };
-    } catch (apiError) {
-      throw new Error('Moxfield is blocking automated requests. Please export your deck from Moxfield (click Export → Text) and import using a .txt file instead.');
-    }
+  } catch (err) {
+    throw new Error('Could not fetch Moxfield deck. Make sure the deck is set to Public, or export it as text and use Text List import instead.');
   }
 }
 
@@ -296,12 +248,125 @@ async function parseArchidektURL(url) {
   };
 }
 
+// Parse MTG Arena export format
+function parseArenaText(text) {
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  let commander = null;
+  let partnerCommander = null;
+  const mainDeck = [];
+  let currentSection = 'deck';
+
+  for (const trimmed of lines.map(l => l.trim())) {
+    if (!trimmed) continue;
+    if (/^Commander$/i.test(trimmed)) { currentSection = 'commander'; continue; }
+    if (/^Deck$/i.test(trimmed))      { currentSection = 'deck';      continue; }
+    if (/^Sideboard$/i.test(trimmed)) { currentSection = 'sideboard'; continue; }
+
+    const match = trimmed.match(/^(\d+)\s+(.+)$/);
+    if (!match) continue;
+
+    const quantity = parseInt(match[1]);
+    const cardName = stripSetCode(match[2].trim());
+
+    if (currentSection === 'commander') {
+      if (!commander) commander = cardName;
+      else if (!partnerCommander) partnerCommander = cardName;
+    } else if (currentSection === 'deck') {
+      mainDeck.push({ name: cardName, quantity });
+    }
+    // Sideboard intentionally skipped — not used in Commander format
+  }
+
+  return { commander, partnerCommander, mainDeck };
+}
+
+// Parse TappedOut URL — uses CSV export to detect the commander correctly
+async function parseTappedOutURL(url) {
+  const slug = url.match(/tappedout\.net\/mtg-decks\/([^\/\?]+)/)?.[1];
+  if (!slug) throw new Error('Invalid TappedOut URL — expected https://tappedout.net/mtg-decks/your-deck-name/');
+
+  const response = await axios.get(
+    `https://tappedout.net/mtg-decks/${slug}/?fmt=csv`,
+    {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Referer': 'https://tappedout.net/',
+        'Accept': 'text/plain, */*',
+      },
+      maxRedirects: 5,
+    }
+  );
+
+  // CSV columns: Board,Qty,Name,Printing,Foil,Alter,Signed,Condition,Language,Commander
+  const lines = response.data.split('\n');
+  let commander = null;
+  let partnerCommander = null;
+  const mainDeck = [];
+
+  const parseCSVLine = (line) => {
+    const cols = [];
+    let cur = '';
+    let inQuotes = false;
+    for (const ch of line) {
+      if (ch === '"') { inQuotes = !inQuotes; }
+      else if (ch === ',' && !inQuotes) { cols.push(cur.trim()); cur = ''; }
+      else { cur += ch; }
+    }
+    cols.push(cur.trim());
+    return cols;
+  };
+
+  for (const line of lines.slice(1)) { // skip header
+    if (!line.trim()) continue;
+    const cols = parseCSVLine(line);
+    const board = cols[0];
+    const qty = parseInt(cols[1]) || 1;
+    const name = cols[2];
+    const isCommander = cols[9]?.toLowerCase() === 'true';
+
+    if (!name || board === 'maybe') continue;
+
+    if (isCommander) {
+      if (!commander) commander = name;
+      else if (!partnerCommander) partnerCommander = name;
+    } else if (board === 'main') {
+      mainDeck.push({ name, quantity: qty });
+    }
+  }
+
+  return { commander, partnerCommander, mainDeck };
+}
+
+// Parse MTGGoldfish URL
+async function parseMTGGoldfishURL(url) {
+  const deckId = url.match(/mtggoldfish\.com\/deck(?:\/download)?\/(\d+)/)?.[1];
+  if (!deckId) {
+    throw new Error('Invalid MTGGoldfish URL — expected https://www.mtggoldfish.com/deck/1234567');
+  }
+
+  const response = await axios.get(
+    `https://www.mtggoldfish.com/deck/download/${deckId}`,
+    {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/plain, */*',
+      },
+      maxRedirects: 5,
+    }
+  );
+  return parseTextList(response.data);
+}
+
 module.exports = {
+  stripSetCode,
   parseCMC,
   extractColorsFromManaCost,
   calculateDeckStatistics,
   validateDeck,
   parseTextList,
   parseMoxfieldURL,
-  parseArchidektURL
+  parseArchidektURL,
+  parseArenaText,
+  parseTappedOutURL,
+  parseMTGGoldfishURL
 };

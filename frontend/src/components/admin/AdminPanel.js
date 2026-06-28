@@ -20,6 +20,7 @@ import BadgesTab from './community/BadgesTab';
 import ActivityLogTab from './system/ActivityLogTab';
 import SettingsTab from './system/SettingsTab';
 import SessionsTab from './system/SessionsTab';
+import PerformanceTab from './system/PerformanceTab';
 
 const groups = [
   {
@@ -67,7 +68,8 @@ const groups = [
     tabs: [
       { id: 'activity', label: 'Activity Log', icon: Activity, requiresRole: 'admin' },
       { id: 'settings', label: 'Settings', icon: Settings, requiresRole: 'admin' },
-      { id: 'sessions', label: 'Sessions', icon: Database, requiresRole: 'admin' }
+      { id: 'sessions', label: 'Sessions', icon: Database, requiresRole: 'admin' },
+      { id: 'performance', label: 'Performance', icon: Activity, requiresRole: 'admin' }
     ]
   }
 ];
@@ -94,10 +96,11 @@ function renderContent(activeTab) {
     case 'moderation': return <ContentModerationTab />;
     case 'feedback':   return <FeedbackTab />;
     case 'badges':     return <BadgesTab />;
-    case 'activity':   return <ActivityLogTab />;
-    case 'settings':   return <SettingsTab />;
-    case 'sessions':   return <SessionsTab />;
-    default:           return null;
+    case 'activity':     return <ActivityLogTab />;
+    case 'settings':     return <SettingsTab />;
+    case 'sessions':     return <SessionsTab />;
+    case 'performance':  return <PerformanceTab />;
+    default:             return null;
   }
 }
 
@@ -122,8 +125,8 @@ export function AdminPanel({ onClose, user }) {
   }, [user]);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
+      <div className="bg-gray-800 rounded-t-2xl sm:rounded-xl w-full sm:max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <h2 className="text-xl font-bold text-white">Admin Panel</h2>
@@ -133,9 +136,9 @@ export function AdminPanel({ onClose, user }) {
         </div>
 
         {/* Body: sidebar + content */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col sm:flex-row flex-1 overflow-hidden">
           {/* Sidebar */}
-          <div className="w-56 bg-gray-900 border-r border-gray-700 overflow-y-auto flex-shrink-0">
+          <div className="w-full sm:w-56 bg-gray-900 border-b sm:border-b-0 sm:border-r border-gray-700 overflow-y-auto flex-shrink-0 max-h-64 sm:max-h-none">
             {groups.filter(group => group.tabs.some(tab => canSeeTab(tab, user))).map(group => {
               const GroupIcon = group.icon;
               const isExpanded = expandedGroups[group.id];
@@ -175,7 +178,7 @@ export function AdminPanel({ onClose, user }) {
           </div>
 
           {/* Main content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 min-w-0 overflow-y-auto p-6">
             {renderContent(activeTab)}
           </div>
         </div>
