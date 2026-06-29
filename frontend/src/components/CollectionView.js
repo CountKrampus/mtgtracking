@@ -20,6 +20,8 @@ import Fuse from 'fuse.js';
 
 const CameraModal = React.lazy(() => import('./CameraModal'));
 
+const PRESETS_STORAGE_KEY = 'mtg-filter-presets';
+
 function MobileCardRow({ card, formatPrice, onEdit, onDelete, onUpdatePrice, onViewDetail }) {
   return (
     <div
@@ -72,19 +74,18 @@ function MobileCardRow({ card, formatPrice, onEdit, onDelete, onUpdatePrice, onV
 }
 
 function FilterPresetsPanel({ currentFilters, onApply, onClose }) {
-  const STORAGE_KEY = 'mtg-filter-presets';
-  const [presets, setPresets] = React.useState(() => {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  const [presets, setPresets] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(PRESETS_STORAGE_KEY) || '[]'); }
     catch { return []; }
   });
-  const [saveName, setSaveName] = React.useState('');
-  const [showSaveInput, setShowSaveInput] = React.useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [showSaveInput, setShowSaveInput] = useState(false);
 
   const save = () => {
     if (!saveName.trim()) return;
     const next = [...presets, { id: Date.now().toString(), name: saveName.trim(), filters: currentFilters }];
     setPresets(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(next));
     setSaveName('');
     setShowSaveInput(false);
   };
@@ -92,7 +93,7 @@ function FilterPresetsPanel({ currentFilters, onApply, onClose }) {
   const remove = (id) => {
     const next = presets.filter(p => p.id !== id);
     setPresets(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(next));
   };
 
   return (
@@ -134,6 +135,7 @@ function FilterPresetsPanel({ currentFilters, onApply, onClose }) {
             value={saveName}
             onChange={e => setSaveName(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && save()}
+            maxLength={50}
             style={{ fontSize: '16px' }}
             className="flex-1 px-2 py-1 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-purple-400"
           />
