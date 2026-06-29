@@ -155,6 +155,10 @@ app.use('/api/messages', messagesRouter);
 // Mount trades routes
 app.use('/api/trades', require('./routes/trades'));
 
+// Mount achievements routes
+const achievementsRouter = require('./routes/achievements');
+app.use('/api/achievements', achievementsRouter);
+
 // Check maintenance mode for all other routes
 app.use(checkMaintenanceMode);
 

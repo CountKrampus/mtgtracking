@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Upload, RefreshCw, BookOpen, Star, Layers, TrendingUp, TrendingDown } from 'lucide-react';
 import { API_URL } from '../config';
+import AchievementsGrid from './AchievementsGrid';
 
 // Reusable horizontal bar component
 const HorizontalBar = ({ label, value, total, color, formatLabel }) => {
@@ -788,6 +789,9 @@ const Dashboard = ({
           )}
         </div>
       </div>
+
+      {/* Collector Achievements */}
+      <AchievementsGrid />
     </div>
   );
 };
