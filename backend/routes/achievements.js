@@ -60,6 +60,10 @@ async function getCollectionStats(userQuery) {
 // GET /api/achievements — returns all achievements with earned status
 router.get('/', requireAuth, async (req, res) => {
   try {
+    // In single-user mode, requireAuth is a no-op and req.user is null.
+    // Return empty array — achievements require per-user context.
+    if (!req.user) return res.json([]);
+
     const userQuery = buildUserQuery({}, req);
     const [stats, earned] = await Promise.all([
       getCollectionStats(userQuery),
@@ -72,10 +76,15 @@ router.get('/', requireAuth, async (req, res) => {
     // Auto-grant newly earned achievements
     const toGrant = ACHIEVEMENTS.filter(a => a.check(stats) && !earnedSet.has(a.id));
     if (toGrant.length) {
-      await CollectorAchievement.insertMany(
-        toGrant.map(a => ({ userId: req.user._id, achievementId: a.id })),
-        { ordered: false }
-      );
+      try {
+        await CollectorAchievement.insertMany(
+          toGrant.map(a => ({ userId: req.user._id, achievementId: a.id })),
+          { ordered: false }
+        );
+      } catch (err) {
+        // Ignore duplicate key errors (race condition: concurrent request granted first)
+        if (!err.writeErrors?.every(e => e.code === 11000)) throw err;
+      }
       toGrant.forEach(a => { earnedSet.add(a.id); earnedDates[a.id] = new Date(); });
     }
 

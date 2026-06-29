@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+import { API_URL } from '../config';
 
 export default function AchievementsGrid() {
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_URL}/achievements`, { credentials: 'include' })
+    const token = localStorage.getItem('mtg_access_token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    fetch(`${API_URL}/achievements`, { headers })
       .then(r => r.ok ? r.json() : [])
       .then(data => { setAchievements(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));
