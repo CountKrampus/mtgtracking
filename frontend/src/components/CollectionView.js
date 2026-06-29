@@ -161,23 +161,26 @@ function FilterPresetsPanel({ currentFilters, onApply, onClose }) {
   );
 }
 
-function CollectionFAB({ onAddCard, onImport }) {
-  const [open, setOpen] = React.useState(false);
+function CollectionFAB({ onAddCard, onImport, disabled = false }) {
+  const [open, setOpen] = useState(false);
+
+  if (disabled) return null;
 
   return (
     <>
       {open && (
         <div
-          className="sm:hidden fixed inset-0 z-40"
+          className="sm:hidden fixed inset-0 z-[55]"
           onClick={() => setOpen(false)}
         />
       )}
-      <div className="sm:hidden fixed bottom-20 right-4 z-50 flex flex-col-reverse items-end gap-3">
+      <div className="sm:hidden fixed bottom-20 right-4 z-[60] flex flex-col-reverse items-end gap-3">
         {open && (
           <>
             <div className="flex items-center gap-2">
               <span className="bg-gray-900/90 text-white text-xs px-2 py-1 rounded-lg whitespace-nowrap">Import from file</span>
               <button
+                aria-label="Import cards from file"
                 onClick={() => { setOpen(false); onImport(); }}
                 className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-full shadow-lg flex items-center justify-center transition"
               >
@@ -187,6 +190,7 @@ function CollectionFAB({ onAddCard, onImport }) {
             <div className="flex items-center gap-2">
               <span className="bg-gray-900/90 text-white text-xs px-2 py-1 rounded-lg whitespace-nowrap">Add card</span>
               <button
+                aria-label="Add card"
                 onClick={() => { setOpen(false); onAddCard(); }}
                 className="w-12 h-12 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full shadow-lg flex items-center justify-center transition"
               >
@@ -196,9 +200,10 @@ function CollectionFAB({ onAddCard, onImport }) {
           </>
         )}
         <button
+          aria-label={open ? "Close quick actions" : "Open quick actions"}
           onClick={() => setOpen(p => !p)}
-          className={`w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all ${
-            open ? 'bg-gray-700 rotate-45' : 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800'
+          className={`w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all duration-200 ${
+            open ? 'bg-gray-700 rotate-45' : 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 rotate-0'
           }`}
         >
           <Plus size={26} className="text-white" />
@@ -3053,6 +3058,7 @@ function CollectionView({
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           onImport={() => fileInputRef.current?.click()}
+          disabled={selectedCards.size > 0 || showPriceUpdateModal || showImportResults || !!bulkUpdateModal || showPrintPreview || showSimilarCards || showSynergies || showFinancePanel}
         />
     </>
   );
