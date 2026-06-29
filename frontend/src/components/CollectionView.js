@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, Trash2, Edit2, Save, X, RefreshCw, DollarSign, Camera, Settings,
-  CheckSquare, Square, MapPin, Layers, Zap, Crown, BarChart3, Heart, Plus, SlidersHorizontal
+  CheckSquare, Square, MapPin, Layers, Zap, Crown, BarChart3, Heart, Plus, SlidersHorizontal, Bookmark
 } from 'lucide-react';
 import { standardTypes } from '../constants';
 import { useCardCollection } from '../contexts/CardCollectionContext';
@@ -71,6 +71,87 @@ function MobileCardRow({ card, formatPrice, onEdit, onDelete, onUpdatePrice, onV
   );
 }
 
+function FilterPresetsPanel({ currentFilters, onApply, onClose }) {
+  const STORAGE_KEY = 'mtg-filter-presets';
+  const [presets, setPresets] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch { return []; }
+  });
+  const [saveName, setSaveName] = React.useState('');
+  const [showSaveInput, setShowSaveInput] = React.useState(false);
+
+  const save = () => {
+    if (!saveName.trim()) return;
+    const next = [...presets, { id: Date.now().toString(), name: saveName.trim(), filters: currentFilters }];
+    setPresets(next);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    setSaveName('');
+    setShowSaveInput(false);
+  };
+
+  const remove = (id) => {
+    const next = presets.filter(p => p.id !== id);
+    setPresets(next);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  };
+
+  return (
+    <div className="absolute z-50 right-0 top-full mt-1 w-72 bg-gray-900 border border-white/20 rounded-xl shadow-2xl p-3">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-white font-semibold text-sm">Filter Presets</span>
+        <button onClick={onClose} className="text-white/50 hover:text-white p-1"><X size={14} /></button>
+      </div>
+
+      {presets.length === 0 && (
+        <p className="text-white/40 text-xs text-center py-3">No saved presets yet.</p>
+      )}
+
+      <div className="space-y-1 mb-3 max-h-48 overflow-y-auto">
+        {presets.map(preset => (
+          <div key={preset.id} className="flex items-center gap-2">
+            <button
+              onClick={() => { onApply(preset.filters); onClose(); }}
+              className="flex-1 text-left px-2 py-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg text-sm transition truncate"
+            >
+              {preset.name}
+            </button>
+            <button
+              onClick={() => remove(preset.id)}
+              className="p-1 text-white/30 hover:text-red-400 transition flex-shrink-0"
+            >
+              <Trash2 size={12} />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {showSaveInput ? (
+        <div className="flex gap-2">
+          <input
+            autoFocus
+            type="text"
+            placeholder="Preset name..."
+            value={saveName}
+            onChange={e => setSaveName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && save()}
+            style={{ fontSize: '16px' }}
+            className="flex-1 px-2 py-1 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-purple-400"
+          />
+          <button onClick={save} className="px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs transition">Save</button>
+          <button onClick={() => setShowSaveInput(false)} className="px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs transition">Cancel</button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setShowSaveInput(true)}
+          className="w-full px-2 py-1.5 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 hover:text-white rounded-lg text-sm transition text-center"
+        >
+          + Save current filters as preset
+        </button>
+      )}
+    </div>
+  );
+}
+
 function CollectionView({
   fileInputRef,
   showPriceUpdateModal, setShowPriceUpdateModal, forceUpdate, setForceUpdate, updateFullData, setUpdateFullData,
@@ -114,6 +195,7 @@ function CollectionView({
   const [filterSet, setFilterSet] = useState('all');
   const [filterTag, setFilterTag] = useState('all');
   const [filterLocation, setFilterLocation] = useState('all');
+  const [showPresets, setShowPresets] = useState(false);
   const [sortBy, setSortBy] = useState(settings.defaultSort);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = settings.pageSize;
@@ -156,6 +238,32 @@ function CollectionView({
   const conditions = ['NM', 'LP', 'MP', 'HP', 'DMG'];
   const mtgColors = ['W', 'U', 'B', 'R', 'G', 'C'];
   const colorNames = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green', C: 'Colorless' };
+
+  const currentFilters = {
+    searchTerm, filterCondition, filterColor, filterSet,
+    filterType, filterSpecial, filterRarity, filterTag, filterLocation,
+  };
+
+  const applyPreset = (filters) => {
+    setSearchTerm(filters.searchTerm ?? '');
+    setFilterCondition(filters.filterCondition ?? 'all');
+    setFilterColor(filters.filterColor ?? 'all');
+    setFilterSet(filters.filterSet ?? 'all');
+    setFilterType(filters.filterType ?? 'all');
+    setFilterSpecial(filters.filterSpecial ?? 'all');
+    setFilterRarity(filters.filterRarity ?? 'all');
+    setFilterTag(filters.filterTag ?? 'all');
+    setFilterLocation(filters.filterLocation ?? 'all');
+  };
+
+  useEffect(() => {
+    if (!showPresets) return;
+    const handler = (e) => {
+      if (!e.target.closest('[data-presets-panel]')) setShowPresets(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showPresets]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -625,6 +733,22 @@ function CollectionView({
                     </span>
                   )}
                 </button>
+                <div className="relative" data-presets-panel>
+                  <button
+                    onClick={() => setShowPresets(p => !p)}
+                    className="flex items-center gap-2 px-3 py-2.5 bg-white/20 hover:bg-white/30 border border-white/30 rounded-xl text-white transition min-h-[44px] flex-shrink-0"
+                    title="Presets"
+                  >
+                    <Bookmark size={16} />
+                  </button>
+                  {showPresets && (
+                    <FilterPresetsPanel
+                      currentFilters={currentFilters}
+                      onApply={applyPreset}
+                      onClose={() => setShowPresets(false)}
+                    />
+                  )}
+                </div>
               </div>
 
               {/* Desktop: collapsible toggle */}
@@ -777,6 +901,24 @@ function CollectionView({
               />
               Offline Mode
             </label>
+            {/* Presets button */}
+            <div className="relative" data-presets-panel>
+              <button
+                onClick={() => setShowPresets(p => !p)}
+                className="flex items-center gap-1 px-3 py-1 bg-white/10 hover:bg-white/20 text-white/70 hover:text-white rounded-lg text-sm transition"
+                title="Filter presets"
+              >
+                <Bookmark size={14} />
+                <span>Presets</span>
+              </button>
+              {showPresets && (
+                <FilterPresetsPanel
+                  currentFilters={currentFilters}
+                  onApply={applyPreset}
+                  onClose={() => setShowPresets(false)}
+                />
+              )}
+            </div>
           </div>
             </div>
               )}
