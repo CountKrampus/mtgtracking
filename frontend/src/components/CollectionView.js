@@ -3,7 +3,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, Trash2, Edit2, Save, X, RefreshCw, DollarSign, Camera, Settings,
-  CheckSquare, Square, MapPin, Layers, Zap, Crown, BarChart3, Heart, Plus, SlidersHorizontal, Bookmark
+  CheckSquare, Square, MapPin, Layers, Zap, Crown, BarChart3, Heart, Plus, SlidersHorizontal, Bookmark,
+  Upload, PlusCircle
 } from 'lucide-react';
 import { standardTypes } from '../constants';
 import { useCardCollection } from '../contexts/CardCollectionContext';
@@ -157,6 +158,53 @@ function FilterPresetsPanel({ currentFilters, onApply, onClose }) {
         </button>
       )}
     </div>
+  );
+}
+
+function CollectionFAB({ onAddCard, onImport }) {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <>
+      {open && (
+        <div
+          className="sm:hidden fixed inset-0 z-40"
+          onClick={() => setOpen(false)}
+        />
+      )}
+      <div className="sm:hidden fixed bottom-20 right-4 z-50 flex flex-col-reverse items-end gap-3">
+        {open && (
+          <>
+            <div className="flex items-center gap-2">
+              <span className="bg-gray-900/90 text-white text-xs px-2 py-1 rounded-lg whitespace-nowrap">Import from file</span>
+              <button
+                onClick={() => { setOpen(false); onImport(); }}
+                className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-full shadow-lg flex items-center justify-center transition"
+              >
+                <Upload size={20} />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="bg-gray-900/90 text-white text-xs px-2 py-1 rounded-lg whitespace-nowrap">Add card</span>
+              <button
+                onClick={() => { setOpen(false); onAddCard(); }}
+                className="w-12 h-12 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full shadow-lg flex items-center justify-center transition"
+              >
+                <PlusCircle size={20} />
+              </button>
+            </div>
+          </>
+        )}
+        <button
+          onClick={() => setOpen(p => !p)}
+          className={`w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all ${
+            open ? 'bg-gray-700 rotate-45' : 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800'
+          }`}
+        >
+          <Plus size={26} className="text-white" />
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -2998,6 +3046,14 @@ function CollectionView({
             />
           </Suspense>
         )}
+
+        <CollectionFAB
+          onAddCard={() => {
+            setShowAddForm(true);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onImport={() => fileInputRef.current?.click()}
+        />
     </>
   );
 };
