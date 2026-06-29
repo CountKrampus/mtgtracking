@@ -65,7 +65,7 @@ function MobileCardRow({ card, formatPrice, onEdit, onDelete, onUpdatePrice, onV
         </div>
         {/* Price update button stays visible — swipe reveals edit/delete */}
         <div className="flex justify-between items-center mt-3" onClick={(e) => e.stopPropagation()}>
-          <p className="text-white/30 text-[11px]">← Swipe to edit or delete</p>
+          <p className="text-white/50 text-[11px]">← Swipe to edit or delete</p>
           <button
             onClick={() => onUpdatePrice(card._id)}
             className="p-2.5 bg-indigo-600/50 hover:bg-indigo-600 active:bg-indigo-700 text-white rounded-lg transition min-h-[44px] min-w-[44px] flex items-center justify-center"
