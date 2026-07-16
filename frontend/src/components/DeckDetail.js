@@ -164,6 +164,7 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
   const [shareLoading, setShareLoading] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
   const [shareError, setShareError] = useState('');
+  const [addAllProgress, setAddAllProgress] = useState(null);
 
   useEffect(() => {
     setShareCode(deck.shareCode || null);
@@ -282,8 +283,11 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
 
   const handleAddAllMissingToCollection = async () => {
     if (!ownership?.missingCards?.length) return;
+    const cards = ownership.missingCards;
     let added = 0;
-    for (const card of ownership.missingCards) {
+    setAddAllProgress({ current: 0, total: cards.length, cardName: cards[0].name });
+    for (const card of cards) {
+      setAddAllProgress(prev => ({ ...prev, cardName: card.name }));
       try {
         await axios.post(`${API_URL}/cards`, {
           name: card.name, set: 'Unknown', quantity: 1, condition: 'NM',
@@ -291,11 +295,12 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
           manaCost: card.manaCost, scryfallId: card.scryfallId, imageUrl: card.imageUrl,
         });
         added++;
-        await new Promise(r => setTimeout(r, 200));
       } catch (err) {
         console.error('Error adding card:', err);
       }
+      setAddAllProgress(prev => ({ ...prev, current: prev.current + 1 }));
     }
+    setAddAllProgress(null);
     alert(`Added ${added} cards to collection`);
     onRefresh();
   };
@@ -907,10 +912,46 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
           {ownership?.missingCards && ownership.missingCards.length > 0 && (
             <button
               onClick={handleAddAllMissingToCollection}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded mb-4 font-semibold"
+              disabled={!!addAllProgress}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded mb-4 font-semibold"
             >
               + Add all {ownership.missingCards.length} missing cards to collection
             </button>
+          )}
+
+          {/* Add-all-missing progress modal */}
+          {addAllProgress && (
+            <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+              <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-8 border-2 border-green-500 max-h-[90vh] overflow-y-auto">
+                <h2 className="text-2xl font-bold text-white mb-6 text-center">Adding Cards to Collection</h2>
+
+                <div className="mb-4">
+                  <div className="flex justify-between text-sm text-white/80 mb-2">
+                    <span>Progress</span>
+                    <span>{addAllProgress.current} / {addAllProgress.total}</span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-green-500 to-emerald-500 h-full transition-all duration-300 flex items-center justify-center"
+                      style={{ width: `${(addAllProgress.current / addAllProgress.total) * 100}%` }}
+                    >
+                      <span className="text-xs font-bold text-white">
+                        {Math.round((addAllProgress.current / addAllProgress.total) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 text-center">
+                  <div className="text-sm text-white/60 mb-1">Currently adding:</div>
+                  <div className="text-lg font-semibold text-white">{addAllProgress.cardName}</div>
+                </div>
+
+                <div className="flex justify-center mt-6">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Categorized Deck List */}
