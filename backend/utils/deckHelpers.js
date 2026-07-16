@@ -233,8 +233,16 @@ async function parseArchidektURL(url) {
   });
   const data = response.data;
 
+  // Categories like "Maybeboard" or a user-excluded "Tokens & Extras" are marked
+  // includedInDeck: false — cards tagged with them aren't part of the actual decklist
+  // and must be excluded, or the reported card count is inflated.
+  const excludedCategories = new Set(
+    (data.categories || []).filter(cat => cat.includedInDeck === false).map(cat => cat.name)
+  );
+  const isExcluded = c => (c.categories || []).some(cat => excludedCategories.has(cat));
+
   const commanders = data.cards.filter(c => c.categories.includes('Commander'));
-  const mainboard = data.cards.filter(c => !c.categories.includes('Commander'));
+  const mainboard = data.cards.filter(c => !c.categories.includes('Commander') && !isExcluded(c));
 
   return {
     name: data.name,
@@ -344,17 +352,35 @@ async function parseMTGGoldfishURL(url) {
     throw new Error('Invalid MTGGoldfish URL — expected https://www.mtggoldfish.com/deck/1234567');
   }
 
-  const response = await axios.get(
-    `https://www.mtggoldfish.com/deck/download/${deckId}`,
-    {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/plain, */*',
-      },
+  const headers = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' };
+
+  const [downloadResponse, pageResponse] = await Promise.all([
+    axios.get(`https://www.mtggoldfish.com/deck/download/${deckId}`, {
+      headers: { ...headers, 'Accept': 'text/plain, */*' },
       maxRedirects: 5,
-    }
-  );
-  return parseTextList(response.data);
+    }),
+    axios.get(`https://www.mtggoldfish.com/deck/${deckId}`, { headers, maxRedirects: 5 }),
+  ]);
+
+  const parsed = parseTextList(downloadResponse.data);
+
+  // The plain-text download has no commander marker at all — the commander name is
+  // only exposed via a hidden form field on the deck page itself.
+  const pageHtml = pageResponse.data;
+  const commanderMatch = pageHtml.match(/name="deck_input\[commander\]"[^>]*value="([^"]*)"/);
+  const commanderAltMatch = pageHtml.match(/name="deck_input\[commander_alt\]"[^>]*value="([^"]*)"/);
+  const commander = commanderMatch?.[1]?.trim() || null;
+  const partnerCommander = commanderAltMatch?.[1]?.trim() || null;
+
+  if (commander) {
+    parsed.commander = commander;
+    parsed.partnerCommander = partnerCommander || null;
+    parsed.mainDeck = parsed.mainDeck.filter(
+      card => card.name !== commander && card.name !== partnerCommander
+    );
+  }
+
+  return parsed;
 }
 
 module.exports = {

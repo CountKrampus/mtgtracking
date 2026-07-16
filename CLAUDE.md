@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MTG Tracker is a full-stack web application for tracking Magic: The Gathering card collections. The application integrates with Scryfall API for card data (images, types, colors, mana cost) and scrapes Exor Games for local pricing.
+MTG Tracker is a full-stack web application for tracking Magic: The Gathering card collections. The application integrates with Scryfall API for card data (images, types, colors, mana cost, pricing) with MTGGoldfish as a pricing backup.
 
 **Stack:**
 - Backend: Node.js + Express + MongoDB (Mongoose)
 - Frontend: React (Create React App) + Tailwind CSS
 - External APIs:
-  - Scryfall API for MTG card data (images, types, colors, mana cost)
-  - Exor Games (exorgames.com) for Canadian pricing via web scraping
+  - Scryfall API for MTG card data (images, types, colors, mana cost, pricing)
+  - MTGGoldfish (mtggoldfish.com) as a pricing backup via web scraping
 
 ## Development Commands
 
@@ -86,15 +86,14 @@ The backend is a single-file Express application with the following components:
 
 3. **API Integrations**
    - **Scryfall API**: Fetches card metadata (colors, types, mana cost, images) using fuzzy name matching
-   - **Pricing Strategy (Exor Games with Scryfall Backup)**:
-     - **Primary**: Searches exorgames.com for card pricing
-       - Extracts prices from HTML using regex pattern matching
-       - Prices in CAD, converted to USD using approximate 0.73 conversion rate
-       - 500ms delay between bulk requests to be respectful to their servers
-     - **Fallback**: If Exor Games returns $0 or fails, automatically uses Scryfall pricing
-       - Ensures every card has a price even if not available at Exor Games
-       - Logs fallback usage to console for debugging
-     - Returns `{cad, usd, source}` where source is 'Exor Games', 'Scryfall (backup)', or 'None (not found)'
+   - **Pricing Strategy (Scryfall with MTGGoldfish Backup)**:
+     - **Primary**: Fetches USD pricing directly from the Scryfall API (fuzzy name match)
+     - **Fallback**: If Scryfall has no price, searches MTGGoldfish and scrapes the first matching printing's price
+       - Ensures every card has a price even if not available on Scryfall
+     - 500ms delay between bulk requests to be respectful to external servers
+     - Returns `{cad, usd, source}` where source is 'Scryfall', 'MTGGoldfish (backup)', or 'None (not found)'
+     - Exor Games was previously the primary source but was removed after its search endpoint stopped
+       returning usable product data (started silently returning the same wrong price for every card)
    - **Image Caching System**:
      - Card images are downloaded from Scryfall and cached locally in `backend/cached-images/`
      - Images are stored as `.jpg` files named by Scryfall ID (e.g., `abc123.jpg`)
@@ -208,12 +207,11 @@ See `MONGODB_SETUP.md` for full installation and configuration instructions.
 ## Important Implementation Details
 
 1. **Pricing with Fallback Strategy**:
-   - **Primary (Exor Games)**: Scrapes HTML from `https://exorgames.com/a/search?type=product&q={cardName}`
-     - Extracts price from embedded JSON using regex: `/"price":\s*(\d+)/`
-     - Prices are in cents (CAD), converted to dollars and then to USD (~0.73 conversion)
-   - **Fallback (Scryfall)**: If Exor Games returns $0 or fails, automatically fetches from Scryfall API
+   - **Primary (Scryfall)**: Fetches USD price directly from `https://api.scryfall.com/cards/named?fuzzy={cardName}`
+   - **Fallback (MTGGoldfish)**: If Scryfall has no price, searches `mtggoldfish.com/q?query_string={cardName}`,
+     resolves the first matching printing's price page, and scrapes its price
    - 500ms delay between bulk updates to avoid overloading servers
-   - Price source is tracked in response: 'Exor Games', 'Scryfall (backup)', or 'None (not found)'
+   - Price source is tracked in response: 'Scryfall', 'MTGGoldfish (backup)', or 'None (not found)'
 
 2. **Smart Price Updates (Skip Existing Data)**:
    - Price update endpoints (`/api/cards/:id/update-price` and `/api/cards/update-all-prices`) by default only update cards missing price or oracle text
@@ -243,7 +241,7 @@ See `MONGODB_SETUP.md` for full installation and configuration instructions.
 
 8. **Database Connection**: MongoDB connection string should include database name or default to 'mtg-tracker'
 
-9. **Currency Display**: Prices stored and displayed in USD (converted from Exor Games CAD pricing)
+9. **Currency Display**: Prices stored and displayed in USD
 
 10. **Duplicate Card Handling (Auto-Merge)**:
    - When adding a card via `POST /api/cards`, the backend checks for existing cards with the same name, set, AND condition
@@ -264,7 +262,7 @@ See `MONGODB_SETUP.md` for full installation and configuration instructions.
    - Two endpoints: `/api/cards/bulk-import` (online with fallback) and `/api/cards/bulk-import-offline` (pure offline)
    - Parses multiple card formats: `4 Lightning Bolt`, `Lightning Bolt`, `1 Evolving Wilds (PLST) C18-245`
    - Strips set codes and collector numbers using regex: `/\s*\([A-Z0-9]+\)\s*[A-Z0-9\-]*$/i`
-   - **Online mode**: Fetches full data from Scryfall + Exor Games pricing
+   - **Online mode**: Fetches full data and pricing from Scryfall
    - **Offline mode**: Creates cards with minimal data (name, quantity, defaults for other fields)
    - Auto-merge applies in both modes (checks name + set + condition)
    - Frontend shows real-time progress with card-by-card status updates
@@ -303,12 +301,12 @@ See `MONGODB_SETUP.md` for full installation and configuration instructions.
 **Adding a card:**
 - Type name in autocomplete field (uses Scryfall autocomplete)
 - Select from dropdown or click "Search Scryfall"
-- Card data fetched from Scryfall, pricing from Exor Games
+- Card data and pricing fetched from Scryfall
 - Adjust quantity, condition as needed
-- Prices auto-populate from Exor Games (in USD, converted from CAD)
+- Prices auto-populate from Scryfall (in USD)
 
 **Updating prices:**
-- Individual: Click dollar sign icon on card row (fetches from Exor Games with Scryfall fallback)
+- Individual: Click dollar sign icon on card row (fetches from Scryfall with MTGGoldfish fallback)
 - Bulk: Click "Update All Prices" button (takes time due to 500ms rate limiting per card)
   - By default, only updates cards missing price or oracle text data
   - Click "Force Update Existing Cards" toggle button (purple = active) to update ALL cards regardless of existing data
@@ -484,3 +482,16 @@ See `MONGODB_SETUP.md` for full installation and configuration instructions.
   - Is Token, Is Foil, Scryfall ID, Image URL
   - Oracle Text, Created At, Updated At
 - **Proper Escaping**: CSV fields with quotes are properly escaped
+
+### Pricing Fixes (July 2026)
+- **Removed Exor Games**: Its search endpoint stopped returning product data and was silently
+  returning the same fixed decoy price for every card (including basic lands). Removed rather
+  than patched — see `backend/utils/pricing.js`
+- **New Pricing Strategy**: Scryfall (primary) with MTGGoldfish (backup), replacing
+  Exor Games → MTGGoldfish → Scryfall. Also fixes a broken MTGGoldfish URL/parsing bug that made
+  the backup source always fail
+- **Deck Import Fixes**:
+  - MTGGoldfish import now detects the commander correctly (previously always showed "no commander
+    found" since the plain-text export has no commander marker at all)
+  - Archidekt import now excludes cards in categories marked `includedInDeck: false` (e.g. a
+    "Tokens & Extras" category), fixing inflated card counts on import

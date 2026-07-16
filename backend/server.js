@@ -48,6 +48,10 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust the Caddy reverse proxy running in front of this server (single hop) so
+// express-rate-limit can safely read X-Forwarded-For for per-client rate limiting.
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(cors());
 app.use(compression());
@@ -590,7 +594,7 @@ app.use('/api/decks', deckRoutes);
 const deckFolderRoutes = require('./routes/deckFolders');
 app.use('/api/deck-folders', deckFolderRoutes);
 
-// Search Scryfall API for card data with Exor Games pricing
+// Search Scryfall API for card data and pricing
 app.get('/api/scryfall/search', async (req, res) => {
   try {
     const { name, setCode, collectorNumber } = req.query;
@@ -600,7 +604,7 @@ app.get('/api/scryfall/search', async (req, res) => {
     const cacheKey = `scryfall:${name.toLowerCase()}:${(setCode || '').toLowerCase()}:${collectorNumber || ''}`;
     const { cardData } = await cachedApiCall(cacheKey, () => fetchCardFromScryfall(name, setCode, collectorNumber));
 
-    // Get pricing from Exor Games (with Scryfall backup)
+    // Get pricing from Scryfall (with MTGGoldfish backup)
     const priceData = await getPriceWithFallback(name);
 
     // Cache image and get local URL
@@ -634,7 +638,7 @@ app.get('/api/scryfall/search', async (req, res) => {
   }
 });
 
-// Update prices from Exor Games (with Scryfall backup)
+// Update prices from Scryfall (with MTGGoldfish backup)
 app.post('/api/cards/:id/update-price', requireAuth, requireEditor, activityLoggers.priceUpdate, async (req, res) => {
   try {
     const { force, fullData } = req.query; // Optional: force update, fullData for complete card info
@@ -731,7 +735,7 @@ app.post('/api/cards/:id/update-price', requireAuth, requireEditor, activityLogg
   }
 });
 
-// Bulk update all prices from Exor Games (with Scryfall backup)
+// Bulk update all prices from Scryfall (with MTGGoldfish backup)
 app.post('/api/cards/update-all-prices', requireAuth, requireEditor, activityLoggers.priceBulkUpdate, async (req, res) => {
   try {
     const { force, fullData } = req.query; // Optional: force update, fullData for complete card info

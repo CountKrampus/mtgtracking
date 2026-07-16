@@ -1,0 +1,22 @@
+fix right click context menu - condense menu and add a edit option
+add option to remove trade listing
+fix mtggoldfish deck import (no commander found)
+archidekt decks show wrong card count (https://archidekt.com/decks/13613745/never_mind_its_dinos) has 100 cards but our site shows 106
+"fix wishlist preview on profiles: Wishlist Preview
+Avacyn, Angel of Hope
+$306.56
+medium
+Beledros Witherbloom
+Strixhaven: School of Mages
+$306.56
+medium
+Boros Charm"
+
+Allow admin price update to also be ran in the background
+when someone becomes staff, give them the coresponding badge automatically (Moderators get Moderator badge, etc)
+
+Allow to create roles and assign permissions
+
+"No feedback system implemented
+Feedback submissions would appear here.
+To enable feedback, add a POST /api/feedback endpoint and GET /api/admin/feedback endpoint to the backend."

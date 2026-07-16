@@ -1,8 +1,7 @@
 const express = require('express');
+const { getPriceWithFallback } = require('../utils/pricing');
 const router = express.Router();
 const mongoose = require('mongoose');
-
-const axios = require('axios');
 
 const User = require('../models/User');
 const Session = require('../models/Session');
@@ -1582,49 +1581,6 @@ router.get('/moderation-history/:userId', requireModerator(), async (req, res) =
 const priceUpdateJobs = {};
 
 /**
- * Helper: fetch price from Exor Games with Scryfall fallback.
- * Mirrors the getPriceWithFallback function in server.js (no import to avoid circular deps).
- */
-async function fetchPriceForCard(cardName, isFoil = false) {
-  // Try Exor Games first
-  try {
-    const searchUrl = `https://exorgames.com/a/search?type=product&q=${encodeURIComponent(cardName)}`;
-    const response = await axios.get(searchUrl);
-    const html = response.data;
-
-    const priceMatch = html.match(/"price":\s*(\d+)/);
-    if (priceMatch) {
-      const priceInCents = parseInt(priceMatch[1]);
-      const priceCAD = priceInCents / 100;
-      const priceUSD = Math.round(priceCAD * 0.73 * 100) / 100;
-
-      if (priceUSD > 0) {
-        return { cad: priceCAD, usd: priceUSD, source: 'Exor Games' };
-      }
-    }
-  } catch (error) {
-    console.error('Exor Games price fetch failed:', error.message);
-  }
-
-  // Fallback to Scryfall
-  try {
-    console.log('Admin price fetch: falling back to Scryfall for:', cardName);
-    const response = await axios.get(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`);
-    const scryfallPrice = isFoil
-      ? (response.data.prices.usd_foil ? parseFloat(response.data.prices.usd_foil) : 0)
-      : (response.data.prices.usd ? parseFloat(response.data.prices.usd) : 0);
-
-    if (scryfallPrice > 0) {
-      return { cad: 0, usd: scryfallPrice, source: 'Scryfall (backup)' };
-    }
-  } catch (error) {
-    console.error('Scryfall price fetch failed:', error.message);
-  }
-
-  return { cad: 0, usd: 0, source: 'None (not found)' };
-}
-
-/**
  * POST /api/admin/force-price-update - Start async background price update job
  */
 router.post('/force-price-update', requireContentManager(), async (req, res) => {
@@ -1657,7 +1613,7 @@ router.post('/force-price-update', requireContentManager(), async (req, res) => 
             // Rate limit: 500ms between requests
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            const priceData = await fetchPriceForCard(card.name, card.isFoil);
+            const priceData = await getPriceWithFallback(card.name, card.isFoil);
 
             if (priceData && (priceData.usd > 0 || priceData.source !== 'None (not found)')) {
               await Card.findByIdAndUpdate(card._id, {
