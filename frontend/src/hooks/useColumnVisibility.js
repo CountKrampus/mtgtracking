@@ -5,26 +5,29 @@ import { API_URL } from '../config';
 const DEFAULT_COLUMNS = ['cardName', 'quantity', 'condition', 'price'];
 
 const ALL_COLUMNS = [
-  { id: 'cardName', label: 'Card Name', alwaysVisible: true },
-  { id: 'set', label: 'Set' },
-  { id: 'setCode', label: 'Set Code' },
-  { id: 'collectorNumber', label: 'Collector #' },
-  { id: 'rarity', label: 'Rarity' },
-  { id: 'manaCost', label: 'Mana Cost' },
-  { id: 'colors', label: 'Colors' },
-  { id: 'types', label: 'Types' },
-  { id: 'location', label: 'Location' },
-  { id: 'foil', label: 'Foil' },
-  { id: 'token', label: 'Token' },
-  { id: 'tags', label: 'Tags' },
-  { id: 'quantity', label: 'Qty', alwaysVisible: true },
-  { id: 'condition', label: 'Condition', alwaysVisible: true },
-  { id: 'price', label: 'Price', alwaysVisible: true },
-  { id: 'buylistValue', label: 'Buylist Value' },
-  { id: 'sellValue', label: 'Sell Value' },
-  { id: 'total', label: 'Total' },
-  { id: 'actions', label: 'Actions' }
+  { id: 'cardName', label: 'Card Name', alwaysVisible: true, group: 'Card Info' },
+  { id: 'set', label: 'Set', group: 'Card Info' },
+  { id: 'setCode', label: 'Set Code', group: 'Card Info' },
+  { id: 'collectorNumber', label: 'Collector #', group: 'Card Info' },
+  { id: 'rarity', label: 'Rarity', group: 'Card Info' },
+  { id: 'manaCost', label: 'Mana Cost', group: 'Card Info' },
+  { id: 'colors', label: 'Colors', group: 'Card Info' },
+  { id: 'types', label: 'Types', group: 'Card Info' },
+  { id: 'quantity', label: 'Qty', alwaysVisible: true, group: 'Collection' },
+  { id: 'condition', label: 'Condition', alwaysVisible: true, group: 'Collection' },
+  { id: 'location', label: 'Location', group: 'Collection' },
+  { id: 'foil', label: 'Foil', group: 'Collection' },
+  { id: 'token', label: 'Token', group: 'Collection' },
+  { id: 'tags', label: 'Tags', group: 'Collection' },
+  { id: 'price', label: 'Price', alwaysVisible: true, group: 'Pricing' },
+  { id: 'buylistValue', label: 'Buylist Value', group: 'Pricing' },
+  { id: 'sellValue', label: 'Sell Value', group: 'Pricing' },
+  { id: 'total', label: 'Total', group: 'Pricing' },
+  { id: 'actions', label: 'Actions', group: 'Other' }
 ];
+
+// Ordered list of group names, derived from column definition order
+const COLUMN_GROUPS = [...new Set(ALL_COLUMNS.map(col => col.group))];
 
 export default function useColumnVisibility() {
   const [visibleColumns, setVisibleColumns] = useState(DEFAULT_COLUMNS);
@@ -65,11 +68,30 @@ export default function useColumnVisibility() {
 
   const isColumnVisible = (columnId) => visibleColumns.includes(columnId);
 
+  const saveVisibleColumns = async (updated) => {
+    const previous = visibleColumns;
+    setVisibleColumns(updated);
+    try {
+      await axios.put(`${API_URL}/user/column-preferences`, {
+        visibleColumns: updated
+      });
+    } catch (err) {
+      console.error('Failed to save column preferences:', err);
+      setVisibleColumns(previous);
+    }
+  };
+
+  const selectAllColumns = () => saveVisibleColumns(ALL_COLUMNS.map(col => col.id));
+  const resetColumns = () => saveVisibleColumns(DEFAULT_COLUMNS);
+
   return {
     visibleColumns,
     isColumnVisible,
     toggleColumn,
+    selectAllColumns,
+    resetColumns,
     loading,
-    allColumns: ALL_COLUMNS
+    allColumns: ALL_COLUMNS,
+    columnGroups: COLUMN_GROUPS
   };
 }

@@ -14,6 +14,7 @@ import useSettings from '../hooks/useSettings';
 import useColumnVisibility from '../hooks/useColumnVisibility';
 import { useToast } from '../contexts/ToastContext';
 import ColumnContextMenu from './ColumnContextMenu';
+import ColumnSettingsModal from './ColumnSettingsModal';
 import ValueHistoryChart from './ValueHistoryChart';
 import MobileFilterSheet from './MobileFilterSheet';
 import SwipeableRow from './SwipeableRow';
@@ -242,7 +243,7 @@ function CollectionView({
   const { locations, locationStats, availableTags, fetchAvailableTags } = useLocationTag();
   const { addToWishlist, fetchWishlist } = useWishlist();
   const { settings } = useSettings();
-  const { visibleColumns, isColumnVisible, toggleColumn, allColumns } = useColumnVisibility();
+  const { visibleColumns, isColumnVisible, toggleColumn, selectAllColumns, resetColumns, allColumns } = useColumnVisibility();
   const { addToast } = useToast();
 
   const searchInputRef = useRef(null);
@@ -284,6 +285,7 @@ function CollectionView({
   const [bulkLocation, setBulkLocation] = useState('');
   const [bulkTags, setBulkTags] = useState('');
   const [contextMenu, setContextMenu] = useState(null);
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
   const [showPrintPreview, setShowPrintPreview] = useState(false);
   const [showSimilarCards, setShowSimilarCards] = useState(false);
   const [similarCardsSource, setSimilarCardsSource] = useState(null);
@@ -1502,7 +1504,7 @@ function CollectionView({
                           <button
                             onClick={() => updateCardPrice(card._id)}
                             className="p-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded transition"
-                            title="Update price from Exor Games"
+                            title="Update price from Scryfall"
                           >
                             <DollarSign size={16} />
                           </button>
@@ -1550,6 +1552,17 @@ function CollectionView({
             visibleColumns={visibleColumns}
             onToggle={toggleColumn}
             onClose={() => setContextMenu(null)}
+            onEdit={() => { setContextMenu(null); setShowColumnSettings(true); }}
+          />
+
+          <ColumnSettingsModal
+            isOpen={showColumnSettings}
+            columns={allColumns}
+            visibleColumns={visibleColumns}
+            onToggle={toggleColumn}
+            onSelectAll={selectAllColumns}
+            onReset={resetColumns}
+            onClose={() => setShowColumnSettings(false)}
           />
 
           {/* Pagination Controls */}
