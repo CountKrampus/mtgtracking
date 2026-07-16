@@ -35,35 +35,46 @@ async function backfillStaffBadges() {
   let namesFixed = 0;
 
   for (const user of staffUsers) {
-    usersChecked++;
-    let changed = false;
+    try {
+      usersChecked++;
+      let changed = false;
 
-    const legacyIndex = user.badges.findIndex(b => b.name === 'Owner');
-    if (legacyIndex !== -1) {
-      const alreadyHasSiteOwner = user.badges.some(b => b.name === 'Site Owner');
-      if (alreadyHasSiteOwner) {
-        user.badges.splice(legacyIndex, 1);
-      } else {
-        user.badges[legacyIndex].name = 'Site Owner';
+      const legacyIndex = user.badges.findIndex(b => b.name === 'Owner');
+      if (legacyIndex !== -1) {
+        const alreadyHasSiteOwner = user.badges.some(b => b.name === 'Site Owner');
+        if (alreadyHasSiteOwner) {
+          user.badges.splice(legacyIndex, 1);
+        } else {
+          user.badges[legacyIndex].name = 'Site Owner';
+        }
+        namesFixed++;
+        changed = true;
       }
-      namesFixed++;
-      changed = true;
-    }
 
-    const badge = STAFF_ROLE_BADGES[user.role];
-    if (badge && !user.badges.some(b => b.name === badge.name)) {
-      user.badges.push({
-        name: badge.name,
-        description: badge.description,
-        icon: badge.icon,
-        earnedAt: new Date()
-      });
-      badgesGranted++;
-      changed = true;
-    }
+      const badge = STAFF_ROLE_BADGES[user.role];
+      // Badge identity is name-based by design, matching syncStaffBadge's convention
+      // (backend/utils/permissions.js). If a user already has a badge with this name
+      // but a stale description/icon, this script does not reconcile that drift.
+      if (badge && !user.badges.some(b => b.name === badge.name)) {
+        user.badges.push({
+          name: badge.name,
+          description: badge.description,
+          icon: badge.icon,
+          earnedAt: new Date()
+        });
+        badgesGranted++;
+        changed = true;
+      }
 
-    if (changed) {
-      await user.save();
+      if (changed) {
+        await user.save();
+      }
+    } catch (err) {
+      console.error(
+        `Failed to update user ${user._id} (${user.username}) after ${usersChecked - 1} prior user(s) succeeded:`,
+        err.message
+      );
+      throw err;
     }
   }
 
