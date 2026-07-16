@@ -19,7 +19,7 @@ const ForumThread = require('../models/ForumThread');
 const ForumCategory = require('../models/ForumCategory');
 const { verifyToken, requireAuth, requireAdmin, requireModerator, requireContentManager, requireSupport, isMultiUserEnabled } = require('../middleware/auth');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
-const { isStaffRole, ROLE_PERMISSIONS } = require('../utils/permissions');
+const { isStaffRole, ROLE_PERMISSIONS, syncStaffBadge } = require('../utils/permissions');
 
 // All admin routes require authentication
 router.use(verifyToken);
@@ -301,6 +301,7 @@ router.put('/users/:userId/role', requireAdmin, async (req, res) => {
     const oldRole = targetUser.role;
     targetUser.role = newRole;
     targetUser.staffSince = isStaffRole(newRole) ? (targetUser.staffSince || new Date()) : null;
+    syncStaffBadge(targetUser, oldRole, newRole);
 
     await targetUser.save();
 
