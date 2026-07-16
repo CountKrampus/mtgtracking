@@ -42,6 +42,50 @@ Object.freeze(ROLE_PERMISSIONS);
 // Staff roles that get a staffSince timestamp when assigned
 const STAFF_ROLES = ['admin', 'moderator', 'content_manager', 'community_manager', 'support'];
 
+// Badge granted/revoked for each staff role — mirrors STAFF_ROLES 1:1.
+// `admin` maps to the existing "Site Owner" Badge record (fixes the legacy
+// "Owner" naming drift — see backend/scripts/backfillStaffBadges.js).
+const STAFF_ROLE_BADGES = Object.freeze({
+  admin: { name: 'Site Owner', description: 'The Creator', icon: 'lucide:Crown' },
+  moderator: { name: 'Moderator', description: '', icon: 'lucide:Flame' },
+  content_manager: { name: 'Content Manager', description: '', icon: 'lucide:Flame' },
+  community_manager: { name: 'Community Manager', description: '', icon: 'lucide:Flame' },
+  support: { name: 'Support', description: '', icon: 'lucide:Flame' },
+});
+
+/**
+ * Sync a user's staff badge to match a role change.
+ * Revokes the badge tied to oldRole (if any, and if newRole doesn't grant the
+ * same badge) and grants the badge tied to newRole (if any, and not already
+ * present). Mutates user.badges in place using the same array-reassignment
+ * pattern as the badge grant/revoke routes in backend/routes/admin.js.
+ * Does not save — caller is responsible for persisting the user.
+ * @param {{ badges?: Array<{name: string}> }} user
+ * @param {string} oldRole
+ * @param {string} newRole
+ */
+function syncStaffBadge(user, oldRole, newRole) {
+  const oldBadge = STAFF_ROLE_BADGES[oldRole];
+  const newBadge = STAFF_ROLE_BADGES[newRole];
+
+  user.badges = user.badges || [];
+
+  // Revoke: previous role had a staff badge that the new role doesn't also grant
+  if (oldBadge && (!newBadge || oldBadge.name !== newBadge.name)) {
+    user.badges = user.badges.filter(b => b.name !== oldBadge.name);
+  }
+
+  // Grant: new role has a staff badge the user doesn't already have
+  if (newBadge && !user.badges.some(b => b.name === newBadge.name)) {
+    user.badges.push({
+      name: newBadge.name,
+      description: newBadge.description,
+      icon: newBadge.icon,
+      earnedAt: new Date()
+    });
+  }
+}
+
 /**
  * Returns the permission strings for a given role.
  * Admin always gets ['all'] — check with hasPermission() which expands it.
@@ -75,4 +119,12 @@ function isStaffRole(role) {
   return STAFF_ROLES.includes(role);
 }
 
-module.exports = { ROLE_PERMISSIONS, STAFF_ROLES, getPermissionsForRole, hasPermission, isStaffRole };
+module.exports = {
+  ROLE_PERMISSIONS,
+  STAFF_ROLES,
+  STAFF_ROLE_BADGES,
+  getPermissionsForRole,
+  hasPermission,
+  isStaffRole,
+  syncStaffBadge
+};
