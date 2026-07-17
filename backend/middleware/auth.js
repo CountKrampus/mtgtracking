@@ -1,6 +1,7 @@
 const { verifyAccessToken } = require('../utils/jwt');
 const User = require('../models/User');
 const SystemSettings = require('../models/SystemSettings');
+const { hasPermission } = require('../utils/permissions');
 
 /**
  * Check if multi-user mode is enabled
@@ -106,6 +107,43 @@ const requireRole = (...roles) => {
         message: 'Insufficient permissions',
         code: 'FORBIDDEN',
         requiredRoles: roles,
+        currentRole: req.user.role
+      });
+    }
+
+    next();
+  };
+};
+
+/**
+ * Require specific permission(s) — passes if the user's role has ANY of the
+ * listed permissions (or 'all'). Must be used after requireAuth.
+ * Looks up the user's permissions via hasPermission()
+ * (backend/utils/permissions.js), which reads the in-memory Role cache —
+ * refreshed whenever a Role document changes (see backend/routes/roles.js).
+ * @param {...string} permissions - Any one of these grants access
+ */
+const requirePermission = (...permissions) => {
+  return (req, res, next) => {
+    // If multi-user is not enabled, allow all requests
+    if (!isMultiUserEnabled()) {
+      return next();
+    }
+
+    if (!req.user) {
+      return res.status(401).json({
+        message: 'Authentication required',
+        code: 'UNAUTHORIZED'
+      });
+    }
+
+    const allowed = permissions.some(permission => hasPermission(req.user, permission));
+
+    if (!allowed) {
+      return res.status(403).json({
+        message: 'Insufficient permissions',
+        code: 'FORBIDDEN',
+        requiredPermissions: permissions,
         currentRole: req.user.role
       });
     }
@@ -229,6 +267,7 @@ module.exports = {
   verifyToken,
   requireAuth,
   requireRole,
+  requirePermission,
   requireEditor,
   requireAdmin,
   requireModerator,
