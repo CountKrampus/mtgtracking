@@ -7,6 +7,7 @@ const deckRoutes = require('./routes/decks');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const adminRoutes = require('./routes/admin');
+const rolesRoutes = require('./routes/roles');
 const forumRouter = require('./routes/forum');
 const notificationsRouter = require('./routes/notifications');
 const messagesRouter = require('./routes/messages');
@@ -156,6 +157,7 @@ app.use('/api/users', userRoutes);
 
 // Mount admin routes (require admin role)
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/roles', rolesRoutes);
 
 // Mount forum routes
 app.use('/api/forum', forumRouter);
