@@ -346,6 +346,39 @@ export default function UserProfile({ username }) {
             </div>
           </div>
         )}
+
+        {/* Wishlist Preview */}
+        {publicProfile?.wishlistPreview && publicProfile.wishlistPreview.length > 0 && (
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-bold text-white mb-4">Wishlist Preview</h2>
+            <div className="space-y-2">
+              {publicProfile.wishlistPreview.map((item, i) => (
+                <div key={item._id || i} className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-white text-sm font-medium truncate">{item.name}</div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    {item.targetPrice > 0 && (
+                      <div className="text-xs text-slate-400">
+                        Target: <span className="text-white">${item.targetPrice.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {item.currentPrice > 0 && (
+                      <div className={`text-xs font-medium ${item.currentPrice <= item.targetPrice ? 'text-green-400' : 'text-red-400'}`}>
+                        ${item.currentPrice.toFixed(2)}
+                      </div>
+                    )}
+                  </div>
+                  <span className={`text-xs px-1.5 py-0.5 rounded capitalize flex-shrink-0 ${
+                    item.priority === 'high' ? 'bg-red-900/40 text-red-300' :
+                    item.priority === 'medium' ? 'bg-amber-900/40 text-amber-300' :
+                    'bg-slate-700 text-slate-400'
+                  }`}>{item.priority}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

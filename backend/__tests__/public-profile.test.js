@@ -9,6 +9,15 @@ const ForumLevel = require('../models/ForumLevel');
 const Cosmetic = require('../models/Cosmetic');
 const Deck = require('../models/Deck');
 
+const wishlistItemSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+  name: String,
+  targetPrice: { type: Number, default: 0 },
+  currentPrice: { type: Number, default: 0 },
+  priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
+});
+const WishlistItem = mongoose.model('WishlistItem', wishlistItemSchema);
+
 /**
  * Create a signed JWT for the given userId.
  * Must match the secret in jest.setup.js ('test-secret').
@@ -231,6 +240,71 @@ describe('GET /api/users/:username/public-profile', () => {
     const res = await request(app).get('/api/users/nodecksuser/public-profile');
     expect(res.status).toBe(200);
     expect(res.body.publicDecks).toBeNull();
+  });
+
+  it('orders wishlistPreview by actual priority rank (high, medium, low), not alphabetically', async () => {
+    const user = await User.create({
+      email: 'wishuser@test.com',
+      username: 'wishuser',
+      passwordHash: 'hash',
+      role: 'user',
+      privacy: { isPublic: true, showWishlist: true },
+    });
+
+    const cosmetic = await Cosmetic.create({
+      name: 'Wishlist Preview',
+      category: 'wishlistPreview',
+      cost: 500,
+      isActive: true,
+    });
+
+    await ForumLevel.create({
+      userId: user._id,
+      cosmetics: { purchased: [cosmetic._id.toString()] },
+    });
+
+    // Inserted in an order that would already look "alphabetically sorted"
+    // (medium, low, high) if the buggy string sort were still in place.
+    await WishlistItem.create([
+      { userId: user._id, name: 'Medium Card', priority: 'medium', targetPrice: 10 },
+      { userId: user._id, name: 'Low Card', priority: 'low', targetPrice: 10 },
+      { userId: user._id, name: 'High Card', priority: 'high', targetPrice: 10 },
+    ]);
+
+    const app = buildApp();
+    const res = await request(app).get('/api/users/wishuser/public-profile');
+    expect(res.status).toBe(200);
+    expect(res.body.wishlistPreview).toHaveLength(3);
+    expect(res.body.wishlistPreview.map(i => i.name)).toEqual(['High Card', 'Medium Card', 'Low Card']);
+  });
+
+  it('returns null for wishlistPreview when privacy.showWishlist is false even if unlocked', async () => {
+    const user = await User.create({
+      email: 'nowish@test.com',
+      username: 'nowishuser',
+      passwordHash: 'hash',
+      role: 'user',
+      privacy: { isPublic: true, showWishlist: false },
+    });
+
+    const cosmetic = await Cosmetic.create({
+      name: 'Wishlist Preview',
+      category: 'wishlistPreview',
+      cost: 500,
+      isActive: true,
+    });
+
+    await ForumLevel.create({
+      userId: user._id,
+      cosmetics: { purchased: [cosmetic._id.toString()] },
+    });
+
+    await WishlistItem.create({ userId: user._id, name: 'Hidden Card', priority: 'high' });
+
+    const app = buildApp();
+    const res = await request(app).get('/api/users/nowishuser/public-profile');
+    expect(res.status).toBe(200);
+    expect(res.body.wishlistPreview).toBeNull();
   });
 });
 

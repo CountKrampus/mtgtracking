@@ -2051,7 +2051,12 @@ app.delete('/api/locations/:id', requireAuth, requireEditor, activityLoggers.loc
 app.get('/api/wishlist', requireAuth, async (req, res) => {
   try {
     const query = buildUserQuery({}, req);
-    const items = await WishlistItem.find(query).sort({ priority: -1, name: 1 });
+    // priority is a string enum ('low'/'medium'/'high'); sort by actual rank,
+    // not alphabetically (a plain Mongo sort would put "medium" before "high").
+    const PRIORITY_RANK = { high: 0, medium: 1, low: 2 };
+    const items = (await WishlistItem.find(query).lean()).sort(
+      (a, b) => (PRIORITY_RANK[a.priority] ?? 3) - (PRIORITY_RANK[b.priority] ?? 3) || a.name.localeCompare(b.name)
+    );
     res.json(items);
   } catch (error) {
     res.status(500).json({ message: error.message });

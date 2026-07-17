@@ -122,11 +122,15 @@ router.get('/:username/public-profile', async (req, res) => {
     // Wishlist preview — gated by wishlistPreview unlock and privacy setting
     let wishlistPreview = null;
     if (hasUnlock('wishlistPreview') && user.privacy?.showWishlist) {
-      wishlistPreview = await WishlistItem.find({ userId: user._id })
+      // priority is a string enum ('low'/'medium'/'high'); sort by actual rank,
+      // not alphabetically (a plain Mongo sort would put "medium" before "high").
+      const PRIORITY_RANK = { high: 0, medium: 1, low: 2 };
+      const items = await WishlistItem.find({ userId: user._id })
         .select('name targetPrice currentPrice priority')
-        .sort({ priority: -1, targetPrice: 1 })
-        .limit(3)
         .lean();
+      wishlistPreview = items
+        .sort((a, b) => (PRIORITY_RANK[a.priority] ?? 3) - (PRIORITY_RANK[b.priority] ?? 3) || a.targetPrice - b.targetPrice)
+        .slice(0, 3);
     }
 
     res.json({
