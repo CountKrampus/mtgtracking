@@ -25,6 +25,8 @@ const CardPriceHistory = require('./models/CardPriceHistory');
 const CardPriceSnapshot = require('./models/CardPriceSnapshot');
 const ValueSnapshot = require('./models/ValueSnapshot');
 const User = require('./models/User');
+const Role = require('./models/Role');
+const { refreshRoleCache } = require('./utils/permissions');
 
 // Try to load sharp for image hashing (optional dependency)
 let sharp = null;
@@ -86,6 +88,14 @@ mongoose.connect(MONGODB_URI)
     await SystemSettings.initializeDefaults();
     console.log('Multi-user mode enabled - system settings initialized');
   }
+  // Seed built-in roles (Role collection) and load the in-memory permission
+  // cache used by getPermissionsForRole()/hasPermission()
+  // (backend/utils/permissions.js). Runs regardless of multi-user mode so
+  // the Role collection and cache are always consistent.
+  await Role.seedBuiltInRoles();
+  await Role.grantMigrationPermissions();
+  await refreshRoleCache();
+  console.log('Roles seeded and permission cache loaded');
 })
 .catch(err => console.error('MongoDB connection error:', err));
 
