@@ -17,7 +17,7 @@ const ForumPost = require('../models/ForumPost');
 const ForumThread = require('../models/ForumThread');
 const ForumCategory = require('../models/ForumCategory');
 const Role = require('../models/Role');
-const { verifyToken, requireAuth, requireAdmin, requireContentManager, requirePermission, isMultiUserEnabled } = require('../middleware/auth');
+const { verifyToken, requireAuth, requireAdmin, requirePermission, isMultiUserEnabled } = require('../middleware/auth');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
 const { isStaffRole, ROLE_PERMISSIONS, syncStaffBadge } = require('../utils/permissions');
 
@@ -1594,7 +1594,7 @@ const priceUpdateJobs = {};
 /**
  * POST /api/admin/force-price-update - Start async background price update job
  */
-router.post('/force-price-update', requireContentManager(), async (req, res) => {
+router.post('/force-price-update', requirePermission('prices:force-update'), async (req, res) => {
   try {
     const jobId = `price_update_${Date.now()}`;
     priceUpdateJobs[jobId] = {
@@ -1674,7 +1674,7 @@ router.post('/force-price-update', requireContentManager(), async (req, res) => 
 /**
  * GET /api/admin/force-price-update/:jobId - Poll job status
  */
-router.get('/force-price-update/:jobId', requireContentManager(), async (req, res) => {
+router.get('/force-price-update/:jobId', requirePermission('prices:force-update'), async (req, res) => {
   const job = priceUpdateJobs[req.params.jobId];
   if (!job) return res.status(404).json({ message: 'Job not found' });
   res.json({ jobId: req.params.jobId, ...job });
@@ -1685,7 +1685,7 @@ router.get('/force-price-update/:jobId', requireContentManager(), async (req, re
 /**
  * POST /api/admin/audits/run - Start async collection audit scan
  */
-router.post('/audits/run', requireContentManager(), async (req, res) => {
+router.post('/audits/run', requirePermission('cards:audit'), async (req, res) => {
   try {
     const { auditName = `Audit ${new Date().toLocaleDateString()}` } = req.body;
 
@@ -1782,7 +1782,7 @@ router.post('/audits/run', requireContentManager(), async (req, res) => {
 /**
  * GET /api/admin/audits - List all audits
  */
-router.get('/audits', requireContentManager(), async (req, res) => {
+router.get('/audits', requirePermission('cards:audit'), async (req, res) => {
   try {
     const audits = await CollectionAudit.find()
       .populate('createdBy', 'username')
@@ -1799,7 +1799,7 @@ router.get('/audits', requireContentManager(), async (req, res) => {
 /**
  * GET /api/admin/audits/:id - Fetch audit results including issues
  */
-router.get('/audits/:id', requireContentManager(), async (req, res) => {
+router.get('/audits/:id', requirePermission('cards:audit'), async (req, res) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) {
       return res.status(400).json({ message: 'Invalid audit ID' });
@@ -1817,7 +1817,7 @@ router.get('/audits/:id', requireContentManager(), async (req, res) => {
 /**
  * PUT /api/admin/audits/:id/action - Resolve/flag/delete an issue
  */
-router.put('/audits/:id/action', requireContentManager(), async (req, res) => {
+router.put('/audits/:id/action', requirePermission('cards:audit'), async (req, res) => {
   try {
     const { issueIndex, action } = req.body; // action: 'resolve', 'flag', 'delete'
     if (!['resolve', 'flag', 'delete'].includes(action)) {

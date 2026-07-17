@@ -14,7 +14,7 @@ const messagesRouter = require('./routes/messages');
 const path = require('path');
 const fs = require('fs');
 const { pipeline } = require('stream/promises');
-const { isMultiUserEnabled, verifyToken, requireAuth, requireEditor, checkMaintenanceMode } = require('./middleware/auth');
+const { isMultiUserEnabled, verifyToken, requireAuth, requireEditor, requirePermission, checkMaintenanceMode } = require('./middleware/auth');
 const { buildUserQuery, getUserId } = require('./middleware/multiUser');
 const { activityLoggers } = require('./middleware/activityLogger');
 const { getPriceWithFallback } = require('./utils/pricing');
@@ -3154,11 +3154,7 @@ app.put('/api/user/column-preferences', verifyToken, requireAuth, async (req, re
 });
 
 // GET /api/admin/collection-audit/:userId - audit a user's collection
-app.get('/api/admin/collection-audit/:userId', verifyToken, requireAuth, async (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Admin only' });
-  }
-
+app.get('/api/admin/collection-audit/:userId', verifyToken, requireAuth, requirePermission('cards:audit'), async (req, res) => {
   try {
     const cards = await Card.find({ userId: req.params.userId });
     const duplicates = cards.filter((card, index, self) =>
