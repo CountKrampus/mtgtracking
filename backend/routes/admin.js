@@ -713,7 +713,7 @@ router.get('/health', requireAdmin, async (req, res) => {
  * GET /api/admin/settings
  * Get all system settings
  */
-router.get('/settings', requireAdmin, async (req, res) => {
+router.get('/settings', requirePermission('system:settings:manage'), async (req, res) => {
   try {
     const settings = await SystemSettings.getAll();
     res.json(settings);
@@ -727,7 +727,7 @@ router.get('/settings', requireAdmin, async (req, res) => {
  * PUT /api/admin/settings/:key
  * Update a system setting
  */
-router.put('/settings/:key', requireAdmin, async (req, res) => {
+router.put('/settings/:key', requirePermission('system:settings:manage'), async (req, res) => {
   try {
     const { key } = req.params;
     const { value } = req.body;
@@ -763,7 +763,7 @@ router.put('/settings/:key', requireAdmin, async (req, res) => {
  * POST /api/admin/maintenance
  * Toggle maintenance mode
  */
-router.post('/maintenance', requireAdmin, async (req, res) => {
+router.post('/maintenance', requirePermission('system:settings:manage'), async (req, res) => {
   try {
     const { enabled } = req.body;
 
@@ -799,7 +799,7 @@ router.post('/maintenance', requireAdmin, async (req, res) => {
  * POST /api/admin/init
  * Initialize system settings (run once on first admin login)
  */
-router.post('/init', requireAdmin, async (req, res) => {
+router.post('/init', requirePermission('system:settings:manage'), async (req, res) => {
   try {
     await SystemSettings.initializeDefaults();
 
