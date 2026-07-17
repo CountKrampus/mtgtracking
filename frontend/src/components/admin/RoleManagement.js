@@ -1,30 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Clock, ChevronRight } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { API_URL } from '../../config';
 
-const VALID_ROLES = [
-  'admin',
-  'moderator',
-  'content_manager',
-  'community_manager',
-  'support',
-  'user',
-  'editor',
-  'viewer',
-];
-
-const ROLE_LABELS = {
-  admin: 'Admin',
-  moderator: 'Moderator',
-  content_manager: 'Content Manager',
-  community_manager: 'Community Manager',
-  support: 'Support',
-  user: 'User',
-  editor: 'Editor',
-  viewer: 'Viewer',
-};
-
+// Known built-in role color classes — custom roles fall back to
+// DEFAULT_ROLE_COLOR below. Roles themselves (names, display labels) are now
+// fetched from GET /api/admin/roles (see fetchRoles below) so newly-created
+// custom roles show up here without a code change.
 const ROLE_COLORS = {
   admin: 'bg-red-500/20 text-red-300 border border-red-500/50',
   moderator: 'bg-orange-500/20 text-orange-300 border border-orange-500/50',
@@ -35,6 +17,7 @@ const ROLE_COLORS = {
   editor: 'bg-purple-500/20 text-purple-300 border border-purple-500/50',
   viewer: 'bg-slate-500/20 text-slate-300 border border-slate-500/50',
 };
+const DEFAULT_ROLE_COLOR = 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/50';
 
 function formatDate(dateStr) {
   if (!dateStr) return '—';
@@ -43,9 +26,9 @@ function formatDate(dateStr) {
 }
 
 // RoleBadge at module scope — prevents DOM remount on every render
-function RoleBadge({ role }) {
-  const colorClass = ROLE_COLORS[role] || ROLE_COLORS.user;
-  const label = ROLE_LABELS[role] || role;
+function RoleBadge({ role, roleLabels }) {
+  const colorClass = ROLE_COLORS[role] || DEFAULT_ROLE_COLOR;
+  const label = roleLabels[role] || role;
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
       {label}
@@ -54,7 +37,7 @@ function RoleBadge({ role }) {
 }
 
 // HistoryPanel at module scope — prevents DOM remount on every render
-function HistoryPanel({ selectedUser, history, loading }) {
+function HistoryPanel({ selectedUser, history, loading, roleLabels }) {
   if (!selectedUser) {
     return (
       <div className="flex items-center justify-center h-48 text-gray-500 text-sm">
@@ -82,8 +65,8 @@ function HistoryPanel({ selectedUser, history, loading }) {
               entry.userId?.displayName ||
               entry.userId?.username ||
               'System';
-            const oldLabel = ROLE_LABELS[entry.details?.oldRole] || entry.details?.oldRole || '?';
-            const newLabel = ROLE_LABELS[entry.details?.newRole] || entry.details?.newRole || '?';
+            const oldLabel = roleLabels[entry.details?.oldRole] || entry.details?.oldRole || '?';
+            const newLabel = roleLabels[entry.details?.newRole] || entry.details?.newRole || '?';
             return (
               <li
                 key={entry._id}
@@ -111,6 +94,7 @@ export function RoleManagement() {
   const { authFetch } = useAuthContext();
 
   const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -118,14 +102,25 @@ export function RoleManagement() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [updatingRole, setUpdatingRole] = useState(null); // userId string while saving
 
+  const roleLabels = useMemo(
+    () => roles.reduce((acc, r) => ({ ...acc, [r.name]: r.displayName }), {}),
+    [roles]
+  );
+
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await authFetch(`${API_URL}/admin/users?limit=100`);
-      if (!res.ok) throw new Error(`Failed to load users (${res.status})`);
-      const data = await res.json();
-      setUsers(data.users || []);
+      const [usersRes, rolesRes] = await Promise.all([
+        authFetch(`${API_URL}/admin/users?limit=100`),
+        authFetch(`${API_URL}/admin/roles`)
+      ]);
+      if (!usersRes.ok) throw new Error(`Failed to load users (${usersRes.status})`);
+      if (!rolesRes.ok) throw new Error(`Failed to load roles (${rolesRes.status})`);
+      const usersData = await usersRes.json();
+      const rolesData = await rolesRes.json();
+      setUsers(usersData.users || []);
+      setRoles(rolesData.roles || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -233,7 +228,7 @@ export function RoleManagement() {
 
                       {/* Current role badge */}
                       <td className="px-4 py-3">
-                        <RoleBadge role={user.role} />
+                        <RoleBadge role={user.role} roleLabels={roleLabels} />
                       </td>
 
                       {/* Change role select */}
@@ -245,9 +240,9 @@ export function RoleManagement() {
                             onChange={e => handleRoleChange(user._id, e.target.value)}
                             className="bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1 text-sm disabled:opacity-50 focus:outline-none focus:border-purple-500"
                           >
-                            {VALID_ROLES.map(role => (
-                              <option key={role} value={role}>
-                                {ROLE_LABELS[role]}
+                            {roles.map(role => (
+                              <option key={role.name} value={role.name}>
+                                {role.displayName}
                               </option>
                             ))}
                           </select>
@@ -298,6 +293,7 @@ export function RoleManagement() {
           selectedUser={selectedUser}
           history={roleHistory}
           loading={historyLoading}
+          roleLabels={roleLabels}
         />
       </div>
     </div>
