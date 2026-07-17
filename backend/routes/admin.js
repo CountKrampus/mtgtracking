@@ -149,10 +149,12 @@ router.put('/users/:id', requireAdmin, async (req, res) => {
     const changes = {};
 
     if (role && role !== user.role) {
-      changes.oldRole = user.role;
+      const oldRole = user.role;
+      changes.oldRole = oldRole;
       changes.newRole = role;
       user.role = role;
       user.staffSince = isStaffRole(role) ? (user.staffSince || new Date()) : null;
+      syncStaffBadge(user, oldRole, role);
 
       // Log role change
       await logActivity({
