@@ -61,6 +61,9 @@ const activityLogSchema = new mongoose.Schema({
       'user_role_change',
       'user_deactivate',
       'user_activate',
+      'role_create',
+      'role_update',
+      'role_delete',
       'data_migrate',
       'maintenance_toggle',
       'settings_update',
@@ -78,7 +81,7 @@ const activityLogSchema = new mongoose.Schema({
   },
   targetType: {
     type: String,
-    enum: ['card', 'deck', 'wishlist', 'location', 'tag', 'user', 'session', 'settings', null]
+    enum: ['card', 'deck', 'wishlist', 'location', 'tag', 'user', 'session', 'settings', 'role', null]
   },
   targetId: {
     type: mongoose.Schema.Types.ObjectId
