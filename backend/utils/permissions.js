@@ -86,6 +86,71 @@ function syncStaffBadge(user, oldRole, newRole) {
   }
 }
 
+// Full permission catalog, grouped by domain, for the Permissions Management
+// admin UI (frontend/src/components/admin/PermissionsManagement.js). This is
+// the single source of truth for "what permissions exist" — the UI renders
+// its checkbox list from GET /api/admin/roles/permissions-catalog, which
+// calls getPermissionsCatalog() below, so the UI can never drift from what
+// requirePermission() actually enforces.
+//
+// 'decks:moderate' and 'trades:moderate' are reserved: verified during the
+// route audit (see docs/superpowers/plans/2026-07-09-custom-roles-permissions.md)
+// that no route currently exists for community-deck or trade moderation —
+// they're catalog-only until such a route is built.
+const PERMISSIONS_CATALOG = {
+  'User Management': [
+    { key: 'user:view', label: 'View user list & profiles' },
+    { key: 'user:warn', label: 'Issue warnings to users' },
+    { key: 'user:mute', label: 'Mute/unmute users' },
+    { key: 'user:ban', label: 'Ban/suspend user accounts' },
+    { key: 'user:appeal:review', label: 'Review ban & mute appeals' },
+    { key: 'user:role:manage', label: 'Assign roles to users' }
+  ],
+  'Roles & Permissions': [
+    { key: 'roles:manage', label: 'Create, edit, and delete custom roles' }
+  ],
+  'Forum & Community': [
+    { key: 'forum:moderate', label: 'Pin, lock, move, merge, and delete threads/posts' },
+    { key: 'chat:moderate', label: 'Moderate chat messages and spam filters' },
+    { key: 'comments:moderate', label: 'Moderate comments' },
+    { key: 'content:flag', label: 'Flag content for review' },
+    { key: 'community:events', label: 'Manage community events' },
+    { key: 'announcements:manage', label: 'Post and manage announcements' },
+    { key: 'feedback:manage', label: 'Manage user feedback' },
+    { key: 'feedback:read', label: 'Read user feedback' },
+    { key: 'playgroups:manage', label: 'Manage playgroups' },
+    { key: 'badges:manage', label: 'Grant, revoke, and create badges/cosmetics' },
+    { key: 'ticket:manage', label: 'Manage support tickets' }
+  ],
+  'Pricing & Data': [
+    { key: 'cards:audit', label: 'Run and review collection audits' },
+    { key: 'prices:manage', label: 'Correct individual card prices' },
+    { key: 'prices:force-update', label: 'Trigger bulk price-update jobs' },
+    { key: 'data:export', label: 'Export collection/system data' }
+  ],
+  'System': [
+    { key: 'system:settings:manage', label: 'Manage system settings & maintenance mode' }
+  ],
+  'Collection & Decks': [
+    { key: 'collection:manage', label: 'Add/edit/delete own collection cards' },
+    { key: 'collection:view', label: 'View own collection (read-only)' },
+    { key: 'deck:create', label: 'Create and edit decks' },
+    { key: 'decks:moderate', label: 'Unpublish/moderate community decks (reserved — not yet wired to a route)' },
+    { key: 'trades:moderate', label: 'Moderate trading board listings/offers (reserved — not yet wired to a route)' }
+  ],
+  'Chat': [
+    { key: 'community:chat', label: 'Participate in community chat' }
+  ]
+};
+
+/**
+ * Returns the full permission catalog grouped by domain.
+ * @returns {Object<string, Array<{key: string, label: string}>>}
+ */
+function getPermissionsCatalog() {
+  return PERMISSIONS_CATALOG;
+}
+
 /**
  * Returns the permission strings for a given role.
  * Admin always gets ['all'] — check with hasPermission() which expands it.
@@ -123,6 +188,7 @@ module.exports = {
   ROLE_PERMISSIONS,
   STAFF_ROLES,
   STAFF_ROLE_BADGES,
+  getPermissionsCatalog,
   getPermissionsForRole,
   hasPermission,
   isStaffRole,
