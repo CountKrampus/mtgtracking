@@ -5,7 +5,8 @@ const ForumCategory = require('../models/ForumCategory');
 const ForumThread = require('../models/ForumThread');
 const ForumPost = require('../models/ForumPost');
 const Notification = require('../models/Notification');
-const { verifyToken, requireAuth, requireAdmin } = require('../middleware/auth');
+const { verifyToken, requireAuth, requireAdmin, requirePermission } = require('../middleware/auth');
+const { hasPermission } = require('../utils/permissions');
 const { checkMute } = require('../middleware/muteEnforcer');
 const { checkSpam } = require('../utils/spamFilter');
 const {
@@ -24,7 +25,7 @@ const { checkAndAwardBadges } = require('../utils/badgeManager');
 const forumCache = require('../cache/forumCache');
 
 // POST /api/forum/categories - Create category (admin only)
-router.post('/categories', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+router.post('/categories', verifyToken, requireAuth, requirePermission('forum:moderate'), async (req, res) => {
   try {
     const { name, description, parentCategoryId, displayOrder = 0 } = req.body;
 
@@ -34,6 +35,7 @@ router.post('/categories', verifyToken, requireAuth, requireAdmin, async (req, r
 
     const category = new ForumCategory({
       name,
+      slug: name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
       description,
       parentCategoryId: parentCategoryId || null,
       displayOrder
@@ -49,7 +51,7 @@ router.post('/categories', verifyToken, requireAuth, requireAdmin, async (req, r
 });
 
 // PUT /api/forum/categories/:id - Update category (admin only)
-router.put('/categories/:id', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+router.put('/categories/:id', verifyToken, requireAuth, requirePermission('forum:moderate'), async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, parentCategoryId, displayOrder, isActive, isQA } = req.body;
@@ -73,7 +75,7 @@ router.put('/categories/:id', verifyToken, requireAuth, requireAdmin, async (req
 });
 
 // DELETE /api/forum/categories/:id - Delete category (admin only, cascade)
-router.delete('/categories/:id', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+router.delete('/categories/:id', verifyToken, requireAuth, requirePermission('forum:moderate'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -764,7 +766,7 @@ router.put('/threads/:threadId', verifyToken, requireAuth, async (req, res) => {
     }
 
     const isAuthor = thread.authorId.toString() === req.user._id.toString();
-    const isAdmin = req.user.role === 'admin' || req.user.isAdmin;
+    const isAdmin = hasPermission(req.user, 'forum:moderate') || req.user.isAdmin;
 
     if (!isAuthor && !isAdmin) {
       return res.status(403).json({ message: 'Not authorized to edit this thread' });
@@ -785,7 +787,7 @@ router.put('/threads/:threadId', verifyToken, requireAuth, async (req, res) => {
 });
 
 // PUT /api/forum/threads/:threadId/pin - Pin/unpin thread (admin only)
-router.put('/threads/:threadId/pin', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+router.put('/threads/:threadId/pin', verifyToken, requireAuth, requirePermission('forum:moderate'), async (req, res) => {
   try {
     const { threadId } = req.params;
 
@@ -805,7 +807,7 @@ router.put('/threads/:threadId/pin', verifyToken, requireAuth, requireAdmin, asy
 });
 
 // PUT /api/forum/threads/:threadId/lock - Lock/unlock thread (admin only)
-router.put('/threads/:threadId/lock', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+router.put('/threads/:threadId/lock', verifyToken, requireAuth, requirePermission('forum:moderate'), async (req, res) => {
   try {
     const { threadId } = req.params;
 
@@ -825,7 +827,7 @@ router.put('/threads/:threadId/lock', verifyToken, requireAuth, requireAdmin, as
 });
 
 // PUT /api/forum/threads/:threadId/move - Move thread to different category (admin only)
-router.put('/threads/:threadId/move', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+router.put('/threads/:threadId/move', verifyToken, requireAuth, requirePermission('forum:moderate'), async (req, res) => {
   try {
     const { threadId } = req.params;
     const { categoryId } = req.body;
@@ -938,7 +940,7 @@ router.delete('/posts/:postId', verifyToken, requireAuth, async (req, res) => {
     }
 
     const isAuthor = post.authorId.toString() === req.user._id.toString();
-    const isAdmin = req.user.role === 'admin' || req.user.isAdmin;
+    const isAdmin = hasPermission(req.user, 'forum:moderate') || req.user.isAdmin;
 
     if (!isAuthor && !isAdmin) {
       return res.status(403).json({ message: 'Not authorized to delete this post' });
@@ -1040,7 +1042,7 @@ router.put('/threads/:threadId/merge-request', async (req, res) => {
 });
 
 // GET /api/forum/admin/flagged-posts - list flagged/hidden posts (admin only)
-router.get('/admin/flagged-posts', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+router.get('/admin/flagged-posts', verifyToken, requireAuth, requirePermission('forum:moderate'), async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = 20;
@@ -1095,7 +1097,7 @@ router.get('/admin/merge-requests', async (req, res) => {
 });
 
 // POST /api/forum/threads/:threadId/merge - approve and merge threads
-router.post('/threads/:threadId/merge', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+router.post('/threads/:threadId/merge', verifyToken, requireAuth, requirePermission('forum:moderate'), async (req, res) => {
   try {
     const { threadId } = req.params;
     const thread = await ForumThread.findById(threadId);
@@ -1135,7 +1137,7 @@ router.post('/threads/:threadId/merge', verifyToken, requireAuth, requireAdmin, 
 });
 
 // POST /api/forum/threads/:threadId/merge-request/reject - reject merge request
-router.post('/threads/:threadId/merge-request/reject', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+router.post('/threads/:threadId/merge-request/reject', verifyToken, requireAuth, requirePermission('forum:moderate'), async (req, res) => {
   try {
     const { threadId } = req.params;
     const { reason } = req.body;
@@ -1219,7 +1221,7 @@ router.post('/threads/:threadId/extract-deck', verifyToken, requireAuth, async (
 });
 
 // DELETE /api/forum/threads/:threadId
-router.delete('/threads/:threadId', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+router.delete('/threads/:threadId', verifyToken, requireAuth, requirePermission('forum:moderate'), async (req, res) => {
   try {
     const { threadId } = req.params;
 
