@@ -1778,7 +1778,7 @@ router.get('/leaderboard-levels', async (req, res) => {
 });
 
 // POST /api/forum/level/award-xp - Award XP to a user (admin only)
-router.post('/level/award-xp', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+router.post('/level/award-xp', verifyToken, requireAuth, requirePermission('badges:manage'), async (req, res) => {
   try {
     const { userId, amount } = req.body;
     if (!userId || !amount) {
@@ -1822,7 +1822,7 @@ router.post('/level/coins/spend', verifyToken, requireAuth, async (req, res) => 
 });
 
 // POST /api/forum/level/coins/earn - Award coins to a user (admin only)
-router.post('/level/coins/earn', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+router.post('/level/coins/earn', verifyToken, requireAuth, requirePermission('badges:manage'), async (req, res) => {
   try {
     const { userId, amount, reason } = req.body;
     if (!userId || !amount) {
@@ -1844,7 +1844,7 @@ router.post('/level/coins/earn', verifyToken, requireAuth, requireAdmin, async (
 // ============ COSMETICS MANAGEMENT (ADMIN) ============
 
 // GET /api/forum/admin/cosmetics - list all cosmetics for admin
-router.get('/admin/cosmetics', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+router.get('/admin/cosmetics', verifyToken, requireAuth, requirePermission('badges:manage'), async (req, res) => {
   try {
     const cosmetics = await Cosmetic.find({}).sort({ category: 1, rarity: 1 }).lean();
     res.json({ cosmetics });
@@ -1855,7 +1855,7 @@ router.get('/admin/cosmetics', verifyToken, requireAuth, requireAdmin, async (re
 });
 
 // POST /api/forum/admin/cosmetics - create new cosmetic
-router.post('/admin/cosmetics', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+router.post('/admin/cosmetics', verifyToken, requireAuth, requirePermission('badges:manage'), async (req, res) => {
   try {
     const { name, category, cost, description, rarity, color, icon, animationClass, cssProperties, imageUrl, availableUntil } = req.body;
 
@@ -1886,7 +1886,7 @@ router.post('/admin/cosmetics', verifyToken, requireAuth, requireAdmin, async (r
 });
 
 // PUT /api/forum/admin/cosmetics/:cosmeticId - update cosmetic
-router.put('/admin/cosmetics/:cosmeticId', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+router.put('/admin/cosmetics/:cosmeticId', verifyToken, requireAuth, requirePermission('badges:manage'), async (req, res) => {
   try {
     const { name, category, cost, description, rarity, color, icon, isActive, animationClass, cssProperties, imageUrl, availableUntil } = req.body;
 
@@ -1922,7 +1922,7 @@ router.put('/admin/cosmetics/:cosmeticId', verifyToken, requireAuth, requireAdmi
 });
 
 // DELETE /api/forum/admin/cosmetics/:cosmeticId - delete cosmetic
-router.delete('/admin/cosmetics/:cosmeticId', verifyToken, requireAuth, requireAdmin, async (req, res) => {
+router.delete('/admin/cosmetics/:cosmeticId', verifyToken, requireAuth, requirePermission('badges:manage'), async (req, res) => {
   try {
     const cosmetic = await Cosmetic.findByIdAndDelete(req.params.cosmeticId);
 

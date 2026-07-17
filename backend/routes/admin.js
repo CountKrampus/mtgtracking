@@ -335,7 +335,7 @@ router.put('/users/:userId/role', requirePermission('user:role:manage'), async (
 // ── Badge management ──────────────────────────────────────────────────────────
 
 // GET /api/admin/badges — list all badges
-router.get('/badges', requireAdmin, async (req, res) => {
+router.get('/badges', requirePermission('badges:manage'), async (req, res) => {
   try {
     const badges = await Badge.find().sort({ name: 1 }).lean();
     res.json({ badges });
@@ -343,7 +343,7 @@ router.get('/badges', requireAdmin, async (req, res) => {
 });
 
 // POST /api/admin/badges — create a new badge definition
-router.post('/badges', requireAdmin, async (req, res) => {
+router.post('/badges', requirePermission('badges:manage'), async (req, res) => {
   try {
     const { name, description, icon } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ message: 'Badge name is required' });
@@ -356,7 +356,7 @@ router.post('/badges', requireAdmin, async (req, res) => {
 });
 
 // PUT /api/admin/badges/:id — update a badge definition
-router.put('/badges/:id', requireAdmin, async (req, res) => {
+router.put('/badges/:id', requirePermission('badges:manage'), async (req, res) => {
   try {
     const { name, description, icon } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ message: 'Badge name is required' });
@@ -373,7 +373,7 @@ router.put('/badges/:id', requireAdmin, async (req, res) => {
 });
 
 // DELETE /api/admin/badges/:id — delete a badge definition
-router.delete('/badges/:id', requireAdmin, async (req, res) => {
+router.delete('/badges/:id', requirePermission('badges:manage'), async (req, res) => {
   try {
     const badge = await Badge.findByIdAndDelete(req.params.id);
     if (!badge) return res.status(404).json({ message: 'Badge not found' });
@@ -382,7 +382,7 @@ router.delete('/badges/:id', requireAdmin, async (req, res) => {
 });
 
 // POST /api/admin/badges/:badgeId/grant/:userId — grant a badge to a user
-router.post('/badges/:badgeId/grant/:userId', requireAdmin, async (req, res) => {
+router.post('/badges/:badgeId/grant/:userId', requirePermission('badges:manage'), async (req, res) => {
   try {
     const badge = await Badge.findById(req.params.badgeId).lean();
     if (!badge) return res.status(404).json({ message: 'Badge not found' });
@@ -402,7 +402,7 @@ router.post('/badges/:badgeId/grant/:userId', requireAdmin, async (req, res) => 
 });
 
 // DELETE /api/admin/badges/:badgeId/revoke/:userId — revoke a badge from a user
-router.delete('/badges/:badgeId/revoke/:userId', requireAdmin, async (req, res) => {
+router.delete('/badges/:badgeId/revoke/:userId', requirePermission('badges:manage'), async (req, res) => {
   try {
     const badge = await Badge.findById(req.params.badgeId).lean();
     if (!badge) return res.status(404).json({ message: 'Badge not found' });
@@ -420,7 +420,7 @@ router.delete('/badges/:badgeId/revoke/:userId', requireAdmin, async (req, res) 
 });
 
 // POST /api/admin/badges/sync-icons — backfill icon field on all user badge entries
-router.post('/badges/sync-icons', requireAdmin, async (req, res) => {
+router.post('/badges/sync-icons', requirePermission('badges:manage'), async (req, res) => {
   try {
     const badges = await Badge.find({}).lean();
     const iconMap = {};
