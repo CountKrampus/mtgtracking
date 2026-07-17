@@ -3,6 +3,7 @@ import { X, Users, Activity, Server, Database, MessageSquare, Settings, ChevronD
 
 import UsersTab from './user-management/UsersTab';
 import RoleManagement from './RoleManagement';
+import PermissionsManagement from './PermissionsManagement';
 import BansTab from './user-management/BansTab';
 import WarningsTab from './user-management/WarningsTab';
 import AppealsTab from './user-management/AppealsTab';
@@ -31,6 +32,7 @@ const groups = [
     tabs: [
       { id: 'users', label: 'Users', icon: Users, requiresRole: 'admin' },
       { id: 'roles', label: 'Roles', icon: Shield, requiresRole: 'admin' },
+      { id: 'permissions', label: 'Permissions', icon: Shield, requiresPermission: 'roles:manage' },
       { id: 'bans', label: 'Bans', icon: Shield, requiresRole: 'moderator' },
       { id: 'warnings', label: 'Warnings', icon: AlertTriangle, requiresRole: 'moderator' },
       { id: 'appeals', label: 'Appeals', icon: MessageSquare, requiresRole: 'moderator' }
@@ -75,6 +77,10 @@ const groups = [
 ];
 
 function canSeeTab(tab, user) {
+  if (tab.requiresPermission) {
+    if (!user || !Array.isArray(user.permissions)) return false;
+    return user.permissions.includes('all') || user.permissions.includes(tab.requiresPermission);
+  }
   if (!tab.requiresRole) return true;
   if (!user || !user.role) return false;
   if (user.role === 'admin') return true;
@@ -85,6 +91,7 @@ function renderContent(activeTab) {
   switch (activeTab) {
     case 'users':      return <UsersTab />;
     case 'roles':      return <RoleManagement />;
+    case 'permissions': return <PermissionsManagement />;
     case 'bans':       return <BansTab />;
     case 'warnings':   return <WarningsTab />;
     case 'appeals':    return <AppealsTab />;
