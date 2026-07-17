@@ -16,6 +16,7 @@ const Badge = require('../models/Badge');
 const ForumPost = require('../models/ForumPost');
 const ForumThread = require('../models/ForumThread');
 const ForumCategory = require('../models/ForumCategory');
+const Role = require('../models/Role');
 const { verifyToken, requireAuth, requireAdmin, requireModerator, requireContentManager, requireSupport, isMultiUserEnabled } = require('../middleware/auth');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
 const { isStaffRole, ROLE_PERMISSIONS, syncStaffBadge } = require('../utils/permissions');
@@ -121,6 +122,13 @@ router.put('/users/:id', requireAdmin, async (req, res) => {
     }
 
     const { role, isActive, displayName } = req.body;
+
+    if (role) {
+      const validRoleNames = await Role.distinct('name');
+      if (!validRoleNames.includes(role)) {
+        return res.status(400).json({ message: 'Invalid role', code: 'INVALID_ROLE' });
+      }
+    }
 
     // Prevent admin from demoting themselves if they're the only admin
     if (role && role !== 'admin' && user._id.toString() === req.user._id.toString()) {
@@ -278,7 +286,7 @@ router.put('/users/:userId/role', requireAdmin, async (req, res) => {
     const { userId } = req.params;
     const { newRole } = req.body;
 
-    const validRoles = Object.keys(ROLE_PERMISSIONS);
+    const validRoles = await Role.distinct('name');
     if (!validRoles.includes(newRole)) {
       return res.status(400).json({ message: 'Invalid role', code: 'INVALID_ROLE' });
     }

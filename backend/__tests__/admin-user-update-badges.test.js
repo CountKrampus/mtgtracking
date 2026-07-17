@@ -7,6 +7,8 @@ const request = require('supertest');
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Role = require('../models/Role');
+const { refreshRoleCache } = require('../utils/permissions');
 
 let mongod;
 
@@ -41,6 +43,10 @@ describe('PUT /api/admin/users/:id — staff badge sync', () => {
 
   beforeEach(async () => {
     app = buildApp();
+    await Role.syncIndexes();
+    await Role.seedBuiltInRoles();
+    await Role.grantMigrationPermissions();
+    await refreshRoleCache();
     admin = await User.create({
       email: 'admin@test.com', username: 'admin1', passwordHash: 'x', role: 'admin'
     });

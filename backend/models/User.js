@@ -30,18 +30,12 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: [
-      // Staff roles (Phase 2)
-      'admin',
-      'moderator',
-      'content_manager',
-      'community_manager',
-      'support',
-      'user',
-      // Legacy roles (kept for backward compatibility — existing users)
-      'editor',
-      'viewer'
-    ],
+    // No enum validator: valid role names now live in the Role collection
+    // (backend/models/Role.js) so custom roles can be created without a code
+    // change. Existence is validated at assignment time in the route
+    // handlers (see backend/routes/admin.js PUT /users/:id and
+    // PUT /users/:userId/role, and backend/routes/roles.js) — not here at
+    // the schema level.
     default: 'editor'
   },
   staffSince: {
