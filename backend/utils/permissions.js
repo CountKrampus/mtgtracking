@@ -1,3 +1,5 @@
+const Role = require('../models/Role');
+
 // Role → permission strings mapping.
 // These match the labels shown in Phase 2's RoleManagement UI component.
 const ROLE_PERMISSIONS = {
@@ -151,28 +153,62 @@ function getPermissionsCatalog() {
   return PERMISSIONS_CATALOG;
 }
 
+// In-memory cache of role name -> permissions[], loaded from the Role
+// collection. null until the first refreshRoleCache() call (e.g. at server
+// startup in server.js, or explicitly in tests). Kept in memory (rather than
+// hitting the DB on every request) because getPermissionsForRole() is called
+// synchronously from User.toSafeObject() (backend/models/User.js), which
+// itself runs on every authenticated request via verifyToken
+// (backend/middleware/auth.js) — making it async would require reworking the
+// entire auth pipeline.
+let roleCache = null;
+
+/**
+ * Reloads the in-memory role permission cache from the Role collection.
+ * Must be called after any Role document is created/updated/deleted
+ * (see backend/routes/roles.js) and once at server startup (see server.js).
+ * @returns {Promise<Map<string, string[]>>}
+ */
+async function refreshRoleCache() {
+  const roles = await Role.find().lean();
+  const map = new Map();
+  for (const role of roles) {
+    map.set(role.name, role.permissions);
+  }
+  roleCache = map;
+  return roleCache;
+}
+
 /**
  * Returns the permission strings for a given role.
- * Admin always gets ['all'] — check with hasPermission() which expands it.
+ * Reads from the in-memory cache once refreshRoleCache() has run; falls back
+ * to the static ROLE_PERMISSIONS map before the cache is loaded, or for an
+ * unrecognized role once the cache IS loaded, so the app stays functional
+ * during startup and in tests that don't call refreshRoleCache().
  * @param {string} role
  * @returns {string[]}
  */
 function getPermissionsForRole(role) {
+  if (roleCache && roleCache.has(role)) {
+    return roleCache.get(role);
+  }
+  if (roleCache) {
+    return ROLE_PERMISSIONS['user'];
+  }
   return ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS['user'];
 }
 
 /**
  * Returns true if the user object has a given permission.
- * Admins pass every check (they have 'all').
+ * A role with 'all' (by convention, only 'admin') passes every check.
  * @param {{ role: string }} user
  * @param {string} permission
  * @returns {boolean}
  */
 function hasPermission(user, permission) {
   if (!user || !user.role) return false;
-  if (user.role === 'admin') return true;
   const perms = getPermissionsForRole(user.role);
-  return perms.includes(permission);
+  return perms.includes('all') || perms.includes(permission);
 }
 
 /**
@@ -192,5 +228,6 @@ module.exports = {
   getPermissionsForRole,
   hasPermission,
   isStaffRole,
+  refreshRoleCache,
   syncStaffBadge
 };
