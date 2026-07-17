@@ -17,7 +17,7 @@ const ForumPost = require('../models/ForumPost');
 const ForumThread = require('../models/ForumThread');
 const ForumCategory = require('../models/ForumCategory');
 const Role = require('../models/Role');
-const { verifyToken, requireAuth, requireAdmin, requireModerator, requireContentManager, requireSupport, isMultiUserEnabled } = require('../middleware/auth');
+const { verifyToken, requireAuth, requireAdmin, requireContentManager, requirePermission, isMultiUserEnabled } = require('../middleware/auth');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
 const { isStaffRole, ROLE_PERMISSIONS, syncStaffBadge } = require('../utils/permissions');
 
@@ -281,7 +281,7 @@ router.delete('/users/:id', requireAdmin, async (req, res) => {
  * Role Management — dedicated role assignment endpoint
  * Called by the RoleManagement frontend component with body: { newRole }
  */
-router.put('/users/:userId/role', requireAdmin, async (req, res) => {
+router.put('/users/:userId/role', requirePermission('user:role:manage'), async (req, res) => {
   try {
     const { userId } = req.params;
     const { newRole } = req.body;
@@ -829,7 +829,7 @@ const MUTE_DURATIONS = {
 /**
  * POST /api/admin/mute/:userId - Create or escalate mute
  */
-router.post('/mute/:userId', requireModerator(), async (req, res) => {
+router.post('/mute/:userId', requirePermission('user:mute'), async (req, res) => {
   try {
     const { userId } = req.params;
     const { reason, level, mutedUntil } = req.body;
@@ -887,7 +887,7 @@ router.post('/mute/:userId', requireModerator(), async (req, res) => {
 /**
  * POST /api/admin/unmute/:userId - Deactivate mute
  */
-router.post('/unmute/:userId', requireModerator(), async (req, res) => {
+router.post('/unmute/:userId', requirePermission('user:mute'), async (req, res) => {
   try {
     const result = await Ban.findOneAndUpdate(
       { userId: req.params.userId, type: 'mute', isActive: true },
@@ -909,7 +909,7 @@ router.post('/unmute/:userId', requireModerator(), async (req, res) => {
 /**
  * DELETE /api/admin/mute/:userId - Revoke mute (alias for backwards compatibility)
  */
-router.delete('/mute/:userId', requireModerator(), async (req, res) => {
+router.delete('/mute/:userId', requirePermission('user:mute'), async (req, res) => {
   try {
     const result = await Ban.findOneAndUpdate(
       { userId: req.params.userId, type: 'mute', isActive: true },
@@ -931,7 +931,7 @@ router.delete('/mute/:userId', requireModerator(), async (req, res) => {
 /**
  * GET /api/admin/mutes - List active mutes (paginated)
  */
-router.get('/mutes', requireModerator(), async (req, res) => {
+router.get('/mutes', requirePermission('user:mute'), async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -973,7 +973,7 @@ router.get('/mutes', requireModerator(), async (req, res) => {
 /**
  * GET /api/admin/mutes/:userId - Get mute details and history for a specific user
  */
-router.get('/mutes/:userId', requireModerator(), async (req, res) => {
+router.get('/mutes/:userId', requirePermission('user:mute'), async (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -1009,7 +1009,7 @@ router.get('/mutes/:userId', requireModerator(), async (req, res) => {
 /**
  * GET /api/admin/appeals - List pending ban/mute appeals (paginated)
  */
-router.get('/appeals', requireModerator(), async (req, res) => {
+router.get('/appeals', requirePermission('user:appeal:review'), async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -1046,7 +1046,7 @@ router.get('/appeals', requireModerator(), async (req, res) => {
 /**
  * POST /api/admin/appeals/:banId/approve - Approve a ban/mute appeal
  */
-router.post('/appeals/:banId/approve', requireModerator(), async (req, res) => {
+router.post('/appeals/:banId/approve', requirePermission('user:appeal:review'), async (req, res) => {
   try {
     const { banId } = req.params;
     const { message } = req.body;
@@ -1085,7 +1085,7 @@ router.post('/appeals/:banId/approve', requireModerator(), async (req, res) => {
 /**
  * POST /api/admin/appeals/:banId/reject - Reject a ban/mute appeal
  */
-router.post('/appeals/:banId/reject', requireModerator(), async (req, res) => {
+router.post('/appeals/:banId/reject', requirePermission('user:appeal:review'), async (req, res) => {
   try {
     const { banId } = req.params;
     const { reason } = req.body;
@@ -1127,7 +1127,7 @@ router.post('/appeals/:banId/reject', requireModerator(), async (req, res) => {
 /**
  * GET /api/admin/spam-config - Get spam filter config
  */
-router.get('/spam-config', requireModerator(), async (req, res) => {
+router.get('/spam-config', requirePermission('chat:moderate'), async (req, res) => {
   try {
     const config = await SpamFilterConfig.getConfig();
     res.json(config);
@@ -1140,7 +1140,7 @@ router.get('/spam-config', requireModerator(), async (req, res) => {
 /**
  * PUT /api/admin/spam-config - Update spam config
  */
-router.put('/spam-config', requireModerator(), async (req, res) => {
+router.put('/spam-config', requirePermission('chat:moderate'), async (req, res) => {
   try {
     const { sensitivity, bannedWords, minReputationToAutoFlag, maxPostsPerHourPerUser } = req.body;
 
@@ -1161,7 +1161,7 @@ router.put('/spam-config', requireModerator(), async (req, res) => {
 /**
  * POST /api/admin/spam-config/test - Test spam filter
  */
-router.post('/spam-config/test', requireModerator(), async (req, res) => {
+router.post('/spam-config/test', requirePermission('chat:moderate'), async (req, res) => {
   try {
     const { text } = req.body;
     const user = await User.findById(req.user._id);
@@ -1182,7 +1182,7 @@ router.post('/spam-config/test', requireModerator(), async (req, res) => {
 /**
  * POST /api/admin/modmail - Send modmail to all users
  */
-router.post('/modmail', requireModerator(), async (req, res) => {
+router.post('/modmail', requirePermission('chat:moderate'), async (req, res) => {
   try {
     const { subject, message } = req.body;
 
@@ -1256,7 +1256,7 @@ router.post('/modmail', requireModerator(), async (req, res) => {
 /**
  * POST /api/admin/account-bans - Create account ban or suspension
  */
-router.post('/account-bans', requireModerator(), async (req, res) => {
+router.post('/account-bans', requirePermission('user:ban'), async (req, res) => {
   try {
     const { userId, banType, reason, expiresAt } = req.body;
     if (!userId || !banType || !reason) {
@@ -1299,7 +1299,7 @@ router.post('/account-bans', requireModerator(), async (req, res) => {
 /**
  * GET /api/admin/account-bans - List active bans with optional filters
  */
-router.get('/account-bans', requireModerator(), async (req, res) => {
+router.get('/account-bans', requirePermission('user:ban'), async (req, res) => {
   try {
     const { userId, banType, active = 'true', page = 1, limit = 50 } = req.query;
     const query = {};
@@ -1328,7 +1328,7 @@ router.get('/account-bans', requireModerator(), async (req, res) => {
 /**
  * PUT /api/admin/account-bans/:id - Update ban expiration or reason
  */
-router.put('/account-bans/:id', requireModerator(), async (req, res) => {
+router.put('/account-bans/:id', requirePermission('user:ban'), async (req, res) => {
   try {
     const { reason, expiresAt } = req.body;
     const ban = await UserBan.findById(req.params.id);
@@ -1357,7 +1357,7 @@ router.put('/account-bans/:id', requireModerator(), async (req, res) => {
 /**
  * DELETE /api/admin/account-bans/:id - Revoke (deactivate) a ban
  */
-router.delete('/account-bans/:id', requireModerator(), async (req, res) => {
+router.delete('/account-bans/:id', requirePermission('user:ban'), async (req, res) => {
   try {
     const ban = await UserBan.findById(req.params.id);
     if (!ban) return res.status(404).json({ message: 'Ban not found' });
@@ -1385,7 +1385,7 @@ router.delete('/account-bans/:id', requireModerator(), async (req, res) => {
  * POST /api/admin/warnings - Issue a warning to a user
  * Auto-escalates to 7-day suspension if user has 3+ warnings in 90 days
  */
-router.post('/warnings', requireModerator(), async (req, res) => {
+router.post('/warnings', requirePermission('user:warn'), async (req, res) => {
   try {
     const { userId, reason, bypassEscalation = false } = req.body;
     if (!userId || !reason) {
@@ -1467,7 +1467,7 @@ router.post('/warnings', requireModerator(), async (req, res) => {
 /**
  * GET /api/admin/warnings/:userId - List warnings for a specific user
  */
-router.get('/warnings/:userId', requireModerator(), async (req, res) => {
+router.get('/warnings/:userId', requirePermission('user:warn'), async (req, res) => {
   try {
     if (!mongoose.isValidObjectId(req.params.userId)) {
       return res.status(400).json({ message: 'Invalid userId' });
@@ -1491,7 +1491,7 @@ router.get('/warnings/:userId', requireModerator(), async (req, res) => {
 /**
  * GET /api/admin/ban-appeals - List pending appeals (admin view)
  */
-router.get('/ban-appeals', requireModerator(), async (req, res) => {
+router.get('/ban-appeals', requirePermission('user:appeal:review'), async (req, res) => {
   try {
     const { status = 'pending', page = 1, limit = 50 } = req.query;
     const query = {};
@@ -1519,7 +1519,7 @@ router.get('/ban-appeals', requireModerator(), async (req, res) => {
 /**
  * PUT /api/admin/ban-appeals/:id - Approve or deny an appeal
  */
-router.put('/ban-appeals/:id', requireModerator(), async (req, res) => {
+router.put('/ban-appeals/:id', requirePermission('user:appeal:review'), async (req, res) => {
   try {
     const { status, decisionReason } = req.body;
     if (!['approved', 'denied'].includes(status)) {
@@ -1570,7 +1570,7 @@ router.put('/ban-appeals/:id', requireModerator(), async (req, res) => {
 /**
  * GET /api/admin/moderation-history/:userId - Full moderation audit trail for a user
  */
-router.get('/moderation-history/:userId', requireModerator(), async (req, res) => {
+router.get('/moderation-history/:userId', requirePermission('user:ban', 'user:appeal:review', 'user:warn'), async (req, res) => {
   try {
     if (!mongoose.isValidObjectId(req.params.userId)) {
       return res.status(400).json({ message: 'Invalid userId' });
