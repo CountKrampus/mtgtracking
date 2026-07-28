@@ -89,45 +89,48 @@ async function runDailySnapshot() {
   }
 
   // --- Phase 3: Price alert check ---
+  // Checks one direction of a card's price alert (low target crossed downward,
+  // or high target crossed upward), firing a notification only on a fresh
+  // crossing — i.e. yesterday's snapshot was still on the "safe" side — so a
+  // price that's been sitting past the target for days doesn't re-notify daily.
+  async function checkAlertDirection(card, newPrice, direction) {
+    const target = direction === 'high' ? card.priceAlert.targetHigh : card.priceAlert.targetPrice;
+    if (!(target > 0)) return false;
+
+    const crossed = direction === 'high' ? newPrice >= target : newPrice <= target;
+    if (!crossed) return false;
+
+    const firedField = direction === 'high' ? 'lastHighAlertFiredAt' : 'lastAlertFiredAt';
+    const lastFired = card.priceAlert[firedField];
+    if (lastFired) {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const prevSnap = await CardPriceSnapshot.findOne({
+        cardId: card._id,
+        createdAt: { $lt: todayStart }
+      }).sort({ createdAt: -1 }).lean();
+
+      const wasSafe = direction === 'high' ? prevSnap && prevSnap.price < target : prevSnap && prevSnap.price > target;
+      if (!wasSafe) return false; // no prior snapshot to confirm a fresh crossing, or already past target
+    }
+
+    const notif = await createPriceAlertNotification(card.userId, card._id, card.name, target, newPrice, direction);
+    if (!notif) return false;
+
+    await Card.updateOne({ _id: card._id }, { $set: { [`priceAlert.${firedField}`]: new Date() } });
+    return true;
+  }
+
   try {
-    const alertCards = cards.filter(c => c.priceAlert && c.priceAlert.targetPrice > 0 && c.userId);
+    const alertCards = cards.filter(c =>
+      c.priceAlert && c.userId && (c.priceAlert.targetPrice > 0 || c.priceAlert.targetHigh > 0)
+    );
     for (const card of alertCards) {
       const newPrice = updatedPrices[card._id.toString()];
       if (newPrice === undefined) continue;
 
-      const targetPrice = card.priceAlert.targetPrice;
-      if (newPrice > targetPrice) continue;
-
-      // Check if this is a new crossing (price was above target yesterday)
-      const lastFired = card.priceAlert.lastAlertFiredAt;
-      if (lastFired) {
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const prevSnap = await CardPriceSnapshot.findOne({
-          cardId: card._id,
-          createdAt: { $lt: todayStart }
-        }).sort({ createdAt: -1 }).lean();
-
-        if (!prevSnap || prevSnap.price <= targetPrice) {
-          // No prior snapshot to confirm recovery, or price was already at or below target — not a new crossing
-          continue;
-        }
-      }
-
-      const notif = await createPriceAlertNotification(
-        card.userId,
-        card._id,
-        card.name,
-        targetPrice,
-        newPrice
-      );
-      if (notif) {
-        await Card.updateOne(
-          { _id: card._id },
-          { $set: { 'priceAlert.lastAlertFiredAt': new Date() } }
-        );
-        alertsFired++;
-      }
+      if (await checkAlertDirection(card, newPrice, 'low')) alertsFired++;
+      if (await checkAlertDirection(card, newPrice, 'high')) alertsFired++;
     }
   } catch (err) {
     console.error('[dailySnapshot] Error checking price alerts:', err.message);

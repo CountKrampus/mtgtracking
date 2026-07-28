@@ -209,9 +209,11 @@ const cardSchema = new mongoose.Schema({
   buylistValue: { type: Number, default: 0 },
   sellValue: { type: Number, default: 0 },
   priceAlert: {
-    targetPrice: Number,
+    targetPrice: Number, // notify when price drops to/below this
+    targetHigh: Number, // notify when price rises to/above this
     emailNotification: { type: Boolean, default: false },
-    lastAlertFiredAt: { type: Date, default: null }
+    lastAlertFiredAt: { type: Date, default: null },
+    lastHighAlertFiredAt: { type: Date, default: null }
   },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import {
   Search, Trash2, Edit2, Save, X, RefreshCw, DollarSign, Camera, Settings,
   CheckSquare, Square, MapPin, Layers, Zap, Crown, BarChart3, Heart, Plus, SlidersHorizontal, Bookmark,
-  Upload, PlusCircle, ExternalLink, Mic
+  Upload, PlusCircle, ExternalLink, Mic, Bell
 } from 'lucide-react';
 import { standardTypes } from '../constants';
 import { buildScryfallSearchUrl } from '../utils/scryfallDeeplink';
 import useVoiceSearch from '../hooks/useVoiceSearch';
+import PriceAlertModal from './PriceAlertModal';
 import { useCardCollection } from '../contexts/CardCollectionContext';
 import { useLocationTag } from '../contexts/LocationTagContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -282,6 +283,7 @@ function CollectionView({
     isFoil: false, isToken: false, oracleText: '', tags: [], location: '',
   });
   const [selectedCards, setSelectedCards] = useState(new Set());
+  const [priceAlertCard, setPriceAlertCard] = useState(null);
   const [bulkUpdateModal, setBulkUpdateModal] = useState(null);
   const [bulkCondition, setBulkCondition] = useState('NM');
   const [bulkLocation, setBulkLocation] = useState('');
@@ -1567,6 +1569,13 @@ function CollectionView({
                             title="Find card synergies"
                           >
                             <Zap size={16} />
+                          </button>
+                          <button
+                            onClick={() => setPriceAlertCard(card)}
+                            className={`p-1 hover:bg-amber-700 text-white rounded transition ${card.priceAlert?.targetPrice > 0 || card.priceAlert?.targetHigh > 0 ? 'bg-amber-600' : 'bg-amber-600/40'}`}
+                            title="Set price alert"
+                          >
+                            <Bell size={16} />
                           </button>
                           <button
                             onClick={() => handleDelete(card._id)}
@@ -3026,6 +3035,14 @@ function CollectionView({
               </div>
             </div>
           </div>
+        )}
+
+        {priceAlertCard && (
+          <PriceAlertModal
+            card={priceAlertCard}
+            onClose={() => setPriceAlertCard(null)}
+            onSaved={() => { setPriceAlertCard(null); fetchCards(); }}
+          />
         )}
 
         {/* QR Preview Modal */}

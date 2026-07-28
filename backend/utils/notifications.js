@@ -154,11 +154,13 @@ async function createUpvoteNotification(postAuthorId, fromUserId, postId, conten
  * @param {string} cardName - Card name for display
  * @param {number} targetPrice - The alert target price
  * @param {number} actualPrice - The current price that triggered the alert
+ * @param {string} [direction='low'] - 'low' (price dropped to/below target) or 'high' (rose to/above)
  * @returns {object} Created notification or null on error
  */
-async function createPriceAlertNotification(userId, cardId, cardName, targetPrice, actualPrice) {
+async function createPriceAlertNotification(userId, cardId, cardName, targetPrice, actualPrice, direction = 'low') {
   try {
-    const content = `${cardName} dropped to $${actualPrice.toFixed(2)} (target: $${targetPrice.toFixed(2)})`;
+    const verb = direction === 'high' ? 'rose to' : 'dropped to';
+    const content = `${cardName} ${verb} $${actualPrice.toFixed(2)} (target: $${targetPrice.toFixed(2)})`;
     const notification = await Notification.create({
       userId,
       type: 'price_alert',

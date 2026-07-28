@@ -50,6 +50,21 @@ describe('price_alert notifications', () => {
     expect(notif.content).toContain('0.45');
   });
 
+  test('createPriceAlertNotification with direction "high" uses rose-to wording', async () => {
+    const cardId = new mongoose.Types.ObjectId();
+    const notif = await createPriceAlertNotification(
+      user._id,
+      cardId,
+      'Mox Diamond',
+      50,
+      65,
+      'high'
+    );
+    expect(notif).not.toBeNull();
+    expect(notif.content).toContain('rose to');
+    expect(notif.content).toContain('65.00');
+  });
+
   test('price_alert notification can be created without fromUserId', async () => {
     const cardId = new mongoose.Types.ObjectId();
     const notif = await Notification.create({
