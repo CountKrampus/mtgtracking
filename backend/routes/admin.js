@@ -21,6 +21,10 @@ const { verifyToken, requireAuth, requireAdmin, requirePermission, isMultiUserEn
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
 const { isStaffRole, ROLE_PERMISSIONS, syncStaffBadge } = require('../utils/permissions');
 
+// ---- In-memory cache for category health stats (5-minute TTL) ----
+const categoryStatsCache = new Map(); // key = window string ('7'|'30'), value = { data, timestamp }
+const CATEGORY_STATS_CACHE_TTL_MS = 5 * 60 * 1000;
+
 // All admin routes require authentication
 router.use(verifyToken);
 router.use(requireAuth);
@@ -2179,6 +2183,113 @@ router.get('/performance', requireAdmin, async (req, res) => {
     res.json({ queries, recommendations, indexes });
   } catch (error) {
     console.error('Admin performance error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/forum/category-stats?window=7|30
+ * Returns per-category post velocity, spam rate, and engagement metrics.
+ * Requires forum:moderate permission. Results cached for 5 minutes.
+ */
+router.get('/forum/category-stats', requirePermission('forum:moderate'), async (req, res) => {
+  try {
+    const windowParam = req.query.window || '7';
+    const windowDays = parseInt(windowParam);
+
+    if (![7, 30].includes(windowDays)) {
+      return res.status(400).json({
+        message: 'Invalid window parameter. Must be 7 or 30.',
+        code: 'INVALID_WINDOW'
+      });
+    }
+
+    // Check in-memory cache
+    const cacheKey = String(windowDays);
+    const cached = categoryStatsCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CATEGORY_STATS_CACHE_TTL_MS) {
+      return res.json(cached.data);
+    }
+
+    const windowStart = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000);
+
+    // Run two aggregations in parallel
+    const [threadAgg, postAgg, categories] = await Promise.all([
+      ForumThread.aggregate([
+        { $match: { createdAt: { $gte: windowStart }, isHidden: { $ne: true } } },
+        { $group: { _id: '$categoryId', newThreads: { $sum: 1 } } }
+      ]),
+      ForumPost.aggregate([
+        { $match: { createdAt: { $gte: windowStart } } },
+        {
+          $lookup: {
+            from: 'forumthreads',
+            localField: 'threadId',
+            foreignField: '_id',
+            as: 'thread'
+          }
+        },
+        { $unwind: '$thread' },
+        {
+          $group: {
+            _id: '$thread.categoryId',
+            newPosts: { $sum: 1 },
+            hiddenPosts: { $sum: { $cond: ['$isHidden', 1, 0] } },
+            uniqueAuthors: { $addToSet: '$authorId' }
+          }
+        }
+      ]),
+      ForumCategory.find({}).lean()
+    ]);
+
+    // Build lookup maps
+    const threadMap = {};
+    threadAgg.forEach(r => { threadMap[r._id.toString()] = r.newThreads; });
+
+    const postMap = {};
+    postAgg.forEach(r => {
+      postMap[r._id.toString()] = {
+        newPosts: r.newPosts,
+        hiddenPosts: r.hiddenPosts,
+        uniqueAuthors: r.uniqueAuthors.length
+      };
+    });
+
+    // Merge and compute derived metrics
+    const categoryStats = categories.map(cat => {
+      const catId = cat._id.toString();
+      const newThreads = threadMap[catId] || 0;
+      const postData = postMap[catId] || { newPosts: 0, hiddenPosts: 0, uniqueAuthors: 0 };
+      const { newPosts, hiddenPosts, uniqueAuthors } = postData;
+
+      return {
+        categoryId: catId,
+        name: cat.name,
+        slug: cat.slug,
+        newThreads,
+        newPosts,
+        postsPerDay: newPosts / windowDays,
+        spamRate: newPosts > 0 ? hiddenPosts / newPosts : 0,
+        avgRepliesPerThread: newThreads > 0 ? newPosts / newThreads : 0,
+        uniqueAuthors
+      };
+    });
+
+    // Sort by newPosts descending
+    categoryStats.sort((a, b) => b.newPosts - a.newPosts);
+
+    const responseData = {
+      window: windowDays,
+      generatedAt: new Date(),
+      categories: categoryStats
+    };
+
+    // Store in cache
+    categoryStatsCache.set(cacheKey, { data: responseData, timestamp: Date.now() });
+
+    res.json(responseData);
+  } catch (error) {
+    console.error('Category health stats error:', error);
     res.status(500).json({ message: error.message });
   }
 });
