@@ -4,9 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import {
   Search, Trash2, Edit2, Save, X, RefreshCw, DollarSign, Camera, Settings,
   CheckSquare, Square, MapPin, Layers, Zap, Crown, BarChart3, Heart, Plus, SlidersHorizontal, Bookmark,
-  Upload, PlusCircle
+  Upload, PlusCircle, ExternalLink
 } from 'lucide-react';
 import { standardTypes } from '../constants';
+import { buildScryfallSearchUrl } from '../utils/scryfallDeeplink';
 import { useCardCollection } from '../contexts/CardCollectionContext';
 import { useLocationTag } from '../contexts/LocationTagContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -306,6 +307,11 @@ function CollectionView({
     searchTerm, filterCondition, filterColor, filterSet,
     filterType, filterSpecial, filterRarity, filterTag, filterLocation,
   };
+
+  const scryfallSearchUrl = useMemo(
+    () => buildScryfallSearchUrl({ searchTerm, filterColor, filterType, filterRarity, filterSet, filterSpecial, cards }),
+    [searchTerm, filterColor, filterType, filterRarity, filterSet, filterSpecial, cards]
+  );
 
   const applyPreset = (filters) => {
     setSearchTerm(filters.searchTerm ?? '');
@@ -982,6 +988,18 @@ function CollectionView({
                 />
               )}
             </div>
+            {scryfallSearchUrl && (
+              <a
+                href={scryfallSearchUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 px-3 py-1 bg-white/10 hover:bg-white/20 text-white/70 hover:text-white rounded-lg text-sm transition"
+                title="Open this search on Scryfall"
+              >
+                <ExternalLink size={14} />
+                <span>View on Scryfall</span>
+              </a>
+            )}
           </div>
             </div>
               )}
