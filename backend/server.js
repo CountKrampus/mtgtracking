@@ -20,6 +20,7 @@ const { activityLoggers } = require('./middleware/activityLogger');
 const { getPriceWithFallback } = require('./utils/pricing');
 const { registerDailySnapshotJob } = require('./jobs/dailyPriceSnapshot');
 const { registerWeeklyHealthReportJob } = require('./jobs/weeklyHealthReport');
+const { registerSetReleaseAnnouncerJob } = require('./jobs/setReleaseAnnouncer');
 const SystemSettings = require('./models/SystemSettings');
 const UserColumnPreferences = require('./models/UserColumnPreferences');
 const CardValueSnapshot = require('./models/CardValueSnapshot');
@@ -3214,3 +3215,4 @@ app.listen(PORT, () => {
 
 registerDailySnapshotJob();
 registerWeeklyHealthReportJob();
+registerSetReleaseAnnouncerJob();
