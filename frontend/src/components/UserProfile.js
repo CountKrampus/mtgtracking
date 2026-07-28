@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import * as LucideIcons from 'lucide-react';
+import { Layers } from 'lucide-react';
 import { API_URL } from '../config';
 import UserAvatar from './avatars/UserAvatar';
+import CollectionComparison from './CollectionComparison';
+import { useAuthContext } from '../contexts/AuthContext';
 
 function renderBadgeIcon(iconStr) {
   if (!iconStr) return '🏅';
@@ -124,6 +127,8 @@ function ForumActivitySection({ activity }) {
 }
 
 export default function UserProfile({ username }) {
+  const { user: currentUser } = useAuthContext();
+  const [showComparison, setShowComparison] = useState(false);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -218,6 +223,20 @@ export default function UserProfile({ username }) {
               </div>
             )}
           </div>
+
+          {currentUser && currentUser.username !== profile.username && (
+            <div className="mt-4">
+              <button
+                data-testid="compare-collections-btn"
+                onClick={() => setShowComparison(true)}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 text-blue-300 hover:text-blue-200 text-sm transition-colors"
+                title="Compare your collection with this user"
+              >
+                <Layers size={15} />
+                Compare Collections
+              </button>
+            </div>
+          )}
 
           {/* Badges */}
           {profile.badges && profile.badges.length > 0 && (
@@ -380,6 +399,13 @@ export default function UserProfile({ username }) {
           </div>
         )}
       </div>
+
+      {showComparison && (
+        <CollectionComparison
+          targetUsername={profile.username}
+          onClose={() => setShowComparison(false)}
+        />
+      )}
     </div>
   );
 }
