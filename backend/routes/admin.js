@@ -21,6 +21,7 @@ const ContentReport = require('../models/ContentReport');
 const { verifyToken, requireAuth, requireAdmin, requirePermission, isMultiUserEnabled } = require('../middleware/auth');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
 const { isStaffRole, ROLE_PERMISSIONS, syncStaffBadge } = require('../utils/permissions');
+const { createTransporter } = require('../utils/email');
 
 // ---- In-memory cache for category health stats (5-minute TTL) ----
 const categoryStatsCache = new Map(); // key = window string ('7'|'30'), value = { data, timestamp }
@@ -68,6 +69,186 @@ router.get('/users', requireAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('List users error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/users/bulk-select
+ * Return all matching user IDs (no pagination) for bulk selection.
+ * Query params: search, role, status (same semantics as GET /admin/users)
+ */
+router.get('/users/bulk-select', requireAdmin, async (req, res) => {
+  try {
+    const { role, status, search } = req.query;
+
+    const query = {};
+    if (role) query.role = role;
+    if (status !== undefined) query.isActive = status === 'true';
+    if (search) {
+      query.$or = [
+        { username: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { displayName: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const users = await User.find(query, '_id');
+    res.json(users.map(u => u._id.toString()));
+  } catch (error) {
+    console.error('Bulk select error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/users/bulk-email
+ * Send an email blast to a list of users.
+ * Body: { userIds: string[], subject: string, body: string }
+ */
+router.post('/users/bulk-email', requireAdmin, async (req, res) => {
+  try {
+    const { userIds, subject, body } = req.body;
+
+    if (!Array.isArray(userIds) || userIds.length < 1 || userIds.length > 500) {
+      return res.status(400).json({ message: 'userIds must be an array of 1–500 IDs' });
+    }
+    if (!subject || typeof subject !== 'string' || subject.length > 200) {
+      return res.status(400).json({ message: 'subject is required and must be ≤ 200 characters' });
+    }
+    if (!body || typeof body !== 'string' || body.length > 5000) {
+      return res.status(400).json({ message: 'body is required and must be ≤ 5000 characters' });
+    }
+
+    const transporter = createTransporter();
+    if (!transporter) {
+      return res.status(503).json({ message: 'Email is not configured on this server' });
+    }
+
+    const users = await User.find({ _id: { $in: userIds } }, 'email username displayName');
+
+    const sent = [];
+    const failed = [];
+    const errors = [];
+
+    for (const user of users) {
+      try {
+        await transporter.sendMail({
+          from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+          to: user.email,
+          subject,
+          html: `<p>${body.replace(/\n/g, '<br>')}</p>`,
+        });
+        sent.push(user._id.toString());
+      } catch (mailErr) {
+        failed.push(user._id.toString());
+        errors.push({ userId: user._id.toString(), error: mailErr.message });
+      }
+    }
+
+    const auditEntries = users.map(user => ({
+      actionType: 'bulk_email',
+      actionDetails: { subject },
+      performedBy: req.user._id,
+      userId: user._id,
+    }));
+    await ModerationHistory.insertMany(auditEntries);
+
+    res.json({ sent: sent.length, failed: failed.length, errors });
+  } catch (error) {
+    console.error('Bulk email error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/users/bulk-badge
+ * Grant a badge to multiple users (skips users who already have it).
+ * Body: { userIds: string[], badgeId: string }
+ */
+router.post('/users/bulk-badge', requireAdmin, async (req, res) => {
+  try {
+    const { userIds, badgeId } = req.body;
+
+    if (!Array.isArray(userIds) || userIds.length < 1 || userIds.length > 500) {
+      return res.status(400).json({ message: 'userIds must be an array of 1–500 IDs' });
+    }
+    if (!badgeId) {
+      return res.status(400).json({ message: 'badgeId is required' });
+    }
+
+    const badge = await Badge.findById(badgeId).lean();
+    if (!badge) {
+      return res.status(404).json({ message: 'Badge not found' });
+    }
+
+    const users = await User.find({ _id: { $in: userIds } });
+
+    let updated = 0;
+    const auditEntries = [];
+
+    for (const user of users) {
+      const alreadyHas = (user.badges || []).some(b => b.name === badge.name);
+      if (alreadyHas) continue;
+
+      user.badges = user.badges || [];
+      user.badges.push({
+        name: badge.name,
+        description: badge.description,
+        icon: badge.icon || '',
+        earnedAt: new Date(),
+      });
+      await user.save();
+      updated++;
+
+      auditEntries.push({
+        actionType: 'bulk_badge_grant',
+        actionDetails: { badgeId: badge._id.toString(), badgeName: badge.name },
+        performedBy: req.user._id,
+        userId: user._id,
+      });
+    }
+
+    if (auditEntries.length > 0) {
+      await ModerationHistory.insertMany(auditEntries);
+    }
+
+    res.json({ updated });
+  } catch (error) {
+    console.error('Bulk badge error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/users/bulk-2fa-reset
+ * Clear 2FA secret and enabled flag for multiple users.
+ * Body: { userIds: string[] }
+ */
+router.post('/users/bulk-2fa-reset', requireAdmin, async (req, res) => {
+  try {
+    const { userIds } = req.body;
+
+    if (!Array.isArray(userIds) || userIds.length < 1 || userIds.length > 500) {
+      return res.status(400).json({ message: 'userIds must be an array of 1–500 IDs' });
+    }
+
+    const result = await User.updateMany(
+      { _id: { $in: userIds } },
+      { $set: { twoFactorSecret: null, twoFactorEnabled: false } }
+    );
+
+    const auditEntries = userIds.map(uid => ({
+      actionType: 'bulk_2fa_reset',
+      actionDetails: { resetBy: req.user._id.toString() },
+      performedBy: req.user._id,
+      userId: uid,
+    }));
+    await ModerationHistory.insertMany(auditEntries);
+
+    res.json({ updated: result.modifiedCount || 0 });
+  } catch (error) {
+    console.error('Bulk 2FA reset error:', error);
     res.status(500).json({ message: error.message });
   }
 });
