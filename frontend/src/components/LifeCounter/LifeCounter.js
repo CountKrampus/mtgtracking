@@ -200,6 +200,26 @@ function LifeCounter({ onBack }) {
     }
   };
 
+  // Storm count milestones that trigger a toast + log entry + sound
+  const STORM_MILESTONES = [5, 10, 15, 20, 25];
+
+  const handleIncrementStorm = () => {
+    const newCount = stormCount + 1;
+    incrementStorm();
+    if (STORM_MILESTONES.includes(newCount)) {
+      addToast({
+        type: 'warning',
+        title: `⚡ Storm Count: ${newCount}!`,
+        message: `${newCount} spells cast this turn — the storm is building.`,
+        duration: 5000
+      });
+      addLogEntry(LogCreators.stormMilestone(newCount));
+      if (settings.soundEnabled) {
+        playSound('warning');
+      }
+    }
+  };
+
   // Handle poison change
   const handlePoisonChange = (playerId, amount) => {
     changePoison(playerId, amount);
@@ -771,7 +791,7 @@ function LifeCounter({ onBack }) {
           onNextTurn={handleNextTurn}
           onPreviousTurn={previousTurn}
           onSetCurrentPlayer={setCurrentPlayer}
-          onIncrementStorm={incrementStorm}
+          onIncrementStorm={handleIncrementStorm}
           onDecrementStorm={decrementStorm}
           onResetStorm={resetStorm}
           currentPhase={currentPhase}

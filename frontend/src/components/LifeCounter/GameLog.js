@@ -205,6 +205,11 @@ export const LogCreators = {
     return createLogEntry('dice', message);
   },
 
+  stormMilestone: (count) => {
+    const message = `Storm count reached ${count} spells this turn!`;
+    return createLogEntry('mechanic', message);
+  },
+
   gameStart: (format, playerCount) => {
     const message = `Game started: ${format} with ${playerCount} players`;
     return createLogEntry('turn', message);
