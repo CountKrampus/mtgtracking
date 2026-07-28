@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { Bell, X, Eye, Trash2 } from 'lucide-react';
 
 export default function NotificationBell({ apiUrl, user, openPanel, setOpenPanel }) {
@@ -10,13 +11,15 @@ export default function NotificationBell({ apiUrl, user, openPanel, setOpenPanel
   const [loading, setLoading] = useState(false);
 
   const isOpen = openPanel === 'notifications';
+  const navigate = useNavigate();
 
   const typeEmojis = {
     mention: '💬',
     reply: '📝',
     upvote: '⬆️',
     dm: '💌',
-    price_alert: '📉'
+    price_alert: '📉',
+    collection_health_report: '📊'
   };
 
   const fetchNotifications = async () => {
@@ -149,6 +152,18 @@ export default function NotificationBell({ apiUrl, user, openPanel, setOpenPanel
                         <div className="text-sm text-white font-medium">Price Alert</div>
                         <div className="text-xs text-slate-300 mt-0.5 truncate">{notif.content}</div>
                       </>
+                    ) : notif.type === 'collection_health_report' ? (
+                      <div
+                        className="cursor-pointer"
+                        onClick={() => {
+                          if (!notif.isRead) handleMarkAsRead(notif._id);
+                          setOpenPanel(null);
+                          navigate('/health-report');
+                        }}
+                      >
+                        <div className="text-sm text-white font-medium">Collection Health Report</div>
+                        <div className="text-xs text-slate-300 mt-0.5 truncate">{notif.content}</div>
+                      </div>
                     ) : (
                       <>
                         <div className="text-sm text-white font-medium">
