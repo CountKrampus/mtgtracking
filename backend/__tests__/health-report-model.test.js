@@ -15,6 +15,7 @@ afterAll(async () => {
 
 const CollectionHealthReport = require('../models/CollectionHealthReport');
 const Notification = require('../models/Notification');
+const { createHealthReportNotification } = require('../utils/notifications');
 
 afterEach(async () => {
   await CollectionHealthReport.deleteMany({});
@@ -86,5 +87,33 @@ describe('Notification: collection_health_report type', () => {
     expect(notif._id).toBeDefined();
     expect(notif.fromUserId).toBeUndefined();
     expect(notif.healthReportId.toString()).toBe(reportId.toString());
+  });
+});
+
+describe('createHealthReportNotification', () => {
+  afterEach(async () => {
+    await Notification.deleteMany({});
+  });
+
+  test('creates a collection_health_report notification referencing the report and summarizing the value delta', async () => {
+    const userId = new mongoose.Types.ObjectId();
+    const reportId = new mongoose.Types.ObjectId();
+
+    const notif = await createHealthReportNotification(userId, reportId, { delta: 12.5, deltaPercent: 8.2 });
+
+    expect(notif).not.toBeNull();
+    expect(notif.type).toBe('collection_health_report');
+    expect(notif.userId.toString()).toBe(userId.toString());
+    expect(notif.healthReportId.toString()).toBe(reportId.toString());
+    expect(notif.content).toContain('+$12.50');
+  });
+
+  test('formats a negative value delta with a minus sign', async () => {
+    const userId = new mongoose.Types.ObjectId();
+    const reportId = new mongoose.Types.ObjectId();
+
+    const notif = await createHealthReportNotification(userId, reportId, { delta: -7, deltaPercent: -3.1 });
+
+    expect(notif.content).toContain('-$7.00');
   });
 });

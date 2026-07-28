@@ -172,11 +172,38 @@ async function createPriceAlertNotification(userId, cardId, cardName, targetPric
   }
 }
 
+/**
+ * Create a collection health report notification (system-generated, no fromUserId required)
+ *
+ * @param {string|ObjectId} userId - User the report belongs to
+ * @param {string|ObjectId} reportId - CollectionHealthReport document ID
+ * @param {object} valueChange - { delta, deltaPercent } from the generated report
+ * @returns {object} Created notification or null on error
+ */
+async function createHealthReportNotification(userId, reportId, valueChange) {
+  try {
+    const delta = valueChange?.delta || 0;
+    const sign = delta >= 0 ? '+' : '-';
+    const content = `Your weekly collection health report is ready (value ${sign}$${Math.abs(delta).toFixed(2)} this week)`;
+    const notification = await Notification.create({
+      userId,
+      type: 'collection_health_report',
+      healthReportId: reportId,
+      content: content.substring(0, 200)
+    });
+    return notification;
+  } catch (error) {
+    console.error('Error creating collection health report notification:', error);
+    return null;
+  }
+}
+
 module.exports = {
   extractMentions,
   createNotification,
   createMentionNotifications,
   createReplyNotification,
   createUpvoteNotification,
-  createPriceAlertNotification
+  createPriceAlertNotification,
+  createHealthReportNotification
 };
