@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Upload, Plus, X } from 'lucide-react';
+import DeckShellExtractor from './DeckShellExtractor';
 
 // Helper: build a nested folder tree from a flat array
 function buildFolderTree(folders, parentId = null) {
@@ -62,6 +63,7 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck
   const [newDeckName, setNewDeckName] = useState('');
   const [newDeckFormat, setNewDeckFormat] = useState('commander');
   const [showSleeveCalc, setShowSleeveCalc] = useState(false);
+  const [showStaples, setShowStaples] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Folder state
@@ -283,6 +285,7 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck
         </div>
         <div className="flex gap-2 flex-wrap">
           <button onClick={() => setShowSleeveCalc(true)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center gap-2 transition">Calculate Sleeves</button>
+          <button onClick={() => setShowStaples(true)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold flex items-center gap-2 transition">Find Staples</button>
           <button onClick={() => setShowCreateModal(true)} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold flex items-center gap-2 transition"><Plus size={20} />New Deck</button>
           <button onClick={onImportClick} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold flex items-center gap-2 transition"><Upload size={20} />Import Deck</button>
         </div>
@@ -425,6 +428,11 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck
             </div>
           </div>
         </div>
+      )}
+
+      {/* Deck Shell Extractor Modal */}
+      {showStaples && (
+        <DeckShellExtractor decks={decks} onClose={() => setShowStaples(false)} />
       )}
 
       {/* Create New Deck Modal */}
