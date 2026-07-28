@@ -23,6 +23,8 @@ const ForumLevel = require('../models/ForumLevel');
 const Cosmetic = require('../models/Cosmetic');
 const { checkAndAwardBadges } = require('../utils/badgeManager');
 const forumCache = require('../cache/forumCache');
+const ContentReport = require('../models/ContentReport');
+const { computeSuggestedAction } = require('../models/ContentReport');
 
 // POST /api/forum/categories - Create category (admin only)
 router.post('/categories', verifyToken, requireAuth, requirePermission('forum:moderate'), async (req, res) => {
@@ -1994,6 +1996,75 @@ router.get('/feed', verifyToken, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: 'Error fetching feed', error: err.message });
+  }
+});
+
+// POST /api/forum/report
+router.post('/report', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { contentId, contentType, reason } = req.body;
+
+    if (!contentId || !contentType || !reason) {
+      return res.status(400).json({ message: 'contentId, contentType, and reason are required' });
+    }
+
+    if (!['post', 'thread'].includes(contentType)) {
+      return res.status(400).json({ message: 'contentType must be post or thread' });
+    }
+
+    if (!['spam', 'harassment', 'off-topic', 'other'].includes(reason)) {
+      return res.status(400).json({ message: 'Invalid reason' });
+    }
+
+    // Rate-limit: max 5 reports per user per hour
+    const recentCount = await ContentReport.countDocuments({
+      reportedBy: req.user._id,
+      createdAt: { $gte: new Date(Date.now() - 3600000) },
+    });
+    if (recentCount >= 5) {
+      return res.status(429).json({ message: 'Reporting too frequently. Please wait before submitting more reports.' });
+    }
+
+    // Duplicate check: same user + same content already pending
+    const existing = await ContentReport.findOne({
+      contentId,
+      reportedBy: req.user._id,
+      status: 'pending',
+    });
+    if (existing) {
+      return res.status(409).json({ message: 'You have already reported this content.' });
+    }
+
+    // Count existing pending reports for this content
+    const pendingCount = await ContentReport.countDocuments({ contentId, status: 'pending' });
+
+    const suggestedAction = computeSuggestedAction('user', reason, pendingCount);
+
+    const report = await ContentReport.create({
+      contentId,
+      contentType,
+      reportedBy: req.user._id,
+      reason,
+      source: 'user',
+      status: 'pending',
+      suggestedAction,
+    });
+
+    // Auto-hide if total pending (including new report) reaches 3
+    const newTotal = pendingCount + 1;
+    if (newTotal >= 3) {
+      const hiddenData = { isHidden: true, hiddenReason: 'Auto-hidden: multiple reports' };
+      if (contentType === 'post') {
+        await ForumPost.findByIdAndUpdate(contentId, hiddenData);
+      } else {
+        await ForumThread.findByIdAndUpdate(contentId, hiddenData);
+      }
+    }
+
+    return res.status(201).json({ message: 'Report submitted', report });
+  } catch (err) {
+    console.error('Error submitting report:', err);
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 
