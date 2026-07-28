@@ -24,6 +24,16 @@ import { LogCreators } from './GameLog';
 
 const STORAGE_KEY = 'mtg-life-counter';
 const SAVE_EXPIRY_HOURS = 24;
+const SNAPSHOTS_KEY = 'mtg-life-counter-snapshots';
+const MAX_SNAPSHOTS = 10;
+
+function loadSnapshots() {
+  try {
+    return JSON.parse(localStorage.getItem(SNAPSHOTS_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
 
 function LifeCounter({ onBack }) {
   const [gamePhase, setGamePhase] = useState('setup'); // 'setup' | 'game' | 'resume'
@@ -56,6 +66,7 @@ function LifeCounter({ onBack }) {
   const [gameStartTime, setGameStartTime] = useState(null);
   const [useLandscapeLayout, setUseLandscapeLayout] = useState(false);
   const [showTriggerReminders, setShowTriggerReminders] = useState(false);
+  const [snapshots, setSnapshots] = useState(loadSnapshots);
   const [settings, setSettings] = useState({
     soundEnabled: true,
     soundVolume: 0.5,
@@ -113,7 +124,8 @@ function LifeCounter({ onBack }) {
     resetTurnTracking,
     nextTurnSkipEliminated,
     advancePhase,
-    setPhase
+    setPhase,
+    restoreTurnState
   } = useTurnTracking(playerCount);
 
   // Check for saved game on mount
@@ -323,6 +335,51 @@ function LifeCounter({ onBack }) {
     if (player && pw) {
       addLogEntry(LogCreators.planeswalkerRemoved(player.name, pw.name));
     }
+  };
+
+  // Handle saving a manual game snapshot (checkpoint) — complements the
+  // continuous single-slot auto-save with multiple named, restorable points.
+  const handleSaveSnapshot = (label) => {
+    const snapshot = {
+      id: Date.now() + Math.random(),
+      label: label || `Turn ${turnNumber}`,
+      savedAt: Date.now(),
+      players,
+      gameFormat,
+      playerCount,
+      turnNumber,
+      currentPlayerIndex,
+      stormCount,
+    };
+    setSnapshots(prev => {
+      const next = [...prev, snapshot].slice(-MAX_SNAPSHOTS);
+      localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(next));
+      return next;
+    });
+    addLogEntry(LogCreators.snapshotSaved(snapshot.label, turnNumber));
+    if (settings.soundEnabled) playSound('success');
+  };
+
+  // Handle restoring a manual snapshot
+  const handleRestoreSnapshot = (snapshot) => {
+    loadGameState(snapshot);
+    setPlayerCount(snapshot.playerCount);
+    restoreTurnState({
+      currentPlayerIndex: snapshot.currentPlayerIndex,
+      turnNumber: snapshot.turnNumber,
+      stormCount: snapshot.stormCount,
+    });
+    addLogEntry(LogCreators.snapshotRestored(snapshot.label, snapshot.turnNumber));
+    if (settings.soundEnabled) playSound('success');
+  };
+
+  // Handle deleting a manual snapshot
+  const handleDeleteSnapshot = (snapshotId) => {
+    setSnapshots(prev => {
+      const next = prev.filter(s => s.id !== snapshotId);
+      localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(next));
+      return next;
+    });
   };
 
   // Handle mana change
@@ -998,6 +1055,10 @@ function LifeCounter({ onBack }) {
           gameLog={gameLog}
           onAddLog={addLogEntry}
           onLifeChange={handleLifeChange}
+          snapshots={snapshots}
+          onSaveSnapshot={handleSaveSnapshot}
+          onRestoreSnapshot={handleRestoreSnapshot}
+          onDeleteSnapshot={handleDeleteSnapshot}
           soundEnabled={settings.soundEnabled}
           playSound={playSound}
         />

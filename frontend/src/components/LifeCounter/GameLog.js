@@ -233,6 +233,16 @@ export const LogCreators = {
     return createLogEntry('mechanic', message);
   },
 
+  snapshotSaved: (label, turnNumber) => {
+    const message = `Checkpoint saved: "${label}" (Turn ${turnNumber})`;
+    return createLogEntry('mechanic', message);
+  },
+
+  snapshotRestored: (label, turnNumber) => {
+    const message = `Restored checkpoint: "${label}" (Turn ${turnNumber})`;
+    return createLogEntry('mechanic', message);
+  },
+
   gameStart: (format, playerCount) => {
     const message = `Game started: ${format} with ${playerCount} players`;
     return createLogEntry('turn', message);

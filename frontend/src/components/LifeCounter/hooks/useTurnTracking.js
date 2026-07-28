@@ -143,6 +143,13 @@ function useTurnTracking(playerCount = 4) {
     setCurrentPhase('upkeep');
   }, [playerCount]);
 
+  // Bulk-restore turn state from a saved snapshot (auto-save/manual checkpoint)
+  const restoreTurnState = useCallback(({ currentPlayerIndex: idx, turnNumber: turn, stormCount: storm }) => {
+    if (idx !== undefined) setCurrentPlayerIndex(idx);
+    if (turn !== undefined) setTurnNumber(turn);
+    if (storm !== undefined) setStormCount(storm);
+  }, []);
+
   return {
     // State
     currentPlayerIndex,
@@ -165,6 +172,7 @@ function useTurnTracking(playerCount = 4) {
     advancePhase,
     resetPhase,
     setPhase,
+    restoreTurnState,
 
     // Computed
     allPassedPriority: passedPriority.length >= playerCount,
