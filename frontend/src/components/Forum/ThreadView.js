@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Trash2, History, Lock, Unlock, RefreshCw, X } from 'lucide-react';
+import { Edit2, Trash2, History, Lock, Unlock, RefreshCw, X, Flag } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import PostComposer from './PostComposer';
 import PostEditHistory from './PostEditHistory';
@@ -43,6 +43,91 @@ function findPostById(nodes, id) {
   return null;
 }
 
+export function ReportModal({ apiUrl, contentId, contentType, onClose }) {
+  const [reason, setReason] = useState('other');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('mtg_access_token');
+      const res = await fetch(`${apiUrl}/forum/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ contentId, contentType, reason }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || 'Failed to submit report');
+      } else {
+        setSuccess(true);
+        setTimeout(onClose, 1500);
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+      <div className="bg-gray-900 border border-white/20 rounded-lg p-6 w-full max-w-sm shadow-xl">
+        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <Flag size={18} />
+          Report Content
+        </h3>
+
+        {success ? (
+          <p className="text-green-400 text-sm">Report submitted. Thank you.</p>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="report-reason" className="block text-sm font-medium mb-1">
+              Reason
+            </label>
+            <select
+              id="report-reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="w-full bg-white/10 border border-white/20 rounded px-2 py-1 text-sm mb-3"
+            >
+              <option value="spam">Spam</option>
+              <option value="harassment">Harassment</option>
+              <option value="off-topic">Off-topic</option>
+              <option value="other">Other</option>
+            </select>
+
+            {error && (
+              <p className="text-red-400 text-xs mb-2">{error}</p>
+            )}
+
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-sm font-medium disabled:opacity-50"
+              >
+                {submitting ? 'Submitting…' : 'Submit'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const BADGE_EMOJI = {
   'First Post': '📝',
   'Century': '💬',
@@ -53,7 +138,7 @@ const BADGE_EMOJI = {
   'Engaged Member': '🌟'
 };
 
-function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost, onEditPost, editingPostId, editBody, setEditingPostId, setEditBody, setHistoryPostId }) {
+function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost, onEditPost, onReportPost, editingPostId, editBody, setEditingPostId, setEditBody, setHistoryPostId }) {
   const [hoverPos, setHoverPos] = useState(null);
   const ac = post.authorCosmetics || {};
 
@@ -175,6 +260,16 @@ function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost,
             </div>
           </div>
         </div>
+        {user && user._id !== post.authorId._id && (
+          <button
+            onClick={() => onReportPost(post._id)}
+            className="p-1 text-white/40 hover:text-red-400 transition-colors"
+            title="Report post"
+            aria-label="Report post"
+          >
+            <Flag size={16} />
+          </button>
+        )}
         {user && (user._id === post.authorId._id || user.role === 'admin') && (
           <div className="flex gap-2">
             {user._id === post.authorId._id && (
@@ -261,6 +356,7 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
   const [newTitle, setNewTitle] = useState('');
   const [categories, setCategories] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [reportTarget, setReportTarget] = useState(null); // { contentId, contentType }
 
   useEffect(() => {
     if (!threadId) return;
@@ -482,6 +578,16 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
           <div className="mb-6 pb-6 border-b border-slate-700">
             <div className="flex items-start justify-between mb-2">
               <h1 className="text-3xl font-bold text-white">{thread.title}</h1>
+              {user && user._id !== thread.authorId?._id && (
+                <button
+                  onClick={() => setReportTarget({ contentId: thread._id, contentType: 'thread' })}
+                  className="p-1 text-white/40 hover:text-red-400 transition-colors"
+                  title="Report thread"
+                  aria-label="Report thread"
+                >
+                  <Flag size={16} />
+                </button>
+              )}
               {user?.role === 'admin' && (
                 <div className="flex gap-2">
                   <button
@@ -648,6 +754,7 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
                 onViewProfile={onViewProfile}
                 onDeletePost={handleDeletePost}
                 onEditPost={handleEditPost}
+                onReportPost={(postId) => setReportTarget({ contentId: postId, contentType: 'post' })}
                 editingPostId={editingPostId}
                 editBody={editBody}
                 setEditingPostId={setEditingPostId}
@@ -695,6 +802,15 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
             />
           )}
         </>
+      )}
+
+      {reportTarget && (
+        <ReportModal
+          apiUrl={apiUrl}
+          contentId={reportTarget.contentId}
+          contentType={reportTarget.contentType}
+          onClose={() => setReportTarget(null)}
+        />
       )}
     </div>
   );
