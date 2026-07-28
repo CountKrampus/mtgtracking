@@ -59,11 +59,58 @@ function startOfISOWeek(date) {
   return d;
 }
 
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+// Orchestrates one report for one user. Models are passed in explicitly (Card, ValueSnapshot,
+// CardPriceSnapshot, CollectionHealthReport) rather than required at the top of this module,
+// because Card is registered dynamically by server.js at runtime (see backend/server.js:398)
+// and isn't a requirable file — callers (the weekly job, the admin run-now route, and tests)
+// each resolve/construct the Card model themselves and pass it in.
+async function generateHealthReportForUser(userId, models) {
+  const { Card, ValueSnapshot, CardPriceSnapshot, CollectionHealthReport } = models;
+
+  const cards = await Card.find({ userId }).lean();
+  const conditionBreakdown = computeConditionBreakdown(cards);
+
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - WEEK_MS);
+
+  const latestSnapshot = await ValueSnapshot.findOne({ userId }).sort({ createdAt: -1 }).lean();
+  const weekAgoSnapshot = await ValueSnapshot.findOne({
+    userId,
+    createdAt: { $lte: weekAgo }
+  }).sort({ createdAt: -1 }).lean();
+
+  const valueChange = computeValueChange(weekAgoSnapshot?.value, latestSnapshot?.value);
+
+  const priceWeekAgoByCardId = new Map();
+  for (const card of cards) {
+    const snap = await CardPriceSnapshot.findOne({
+      cardId: card._id,
+      createdAt: { $lte: weekAgo }
+    }).sort({ createdAt: -1 }).lean();
+    if (snap) {
+      priceWeekAgoByCardId.set(card._id.toString(), snap.price);
+    }
+  }
+
+  const upgradeSuggestions = computeUpgradeSuggestions(cards, priceWeekAgoByCardId);
+
+  return CollectionHealthReport.create({
+    userId,
+    weekOf: startOfISOWeek(now),
+    conditionBreakdown,
+    valueChange,
+    upgradeSuggestions
+  });
+}
+
 module.exports = {
   PRICE_DROP_THRESHOLD_PCT,
   PRICE_DROP_MIN_PRICE,
   computeConditionBreakdown,
   computeValueChange,
   computeUpgradeSuggestions,
-  startOfISOWeek
+  startOfISOWeek,
+  generateHealthReportForUser
 };
