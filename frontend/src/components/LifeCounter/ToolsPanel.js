@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Wrench, X, Dices, Shuffle, Clock, ScrollText } from 'lucide-react';
+import { Wrench, X, Dices, Shuffle, Clock, ScrollText, Swords } from 'lucide-react';
 import DiceRoller from './DiceRoller';
 import RandomPicker from './RandomPicker';
 import ChessClock from './ChessClock';
 import GameLog from './GameLog';
+import CombatCalculator from './CombatCalculator';
 
 const TOOLS = [
   { id: 'dice', name: 'Dice Roller', icon: Dices, color: '#9333ea' },
   { id: 'random', name: 'Random Player', icon: Shuffle, color: '#16a34a' },
   { id: 'clock', name: 'Chess Clock', icon: Clock, color: '#2563eb' },
-  { id: 'log', name: 'Game Log', icon: ScrollText, color: '#f59e0b' }
+  { id: 'log', name: 'Game Log', icon: ScrollText, color: '#f59e0b' },
+  { id: 'combat', name: 'Combat Calculator', icon: Swords, color: '#dc2626' }
 ];
 
 function ToolsPanel({
@@ -23,6 +25,7 @@ function ToolsPanel({
   onDiceRoll,
   onRandomPick,
   onTimeUp,
+  onLifeChange,
   soundEnabled,
   playSound,
   compact = false
@@ -87,6 +90,8 @@ function ToolsPanel({
         );
       case 'log':
         return <GameLog logs={gameLog} onClear={handleClearLogs} compact={compact} />;
+      case 'combat':
+        return <CombatCalculator players={players} onLifeChange={onLifeChange} compact={compact} />;
       default:
         return null;
     }

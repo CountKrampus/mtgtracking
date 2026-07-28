@@ -922,6 +922,7 @@ function LifeCounter({ onBack }) {
           currentPlayerIndex={currentPlayerIndex}
           gameLog={gameLog}
           onAddLog={addLogEntry}
+          onLifeChange={handleLifeChange}
           soundEnabled={settings.soundEnabled}
           playSound={playSound}
         />
