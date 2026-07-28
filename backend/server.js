@@ -19,6 +19,7 @@ const { buildUserQuery, getUserId } = require('./middleware/multiUser');
 const { activityLoggers } = require('./middleware/activityLogger');
 const { getPriceWithFallback } = require('./utils/pricing');
 const { registerDailySnapshotJob } = require('./jobs/dailyPriceSnapshot');
+const { registerWeeklyHealthReportJob } = require('./jobs/weeklyHealthReport');
 const SystemSettings = require('./models/SystemSettings');
 const UserColumnPreferences = require('./models/UserColumnPreferences');
 const CardValueSnapshot = require('./models/CardValueSnapshot');
@@ -167,6 +168,9 @@ app.use('/api/notifications', notificationsRouter);
 
 // Mount messages routes
 app.use('/api/messages', messagesRouter);
+
+// Mount health report routes
+app.use('/api/health-report', require('./routes/healthReport'));
 
 // Mount trades routes
 app.use('/api/trades', require('./routes/trades'));
@@ -3209,3 +3213,4 @@ app.listen(PORT, () => {
 });
 
 registerDailySnapshotJob();
+registerWeeklyHealthReportJob();
