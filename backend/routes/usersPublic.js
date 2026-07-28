@@ -5,6 +5,7 @@ const User = require('../models/User');
 const ForumLevel = require('../models/ForumLevel');
 const Cosmetic = require('../models/Cosmetic');
 const Deck = require('../models/Deck');
+const { verifyToken, requireAuth } = require('../middleware/auth');
 
 /**
  * Get (or lazily register) the Card model.
@@ -150,6 +151,62 @@ router.get('/:username/public-profile', async (req, res) => {
   } catch (e) {
     console.error('public-profile error:', e);
     res.status(500).json({ message: e.message });
+  }
+});
+
+/**
+ * GET /api/users/:username/compare — compare collections for trade targets.
+ * Requires auth (unlike public-profile above, which is intentionally public).
+ */
+router.get('/:username/compare', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const Card = getCardModel();
+
+    const targetUser = await User.findOne({ username: req.params.username });
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    if (!targetUser.privacy?.showCollection) {
+      return res.status(403).json({ message: "This user's collection is private." });
+    }
+
+    const [myCards, theirCards] = await Promise.all([
+      Card.find({ userId: req.user._id }, 'name set price imageUrl scryfallId condition quantity'),
+      Card.find({ userId: targetUser._id }, 'name set price imageUrl scryfallId condition quantity'),
+    ]);
+
+    const myNames = new Set(myCards.map(c => c.name.toLowerCase()));
+    const theirNames = new Set(theirCards.map(c => c.name.toLowerCase()));
+
+    const theyHaveYouDont = theirCards
+      .filter(c => !myNames.has(c.name.toLowerCase()))
+      .sort((a, b) => (b.price || 0) - (a.price || 0))
+      .slice(0, 200);
+
+    const youHaveTheyDont = myCards
+      .filter(c => !theirNames.has(c.name.toLowerCase()))
+      .sort((a, b) => (b.price || 0) - (a.price || 0))
+      .slice(0, 200);
+
+    const theirTotal = theyHaveYouDont.reduce((s, c) => s + (c.price || 0), 0);
+    const yourTotal = youHaveTheyDont.reduce((s, c) => s + (c.price || 0), 0);
+
+    return res.json({
+      targetUser: {
+        username: targetUser.username,
+        avatarUrl: targetUser.avatarUrl || '',
+        reputation: targetUser.reputation || 0,
+      },
+      theyHaveYouDont,
+      youHaveTheyDont,
+      theirTotal,
+      yourTotal,
+      balance: theirTotal - yourTotal,
+    });
+  } catch (err) {
+    console.error('Compare route error:', err);
+    return res.status(500).json({ message: 'Server error during comparison.' });
   }
 });
 
