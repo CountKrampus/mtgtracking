@@ -4,10 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import {
   Search, Trash2, Edit2, Save, X, RefreshCw, DollarSign, Camera, Settings,
   CheckSquare, Square, MapPin, Layers, Zap, Crown, BarChart3, Heart, Plus, SlidersHorizontal, Bookmark,
-  Upload, PlusCircle, ExternalLink
+  Upload, PlusCircle, ExternalLink, Mic
 } from 'lucide-react';
 import { standardTypes } from '../constants';
 import { buildScryfallSearchUrl } from '../utils/scryfallDeeplink';
+import useVoiceSearch from '../hooks/useVoiceSearch';
 import { useCardCollection } from '../contexts/CardCollectionContext';
 import { useLocationTag } from '../contexts/LocationTagContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -312,6 +313,9 @@ function CollectionView({
     () => buildScryfallSearchUrl({ searchTerm, filterColor, filterType, filterRarity, filterSet, filterSpecial, cards }),
     [searchTerm, filterColor, filterType, filterRarity, filterSet, filterSpecial, cards]
   );
+
+  const handleVoiceResult = useCallback((transcript) => setSearchTerm(transcript), []);
+  const { isSupported: voiceSearchSupported, isListening: voiceListening, start: startVoiceSearch } = useVoiceSearch(handleVoiceResult);
 
   const applyPreset = (filters) => {
     setSearchTerm(filters.searchTerm ?? '');
@@ -787,8 +791,17 @@ function CollectionView({
                     placeholder="Search cards..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2.5 bg-white/20 border border-white/30 rounded-xl text-white text-base placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400 min-h-[44px]"
+                    className="w-full pl-9 pr-9 py-2.5 bg-white/20 border border-white/30 rounded-xl text-white text-base placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400 min-h-[44px]"
                   />
+                  {voiceSearchSupported && (
+                    <button
+                      onClick={startVoiceSearch}
+                      title="Search by voice"
+                      className={`absolute right-2 top-2 p-1 rounded-lg transition ${voiceListening ? 'text-red-400 animate-pulse' : 'text-white/60 hover:text-white'}`}
+                    >
+                      <Mic size={18} />
+                    </button>
+                  )}
                 </div>
                 <button
                   onClick={() => setShowMobileFilters(true)}
@@ -841,13 +854,21 @@ function CollectionView({
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-10 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
               />
-              {searchTerm && (
+              {searchTerm ? (
                 <button
                   onClick={() => setSearchTerm('')}
                   className="absolute right-3 top-3 text-white/60 hover:text-white transition"
                   title="Clear search"
                 >
                   <X size={20} />
+                </button>
+              ) : voiceSearchSupported && (
+                <button
+                  onClick={startVoiceSearch}
+                  title="Search by voice"
+                  className={`absolute right-3 top-3 transition ${voiceListening ? 'text-red-400 animate-pulse' : 'text-white/60 hover:text-white'}`}
+                >
+                  <Mic size={20} />
                 </button>
               )}
             </div>
