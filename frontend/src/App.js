@@ -62,6 +62,7 @@ const SpoilerSeasonIntegration = React.lazy(() => import('./components/Tools/Spo
 // View components (lazy)
 const CollectionView = React.lazy(() => import('./components/CollectionView'));
 const WishlistView = React.lazy(() => import('./components/WishlistView'));
+const CollectionHealthReportView = React.lazy(() => import('./components/CollectionHealthReportView'));
 const TradingBoard = React.lazy(() => import('./components/TradingBoard'));
 
 // Set up axios interceptor to add auth headers to all requests
@@ -875,6 +876,12 @@ function App() {
             <Route path="/wishlist" element={
               <Suspense fallback={<LoadingFallback />}>
                 <WishlistView />
+              </Suspense>
+            } />
+
+            <Route path="/health-report" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <CollectionHealthReportView />
               </Suspense>
             } />
 
