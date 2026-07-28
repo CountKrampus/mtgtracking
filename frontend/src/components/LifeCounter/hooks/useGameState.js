@@ -20,7 +20,10 @@ export const ACTIONS = {
   SET_ELIMINATED: 'SET_ELIMINATED',
   UPDATE_PLAYER: 'UPDATE_PLAYER',
   RESET_GAME: 'RESET_GAME',
-  SET_PLAYERS: 'SET_PLAYERS'
+  SET_PLAYERS: 'SET_PLAYERS',
+  ADD_PLANESWALKER: 'ADD_PLANESWALKER',
+  CHANGE_PLANESWALKER_LOYALTY: 'CHANGE_PLANESWALKER_LOYALTY',
+  REMOVE_PLANESWALKER: 'REMOVE_PLANESWALKER'
 };
 
 // Default player state structure
@@ -48,6 +51,7 @@ export const createDefaultPlayer = (id, name, startingLife = 40, color = '#6366f
   },
   ringProgress: 0, // 0-4 for Ring tempts you
   citysBlessing: false,
+  planeswalkers: [], // [{ id, name, loyalty }]
   color,
   timer: {
     remaining: 0,
@@ -343,6 +347,50 @@ function gameReducer(state, action) {
       };
     }
 
+    case ACTIONS.ADD_PLANESWALKER: {
+      const { playerId, planeswalker } = action.payload;
+      return {
+        ...state,
+        players: players.map(p => {
+          if (p.id === playerId) {
+            return { ...p, planeswalkers: [...(p.planeswalkers || []), planeswalker] };
+          }
+          return p;
+        })
+      };
+    }
+
+    case ACTIONS.CHANGE_PLANESWALKER_LOYALTY: {
+      const { playerId, planeswalkerId, amount } = action.payload;
+      return {
+        ...state,
+        players: players.map(p => {
+          if (p.id === playerId) {
+            return {
+              ...p,
+              planeswalkers: (p.planeswalkers || []).map(pw =>
+                pw.id === planeswalkerId ? { ...pw, loyalty: pw.loyalty + amount } : pw
+              )
+            };
+          }
+          return p;
+        })
+      };
+    }
+
+    case ACTIONS.REMOVE_PLANESWALKER: {
+      const { playerId, planeswalkerId } = action.payload;
+      return {
+        ...state,
+        players: players.map(p => {
+          if (p.id === playerId) {
+            return { ...p, planeswalkers: (p.planeswalkers || []).filter(pw => pw.id !== planeswalkerId) };
+          }
+          return p;
+        })
+      };
+    }
+
     case ACTIONS.UPDATE_PLAYER: {
       const { playerId, updates } = action.payload;
       return {
@@ -370,7 +418,8 @@ function gameReducer(state, action) {
           counters: { energy: 0, experience: 0, custom: {} },
           manaPool: { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 },
           ringProgress: 0,
-          citysBlessing: false
+          citysBlessing: false,
+          planeswalkers: []
         }))
       };
     }
@@ -459,6 +508,7 @@ function useGameState(initialGameFormat = 'commander') {
       manaPool: p.manaPool || { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 },
       ringProgress: p.ringProgress || 0,
       citysBlessing: p.citysBlessing || false,
+      planeswalkers: p.planeswalkers || [],
       color: p.color || PLAYER_COLORS[(p.id - 1) % PLAYER_COLORS.length].value
     }));
 
@@ -537,6 +587,18 @@ function useGameState(initialGameFormat = 'commander') {
     resetGame: (startingLife) => dispatch({
       type: ACTIONS.RESET_GAME,
       payload: { startingLife }
+    }),
+    addPlaneswalker: (playerId, planeswalker) => dispatch({
+      type: ACTIONS.ADD_PLANESWALKER,
+      payload: { playerId, planeswalker }
+    }),
+    changePlaneswalkerLoyalty: (playerId, planeswalkerId, amount) => dispatch({
+      type: ACTIONS.CHANGE_PLANESWALKER_LOYALTY,
+      payload: { playerId, planeswalkerId, amount }
+    }),
+    removePlaneswalker: (playerId, planeswalkerId) => dispatch({
+      type: ACTIONS.REMOVE_PLANESWALKER,
+      payload: { playerId, planeswalkerId }
     })
   }), [dispatch]);
 

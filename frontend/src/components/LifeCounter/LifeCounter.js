@@ -87,6 +87,9 @@ function LifeCounter({ onBack }) {
     resetGame,
     setRingProgress,
     setCitysBlessing,
+    addPlaneswalker,
+    changePlaneswalkerLoyalty,
+    removePlaneswalker,
     undo,
     redo,
     canUndo,
@@ -152,7 +155,11 @@ function LifeCounter({ onBack }) {
 
   // Add log entry helper
   const addLogEntry = useCallback((entry) => {
-    setGameLog(prev => [...prev, { ...entry, id: Date.now() }]);
+    // Preserve the unique id createLogEntry() already generates (Date.now() + Math.random());
+    // overwriting it with a plain Date.now() caused key collisions whenever two entries were
+    // logged within the same millisecond (e.g. a planeswalker loyalty change and its resulting
+    // destruction, logged back-to-back in the same handler).
+    setGameLog(prev => [...prev, { id: Date.now() + Math.random(), ...entry }]);
   }, []);
 
   // Handle starting a new game
@@ -270,6 +277,51 @@ function LifeCounter({ onBack }) {
     }
     if (settings.soundEnabled) {
       playSound(amount > 0 ? 'counterAdd' : 'counterRemove');
+    }
+  };
+
+  // Handle adding a planeswalker
+  const handlePlaneswalkerAdd = (playerId, planeswalker) => {
+    addPlaneswalker(playerId, planeswalker);
+    const player = players.find(p => p.id === playerId);
+    if (player) {
+      addLogEntry(LogCreators.planeswalkerAdded(player.name, planeswalker.name, planeswalker.loyalty));
+    }
+  };
+
+  // Handle planeswalker loyalty change (auto-destroys at 0 loyalty)
+  const handlePlaneswalkerLoyaltyChange = (playerId, planeswalkerId, amount) => {
+    const player = players.find(p => p.id === playerId);
+    const pw = player?.planeswalkers?.find(p => p.id === planeswalkerId);
+    if (!player || !pw) return;
+
+    const newLoyalty = pw.loyalty + amount;
+    changePlaneswalkerLoyalty(playerId, planeswalkerId, amount);
+    addLogEntry(LogCreators.planeswalkerLoyalty(player.name, pw.name, pw.loyalty, newLoyalty));
+    if (settings.soundEnabled) {
+      playSound(amount > 0 ? 'lifeGain' : 'lifeLoss');
+    }
+
+    if (newLoyalty <= 0) {
+      removePlaneswalker(playerId, planeswalkerId);
+      addLogEntry(LogCreators.planeswalkerDied(player.name, pw.name));
+      addToast({
+        type: 'warning',
+        title: `${pw.name} destroyed`,
+        message: `${player.name}'s ${pw.name} was destroyed (loyalty reached 0).`,
+        duration: 5000
+      });
+      if (settings.soundEnabled) playSound('elimination');
+    }
+  };
+
+  // Handle removing a planeswalker manually
+  const handlePlaneswalkerRemove = (playerId, planeswalkerId) => {
+    const player = players.find(p => p.id === playerId);
+    const pw = player?.planeswalkers?.find(p => p.id === planeswalkerId);
+    removePlaneswalker(playerId, planeswalkerId);
+    if (player && pw) {
+      addLogEntry(LogCreators.planeswalkerRemoved(player.name, pw.name));
     }
   };
 
@@ -842,6 +894,9 @@ function LifeCounter({ onBack }) {
             onCountersChange={(playerId, counterType, amount) => handleCountersChange(playerId, counterType, amount)}
             onManaChange={(playerId, color, amount) => handleManaChange(playerId, color, amount)}
             onCommanderDamageChange={(targetPlayerId, sourcePlayerId, amount) => handleCommanderDamageChange(targetPlayerId, sourcePlayerId, amount)}
+            onPlaneswalkerAdd={handlePlaneswalkerAdd}
+            onPlaneswalkerLoyaltyChange={handlePlaneswalkerLoyaltyChange}
+            onPlaneswalkerRemove={handlePlaneswalkerRemove}
             compact={playerCount > 4}
             isCurrentPlayer={index === currentPlayerIndex}
             isMonarch={monarch === player.id}

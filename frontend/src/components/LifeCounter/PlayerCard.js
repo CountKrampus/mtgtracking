@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Minus, Skull, Droplets, Swords, Crown, Building2, Circle, Zap, Star, Tag, Heart, Activity, Shield, Sword, Settings } from 'lucide-react';
 import CountersPanel from './CountersPanel';
+import PlaneswalkersPanel from './PlaneswalkersPanel';
 import ManaPoolTracker from './ManaPoolTracker';
 import PlayerStatusIndicators from './PlayerStatusIndicators';
 import QuickLifeControls from './QuickLifeControls';
@@ -17,6 +18,9 @@ function PlayerCard({
   onCountersChange,
   onManaChange,
   onCommanderDamageChange,
+  onPlaneswalkerAdd,
+  onPlaneswalkerLoyaltyChange,
+  onPlaneswalkerRemove,
   compact = false,
   isCurrentPlayer = false,
   isMonarch = false,
@@ -194,6 +198,16 @@ function PlayerCard({
         playerId={player.id}
         counters={player.counters}
         onCounterChange={onCountersChange}
+        compact={compact}
+      />
+
+      {/* Planeswalkers Panel */}
+      <PlaneswalkersPanel
+        playerId={player.id}
+        planeswalkers={player.planeswalkers}
+        onAdd={onPlaneswalkerAdd}
+        onLoyaltyChange={onPlaneswalkerLoyaltyChange}
+        onRemove={onPlaneswalkerRemove}
         compact={compact}
       />
 

@@ -210,6 +210,29 @@ export const LogCreators = {
     return createLogEntry('mechanic', message);
   },
 
+  planeswalkerAdded: (playerName, pwName, loyalty) => {
+    const message = `${playerName} played ${pwName} (${loyalty} loyalty)`;
+    return createLogEntry('mechanic', message);
+  },
+
+  planeswalkerLoyalty: (playerName, pwName, oldLoyalty, newLoyalty) => {
+    const diff = newLoyalty - oldLoyalty;
+    const message = diff > 0
+      ? `${playerName}'s ${pwName} gained ${diff} loyalty (${oldLoyalty} → ${newLoyalty})`
+      : `${playerName}'s ${pwName} lost ${Math.abs(diff)} loyalty (${oldLoyalty} → ${newLoyalty})`;
+    return createLogEntry('mechanic', message);
+  },
+
+  planeswalkerDied: (playerName, pwName) => {
+    const message = `${playerName}'s ${pwName} was destroyed (loyalty reached 0)`;
+    return createLogEntry('mechanic', message);
+  },
+
+  planeswalkerRemoved: (playerName, pwName) => {
+    const message = `${playerName}'s ${pwName} was removed from the board`;
+    return createLogEntry('mechanic', message);
+  },
+
   gameStart: (format, playerCount) => {
     const message = `Game started: ${format} with ${playerCount} players`;
     return createLogEntry('turn', message);
