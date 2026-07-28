@@ -21,6 +21,13 @@ export function AccountSettings({ onClose }) {
   const [privacyLoading, setPrivacyLoading] = useState(false);
   const [privacyMessage, setPrivacyMessage] = useState(null);
 
+  // Notification preferences state — initialise from current user object
+  const [notifPrefs, setNotifPrefs] = useState({
+    healthReportEnabled: user?.notificationPreferences?.healthReportEnabled ?? false
+  });
+  const [notifPrefsLoading, setNotifPrefsLoading] = useState(false);
+  const [notifPrefsMessage, setNotifPrefsMessage] = useState(null);
+
   // Profile state
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -146,6 +153,23 @@ export function AccountSettings({ onClose }) {
     setPrivacyLoading(false);
   };
 
+  const updateNotifPrefs = async (changes) => {
+    const next = { ...notifPrefs, ...changes };
+    setNotifPrefs(next);
+    setNotifPrefsLoading(true);
+    setNotifPrefsMessage(null);
+
+    const result = await updateProfile({ notificationPreferences: next });
+
+    if (result.success) {
+      setNotifPrefsMessage({ type: 'success', text: 'Notification preferences saved' });
+    } else {
+      setNotifPrefsMessage({ type: 'error', text: result.error || 'Failed to save notification preferences' });
+    }
+
+    setNotifPrefsLoading(false);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
       <div className="bg-gray-800 rounded-t-2xl sm:rounded-xl w-full sm:max-w-2xl max-h-[90vh] overflow-hidden">
@@ -157,7 +181,7 @@ export function AccountSettings({ onClose }) {
         </div>
 
         <div className="flex border-b border-gray-700">
-          {['profile', 'password', 'privacy', 'sessions', 'danger'].map((tab) => (
+          {['profile', 'password', 'privacy', 'notifications', 'sessions', 'danger'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -411,6 +435,48 @@ export function AccountSettings({ onClose }) {
               </div>
 
               {privacyLoading && (
+                <p className="text-white/40 text-xs text-center">Saving…</p>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'notifications' && (
+            <div className="space-y-4">
+              {notifPrefsMessage && (
+                <div className={`p-3 rounded-lg flex items-center gap-2 ${
+                  notifPrefsMessage.type === 'success'
+                    ? 'bg-green-500/20 text-green-200'
+                    : 'bg-red-500/20 text-red-200'
+                }`}>
+                  {notifPrefsMessage.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+                  <span>{notifPrefsMessage.text}</span>
+                </div>
+              )}
+
+              <div className="p-4 bg-gray-700/50 rounded-lg space-y-1">
+                <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Shield size={14} /> Reports
+                </h3>
+
+                <div className="flex items-center justify-between py-2">
+                  <div>
+                    <div className="text-white text-sm font-medium">Weekly collection health report</div>
+                    <div className="text-white/40 text-xs">
+                      Get a weekly notification summarizing condition breakdown, value change, and cards worth a look
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => updateNotifPrefs({ healthReportEnabled: !notifPrefs.healthReportEnabled })}
+                    disabled={notifPrefsLoading}
+                    className={`relative w-10 h-5 rounded-full transition-colors disabled:opacity-50 ${notifPrefs.healthReportEnabled ? 'bg-purple-600' : 'bg-gray-600'}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${notifPrefs.healthReportEnabled ? 'left-5' : 'left-0.5'}`} />
+                  </button>
+                </div>
+              </div>
+
+              {notifPrefsLoading && (
                 <p className="text-white/40 text-xs text-center">Saving…</p>
               )}
             </div>
