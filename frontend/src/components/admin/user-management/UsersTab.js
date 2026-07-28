@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Search, UserCog, Shield, Eye, Edit2, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { Search, UserCog, Shield, Eye, Edit2, Trash2, CheckCircle, XCircle, Mail, Award } from 'lucide-react';
 import { useAuthContext } from '../../../contexts/AuthContext';
 import { API_URL } from '../../../config';
+import BulkEmailModal from '../BulkEmailModal';
+import BulkBadgeModal from '../BulkBadgeModal';
+import Bulk2FAResetModal from '../Bulk2FAResetModal';
 
 export function UsersTab() {
   const { authFetch, user: currentUser } = useAuthContext();
@@ -13,6 +16,12 @@ export function UsersTab() {
   const [availableBadges, setAvailableBadges] = useState([]);
   const [badgeGrantState, setBadgeGrantState] = useState(null); // { userId, username, action: 'grant'|'revoke', badgeId }
   const [badgeMsg, setBadgeMsg] = useState('');
+
+  // Bulk selection state
+  const [selectedUserIds, setSelectedUserIds] = useState(new Set());
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
+  const [show2FAModal, setShow2FAModal] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -74,6 +83,11 @@ export function UsersTab() {
 
       if (response.ok) {
         setUsers(users.filter(u => u._id !== userId));
+        setSelectedUserIds(prev => {
+          const next = new Set(prev);
+          next.delete(userId);
+          return next;
+        });
       } else {
         const data = await response.json();
         alert(data.message);
@@ -104,6 +118,67 @@ export function UsersTab() {
     } catch (e) {
       setBadgeMsg(`❌ Error: ${e.message}`);
     }
+  };
+
+  // ── Bulk selection helpers ────────────────────────────────────────────────
+
+  const toggleRowSelection = (userId) => {
+    setSelectedUserIds(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+      }
+      return next;
+    });
+  };
+
+  const isPageAllSelected = filteredUsers.length > 0 &&
+    filteredUsers.every(u => selectedUserIds.has(u._id));
+
+  const toggleSelectAllPage = () => {
+    if (isPageAllSelected) {
+      setSelectedUserIds(prev => {
+        const next = new Set(prev);
+        filteredUsers.forEach(u => next.delete(u._id));
+        return next;
+      });
+    } else {
+      setSelectedUserIds(prev => {
+        const next = new Set(prev);
+        filteredUsers.forEach(u => next.add(u._id));
+        return next;
+      });
+    }
+  };
+
+  const handleSelectAllMatching = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      const response = await authFetch(`${API_URL}/admin/users/bulk-select?${params.toString()}`);
+      const ids = await response.json();
+      if (Array.isArray(ids)) {
+        setSelectedUserIds(prev => {
+          const next = new Set(prev);
+          ids.forEach(id => next.add(id));
+          return next;
+        });
+      }
+    } catch (err) {
+      console.error('Failed to select all matching users', err);
+    }
+  };
+
+  const clearSelection = () => setSelectedUserIds(new Set());
+
+  const handleBulkActionSuccess = () => {
+    clearSelection();
+    setShowEmailModal(false);
+    setShowBadgeModal(false);
+    setShow2FAModal(false);
+    fetchUsers();
   };
 
   const getRoleBadge = (role) => {
@@ -159,6 +234,12 @@ export function UsersTab() {
             className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
         </div>
+        <button
+          onClick={handleSelectAllMatching}
+          className="text-sm text-purple-400 hover:text-purple-300 whitespace-nowrap"
+        >
+          Select all matching filter
+        </button>
         <span className="text-gray-400">{filteredUsers.length} users</span>
       </div>
 
@@ -166,6 +247,14 @@ export function UsersTab() {
         <table className="w-full min-w-[600px]">
           <thead className="bg-gray-700">
             <tr>
+              <th className="px-4 py-3 text-left">
+                <input
+                  type="checkbox"
+                  checked={isPageAllSelected}
+                  onChange={toggleSelectAllPage}
+                  className="rounded border-gray-500 text-purple-500 focus:ring-purple-500"
+                />
+              </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">User</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Role</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Status</th>
@@ -175,7 +264,18 @@ export function UsersTab() {
           </thead>
           <tbody className="divide-y divide-gray-600">
             {filteredUsers.map((user) => (
-              <tr key={user._id} className="hover:bg-gray-700/50">
+              <tr
+                key={user._id}
+                className={`hover:bg-gray-700/50 ${selectedUserIds.has(user._id) ? 'bg-purple-900/10' : ''}`}
+              >
+                <td className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedUserIds.has(user._id)}
+                    onChange={() => toggleRowSelection(user._id)}
+                    className="rounded border-gray-500 text-purple-500 focus:ring-purple-500"
+                  />
+                </td>
                 <td className="px-4 py-3 min-w-0">
                   <div className="min-w-0">
                     <p className="text-white font-medium truncate">{user.displayName || user.username}</p>
@@ -311,6 +411,65 @@ export function UsersTab() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Floating action bar — fixed bottom, z-50, only shown when users are selected */}
+      {selectedUserIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl px-5 py-3 flex items-center gap-4">
+          <span className="text-white font-medium text-sm">
+            {selectedUserIds.size} {selectedUserIds.size === 1 ? 'user' : 'users'} selected
+          </span>
+          <button
+            onClick={clearSelection}
+            className="text-gray-400 hover:text-gray-200 text-sm underline"
+          >
+            Clear
+          </button>
+          <div className="w-px h-5 bg-gray-600" />
+          <button
+            onClick={() => setShowEmailModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium"
+          >
+            <Mail size={15} />
+            Email
+          </button>
+          <button
+            onClick={() => setShowBadgeModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-sm font-medium"
+          >
+            <Award size={15} />
+            Badge
+          </button>
+          <button
+            onClick={() => setShow2FAModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-sm font-medium"
+          >
+            <Shield size={15} />
+            2FA Reset
+          </button>
+        </div>
+      )}
+
+      {showEmailModal && (
+        <BulkEmailModal
+          userIds={Array.from(selectedUserIds)}
+          onClose={() => setShowEmailModal(false)}
+          onSuccess={handleBulkActionSuccess}
+        />
+      )}
+      {showBadgeModal && (
+        <BulkBadgeModal
+          userIds={Array.from(selectedUserIds)}
+          onClose={() => setShowBadgeModal(false)}
+          onSuccess={handleBulkActionSuccess}
+        />
+      )}
+      {show2FAModal && (
+        <Bulk2FAResetModal
+          userIds={Array.from(selectedUserIds)}
+          onClose={() => setShow2FAModal(false)}
+          onSuccess={handleBulkActionSuccess}
+        />
       )}
     </div>
   );
