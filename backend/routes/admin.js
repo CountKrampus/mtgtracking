@@ -2461,4 +2461,21 @@ router.post('/moderation-queue/:contentId/action', requirePermission('forum:mode
   }
 });
 
+/**
+ * POST /api/admin/health-reports/run-now - Manually trigger weekly collection health report generation
+ * Reuses the same generation function as the scheduled Sunday job (backend/jobs/weeklyHealthReport.js),
+ * so admins can test the feature without waiting a week. Runs synchronously and returns the summary —
+ * unlike /force-price-update above, this makes no external HTTP calls, so it's fast enough to await.
+ */
+router.post('/health-reports/run-now', requireAdmin, async (req, res) => {
+  try {
+    const { runWeeklyHealthReport } = require('../jobs/weeklyHealthReport');
+    const result = await runWeeklyHealthReport();
+    res.json({ message: 'Health reports generated', ...result });
+  } catch (error) {
+    console.error('Run health reports now error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router;

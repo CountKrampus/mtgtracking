@@ -88,3 +88,51 @@ describe('GET /api/health-report', () => {
     expect(res.body.conditionBreakdown.NM).toBe(2);
   });
 });
+
+describe('POST /api/admin/health-reports/run-now', () => {
+  it('rejects non-admin users with 403', async () => {
+    const user = await User.create({ email: 'c@test.com', username: 'userc', passwordHash: 'hash', role: 'user' });
+    const app = buildApp();
+    const res = await request(app)
+      .post('/api/admin/health-reports/run-now')
+      .set('Authorization', `Bearer ${makeToken(user._id, 'user')}`);
+    expect(res.status).toBe(403);
+  });
+
+  it('generates a report only for opted-in users and creates a notification, skipping opted-out users entirely', async () => {
+    const optedIn = await User.create({
+      email: 'optedin@test.com', username: 'optedin', passwordHash: 'hash', role: 'user',
+      notificationPreferences: { healthReportEnabled: true }
+    });
+    const optedOut = await User.create({
+      email: 'optedout@test.com', username: 'optedout', passwordHash: 'hash', role: 'user',
+      notificationPreferences: { healthReportEnabled: false }
+    });
+    const admin = await User.create({ email: 'admin@test.com', username: 'admin', passwordHash: 'hash', role: 'admin' });
+
+    await Card.create({ userId: optedIn._id, name: 'Sol Ring', condition: 'HP', price: 2, quantity: 1 });
+    await Card.create({ userId: optedOut._id, name: 'Lightning Bolt', condition: 'NM', price: 1, quantity: 1 });
+
+    const app = buildApp();
+    const res = await request(app)
+      .post('/api/admin/health-reports/run-now')
+      .set('Authorization', `Bearer ${makeToken(admin._id, 'admin')}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.usersProcessed).toBe(1);
+    expect(res.body.reportsCreated).toBe(1);
+
+    const optedInReport = await CollectionHealthReport.findOne({ userId: optedIn._id });
+    expect(optedInReport).not.toBeNull();
+    expect(optedInReport.conditionBreakdown.HP).toBe(1);
+
+    const optedOutReport = await CollectionHealthReport.findOne({ userId: optedOut._id });
+    expect(optedOutReport).toBeNull();
+
+    const notif = await Notification.findOne({ userId: optedIn._id, type: 'collection_health_report' });
+    expect(notif).not.toBeNull();
+
+    const optedOutNotif = await Notification.findOne({ userId: optedOut._id, type: 'collection_health_report' });
+    expect(optedOutNotif).toBeNull();
+  });
+});
