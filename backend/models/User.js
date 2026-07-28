@@ -69,6 +69,9 @@ const userSchema = new mongoose.Schema({
     showForum: { type: Boolean, default: false },
     bio: { type: String, default: '' }
   },
+  notificationPreferences: {
+    healthReportEnabled: { type: Boolean, default: false }
+  },
   reputation: {
     type: Number,
     min: 0,
@@ -132,6 +135,7 @@ userSchema.methods.toSafeObject = function() {
     privacy: this.privacy,
     reputation: this.reputation,
     badges: this.badges,
+    notificationPreferences: this.notificationPreferences,
     avatarUrl: this.avatarUrl
   };
 };
