@@ -3,6 +3,7 @@ import { ArrowLeftRight, Plus, X, Check, RotateCcw, ChevronLeft, ChevronRight } 
 import { useTrades } from '../contexts/TradesContext';
 import { useAuthContext } from '../contexts/AuthContext';
 import { API_URL } from '../config';
+import CollectionComparison from './CollectionComparison';
 
 const CONDITIONS = ['NM', 'LP', 'MP', 'HP', 'DMG'];
 const CONDITION_COLORS = {
@@ -10,7 +11,7 @@ const CONDITION_COLORS = {
   MP: 'text-yellow-400', HP: 'text-orange-400', DMG: 'text-red-400',
 };
 
-function ListingCard({ listing, onOffer, isOwn }) {
+function ListingCard({ listing, onOffer, onCompare, isOwn }) {
   return (
     <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/10 p-4 flex gap-3">
       {listing.imageUrl && (
@@ -46,6 +47,15 @@ function ListingCard({ listing, onOffer, isOwn }) {
             </button>
           )}
         </div>
+        {!isOwn && onCompare && (
+          <button
+            data-testid="compare-link"
+            onClick={() => onCompare(listing.username)}
+            className="text-blue-400 hover:text-blue-300 text-xs underline mt-1 w-full text-center transition-colors"
+          >
+            Compare collections
+          </button>
+        )}
       </div>
     </div>
   );
@@ -412,6 +422,7 @@ export default function TradingBoard() {
   const [activeTab, setActiveTab] = useState('browse');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [offerTarget, setOfferTarget] = useState(null);
+  const [comparisonTarget, setComparisonTarget] = useState(null);
 
   const pendingReceived = offersReceived.filter(o => o.status === 'pending').length;
 
@@ -480,7 +491,8 @@ export default function TradingBoard() {
                 {listings.map(l => (
                   <ListingCard key={l._id} listing={l}
                     isOwn={user && l.userId === user._id?.toString()}
-                    onOffer={user ? setOfferTarget : null} />
+                    onOffer={user ? setOfferTarget : null}
+                    onCompare={user ? setComparisonTarget : null} />
                 ))}
               </div>
               <div className="flex items-center justify-between pt-2">
@@ -570,6 +582,12 @@ export default function TradingBoard() {
       )}
       {offerTarget && (
         <MakeOfferModal listing={offerTarget} onClose={() => setOfferTarget(null)} onSubmit={makeOffer} />
+      )}
+      {comparisonTarget && (
+        <CollectionComparison
+          targetUsername={comparisonTarget}
+          onClose={() => setComparisonTarget(null)}
+        />
       )}
     </div>
   );
