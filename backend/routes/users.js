@@ -59,7 +59,7 @@ router.put('/me', async (req, res) => {
       });
     }
 
-    const { displayName, email, privacy, avatarUrl } = req.body;
+    const { displayName, email, privacy, avatarUrl, notificationPreferences } = req.body;
 
     // Update display name if provided
     if (displayName !== undefined) {
@@ -103,6 +103,16 @@ router.put('/me', async (req, res) => {
       for (const key of allowed) {
         if (key in privacy) {
           user.privacy[key] = privacy[key];
+        }
+      }
+    }
+
+    // Update notificationPreferences sub-fields if provided (merge, don't replace)
+    if (notificationPreferences && typeof notificationPreferences === 'object') {
+      const allowedNotifPrefs = ['healthReportEnabled'];
+      for (const key of allowedNotifPrefs) {
+        if (key in notificationPreferences) {
+          user.notificationPreferences[key] = notificationPreferences[key];
         }
       }
     }
