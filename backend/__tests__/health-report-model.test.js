@@ -14,6 +14,7 @@ afterAll(async () => {
 });
 
 const CollectionHealthReport = require('../models/CollectionHealthReport');
+const Notification = require('../models/Notification');
 
 afterEach(async () => {
   await CollectionHealthReport.deleteMany({});
@@ -63,5 +64,27 @@ describe('CollectionHealthReport model', () => {
         upgradeSuggestions: []
       })
     ).rejects.toThrow();
+  });
+});
+
+describe('Notification: collection_health_report type', () => {
+  afterEach(async () => {
+    await Notification.deleteMany({});
+  });
+
+  test('can be created without fromUserId (system-generated)', async () => {
+    const userId = new mongoose.Types.ObjectId();
+    const reportId = new mongoose.Types.ObjectId();
+
+    const notif = await Notification.create({
+      userId,
+      type: 'collection_health_report',
+      healthReportId: reportId,
+      content: 'Your weekly collection health report is ready'
+    });
+
+    expect(notif._id).toBeDefined();
+    expect(notif.fromUserId).toBeUndefined();
+    expect(notif.healthReportId.toString()).toBe(reportId.toString());
   });
 });

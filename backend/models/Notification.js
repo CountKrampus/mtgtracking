@@ -9,14 +9,14 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['mention', 'reply', 'upvote', 'dm', 'price_alert', 'trade_offer', 'trade_accepted', 'trade_rejected', 'trade_countered'],
+    enum: ['mention', 'reply', 'upvote', 'dm', 'price_alert', 'trade_offer', 'trade_accepted', 'trade_rejected', 'trade_countered', 'collection_health_report'],
     required: [true, 'Notification type is required']
   },
   fromUserId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: function() {
-      return this.type !== 'price_alert';
+      return this.type !== 'price_alert' && this.type !== 'collection_health_report';
     }
   },
   threadId: {
@@ -34,6 +34,10 @@ const notificationSchema = new mongoose.Schema({
   cardId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Card'
+  },
+  healthReportId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'CollectionHealthReport'
   },
   tradeOfferId: {
     type: mongoose.Schema.Types.ObjectId,
