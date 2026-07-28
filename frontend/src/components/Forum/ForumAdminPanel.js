@@ -7,6 +7,7 @@ import ModmailAdmin from '../admin/ModmailAdmin';
 import MergeRequestAdmin from './MergeRequestAdmin';
 import CosmeticsManager from './CosmeticsManager';
 import CategoryHealthTab from '../admin/forum/CategoryHealthTab';
+import AutoModQueue from './AutoModQueue';
 import { API_URL } from '../../config';
 
 export default function ForumAdminPanel({ isOpen, onClose }) {
@@ -107,6 +108,16 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
           >
             Category Health
           </button>
+          <button
+            onClick={() => setActiveTab('modQueue')}
+            className={`whitespace-nowrap flex-shrink-0 px-6 py-3 font-semibold transition ${
+              activeTab === 'modQueue'
+                ? 'bg-purple-600 text-white'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Mod Queue
+          </button>
         </div>
 
         {/* Content */}
@@ -131,6 +142,9 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
           )}
           {activeTab === 'categoryHealth' && (
             loadedTabs.categoryHealth ? <CategoryHealthTab /> : <div className="text-slate-400">Loading...</div>
+          )}
+          {activeTab === 'modQueue' && (
+            loadedTabs.modQueue ? <AutoModQueue /> : <div className="text-slate-400">Loading...</div>
           )}
         </div>
       </div>
