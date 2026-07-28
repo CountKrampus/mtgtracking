@@ -141,6 +141,28 @@ export default function SettingsView({
                 </select>
               </div>
             </div>
+            <div className="mt-6">
+              <label className="block text-white/80 text-sm mb-2">Theme</label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: 'default', label: 'Default' },
+                  { id: 'oled', label: 'OLED (pure black)' },
+                  { id: 'high-contrast', label: 'High Contrast' },
+                ].map(theme => (
+                  <button
+                    key={theme.id}
+                    onClick={() => updateSettings({ theme: theme.id })}
+                    className={`px-4 py-2 rounded-lg font-medium transition ${
+                      (settings.theme || 'default') === theme.id
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-white/20 text-white/70 hover:bg-white/30'
+                    }`}
+                  >
+                    {theme.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 

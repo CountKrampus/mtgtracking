@@ -7,6 +7,7 @@ const DEFAULT_SETTINGS = {
   pageSize: 20,
   defaultSort: 'name',
   defaultCondition: 'NM',
+  theme: 'default', // 'default' | 'oled' | 'high-contrast'
 
   // Pricing
   displayCurrency: 'USD',

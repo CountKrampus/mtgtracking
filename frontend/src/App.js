@@ -132,6 +132,10 @@ function App() {
   // Settings must be first so other state can use its values
   const { settings, updateSettings, resetSettings } = useSettings();
 
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', settings.theme || 'default');
+  }, [settings.theme]);
+
   // Card collection state and handlers from context
   const {
     cards,
@@ -740,8 +744,12 @@ function App() {
     <div className="flex items-center justify-center h-full text-white/50">Loading...</div>
   );
 
+  const rootBgClass = settings.theme === 'default' || !settings.theme
+    ? 'bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900'
+    : 'bg-black';
+
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col overflow-hidden">
+    <div className={`h-screen ${rootBgClass} flex flex-col overflow-hidden`}>
       {/* Top Header with Notifications and DMs */}
       {authUser && (
         <div className="bg-slate-900/80 backdrop-blur border-b border-slate-700 px-3 sm:px-6 py-2 sm:py-3 flex items-center justify-between">

@@ -11,6 +11,27 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/*
+ * High-contrast theme: boosts the app's most common semi-transparent
+ * white/opacity utility classes so text and borders read clearly against
+ * the pure-black background. Targets the small set of opacity variants
+ * used pervasively across the glassmorphism UI (bg-white/10..20,
+ * border-white/10..30, text-white/50..70) rather than every class in the
+ * codebase, since a full per-component contrast audit is out of scope here.
+ */
+html[data-theme="high-contrast"] .bg-white\/5 { background-color: rgba(255, 255, 255, 0.14) !important; }
+html[data-theme="high-contrast"] .bg-white\/10 { background-color: rgba(255, 255, 255, 0.2) !important; }
+html[data-theme="high-contrast"] .bg-white\/20 { background-color: rgba(255, 255, 255, 0.3) !important; }
+html[data-theme="high-contrast"] .border-white\/10 { border-color: rgba(255, 255, 255, 0.35) !important; }
+html[data-theme="high-contrast"] .border-white\/20 { border-color: rgba(255, 255, 255, 0.45) !important; }
+html[data-theme="high-contrast"] .border-white\/30 { border-color: rgba(255, 255, 255, 0.6) !important; }
+html[data-theme="high-contrast"] .text-white\/40 { color: rgba(255, 255, 255, 0.75) !important; }
+html[data-theme="high-contrast"] .text-white\/50 { color: rgba(255, 255, 255, 0.8) !important; }
+html[data-theme="high-contrast"] .text-white\/60 { color: rgba(255, 255, 255, 0.85) !important; }
+html[data-theme="high-contrast"] .text-white\/70 { color: rgba(255, 255, 255, 0.9) !important; }
+html[data-theme="high-contrast"] .text-white\/80 { color: rgba(255, 255, 255, 0.95) !important; }
+html[data-theme="high-contrast"] .placeholder-white\/60::placeholder { color: rgba(255, 255, 255, 0.7) !important; }
+
 /* Forum cosmetic animations */
 @keyframes border-fire {
   0%, 100% { box-shadow: 0 0 0 2px #ff4500, 0 0 10px #ff6b35; }
