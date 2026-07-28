@@ -17,6 +17,7 @@ const ForumPost = require('../models/ForumPost');
 const ForumThread = require('../models/ForumThread');
 const ForumCategory = require('../models/ForumCategory');
 const Role = require('../models/Role');
+const ContentReport = require('../models/ContentReport');
 const { verifyToken, requireAuth, requireAdmin, requirePermission, isMultiUserEnabled } = require('../middleware/auth');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
 const { isStaffRole, ROLE_PERMISSIONS, syncStaffBadge } = require('../utils/permissions');
@@ -2291,6 +2292,172 @@ router.get('/forum/category-stats', requirePermission('forum:moderate'), async (
   } catch (error) {
     console.error('Category health stats error:', error);
     res.status(500).json({ message: error.message });
+  }
+});
+
+// GET /api/admin/moderation-queue
+router.get('/moderation-queue', requirePermission('forum:moderate'), async (req, res) => {
+  try {
+    const {
+      status = 'pending',
+      contentType,
+      limit = 50,
+      offset = 0,
+    } = req.query;
+
+    const matchStage = { status };
+    if (contentType && ['post', 'thread'].includes(contentType)) {
+      matchStage.contentType = contentType;
+    }
+
+    const pipeline = [
+      { $match: matchStage },
+      {
+        $group: {
+          _id: '$contentId',
+          contentType: { $first: '$contentType' },
+          reportCount: { $sum: 1 },
+          reasons: { $addToSet: '$reason' },
+          sources: { $addToSet: '$source' },
+          suggestedActions: { $addToSet: '$suggestedAction' },
+          oldestReportAt: { $min: '$createdAt' },
+        },
+      },
+      { $sort: { reportCount: -1 } },
+      { $skip: Number(offset) },
+      { $limit: Number(limit) },
+    ];
+
+    const grouped = await ContentReport.aggregate(pipeline);
+
+    // Severity ranking for suggested actions
+    const actionSeverity = { hide_and_warn: 3, hide_post: 2, review: 1 };
+
+    const items = await Promise.all(
+      grouped.map(async (group) => {
+        // Most severe suggested action
+        const suggestedAction = group.suggestedActions.reduce((prev, curr) =>
+          (actionSeverity[curr] || 0) > (actionSeverity[prev] || 0) ? curr : prev
+        , 'review');
+
+        // Fetch content preview and author
+        let contentPreview = '';
+        let authorUsername = 'Unknown';
+
+        try {
+          if (group.contentType === 'post') {
+            const post = await ForumPost.findById(group._id)
+              .populate('authorId', 'username')
+              .lean();
+            if (post) {
+              contentPreview = (post.body || '').substring(0, 200);
+              authorUsername = post.authorId?.username || 'Unknown';
+            }
+          } else {
+            const thread = await ForumThread.findById(group._id)
+              .populate('authorId', 'username')
+              .lean();
+            if (thread) {
+              contentPreview = (thread.title || '').substring(0, 200);
+              authorUsername = thread.authorId?.username || 'Unknown';
+            }
+          }
+        } catch (e) {
+          // Content may have been deleted — leave defaults
+        }
+
+        return {
+          contentId: group._id.toString(),
+          contentType: group.contentType,
+          reportCount: group.reportCount,
+          reasons: group.reasons,
+          sources: group.sources,
+          suggestedAction,
+          oldestReportAt: group.oldestReportAt,
+          contentPreview,
+          authorUsername,
+        };
+      })
+    );
+
+    return res.status(200).json({ items, total: items.length });
+  } catch (err) {
+    console.error('Error fetching moderation queue:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// POST /api/admin/moderation-queue/:contentId/action
+router.post('/moderation-queue/:contentId/action', requirePermission('forum:moderate'), async (req, res) => {
+  try {
+    const { contentId } = req.params;
+    const { action, contentType } = req.body;
+
+    if (!['hide', 'hide_and_warn', 'dismiss'].includes(action)) {
+      return res.status(400).json({ message: 'action must be hide, hide_and_warn, or dismiss' });
+    }
+    if (!['post', 'thread'].includes(contentType)) {
+      return res.status(400).json({ message: 'contentType must be post or thread' });
+    }
+
+    const now = new Date();
+    let contentAuthorId = null;
+
+    // Fetch content to get the author
+    if (contentType === 'post') {
+      const post = await ForumPost.findById(contentId);
+      if (post) contentAuthorId = post.authorId;
+    } else {
+      const thread = await ForumThread.findById(contentId);
+      if (thread) contentAuthorId = thread.authorId;
+    }
+
+    // Hide content for hide and hide_and_warn actions
+    if (action === 'hide' || action === 'hide_and_warn') {
+      const hiddenData = { isHidden: true, hiddenReason: 'Moderator action' };
+      if (contentType === 'post') {
+        await ForumPost.findByIdAndUpdate(contentId, hiddenData);
+      } else {
+        await ForumThread.findByIdAndUpdate(contentId, hiddenData);
+      }
+    }
+
+    // Create UserWarning for hide_and_warn
+    if (action === 'hide_and_warn' && contentAuthorId) {
+      await UserWarning.create({
+        userId: contentAuthorId,
+        reason: 'Content removed by moderator',
+        warnedBy: req.user._id,
+        escalationLevel: 1,
+      });
+    }
+
+    // Mark all pending reports for this content
+    const newStatus = action === 'dismiss' ? 'dismissed' : 'actioned';
+    await ContentReport.updateMany(
+      { contentId, status: 'pending' },
+      {
+        $set: {
+          status: newStatus,
+          reviewedBy: req.user._id,
+          reviewedAt: now,
+        },
+      }
+    );
+
+    // Not logged to ModerationHistory: that model's actionType enum
+    // (ban/suspend/warn/appeal_approved/appeal_denied/override/ban_revoked/
+    // price_update) has no entry for a content-hide/dismiss action, and its
+    // schema requires a userId — using the content author here would
+    // conflate "this user was moderated" with "this user's post was hidden"
+    // for a dismiss action where no one was actually warned. ContentReport's
+    // own reviewedBy/reviewedAt/status fields are the audit trail for this
+    // feature instead.
+
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error('Error performing moderation action:', err);
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 
