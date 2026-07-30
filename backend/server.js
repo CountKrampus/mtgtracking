@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -157,7 +157,7 @@ app.use(verifyToken);
 // Mount auth routes (these don't require authentication)
 app.use('/api/auth', authRoutes);
 
-// Public user profile endpoint (no auth required — must be before the auth-protected users router)
+// Public user profile endpoint (no auth required â€” must be before the auth-protected users router)
 app.use('/api/users', require('./routes/usersPublic'));
 
 // Mount user routes (require authentication)
@@ -184,6 +184,7 @@ app.use('/api/trades', require('./routes/trades'));
 app.use('/api/webhooks', require('./routes/webhooks'));
 app.use('/api/challenges', require('./routes/challenges'));
 app.use('/api/cards', require('./routes/priceFlags'));
+app.use('/api/discord', require('./routes/discord'));
 
 // Mount achievements routes
 const achievementsRouter = require('./routes/achievements');
@@ -487,7 +488,7 @@ async function fetchCardFromScryfall(cardName, setCode, collectorNumber) {
       );
       cardData = response.data;
       lookupMethod = 'exact';
-      console.log(`✓ Exact match: ${cardName} (${setCode} ${collectorNumber})`);
+      console.log(`âœ“ Exact match: ${cardName} (${setCode} ${collectorNumber})`);
     } catch (error) {
       console.log(`Exact lookup failed for ${setCode}/${collectorNumber}, trying fuzzy...`);
     }
@@ -501,7 +502,7 @@ async function fetchCardFromScryfall(cardName, setCode, collectorNumber) {
       );
       cardData = response.data;
       lookupMethod = 'fuzzy-with-set';
-      console.log(`✓ Fuzzy match with set: ${cardName} (${setCode})`);
+      console.log(`âœ“ Fuzzy match with set: ${cardName} (${setCode})`);
     } catch (error) {
       console.log(`Fuzzy with set failed, trying name-only fuzzy...`);
     }
@@ -527,7 +528,7 @@ async function fetchCardFromScryfall(cardName, setCode, collectorNumber) {
       }
     }
     lookupMethod = 'fuzzy-name-only';
-    console.log(`✓ Fuzzy match (name only): ${cardName}`);
+    console.log(`âœ“ Fuzzy match (name only): ${cardName}`);
   }
 
   return {
@@ -659,7 +660,7 @@ app.get('/api/scryfall/search', async (req, res) => {
       collectorNumber: cardData.collector_number,
       rarity: cardData.rarity[0].toUpperCase(),
       colors: cardData.colors || [],
-      types: cardData.type_line ? cardData.type_line.split('—')[0].trim().split(' ') : [],
+      types: cardData.type_line ? cardData.type_line.split('â€”')[0].trim().split(' ') : [],
       manaCost: cardData.mana_cost || '',
       scryfallId: cardData.id,
       imageUrl: cachedImageUrl,
@@ -717,7 +718,7 @@ app.post('/api/cards/:id/update-price', requireAuth, requireEditor, activityLogg
         card.collectorNumber = cardData.collector_number;
         card.rarity = cardData.rarity[0].toUpperCase();
         card.colors = cardData.colors || [];
-        card.types = cardData.type_line ? cardData.type_line.split('—')[0].trim().split(' ') : [];
+        card.types = cardData.type_line ? cardData.type_line.split('â€”')[0].trim().split(' ') : [];
         card.manaCost = cardData.mana_cost || '';
         card.scryfallId = cardData.id;
         card.imageUrl = cachedImageUrl;
@@ -822,7 +823,7 @@ app.post('/api/cards/update-all-prices', requireAuth, requireEditor, activityLog
             card.collectorNumber = cardData.collector_number;
             card.rarity = cardData.rarity[0].toUpperCase();
             card.colors = cardData.colors || [];
-            card.types = cardData.type_line ? cardData.type_line.split('—')[0].trim().split(' ') : [];
+            card.types = cardData.type_line ? cardData.type_line.split('â€”')[0].trim().split(' ') : [];
             card.manaCost = cardData.mana_cost || '';
             card.scryfallId = cardData.id;
             card.imageUrl = cachedImageUrl;
@@ -947,7 +948,7 @@ app.post('/api/cards/bulk-import', requireAuth, requireEditor, activityLoggers.c
               condition: 'NM',
               price: priceData.usd,
               colors: cardData.colors || [],
-              types: cardData.type_line ? cardData.type_line.split('—')[0].trim().split(' ') : [],
+              types: cardData.type_line ? cardData.type_line.split('â€”')[0].trim().split(' ') : [],
               manaCost: cardData.mana_cost || '',
               scryfallId: cardData.id,
               imageUrl: cachedImageUrl,
@@ -3063,7 +3064,7 @@ app.get('/api/scryfall/rulings', async (req, res) => {
   }
 });
 
-// POST /api/interactions/check — fetch real card data and rulings from Scryfall
+// POST /api/interactions/check â€” fetch real card data and rulings from Scryfall
 app.post('/api/interactions/check', async (req, res) => {
   try {
     const { card1, card2 } = req.body;
