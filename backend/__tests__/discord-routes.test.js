@@ -100,6 +100,15 @@ describe('POST /api/discord/exchange', () => {
       .send({ code: 'ABCDEF', discordUserId: 'discord-777' })
       .expect(401);
   });
+
+  test('rejects a non-string code instead of throwing a 500', async () => {
+    const app = buildApp();
+    await request(app)
+      .post('/api/discord/exchange')
+      .set('Authorization', 'Bearer test-bot-token')
+      .send({ code: 123456, discordUserId: 'discord-666' })
+      .expect(400);
+  });
 });
 
 describe('DELETE /api/discord/link', () => {
@@ -156,5 +165,26 @@ describe('GET /api/discord/notifications/pending', () => {
   test('rejects without the service token', async () => {
     const app = buildApp();
     await request(app).get('/api/discord/notifications/pending').expect(401);
+  });
+
+  test('returns notifications for multiple linked users in one call', async () => {
+    const user1 = await User.create({ email: 'g@test.com', username: 'user7', passwordHash: 'x', role: 'editor' });
+    const user2 = await User.create({ email: 'h@test.com', username: 'user8', passwordHash: 'x', role: 'editor' });
+    await DiscordLink.create({ userId: user1._id, discordUserId: 'discord-444' });
+    await DiscordLink.create({ userId: user2._id, discordUserId: 'discord-555' });
+
+    await Notification.create({ userId: user1._id, type: 'price_alert', content: 'alert for user1' });
+    await Notification.create({ userId: user2._id, type: 'price_alert', content: 'alert for user2' });
+
+    const app = buildApp();
+    const res = await request(app)
+      .get('/api/discord/notifications/pending')
+      .set('Authorization', 'Bearer test-bot-token')
+      .expect(200);
+
+    expect(res.body.notifications).toHaveLength(2);
+    const byDiscordId = Object.fromEntries(res.body.notifications.map(n => [n.discordUserId, n.content]));
+    expect(byDiscordId['discord-444']).toBe('alert for user1');
+    expect(byDiscordId['discord-555']).toBe('alert for user2');
   });
 });

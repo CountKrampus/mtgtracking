@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const { requireAuth } = require('../middleware/auth');
 const DiscordLink = require('../models/DiscordLink');
 const LinkCode = require('../models/LinkCode');
@@ -12,7 +13,9 @@ function requireBotServiceToken(req, res, next) {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
   const expected = process.env.DISCORD_BOT_SERVICE_TOKEN;
-  if (!expected || !token || token !== expected) {
+  const valid = !!expected && !!token && token.length === expected.length &&
+    crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected));
+  if (!valid) {
     return res.status(401).json({ message: 'Invalid bot service token' });
   }
   next();
@@ -35,7 +38,7 @@ router.post('/link-code', requireAuth, async (req, res) => {
 router.post('/exchange', requireBotServiceToken, async (req, res) => {
   try {
     const { code, discordUserId } = req.body;
-    if (!code || !discordUserId) {
+    if (typeof code !== 'string' || !code || !discordUserId) {
       return res.status(400).json({ message: 'code and discordUserId are required' });
     }
 
