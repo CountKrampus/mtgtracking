@@ -3,6 +3,12 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const axios = require('axios');
+
+// Scryfall asks API consumers to identify themselves via User-Agent; requests
+// without one are more likely to get soft rate-limited under sustained load
+// (e.g. during bulk price/full-data updates). This is a process-wide default
+// since axios is a singleton module shared with utils/pricing.js.
+axios.defaults.headers.common['User-Agent'] = 'MTGTracker/1.0 (+https://github.com/mtg-tracker)';
 const deckRoutes = require('./routes/decks');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
@@ -501,12 +507,25 @@ async function fetchCardFromScryfall(cardName, setCode, collectorNumber) {
     }
   }
 
-  // Method 3: Fuzzy search by name only (fallback)
+  // Method 3: Fuzzy search by name only (fallback). Retried once with backoff
+  // on 429, since this is the last method and has nothing further to fall
+  // back to - an uncaught throw here used to silently abort the whole
+  // full-data update for that card (see git history around 2026-07-30).
   if (!cardData) {
-    const response = await axios.get(
-      `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`
-    );
-    cardData = response.data;
+    const url = `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`;
+    try {
+      const response = await axios.get(url);
+      cardData = response.data;
+    } catch (error) {
+      if (error.response?.status === 429) {
+        console.log(`Rate limited fetching ${cardName}, retrying after backoff...`);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        const response = await axios.get(url);
+        cardData = response.data;
+      } else {
+        throw error;
+      }
+    }
     lookupMethod = 'fuzzy-name-only';
     console.log(`✓ Fuzzy match (name only): ${cardName}`);
   }
@@ -783,8 +802,15 @@ app.post('/api/cards/update-all-prices', requireAuth, requireEditor, activityLog
           try {
             const { cardData } = await fetchCardFromScryfall(card.name, card.setCode, card.collectorNumber);
 
-            // Get pricing
-            const priceData = await getPriceWithFallback(card.name, card.isFoil);
+            // Pricing is already included in cardData - reuse it instead of a
+            // second Scryfall round-trip. Only fall through to the MTGGoldfish
+            // backup (via getPriceWithFallback) if Scryfall itself has no price.
+            const scryfallPrice = card.isFoil
+              ? (cardData.prices?.usd_foil ? parseFloat(cardData.prices.usd_foil) : 0)
+              : (cardData.prices?.usd ? parseFloat(cardData.prices.usd) : 0);
+            const priceData = scryfallPrice > 0
+              ? { usd: scryfallPrice }
+              : await getPriceWithFallback(card.name, card.isFoil);
 
             // Cache image and get local URL
             const scryfallImageUrl = cardData.image_uris ? cardData.image_uris.normal : null;
@@ -847,8 +873,10 @@ app.post('/api/cards/update-all-prices', requireAuth, requireEditor, activityLog
           // Non-critical
         }
 
-        // Rate limiting - be respectful to servers
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Rate limiting - be respectful to servers. Lowered from 500ms since
+        // the fullData path now makes ~1 Scryfall call per card instead of ~2
+        // (price is read from the already-fetched cardData, see above).
+        await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {
         console.error(`Error updating ${card.name}:`, error.message);
       }
