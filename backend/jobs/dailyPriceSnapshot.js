@@ -3,6 +3,7 @@ const CardPriceSnapshot = require('../models/CardPriceSnapshot');
 const ValueSnapshot = require('../models/ValueSnapshot');
 const { getPriceWithFallback } = require('../utils/pricing');
 const { createPriceAlertNotification } = require('../utils/notifications');
+const { deliverWebhookEvent } = require('../utils/webhookDelivery');
 
 const RATE_LIMIT_MS = 500;
 
@@ -118,6 +119,15 @@ async function runDailySnapshot() {
     if (!notif) return false;
 
     await Card.updateOne({ _id: card._id }, { $set: { [`priceAlert.${firedField}`]: new Date() } });
+
+    deliverWebhookEvent(card.userId, 'price_alert', {
+      cardId: card._id,
+      cardName: card.name,
+      direction,
+      targetPrice: target,
+      actualPrice: newPrice,
+    }).catch(err => console.error('[dailySnapshot] Webhook delivery error:', err.message));
+
     return true;
   }
 

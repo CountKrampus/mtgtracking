@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Settings, Plus, Trash2, Edit2, MapPin, QrCode, Printer, Layers, Heart, Crown, BarChart3, Zap, X } from 'lucide-react';
 import { API_URL } from '../config';
 import DeckFoldersTab from './DeckFoldersTab';
+import WebhooksTab from './WebhooksTab';
 
 export default function SettingsView({
   settings, updateSettings, resetSettings, formatPrice,
@@ -78,6 +79,7 @@ export default function SettingsView({
             { id: 'locations', label: 'Locations' },
             { id: 'tags', label: 'Tags' },
             { id: 'folders', label: 'Deck Folders' },
+            { id: 'webhooks', label: 'Webhooks' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -529,6 +531,11 @@ export default function SettingsView({
         {/* Deck Folders Tab */}
         {settingsTab === 'folders' && (
           <DeckFoldersTab />
+        )}
+
+        {/* Webhooks Tab */}
+        {settingsTab === 'webhooks' && (
+          <WebhooksTab />
         )}
       </div>
     );
