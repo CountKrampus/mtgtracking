@@ -30,6 +30,7 @@ import CardDetailPanel from './components/CardDetailPanel';
 import UserMenu from './components/UserMenu';
 import MessagesPage from './components/MessagesPage';
 import MyProfile from './components/MyProfile';
+import UserProfile from './components/UserProfile';
 import SettingsView from './components/SettingsView';
 import SparklinePopup from './components/SparklinePopup';
 import BottomNav from './components/BottomNav';
@@ -120,6 +121,15 @@ axios.interceptors.response.use(
 function SharedDeckViewRoute() {
   const { shareCode } = useParams();
   return <SharedDeckView shareCode={shareCode} />;
+}
+
+// Wrapper so UserProfile (the public collection showcase profile) can read
+// :username from React Router params, giving it a shareable direct URL.
+// Previously this component was only reachable by clicking a user from
+// inside the forum (ForumView.js), with no link of its own.
+function UserProfileRoute({ onBack }) {
+  const { username } = useParams();
+  return <UserProfile username={username} onBack={onBack} />;
 }
 
 function App() {
@@ -954,6 +964,12 @@ function App() {
             <Route path="/profile" element={
               authUser
                 ? <MyProfile user={authUser} onBack={() => navigate('/dashboard')} />
+                : <Navigate to="/dashboard" replace />
+            } />
+
+            <Route path="/u/:username" element={
+              authUser
+                ? <UserProfileRoute onBack={() => navigate('/dashboard')} />
                 : <Navigate to="/dashboard" replace />
             } />
 

@@ -20,6 +20,18 @@ function renderBadgeIcon(iconStr) {
 
 export default function MyProfile({ user, onBack }) {
   const [profile, setProfile] = useState(user);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const handleCopyProfileLink = () => {
+    const url = `${window.location.origin}/u/${profile.username}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    }).catch((err) => {
+      console.error('Failed to copy profile link:', err);
+      window.prompt('Copy this link:', url);
+    });
+  };
   const [forumActivity, setForumActivity] = useState(null);
   const [unlockStatus, setUnlockStatus] = useState({});
   const [pinnedCards, setPinnedCards] = useState(Array.isArray(user?.pinnedCards) ? user.pinnedCards : []);
@@ -121,12 +133,22 @@ export default function MyProfile({ user, onBack }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-700">
         <h2 className="text-2xl font-bold text-white">My Profile</h2>
-        <button
-          onClick={onBack}
-          className="p-2 hover:bg-slate-700 rounded text-slate-400 hover:text-white"
-        >
-          <X size={20} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleCopyProfileLink}
+            className="flex items-center gap-2 px-3 py-1.5 bg-purple-600/80 hover:bg-purple-600 text-white rounded-lg text-sm font-medium transition"
+            title="Copy a shareable link to your public profile"
+          >
+            <LucideIcons.Share2 size={16} />
+            {linkCopied ? 'Link Copied!' : 'Share Profile'}
+          </button>
+          <button
+            onClick={onBack}
+            className="p-2 hover:bg-slate-700 rounded text-slate-400 hover:text-white"
+          >
+            <X size={20} />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-6">
