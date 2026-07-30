@@ -1,5 +1,5 @@
 @echo off
-echo Starting MTG Tracker - Backend and Frontend
+echo Starting MTG Tracker - Backend, Frontend, and Discord Bot
 echo.
 
 REM Start backend in background
@@ -14,6 +14,16 @@ REM Start frontend in background
 cd frontend
 start "MTG Tracker Frontend" cmd /k "npm start"
 cd ..
+
+REM Start Discord bot (skips itself if discord-bot\.env doesn't exist yet,
+REM so this script still works before the bot has been configured)
+if exist discord-bot\.env (
+  cd discord-bot
+  start "MTG Tracker Discord Bot" cmd /k "npm start"
+  cd ..
+) else (
+  echo Skipping Discord bot - discord-bot\.env not found. Copy discord-bot\.env.example to set it up.
+)
 
 REM Start Caddy
 start "Caddy" cmd /k "caddy_windows_amd64.exe run"
