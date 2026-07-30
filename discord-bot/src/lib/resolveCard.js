@@ -1,5 +1,8 @@
 const { StringSelectMenuBuilder, ActionRowBuilder, ComponentType } = require('discord.js');
 
+// Discord's StringSelectMenu allows at most 25 options per menu.
+const MAX_SELECT_OPTIONS = 25;
+
 // Finds the calling user's owned card(s) matching `searchName` (case-
 // insensitive substring against GET /api/cards, since that route has no
 // server-side search param - filtering happens here, same as the web
@@ -22,7 +25,7 @@ async function resolveCard(interaction, api, searchName) {
   if (matches.length === 0) return { status: 'no_match' };
   if (matches.length === 1) return { status: 'found', card: matches[0] };
 
-  const options = matches.slice(0, 25).map(c => ({
+  const options = matches.slice(0, MAX_SELECT_OPTIONS).map(c => ({
     label: `${c.name} (${c.set || 'Unknown'}, ${c.condition})`.slice(0, 100),
     value: c._id
   }));
@@ -39,18 +42,25 @@ async function resolveCard(interaction, api, searchName) {
     ephemeral: true
   });
 
+  let selectInteraction;
   try {
-    const selectInteraction = await interaction.channel.awaitMessageComponent({
+    selectInteraction = await interaction.channel.awaitMessageComponent({
       componentType: ComponentType.StringSelect,
       filter: i => i.customId === 'resolve-card-select' && i.user.id === interaction.user.id,
       time: 30000
     });
-    const chosen = matches.find(c => c._id === selectInteraction.values[0]);
-    await selectInteraction.update({ content: `Selected: ${chosen.name}`, components: [] });
-    return { status: 'found', card: chosen };
   } catch {
+    // awaitMessageComponent only rejects when the 30s window elapses with no
+    // selection - a real timeout, not a Discord API error.
     return { status: 'timed_out' };
   }
+
+  const chosen = matches.find(c => c._id === selectInteraction.values[0]);
+  // A selection was made - this is a 'found' result regardless of whether the
+  // follow-up UI update below succeeds, so it's outside the timeout try/catch
+  // and any failure here isn't mislabeled as a timeout.
+  await selectInteraction.update({ content: `Selected: ${chosen.name}`, components: [] });
+  return { status: 'found', card: chosen };
 }
 
 module.exports = { resolveCard };
