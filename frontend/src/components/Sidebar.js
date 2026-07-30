@@ -126,6 +126,7 @@ const Sidebar = ({
     'set-release-calendar': '/tools/set-calendar',
     'spoiler-season': '/tools/spoilers',
     'trades': '/trades',
+    'challenges': '/challenges',
   };
 
   const allNavItems = [
@@ -134,6 +135,7 @@ const Sidebar = ({
     { id: 'decks', label: 'Deck Builder', icon: Layers, feature: 'deckBuilder' },
     { id: 'wishlist', label: 'Wishlist', icon: Heart, feature: 'wishlist' },
     { id: 'trades', label: 'Trading Board', icon: ArrowLeftRight },
+    { id: 'challenges', label: 'Challenges', icon: Trophy },
     { id: 'forum', label: 'Forum', icon: MessageSquare },
     { id: 'community-decks', label: 'Community Decks', icon: Globe },
     { id: 'lifecounter', label: 'Life Counter', icon: Users },

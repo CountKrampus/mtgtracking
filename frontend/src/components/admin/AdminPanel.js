@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Users, Activity, Server, Database, MessageSquare, Settings, ChevronDown, ChevronRight, Shield, AlertTriangle, BarChart2, FileText, Archive, Trash2, Award } from 'lucide-react';
+import { X, Users, Activity, Server, Database, MessageSquare, Settings, ChevronDown, ChevronRight, Shield, AlertTriangle, BarChart2, FileText, Archive, Trash2, Award, Trophy } from 'lucide-react';
 
 import UsersTab from './user-management/UsersTab';
 import RoleManagement from './RoleManagement';
@@ -17,6 +17,7 @@ import DataCleanupTab from './data-pricing/DataCleanupTab';
 import ContentModerationTab from './community/ContentModerationTab';
 import FeedbackTab from './community/FeedbackTab';
 import BadgesTab from './community/BadgesTab';
+import ChallengesTab from './community/ChallengesTab';
 
 import ActivityLogTab from './system/ActivityLogTab';
 import SettingsTab from './system/SettingsTab';
@@ -59,7 +60,8 @@ const groups = [
     tabs: [
       { id: 'moderation', label: 'Content Moderation', icon: Shield, requiresRole: 'moderator' },
       { id: 'feedback', label: 'Feedback', icon: MessageSquare, requiresRole: 'support' },
-      { id: 'badges', label: 'Badges', icon: Award, requiresRole: 'admin' }
+      { id: 'badges', label: 'Badges', icon: Award, requiresRole: 'admin' },
+      { id: 'challenges', label: 'Challenges', icon: Trophy, requiresRole: 'admin' }
     ]
   },
   {
@@ -103,6 +105,7 @@ function renderContent(activeTab) {
     case 'moderation': return <ContentModerationTab />;
     case 'feedback':   return <FeedbackTab />;
     case 'badges':     return <BadgesTab />;
+    case 'challenges': return <ChallengesTab />;
     case 'activity':     return <ActivityLogTab />;
     case 'settings':     return <SettingsTab />;
     case 'sessions':     return <SessionsTab />;

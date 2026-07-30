@@ -18,7 +18,10 @@ const ForumThread = require('../models/ForumThread');
 const ForumCategory = require('../models/ForumCategory');
 const Role = require('../models/Role');
 const ContentReport = require('../models/ContentReport');
-const { verifyToken, requireAuth, requireAdmin, requirePermission, isMultiUserEnabled } = require('../middleware/auth');
+const { verifyToken, requireAuth, requireAdmin, requireModerator, requirePermission, isMultiUserEnabled } = require('../middleware/auth');
+const Challenge = require('../models/Challenge');
+const ChallengeParticipation = require('../models/ChallengeParticipation');
+const { VALID_METRICS, validateMetricParams } = require('../utils/challengeProgress');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
 const { isStaffRole, ROLE_PERMISSIONS, syncStaffBadge } = require('../utils/permissions');
 const { createTransporter } = require('../utils/email');
@@ -2656,6 +2659,109 @@ router.post('/health-reports/run-now', requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Run health reports now error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/challenges - Admin creates a challenge directly (active immediately)
+ */
+router.post('/challenges', requireAdmin, async (req, res) => {
+  try {
+    const { title, description, metric, params = {}, target, month } = req.body;
+    if (!title || !description || !metric || target === undefined || !month) {
+      return res.status(400).json({ message: 'title, description, metric, target, and month are required' });
+    }
+    if (!VALID_METRICS.includes(metric)) {
+      return res.status(400).json({ message: `Invalid metric: ${metric}` });
+    }
+    const paramError = validateMetricParams(metric, params);
+    if (paramError) {
+      return res.status(400).json({ message: paramError });
+    }
+
+    const challenge = await Challenge.create({
+      title, description, metric, params, target, month,
+      status: 'active',
+      isProposal: false,
+      createdBy: req.user._id,
+    });
+    res.status(201).json(challenge);
+  } catch (err) {
+    res.status(500).json({ message: 'Error creating challenge', error: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/challenges/proposals - List pending user-proposed challenges
+ */
+router.get('/challenges/proposals', requireModerator(), async (req, res) => {
+  try {
+    const proposals = await Challenge.find({ isProposal: true, status: 'draft' })
+      .populate('proposedBy', 'username')
+      .sort({ createdAt: -1 });
+    res.json(proposals);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching proposals', error: err.message });
+  }
+});
+
+/**
+ * PUT /api/admin/challenges/proposals/:id/approve - Approve a proposal, making it active
+ */
+router.put('/challenges/proposals/:id/approve', requireAdmin, async (req, res) => {
+  try {
+    const challenge = await Challenge.findById(req.params.id);
+    if (!challenge) return res.status(404).json({ message: 'Proposal not found' });
+
+    challenge.status = 'active';
+    challenge.isProposal = false;
+    challenge.approvedBy = req.user._id;
+    if (!challenge.month) challenge.month = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+    await challenge.save();
+
+    res.json(challenge);
+  } catch (err) {
+    res.status(500).json({ message: 'Error approving proposal', error: err.message });
+  }
+});
+
+/**
+ * DELETE /api/admin/challenges/proposals/:id - Reject/delete a proposal
+ */
+router.delete('/challenges/proposals/:id', requireAdmin, async (req, res) => {
+  try {
+    const challenge = await Challenge.findOneAndDelete({ _id: req.params.id, isProposal: true });
+    if (!challenge) return res.status(404).json({ message: 'Proposal not found' });
+    res.json({ message: 'Proposal rejected' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error rejecting proposal', error: err.message });
+  }
+});
+
+/**
+ * PUT /api/admin/challenges/:id/verify-manual - Verify a user's manual (custom-metric) submission
+ */
+router.put('/challenges/:id/verify-manual', requireModerator(), async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ message: 'userId is required' });
+
+    const challenge = await Challenge.findById(req.params.id);
+    if (!challenge) return res.status(404).json({ message: 'Challenge not found' });
+    if (challenge.metric !== 'custom') {
+      return res.status(400).json({ message: 'Manual verification only applies to custom-metric challenges' });
+    }
+
+    const participation = await ChallengeParticipation.findOneAndUpdate(
+      { userId, challengeId: challenge._id },
+      { completed: true, completedAt: new Date(), verifiedBy: req.user._id, updatedAt: new Date() },
+      { new: true }
+    );
+    if (!participation) return res.status(404).json({ message: 'Participation not found for this user' });
+
+    res.json(participation);
+  } catch (err) {
+    res.status(500).json({ message: 'Error verifying submission', error: err.message });
   }
 });
 

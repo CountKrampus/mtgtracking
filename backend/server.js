@@ -176,6 +176,7 @@ app.use('/api/health-report', require('./routes/healthReport'));
 // Mount trades routes
 app.use('/api/trades', require('./routes/trades'));
 app.use('/api/webhooks', require('./routes/webhooks'));
+app.use('/api/challenges', require('./routes/challenges'));
 
 // Mount achievements routes
 const achievementsRouter = require('./routes/achievements');

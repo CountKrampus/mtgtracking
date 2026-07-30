@@ -65,6 +65,7 @@ const CollectionView = React.lazy(() => import('./components/CollectionView'));
 const WishlistView = React.lazy(() => import('./components/WishlistView'));
 const CollectionHealthReportView = React.lazy(() => import('./components/CollectionHealthReportView'));
 const TradingBoard = React.lazy(() => import('./components/TradingBoard'));
+const ChallengesView = React.lazy(() => import('./components/ChallengesView'));
 
 // Set up axios interceptor to add auth headers to all requests
 axios.interceptors.request.use((config) => {
@@ -906,6 +907,12 @@ function App() {
             <Route path="/trades" element={
               <Suspense fallback={<LoadingFallback />}>
                 <TradingBoard />
+              </Suspense>
+            } />
+
+            <Route path="/challenges" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <ChallengesView />
               </Suspense>
             } />
 
