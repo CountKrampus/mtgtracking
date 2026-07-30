@@ -1,0 +1,15 @@
+{
+  "short_name": "MTG Tracker",
+  "name": "MTG Collection Tracker",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#6366f1",
+  "background_color": "#1e1b4b"
+}

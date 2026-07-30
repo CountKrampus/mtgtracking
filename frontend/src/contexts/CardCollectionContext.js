@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useRef, useEffect, useMemo 
 import axios from 'axios';
 import { useToast } from './ToastContext';
 import { API_URL } from '../config';
+import { saveCardsToCache, getCachedCards } from '../utils/offlineDb';
 
 const CardCollectionContext = createContext(null);
 
@@ -12,6 +13,8 @@ export function CardCollectionProvider({ children }) {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [isShowingCachedCards, setIsShowingCachedCards] = useState(false);
+  const [cacheAge, setCacheAge] = useState(null);
 
   // Hover / sparkline state
   const [hoveredCard, setHoveredCard] = useState(null);
@@ -21,14 +24,41 @@ export function CardCollectionProvider({ children }) {
   const sparklineTimerRef = useRef(null);
   useEffect(() => () => clearTimeout(sparklineTimerRef.current), []);
 
+  // Sync on reconnect: if we're currently showing a cached (offline) snapshot
+  // and connectivity returns, re-fetch immediately rather than waiting for
+  // the user to manually refresh.
+  const isShowingCachedCardsRef = useRef(isShowingCachedCards);
+  isShowingCachedCardsRef.current = isShowingCachedCards;
+  useEffect(() => {
+    const handleOnline = () => {
+      if (isShowingCachedCardsRef.current) {
+        fetchCards();
+      }
+    };
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ── Handlers ───────────────────────────────────────────────────────────────
 
   const fetchCards = async () => {
     try {
       const response = await axios.get(`${API_URL}/cards`);
       setCards(response.data);
+      setIsShowingCachedCards(false);
+      setCacheAge(null);
+      saveCardsToCache(response.data); // fire-and-forget; best-effort offline cache
     } catch (error) {
       console.error('Error fetching cards:', error);
+      // Likely offline (or the server is unreachable) — fall back to the last
+      // successfully fetched collection instead of showing an empty page.
+      const cached = await getCachedCards();
+      if (cached) {
+        setCards(cached.cards);
+        setIsShowingCachedCards(true);
+        setCacheAge(cached.cachedAt);
+      }
     }
   };
 
@@ -332,6 +362,8 @@ export function CardCollectionProvider({ children }) {
     cards, setCards,
     loading, setLoading,
     editingId, setEditingId,
+    isShowingCachedCards,
+    cacheAge,
     hoveredCard, setHoveredCard,
     hoveredCardPriceHistory, setHoveredCardPriceHistory,
     detailCard, setDetailCard,
@@ -351,7 +383,7 @@ export function CardCollectionProvider({ children }) {
     handlePriceCellLeave,
     handleBulkImport,
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [cards, loading, editingId, hoveredCard, hoveredCardPriceHistory, detailCard, sparkline]);
+  }), [cards, loading, editingId, isShowingCachedCards, cacheAge, hoveredCard, hoveredCardPriceHistory, detailCard, sparkline]);
 
   return (
     <CardCollectionContext.Provider value={value}>

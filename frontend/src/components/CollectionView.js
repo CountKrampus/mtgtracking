@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Search, Trash2, Edit2, Save, X, RefreshCw, DollarSign, Camera, Settings,
   CheckSquare, Square, MapPin, Layers, Zap, Crown, BarChart3, Heart, Plus, SlidersHorizontal, Bookmark,
-  Upload, PlusCircle, ExternalLink, Mic, Bell
+  Upload, PlusCircle, ExternalLink, Mic, Bell, WifiOff
 } from 'lucide-react';
 import { standardTypes } from '../constants';
 import { buildScryfallSearchUrl } from '../utils/scryfallDeeplink';
@@ -242,6 +242,7 @@ function CollectionView({
     handleAddTag, handleRemoveTag, handleCardHover, handlePriceCellEnter, handlePriceCellLeave,
     handleBulkImport, hoveredCard, setHoveredCard, hoveredCardPriceHistory,
     setHoveredCardPriceHistory, detailCard, setDetailCard,
+    isShowingCachedCards, cacheAge,
   } = useCardCollection();
   const { locations, locationStats, availableTags, fetchAvailableTags } = useLocationTag();
   const { addToWishlist, fetchWishlist } = useWishlist();
@@ -782,6 +783,15 @@ function CollectionView({
 
   return (    <>
           <>
+            {isShowingCachedCards && (
+              <div className="mb-4 px-4 py-2 bg-amber-500/20 border border-amber-500/40 rounded-lg text-amber-200 text-sm flex items-center gap-2">
+                <WifiOff size={16} className="shrink-0" />
+                <span>
+                  You're offline — showing your collection as of{' '}
+                  {cacheAge ? new Date(cacheAge).toLocaleString() : 'last sync'}. It'll refresh automatically once you're back online.
+                </span>
+              </div>
+            )}
             {/* Search & Filter Bar - Collapseable */}
             <div className="mb-6">
               {/* Mobile: inline search + filter button */}
