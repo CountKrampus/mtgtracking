@@ -7,6 +7,11 @@ backend/.env
 .env.local
 nul
 
+# Discord bot (contains bot token / service secret; node_modules already
+# covered by the glob above)
+discord-bot/.env
+discord-bot/*.log
+
 # Cached card images (downloaded per-install)
 backend/cached-images/
 
