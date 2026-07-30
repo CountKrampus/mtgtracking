@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { User, Mail, Lock, Save, AlertCircle, CheckCircle, LogOut, Trash2, Shield, Camera } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Mail, Lock, Save, AlertCircle, CheckCircle, LogOut, Trash2, Shield, Camera, Link2, Unlink, Copy } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { SessionManager } from './SessionManager';
 import { API_URL } from '../../config';
@@ -49,6 +49,31 @@ export function AccountSettings({ onClose }) {
   // Avatar state
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState(user?.avatarUrl || '');
+
+  // Discord link state
+  const [discordLinked, setDiscordLinked] = useState(null);
+  const [discordStatusLoading, setDiscordStatusLoading] = useState(true);
+  const [discordCode, setDiscordCode] = useState(null);
+  const [discordCodeExpiresAt, setDiscordCodeExpiresAt] = useState(null);
+  const [discordActionLoading, setDiscordActionLoading] = useState(false);
+  const [discordMessage, setDiscordMessage] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await authFetch(`${API_URL}/discord/link`);
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!cancelled) setDiscordLinked(data.linked);
+      } catch (err) {
+        // Leave discordLinked as null (unknown) - the tab still lets the user try to link/unlink.
+      } finally {
+        if (!cancelled) setDiscordStatusLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [authFetch]);
 
   const handleAvatarSave = (avatarUrl) => {
     setCurrentAvatarUrl(avatarUrl);
@@ -170,6 +195,51 @@ export function AccountSettings({ onClose }) {
     setNotifPrefsLoading(false);
   };
 
+  const handleGenerateDiscordCode = async () => {
+    setDiscordActionLoading(true);
+    setDiscordMessage(null);
+    try {
+      const response = await authFetch(`${API_URL}/discord/link-code`, { method: 'POST' });
+      const data = await response.json();
+      if (response.ok) {
+        setDiscordCode(data.code);
+        setDiscordCodeExpiresAt(data.expiresAt);
+      } else {
+        setDiscordMessage({ type: 'error', text: data.message || 'Failed to generate a link code' });
+      }
+    } catch (err) {
+      setDiscordMessage({ type: 'error', text: 'Failed to generate a link code' });
+    } finally {
+      setDiscordActionLoading(false);
+    }
+  };
+
+  const handleCopyDiscordCode = () => {
+    if (!discordCode) return;
+    navigator.clipboard?.writeText(discordCode);
+  };
+
+  const handleUnlinkDiscord = async () => {
+    setDiscordActionLoading(true);
+    setDiscordMessage(null);
+    try {
+      const response = await authFetch(`${API_URL}/discord/link`, { method: 'DELETE' });
+      if (response.ok) {
+        setDiscordLinked(false);
+        setDiscordCode(null);
+        setDiscordCodeExpiresAt(null);
+        setDiscordMessage({ type: 'success', text: 'Discord account unlinked' });
+      } else {
+        const data = await response.json();
+        setDiscordMessage({ type: 'error', text: data.message || 'Failed to unlink Discord account' });
+      }
+    } catch (err) {
+      setDiscordMessage({ type: 'error', text: 'Failed to unlink Discord account' });
+    } finally {
+      setDiscordActionLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
       <div className="bg-gray-800 rounded-t-2xl sm:rounded-xl w-full sm:max-w-2xl max-h-[90vh] overflow-hidden">
@@ -181,7 +251,7 @@ export function AccountSettings({ onClose }) {
         </div>
 
         <div className="flex border-b border-gray-700">
-          {['profile', 'password', 'privacy', 'notifications', 'sessions', 'danger'].map((tab) => (
+          {['profile', 'password', 'privacy', 'notifications', 'discord', 'sessions', 'danger'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -479,6 +549,87 @@ export function AccountSettings({ onClose }) {
               {notifPrefsLoading && (
                 <p className="text-white/40 text-xs text-center">Saving…</p>
               )}
+            </div>
+          )}
+
+          {activeTab === 'discord' && (
+            <div className="space-y-4">
+              {discordMessage && (
+                <div className={`p-3 rounded-lg flex items-center gap-2 ${
+                  discordMessage.type === 'success'
+                    ? 'bg-green-500/20 text-green-200'
+                    : 'bg-red-500/20 text-red-200'
+                }`}>
+                  {discordMessage.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+                  <span>{discordMessage.text}</span>
+                </div>
+              )}
+
+              <div className="p-4 bg-gray-700/50 rounded-lg space-y-3">
+                <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider flex items-center gap-2">
+                  <Link2 size={14} /> Discord Bot
+                </h3>
+
+                <p className="text-white/60 text-sm">
+                  Link your Discord account to look up cards, manage your collection, and get price alerts
+                  right from Discord.
+                </p>
+
+                {!discordStatusLoading && discordLinked && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-green-300 text-sm">
+                      <CheckCircle size={16} /> Discord account linked
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleUnlinkDiscord}
+                      disabled={discordActionLoading}
+                      className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 text-sm disabled:opacity-50"
+                    >
+                      <Unlink size={16} />
+                      {discordActionLoading ? 'Unlinking...' : 'Unlink'}
+                    </button>
+                  </div>
+                )}
+
+                {!discordStatusLoading && !discordLinked && (
+                  <div className="space-y-3">
+                    {discordCode ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <code className="px-3 py-2 bg-gray-900 text-purple-300 text-lg font-mono rounded-lg tracking-widest">
+                            {discordCode}
+                          </code>
+                          <button
+                            type="button"
+                            onClick={handleCopyDiscordCode}
+                            title="Copy code"
+                            className="p-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg"
+                          >
+                            <Copy size={16} />
+                          </button>
+                        </div>
+                        <p className="text-white/40 text-xs">
+                          In Discord, run <code className="text-white/60">/link code:{discordCode}</code>
+                          {discordCodeExpiresAt && (
+                            <> — expires {new Date(discordCodeExpiresAt).toLocaleTimeString()}</>
+                          )}
+                        </p>
+                      </div>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      onClick={handleGenerateDiscordCode}
+                      disabled={discordActionLoading}
+                      className="px-4 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center gap-2 text-sm disabled:opacity-50"
+                    >
+                      <Link2 size={16} />
+                      {discordActionLoading ? 'Generating...' : discordCode ? 'Generate New Code' : 'Generate Link Code'}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

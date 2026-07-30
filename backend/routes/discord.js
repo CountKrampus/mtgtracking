@@ -32,6 +32,17 @@ function requireMultiUser(req, res, next) {
   next();
 }
 
+// GET /api/discord/link - normal authenticated web session checks whether
+// it currently has a linked Discord account, for the Settings UI.
+router.get('/link', requireMultiUser, requireAuth, async (req, res) => {
+  try {
+    const link = await DiscordLink.findOne({ userId: req.user._id });
+    res.json({ linked: !!link });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // POST /api/discord/link-code - normal authenticated web session generates
 // a short code the user then enters into the Discord bot via /link.
 router.post('/link-code', requireMultiUser, requireAuth, async (req, res) => {

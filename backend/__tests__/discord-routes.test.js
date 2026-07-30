@@ -44,6 +44,38 @@ function buildApp() {
   return app;
 }
 
+describe('GET /api/discord/link', () => {
+  test('reports linked: true when a DiscordLink exists', async () => {
+    const user = await User.create({ email: 'i@test.com', username: 'user9', passwordHash: 'x', role: 'editor' });
+    await DiscordLink.create({ userId: user._id, discordUserId: 'discord-666' });
+
+    const app = buildApp();
+    const res = await request(app)
+      .get('/api/discord/link')
+      .set('Authorization', `Bearer ${makeToken(user)}`)
+      .expect(200);
+
+    expect(res.body.linked).toBe(true);
+  });
+
+  test('reports linked: false when no DiscordLink exists', async () => {
+    const user = await User.create({ email: 'j@test.com', username: 'user10', passwordHash: 'x', role: 'editor' });
+
+    const app = buildApp();
+    const res = await request(app)
+      .get('/api/discord/link')
+      .set('Authorization', `Bearer ${makeToken(user)}`)
+      .expect(200);
+
+    expect(res.body.linked).toBe(false);
+  });
+
+  test('401s without a session', async () => {
+    const app = buildApp();
+    await request(app).get('/api/discord/link').expect(401);
+  });
+});
+
 describe('POST /api/discord/link-code', () => {
   test('issues a code for the logged-in user', async () => {
     const user = await User.create({ email: 'a@test.com', username: 'user1', passwordHash: 'x', role: 'editor' });
