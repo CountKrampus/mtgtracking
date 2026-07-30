@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const request = require('supertest');
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const DiscordLink = require('../models/DiscordLink');
 const { verifyToken, requireAuth } = require('../middleware/auth');
@@ -73,5 +74,18 @@ describe('verifyToken bot auth path', () => {
       .get('/whoami')
       .set('Authorization', 'Bearer not-the-service-token-and-not-a-jwt')
       .expect(401);
+  });
+
+  test('a normal user JWT still authenticates correctly (bot auth does not interfere)', async () => {
+    const user = await User.create({ email: 'jwt@test.com', username: 'jwtuser', passwordHash: 'x', role: 'editor' });
+    const token = jwt.sign({ userId: user._id.toString(), role: user.role }, 'test-secret');
+
+    const app = buildApp();
+    const res = await request(app)
+      .get('/whoami')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(res.body.userId).toBe(user._id.toString());
   });
 });

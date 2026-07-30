@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { verifyAccessToken } = require('../utils/jwt');
 const User = require('../models/User');
 const DiscordLink = require('../models/DiscordLink');
@@ -38,7 +39,8 @@ const verifyToken = async (req, res, next) => {
   // instead of embedding it in the token. This lets every existing
   // requireAuth-gated route work for the bot unchanged.
   const botServiceToken = process.env.DISCORD_BOT_SERVICE_TOKEN;
-  if (botServiceToken && token === botServiceToken) {
+  if (botServiceToken && token.length === botServiceToken.length &&
+      crypto.timingSafeEqual(Buffer.from(token), Buffer.from(botServiceToken))) {
     const discordUserId = req.headers['x-discord-user-id'];
     if (!discordUserId) {
       req.user = null;
