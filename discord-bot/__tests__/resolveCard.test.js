@@ -4,10 +4,21 @@ function mockApi(cards, status = 200) {
   return { get: jest.fn().mockResolvedValue({ status, data: cards }) };
 }
 
-function mockInteraction() {
+// Mirrors discord.js's real InteractionResponses#followUp contract (it
+// throws unless the interaction has already been deferred or replied) so
+// these tests catch a caller that forgets to defer before calling
+// resolveCard, not just the happy path.
+function mockInteraction({ deferred = true } = {}) {
   return {
     user: { id: 'discord-1' },
-    followUp: jest.fn().mockResolvedValue(undefined),
+    deferred,
+    replied: false,
+    followUp: jest.fn(function (...args) {
+      if (!this.deferred && !this.replied) {
+        throw new Error('InteractionNotReplied: The reply to this interaction has not been sent or deferred.');
+      }
+      return Promise.resolve(undefined);
+    }),
     channel: { awaitMessageComponent: jest.fn() }
   };
 }
@@ -57,6 +68,17 @@ describe('resolveCard', () => {
     expect(interaction.followUp).toHaveBeenCalled();
     expect(result.status).toBe('found');
     expect(result.card._id).toBe('2');
+  });
+
+  test('requires the interaction to already be deferred/replied before prompting for disambiguation', async () => {
+    const cards = [
+      { _id: '1', name: 'Sol Ring', set: 'C21', condition: 'NM' },
+      { _id: '2', name: 'Sol Ring', set: 'CMR', condition: 'LP' }
+    ];
+    const api = mockApi(cards);
+    const interaction = mockInteraction({ deferred: false });
+
+    await expect(resolveCard(interaction, api, 'Sol Ring')).rejects.toThrow('InteractionNotReplied');
   });
 
   test('returns timed_out if the user never picks', async () => {

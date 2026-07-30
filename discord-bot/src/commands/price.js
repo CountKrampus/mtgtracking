@@ -8,16 +8,23 @@ module.exports = {
     const name = interaction.options.getString('name', true);
     const api = client(interaction.user.id);
 
+    // Deferred up front: resolveCard and the price refresh below both make
+    // backend round-trips (the refresh also calls out to Scryfall) that can
+    // exceed Discord's 3-second initial-response window, and
+    // followUp()/editReply() (used throughout below) both require the
+    // interaction to already be deferred or replied.
+    await interaction.deferReply({ ephemeral: true });
+
     const resolved = await resolveCard(interaction, api, name);
     if (resolved.status === 'not_linked') return replyNotLinked(interaction);
     if (resolved.status === 'no_match') {
-      return interaction.reply({ content: `❌ No card matching "${name}" in your collection.`, ephemeral: true });
+      return interaction.followUp({ content: `❌ No card matching "${name}" in your collection.`, ephemeral: true });
     }
     if (resolved.status === 'timed_out') {
       return interaction.followUp({ content: 'No selection made in time.', ephemeral: true });
     }
     if (resolved.status === 'error') {
-      return interaction.reply({ content: `❌ Something went wrong (${resolved.httpStatus}).`, ephemeral: true });
+      return interaction.followUp({ content: `❌ Something went wrong (${resolved.httpStatus}).`, ephemeral: true });
     }
 
     const card = resolved.card;
