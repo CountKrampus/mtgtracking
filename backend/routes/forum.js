@@ -954,6 +954,13 @@ router.delete('/posts/:postId', verifyToken, requireAuth, async (req, res) => {
       $inc: { postCount: -1 }
     });
 
+    // Keep the author's community stats in sync with actual content (see
+    // the equivalent fix on thread deletion above).
+    await User.updateOne(
+      { _id: post.authorId, 'communityStats.postCount': { $gt: 0 } },
+      { $inc: { 'communityStats.postCount': -1 } }
+    );
+
     res.json({ success: true, message: 'Post deleted' });
   } catch (error) {
     console.error('Delete post error:', error);
@@ -1232,6 +1239,13 @@ router.delete('/threads/:threadId', verifyToken, requireAuth, requirePermission(
       return res.status(404).json({ message: 'Thread not found' });
     }
 
+    // Tally posts-per-author before deleting, so each author's
+    // communityStats.postCount can be decremented below.
+    const postAuthorCounts = await ForumPost.aggregate([
+      { $match: { threadId: thread._id } },
+      { $group: { _id: '$authorId', count: { $sum: 1 } } }
+    ]);
+
     // Delete all posts in this thread
     await ForumPost.deleteMany({ threadId });
 
@@ -1243,6 +1257,20 @@ router.delete('/threads/:threadId', verifyToken, requireAuth, requirePermission(
       thread.categoryId,
       { $inc: { threadCount: -1 } }
     );
+
+    // Keep authors' community stats in sync with actual content - without
+    // this, threadCount/postCount (and any badges/UI reading them) stay
+    // permanently inflated after a delete since nothing else decrements them.
+    await User.updateOne(
+      { _id: thread.authorId, 'communityStats.threadCount': { $gt: 0 } },
+      { $inc: { 'communityStats.threadCount': -1 } }
+    );
+    await Promise.all(postAuthorCounts.map(({ _id: authorId, count }) =>
+      User.updateOne(
+        { _id: authorId, 'communityStats.postCount': { $gte: count } },
+        { $inc: { 'communityStats.postCount': -count } }
+      )
+    ));
 
     res.json({ success: true, message: 'Thread deleted' });
   } catch (error) {
