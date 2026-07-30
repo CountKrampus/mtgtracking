@@ -1,5 +1,6 @@
 const { verifyAccessToken } = require('../utils/jwt');
 const User = require('../models/User');
+const DiscordLink = require('../models/DiscordLink');
 const SystemSettings = require('../models/SystemSettings');
 const { hasPermission } = require('../utils/permissions');
 
@@ -31,6 +32,38 @@ const verifyToken = async (req, res, next) => {
   }
 
   const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+
+  // Bot auth path: the Discord bot authenticates with a shared service token
+  // instead of a per-user JWT, and names the acting user via a header
+  // instead of embedding it in the token. This lets every existing
+  // requireAuth-gated route work for the bot unchanged.
+  const botServiceToken = process.env.DISCORD_BOT_SERVICE_TOKEN;
+  if (botServiceToken && token === botServiceToken) {
+    const discordUserId = req.headers['x-discord-user-id'];
+    if (!discordUserId) {
+      req.user = null;
+      return next();
+    }
+    try {
+      const link = await DiscordLink.findOne({ discordUserId });
+      if (!link) {
+        req.user = null;
+        req.notLinked = true;
+        return next();
+      }
+      const user = await User.findById(link.userId);
+      if (!user || !user.isActive) {
+        req.user = null;
+        return next();
+      }
+      req.user = user.toSafeObject();
+      return next();
+    } catch (error) {
+      console.error('Bot auth error:', error.message);
+      req.user = null;
+      return next();
+    }
+  }
 
   try {
     const decoded = verifyAccessToken(token);
