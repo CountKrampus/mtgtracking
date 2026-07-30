@@ -62,6 +62,17 @@ describe('POST /api/discord/link-code', () => {
     const app = buildApp();
     await request(app).post('/api/discord/link-code').expect(401);
   });
+
+  test('400s with a clear message when multi-user mode is disabled', async () => {
+    process.env.MULTI_USER_ENABLED = 'false';
+    try {
+      const app = buildApp();
+      const res = await request(app).post('/api/discord/link-code').expect(400);
+      expect(res.body.message).toMatch(/multi-user/i);
+    } finally {
+      process.env.MULTI_USER_ENABLED = 'true';
+    }
+  });
 });
 
 describe('POST /api/discord/exchange', () => {
@@ -137,6 +148,21 @@ describe('DELETE /api/discord/link', () => {
       .expect(200);
 
     expect(await DiscordLink.findOne({ discordUserId: 'discord-222' })).toBeNull();
+  });
+
+  test('400s with a clear message when multi-user mode is disabled', async () => {
+    process.env.MULTI_USER_ENABLED = 'false';
+    try {
+      const app = buildApp();
+      const res = await request(app)
+        .delete('/api/discord/link')
+        .set('Authorization', 'Bearer test-bot-token')
+        .set('X-Discord-User-Id', 'discord-999')
+        .expect(400);
+      expect(res.body.message).toMatch(/multi-user/i);
+    } finally {
+      process.env.MULTI_USER_ENABLED = 'true';
+    }
   });
 });
 

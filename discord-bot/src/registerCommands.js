@@ -15,11 +15,11 @@ const commands = [
     .addSubcommand(sub => sub.setName('stats').setDescription('Show your collection stats')),
 
   new SlashCommandBuilder().setName('add').setDescription('Add a card to your collection')
-    .addIntegerOption(o => o.setName('quantity').setDescription('Quantity').setRequired(true))
+    .addIntegerOption(o => o.setName('quantity').setDescription('Quantity').setRequired(true).setMinValue(1))
     .addStringOption(o => o.setName('name').setDescription('Card name').setRequired(true)),
 
   new SlashCommandBuilder().setName('remove').setDescription('Remove a card from your collection')
-    .addIntegerOption(o => o.setName('quantity').setDescription('Quantity').setRequired(true))
+    .addIntegerOption(o => o.setName('quantity').setDescription('Quantity').setRequired(true).setMinValue(1))
     .addStringOption(o => o.setName('name').setDescription('Card name').setRequired(true)),
 
   new SlashCommandBuilder().setName('update').setDescription('Update a card in your collection')

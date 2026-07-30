@@ -35,20 +35,28 @@ module.exports = {
 
     if (sub === 'remove') {
       const name = interaction.options.getString('name', true);
+
+      // Deferred up front: unlike 'list'/'add' above, 'remove' makes two
+      // sequential backend round-trips (list, then delete) that can exceed
+      // Discord's 3-second initial-response window, and followUp() (used
+      // throughout this branch) requires the interaction to already be
+      // deferred or replied.
+      await interaction.deferReply({ ephemeral: true });
+
       const listRes = await api.get('/wishlist');
       if (listRes.status === 401) return replyNotLinked(interaction);
       if (listRes.status !== 200) {
-        return interaction.reply({ content: `❌ Something went wrong (${listRes.status}).`, ephemeral: true });
+        return interaction.followUp({ content: `❌ Something went wrong (${listRes.status}).`, ephemeral: true });
       }
       const match = listRes.data.find(item => item.name.toLowerCase() === name.toLowerCase());
       if (!match) {
-        return interaction.reply({ content: `❌ "${name}" isn't on your wishlist.`, ephemeral: true });
+        return interaction.followUp({ content: `❌ "${name}" isn't on your wishlist.`, ephemeral: true });
       }
       const delRes = await api.delete(`/wishlist/${match._id}`);
       if (delRes.status !== 200) {
-        return interaction.reply({ content: `❌ Couldn't remove "${name}" (${delRes.status}).`, ephemeral: true });
+        return interaction.followUp({ content: `❌ Couldn't remove "${name}" (${delRes.status}).`, ephemeral: true });
       }
-      return interaction.reply({ content: `✅ Removed "${name}" from your wishlist.`, ephemeral: true });
+      return interaction.followUp({ content: `✅ Removed "${name}" from your wishlist.`, ephemeral: true });
     }
 
     return interaction.reply({ content: 'Unknown subcommand.', ephemeral: true });

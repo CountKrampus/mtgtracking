@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, isMultiUserEnabled } = require('../middleware/auth');
 const DiscordLink = require('../models/DiscordLink');
 const LinkCode = require('../models/LinkCode');
 const Notification = require('../models/Notification');
@@ -21,9 +21,20 @@ function requireBotServiceToken(req, res, next) {
   next();
 }
 
+// Discord linking only makes sense when accounts exist to link to.
+// requireAuth is a no-op (doesn't populate req.user at all) when multi-user
+// mode is off, so without this guard req.user._id below would throw a raw
+// TypeError instead of a clear error response.
+function requireMultiUser(req, res, next) {
+  if (!isMultiUserEnabled()) {
+    return res.status(400).json({ message: 'Discord account linking requires multi-user mode to be enabled' });
+  }
+  next();
+}
+
 // POST /api/discord/link-code - normal authenticated web session generates
 // a short code the user then enters into the Discord bot via /link.
-router.post('/link-code', requireAuth, async (req, res) => {
+router.post('/link-code', requireMultiUser, requireAuth, async (req, res) => {
   try {
     const linkCode = await LinkCode.generateForUser(req.user._id);
     res.status(201).json({ code: linkCode.code, expiresAt: linkCode.expiresAt });
@@ -65,7 +76,7 @@ router.post('/exchange', requireBotServiceToken, async (req, res) => {
 // (req.user resolved from a JWT) and the bot's /unlink command (req.user
 // resolved via DiscordLink in verifyToken's bot-auth branch) - either way
 // req.user._id is the real account to unlink.
-router.delete('/link', requireAuth, async (req, res) => {
+router.delete('/link', requireMultiUser, requireAuth, async (req, res) => {
   try {
     await DiscordLink.deleteOne({ userId: req.user._id });
     res.json({ unlinked: true });
