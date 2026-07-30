@@ -27,7 +27,7 @@ module.exports = {
         title: deck.name,
         fields: [
           { name: 'Format', value: deck.format || 'N/A', inline: true },
-          { name: 'Cards', value: String(deck.cards?.length ?? 0), inline: true }
+          { name: 'Cards', value: String(deck.statistics?.totalCards ?? deck.mainDeck?.length ?? 0), inline: true }
         ]
       }],
       ephemeral: true
