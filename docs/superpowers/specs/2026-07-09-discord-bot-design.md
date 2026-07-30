@@ -33,9 +33,16 @@ The bot holds **zero direct database access** and **zero per-user secrets**. It 
 
 ### Bot auth to the backend
 
-`requireBotAuth` middleware: checks a shared secret (bot service token) sent as `Authorization: Bearer <BOT_SERVICE_TOKEN>` on the handful of `/api/discord/*` routes the bot calls (`/exchange`, and the per-command proxy routes below). On every request other than `/link-code` (which is a normal user-session route) and `/exchange` (which is establishing the link), the bot also sends `discordUserId` in the request; the backend looks up `DiscordLink` to resolve the real `userId`, then proceeds exactly as if that user were making the request themselves (same `req.user` shape, same downstream route logic, same per-user rate limiting).
+The commands in this design call the app's *existing* routes directly (`POST /api/cards`, `GET /api/wishlist`, `GET /api/decks`, etc. — see Commands below) rather than new bot-specific proxy routes, so the bot's credentials have to satisfy those routes' existing `verifyToken` → `requireAuth`/`requireEditor` chain unchanged.
 
-If no `DiscordLink` exists for that `discordUserId`, the backend returns 404/`not_linked`, and the bot replies "You haven't linked your account yet — run `/link <code>` first."
+This means the extension belongs in the shared `verifyToken` middleware itself (`backend/middleware/auth.js`), not a separate middleware bolted onto a handful of new routes:
+
+- The bot sends `Authorization: Bearer <BOT_SERVICE_TOKEN>` (a shared secret, from the bot process's own `.env`, distinct from any user's JWT) plus an `X-Discord-User-Id` header on every request.
+- `verifyToken` checks for this pair first. If the bearer token matches `BOT_SERVICE_TOKEN`, it looks up `DiscordLink` by the header's Discord user ID, loads that `User`, and sets `req.user` exactly as it would for a normal JWT — same shape, so every downstream route (`requireAuth`, `requireEditor`, `buildUserQuery`, rate limiting, etc.) behaves identically regardless of which auth path populated it.
+- If the bearer token doesn't match `BOT_SERVICE_TOKEN`, `verifyToken` falls through to today's normal JWT verification unchanged — this is purely additive.
+- If no `DiscordLink` exists for that Discord user ID, `verifyToken` leaves `req.user` as `null` (same as an invalid/missing normal token) and adds `req.notLinked = true` so route handlers/the bot can distinguish "not authenticated" from "authenticated as the bot, but this Discord user hasn't linked yet" and reply with the link prompt instead of a generic 401.
+
+The three new `/api/discord/*` routes (`link-code`, `exchange`, `notifications/pending`) are the only ones with bespoke logic; everything else (cards, wishlist, decks) needs no code changes at all beyond this one middleware extension.
 
 ### Commands (v1 scope)
 
@@ -59,7 +66,9 @@ All commands below (except `/card` and `/link`) require the calling Discord user
 - `/deck view <name>` — `GET /api/decks/:id`
 
 **Notifications**
-- Linking Discord also registers a `Webhook` (existing model) pointed at a small HTTP listener inside the bot process itself. When a price alert fires, the existing webhook-dispatch logic POSTs to that listener, and the bot formats it into a Discord embed, DM'd to the linked user.
+- Price alerts already create an in-app `Notification` document (`type: 'price_alert'`) when they fire, via `createPriceAlertNotification` in `jobs/dailyPriceSnapshot.js` — no changes needed to the alert-firing path itself.
+- The bot polls `GET /api/discord/notifications/pending?since=<ISO8601>` (bot-auth) every ~30 seconds. The route finds all `DiscordLink` records, queries `Notification.find({ userId: { $in: linkedUserIds }, type: 'price_alert', createdAt: { $gt: since } })`, and returns each match mapped to its `discordUserId`. The bot formats each into a Discord embed, DMs the linked user, and remembers the latest `createdAt` it saw as the `since` value for its next poll.
+- This avoids registering a `Webhook` pointed at the bot's own address, which the existing SSRF guard in `utils/webhookDelivery.js` would block anyway (it explicitly rejects localhost/private-IP targets, which the bot's own listener would be). Keeps the bot's network posture strictly outbound-only, consistent with the rest of this design, and needs no new notification-queue model.
 
 **Link management**
 - `/link <code>` / `/unlink` — see Account linking above.
@@ -81,7 +90,7 @@ For commands that resolve a card "by name" (`/remove`, `/update`, `/price`) wher
 
 - New `DiscordLink` model.
 - New `LinkCode` model (TTL index).
-- No changes to existing models. The existing `Webhook` model is reused as-is for notifications.
+- No changes to existing models. Notifications reuse the existing `Notification` model (`type: 'price_alert'`) read-only via a new polling route — the `Webhook` model isn't used by this design at all.
 
 ## Testing
 
