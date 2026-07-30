@@ -49,29 +49,37 @@ client.on(Events.InteractionCreate, async interaction => {
 // than replaying old ones.
 let since = new Date();
 
+// Uses a recursive setTimeout rather than setInterval, since setInterval
+// would fire the next poll on schedule even if the previous one is still
+// in flight (e.g. slow backend, many DMs) - that overlap could read `since`
+// before it's updated and send duplicate DMs for the same alert.
 async function startNotificationPoller() {
-  setInterval(async () => {
+  const poll = async () => {
     try {
       const api = apiClient();
       const res = await api.get('/discord/notifications/pending', { params: { since: since.toISOString() } });
-      if (res.status !== 200) return;
-
-      for (const notif of res.data.notifications) {
-        try {
-          const user = await client.users.fetch(notif.discordUserId);
-          await user.send({ content: `📉 Price Alert: ${notif.content}` });
-        } catch (dmError) {
-          console.error(`Failed to DM ${notif.discordUserId}:`, dmError.message);
+      if (res.status === 200) {
+        for (const notif of res.data.notifications) {
+          try {
+            const user = await client.users.fetch(notif.discordUserId);
+            await user.send({ content: `📉 Price Alert: ${notif.content}` });
+          } catch (dmError) {
+            console.error(`Failed to DM ${notif.discordUserId}:`, dmError.message);
+          }
         }
-      }
 
-      if (res.data.notifications.length > 0) {
-        since = new Date(res.data.notifications[res.data.notifications.length - 1].createdAt);
+        if (res.data.notifications.length > 0) {
+          since = new Date(res.data.notifications[res.data.notifications.length - 1].createdAt);
+        }
       }
     } catch (error) {
       console.error('Notification poll failed:', error.message);
+    } finally {
+      setTimeout(poll, 30000);
     }
-  }, 30000);
+  };
+
+  setTimeout(poll, 30000);
 }
 
 client.login(process.env.DISCORD_BOT_TOKEN);
