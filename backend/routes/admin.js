@@ -21,6 +21,7 @@ const ContentReport = require('../models/ContentReport');
 const { verifyToken, requireAuth, requireAdmin, requireModerator, requirePermission, isMultiUserEnabled } = require('../middleware/auth');
 const Challenge = require('../models/Challenge');
 const ChallengeParticipation = require('../models/ChallengeParticipation');
+const PriceFlag = require('../models/PriceFlag');
 const { VALID_METRICS, validateMetricParams } = require('../utils/challengeProgress');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
 const { isStaffRole, ROLE_PERMISSIONS, syncStaffBadge } = require('../utils/permissions');
@@ -2762,6 +2763,72 @@ router.put('/challenges/:id/verify-manual', requireModerator(), async (req, res)
     res.json(participation);
   } catch (err) {
     res.status(500).json({ message: 'Error verifying submission', error: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/price-flags - List price correction flags
+ * Query param: status (default 'pending'; accepts pending/resolved/dismissed/all)
+ */
+router.get('/price-flags', requireModerator(), async (req, res) => {
+  try {
+    const { status = 'pending' } = req.query;
+    const filter = status === 'all' ? {} : { status };
+
+    const flags = await PriceFlag.find(filter)
+      .sort({ createdAt: 1 })
+      .populate('cardId', 'name set price')
+      .populate('flaggedBy', 'username reputation');
+
+    res.json(flags);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching price flags', error: err.message });
+  }
+});
+
+/**
+ * PUT /api/admin/price-flags/:id - Resolve or dismiss a price flag
+ * Body: { action: 'resolve' | 'dismiss' }
+ * 'resolve' triggers a forced price refresh for the flagged card.
+ */
+router.put('/price-flags/:id', requireModerator(), async (req, res) => {
+  try {
+    const { action } = req.body;
+    if (action !== 'resolve' && action !== 'dismiss') {
+      return res.status(400).json({ message: 'action must be "resolve" or "dismiss"' });
+    }
+
+    const flag = await PriceFlag.findById(req.params.id);
+    if (!flag) return res.status(404).json({ message: 'Price flag not found' });
+
+    if (action === 'resolve') {
+      const Card = mongoose.model('Card');
+      const card = await Card.findById(flag.cardId);
+      if (card) {
+        const priceData = await getPriceWithFallback(card.name, card.isFoil);
+        if (priceData.usd > 0) {
+          card.lastPrice = card.price;
+          card.price = priceData.usd;
+          await card.save();
+        }
+      }
+    }
+
+    flag.status = action === 'resolve' ? 'resolved' : 'dismissed';
+    flag.resolvedBy = req.user._id;
+    flag.resolvedAt = new Date();
+    await flag.save();
+
+    await ModerationHistory.create({
+      userId: flag.flaggedBy,
+      actionType: 'price_update',
+      actionDetails: { flagId: flag._id, cardId: flag.cardId, action },
+      performedBy: req.user._id
+    });
+
+    res.json(flag);
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating price flag', error: err.message });
   }
 });
 

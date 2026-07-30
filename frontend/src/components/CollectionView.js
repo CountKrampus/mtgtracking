@@ -4,12 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import {
   Search, Trash2, Edit2, Save, X, RefreshCw, DollarSign, Camera, Settings,
   CheckSquare, Square, MapPin, Layers, Zap, Crown, BarChart3, Heart, Plus, SlidersHorizontal, Bookmark,
-  Upload, PlusCircle, ExternalLink, Mic, Bell, WifiOff
+  Upload, PlusCircle, ExternalLink, Mic, Bell, WifiOff, Flag
 } from 'lucide-react';
 import { standardTypes } from '../constants';
 import { buildScryfallSearchUrl } from '../utils/scryfallDeeplink';
 import useVoiceSearch from '../hooks/useVoiceSearch';
 import PriceAlertModal from './PriceAlertModal';
+import PriceFlagModal from './PriceFlagModal';
+import { useAuthContext } from '../contexts/AuthContext';
 import { useCardCollection } from '../contexts/CardCollectionContext';
 import { useLocationTag } from '../contexts/LocationTagContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -235,6 +237,7 @@ function CollectionView({
   showFinancePanel, setShowFinancePanel, financeData, openFinancePanel,
 }) {
   const navigate = useNavigate();
+  const { user: currentUser } = useAuthContext() || {};
 
   const {
     cards, loading, setLoading, editingId, setEditingId, fetchCards,
@@ -285,6 +288,7 @@ function CollectionView({
   });
   const [selectedCards, setSelectedCards] = useState(new Set());
   const [priceAlertCard, setPriceAlertCard] = useState(null);
+  const [priceFlagCard, setPriceFlagCard] = useState(null);
   const [bulkUpdateModal, setBulkUpdateModal] = useState(null);
   const [bulkCondition, setBulkCondition] = useState('NM');
   const [bulkLocation, setBulkLocation] = useState('');
@@ -1587,6 +1591,15 @@ function CollectionView({
                           >
                             <Bell size={16} />
                           </button>
+                          {currentUser?.reputation >= 50 && (
+                            <button
+                              onClick={() => setPriceFlagCard(card)}
+                              className="p-1 bg-orange-600 hover:bg-orange-700 text-white rounded transition"
+                              title="Flag this price as incorrect"
+                            >
+                              <Flag size={16} />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDelete(card._id)}
                             className="p-1 bg-red-600 hover:bg-red-700 text-white rounded transition"
@@ -3052,6 +3065,13 @@ function CollectionView({
             card={priceAlertCard}
             onClose={() => setPriceAlertCard(null)}
             onSaved={() => { setPriceAlertCard(null); fetchCards(); }}
+          />
+        )}
+
+        {priceFlagCard && (
+          <PriceFlagModal
+            card={priceFlagCard}
+            onClose={() => setPriceFlagCard(null)}
           />
         )}
 

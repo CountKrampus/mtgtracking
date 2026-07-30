@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Users, Activity, Server, Database, MessageSquare, Settings, ChevronDown, ChevronRight, Shield, AlertTriangle, BarChart2, FileText, Archive, Trash2, Award, Trophy } from 'lucide-react';
+import { X, Users, Activity, Server, Database, MessageSquare, Settings, ChevronDown, ChevronRight, Shield, AlertTriangle, BarChart2, FileText, Archive, Trash2, Award, Trophy, Flag } from 'lucide-react';
 
 import UsersTab from './user-management/UsersTab';
 import RoleManagement from './RoleManagement';
@@ -13,6 +13,7 @@ import PricingAdminTab from './data-pricing/PricingAdminTab';
 import CollectionAuditsTab from './data-pricing/CollectionAuditsTab';
 import BackupsExportsTab from './data-pricing/BackupsExportsTab';
 import DataCleanupTab from './data-pricing/DataCleanupTab';
+import PriceCorrectionsTab from './data-pricing/PriceCorrectionsTab';
 
 import ContentModerationTab from './community/ContentModerationTab';
 import FeedbackTab from './community/FeedbackTab';
@@ -49,7 +50,8 @@ const groups = [
       { id: 'pricing', label: 'Pricing', icon: BarChart2, requiresRole: 'content_manager' },
       { id: 'audits', label: 'Collection Audits', icon: FileText, requiresRole: 'content_manager' },
       { id: 'backups', label: 'Backups & Exports', icon: Archive, requiresRole: 'admin' },
-      { id: 'cleanup', label: 'Data Cleanup', icon: Trash2, requiresRole: 'admin' }
+      { id: 'cleanup', label: 'Data Cleanup', icon: Trash2, requiresRole: 'admin' },
+      { id: 'priceFlags', label: 'Price Flags', icon: Flag, requiresRole: 'moderator' }
     ]
   },
   {
@@ -102,6 +104,7 @@ function renderContent(activeTab) {
     case 'audits':     return <CollectionAuditsTab />;
     case 'backups':    return <BackupsExportsTab />;
     case 'cleanup':    return <DataCleanupTab />;
+    case 'priceFlags': return <PriceCorrectionsTab />;
     case 'moderation': return <ContentModerationTab />;
     case 'feedback':   return <FeedbackTab />;
     case 'badges':     return <BadgesTab />;
