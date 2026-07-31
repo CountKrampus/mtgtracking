@@ -105,13 +105,21 @@ router.get('/:id/synergies', requireAuth, async (req, res) => {
       const tribes = [...new Set([...(typeMatch || []), ...(nameTypes || [])])].map(t => t.toLowerCase());
       if (tribes.length > 0) {
         const tribe = tribes[0];
+        const tribalQuery = `o:"${tribe}" ${colorQuery} -t:${tribe} -!"${card.name}"`;
         try {
-          const r = await axios.get(`https://api.scryfall.com/cards/search?q=o:"${tribe}" ${colorQuery} -t:${tribe} -!"${card.name}"&order=edhrec&unique=cards`);
-          results.tribal = r.data.data.slice(0, 12);
+          const data = await cachedApiCall(`scryfall-search:${tribalQuery}`, async () => {
+            const r = await axios.get(`https://api.scryfall.com/cards/search?q=${tribalQuery}&order=edhrec&unique=cards`);
+            return r.data;
+          });
+          results.tribal = data.data.slice(0, 12);
         } catch (e) {
+          const tribalFallbackQuery = `t:${tribe} ${colorQuery} -!"${card.name}"`;
           try {
-            const r2 = await axios.get(`https://api.scryfall.com/cards/search?q=t:${tribe} ${colorQuery} -!"${card.name}"&order=edhrec&unique=cards`);
-            results.tribal = r2.data.data.slice(0, 12);
+            const data2 = await cachedApiCall(`scryfall-search:${tribalFallbackQuery}`, async () => {
+              const r2 = await axios.get(`https://api.scryfall.com/cards/search?q=${tribalFallbackQuery}&order=edhrec&unique=cards`);
+              return r2.data;
+            });
+            results.tribal = data2.data.slice(0, 12);
           } catch (e2) { /* no tribal results */ }
         }
       }
@@ -120,31 +128,44 @@ router.get('/:id/synergies', requireAuth, async (req, res) => {
     const ot = (card.oracleText || '').toLowerCase();
     const foundKeywords = KEYWORD_PATTERNS.filter(({ keyword }) => ot.includes(keyword));
     if (foundKeywords.length > 0) {
+      const keywordsQuery = `(${foundKeywords[0].search}) ${colorQuery} -!"${card.name}"`;
       try {
-        const r = await axios.get(`https://api.scryfall.com/cards/search?q=(${foundKeywords[0].search}) ${colorQuery} -!"${card.name}"&order=edhrec&unique=cards`);
-        results.keywords = r.data.data.slice(0, 12);
+        const data = await cachedApiCall(`scryfall-search:${keywordsQuery}`, async () => {
+          const r = await axios.get(`https://api.scryfall.com/cards/search?q=${keywordsQuery}&order=edhrec&unique=cards`);
+          return r.data;
+        });
+        results.keywords = data.data.slice(0, 12);
       } catch (e) { /* no keyword results */ }
     }
 
     const foundMechanics = MECHANIC_PATTERNS.filter(({ pattern }) => pattern.test(ot));
     if (foundMechanics.length > 0) {
+      const mechanicsQuery = `(${foundMechanics[0].search}) ${colorQuery} -!"${card.name}"`;
       try {
-        const r = await axios.get(`https://api.scryfall.com/cards/search?q=(${foundMechanics[0].search}) ${colorQuery} -!"${card.name}"&order=edhrec&unique=cards`);
-        results.mechanics = r.data.data.slice(0, 12);
+        const data = await cachedApiCall(`scryfall-search:${mechanicsQuery}`, async () => {
+          const r = await axios.get(`https://api.scryfall.com/cards/search?q=${mechanicsQuery}&order=edhrec&unique=cards`);
+          return r.data;
+        });
+        results.mechanics = data.data.slice(0, 12);
       } catch (e) { /* no mechanic results */ }
     }
 
     if (results.mechanics.length === 0) {
       try {
+        let fallbackQuery = null;
         if (card.types?.includes('Instant') || card.types?.includes('Sorcery')) {
-          const r = await axios.get(`https://api.scryfall.com/cards/search?q=o:"whenever you cast" (o:"instant" OR o:"sorcery") ${colorQuery} -!"${card.name}"&order=edhrec&unique=cards`);
-          results.mechanics = r.data.data.slice(0, 12);
+          fallbackQuery = `o:"whenever you cast" (o:"instant" OR o:"sorcery") ${colorQuery} -!"${card.name}"`;
         } else if (card.types?.includes('Artifact')) {
-          const r = await axios.get(`https://api.scryfall.com/cards/search?q=o:"artifact" o:"whenever" ${colorQuery} -!"${card.name}"&order=edhrec&unique=cards`);
-          results.mechanics = r.data.data.slice(0, 12);
+          fallbackQuery = `o:"artifact" o:"whenever" ${colorQuery} -!"${card.name}"`;
         } else if (card.types?.includes('Enchantment')) {
-          const r = await axios.get(`https://api.scryfall.com/cards/search?q=o:"enchantment" o:"whenever" OR o:"constellation" ${colorQuery} -!"${card.name}"&order=edhrec&unique=cards`);
-          results.mechanics = r.data.data.slice(0, 12);
+          fallbackQuery = `o:"enchantment" o:"whenever" OR o:"constellation" ${colorQuery} -!"${card.name}"`;
+        }
+        if (fallbackQuery) {
+          const data = await cachedApiCall(`scryfall-search:${fallbackQuery}`, async () => {
+            const r = await axios.get(`https://api.scryfall.com/cards/search?q=${fallbackQuery}&order=edhrec&unique=cards`);
+            return r.data;
+          });
+          results.mechanics = data.data.slice(0, 12);
         }
       } catch (e) { /* no fallback mechanic results */ }
     }

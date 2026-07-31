@@ -123,4 +123,21 @@ describe('GET /api/cards/:id/synergies', () => {
     expect(res.body).toHaveProperty('keywords');
     expect(res.body).toHaveProperty('mechanics');
   });
+
+  test('caches each Scryfall query so a second identical request does not re-call Scryfall', async () => {
+    const user = await User.create({ email: 'e@test.com', username: 'user5', passwordHash: 'x', role: 'editor' });
+    const card = await Card.create({
+      userId: user._id, name: 'Goblin Chieftain', quantity: 1, condition: 'NM',
+      price: 0, types: ['Creature'], colors: ['R'],
+      oracleText: 'Goblin creatures you control get +1/+1 and have haste.'
+    });
+    axios.get.mockResolvedValue({ data: { data: [{ name: 'Goblin Warchief' }] } });
+
+    const app = buildApp();
+    await request(app).get(`/api/cards/${card._id}/synergies`).set('Authorization', `Bearer ${makeToken(user)}`).expect(200);
+    const callsAfterFirst = axios.get.mock.calls.length;
+    await request(app).get(`/api/cards/${card._id}/synergies`).set('Authorization', `Bearer ${makeToken(user)}`).expect(200);
+
+    expect(axios.get.mock.calls.length).toBe(callsAfterFirst);
+  });
 });
