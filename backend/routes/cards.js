@@ -1,0 +1,1077 @@
+// backend/routes/cards.js
+const express = require('express');
+const router = express.Router();
+const mongoose = require('mongoose');
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
+const { verifyToken, requireAuth, requireEditor } = require('../middleware/auth');
+const { buildUserQuery, getUserId } = require('../middleware/multiUser');
+const { activityLoggers } = require('../middleware/activityLogger');
+const { getPriceWithFallback } = require('../utils/pricing');
+const { getFromCache, setInCache, clearCache } = require('../utils/statsCache');
+const { CACHE_DIR, cacheCardImage } = require('../utils/imageCache');
+const { fetchCardFromScryfall } = require('../utils/scryfallLookup');
+const CardPriceSnapshot = require('../models/CardPriceSnapshot');
+const CardPriceHistory = require('../models/CardPriceHistory');
+
+router.use(verifyToken);
+
+// Parse card line to extract name, quantity, and metadata (set code, collector number, rarity)
+// Supports formats:
+// - "Lightning Bolt" (plain name)
+// - "Lightning Bolt (M10)" (set code only)
+// - "Lightning Bolt (M10) 146" (set code + collector number)
+// - "Lightning Bolt (U 146 M10)" (rarity + collector number + set code)
+// - "4 Lightning Bolt" (quantity prefix for any format)
+function parseCardLine(line) {
+  // Parse quantity (e.g., "4 Lightning Bolt" -> quantity: 4, rest: "Lightning Bolt")
+  const qtyMatch = line.trim().match(/^(\d+)\s+(.+)$/);
+  let quantity = 1;
+  let rest = line.trim();
+
+  if (qtyMatch) {
+    quantity = parseInt(qtyMatch[1]);
+    rest = qtyMatch[2];
+  }
+
+  // Initialize result
+  const result = {
+    cardName: rest,
+    quantity: quantity,
+    setCode: null,
+    collectorNumber: null,
+    rarity: null
+  };
+
+  // Try to match format: (R 0226 LCI) - full format with rarity
+  const fullMatch = rest.match(/^(.+?)\s*\(([CURMLS])\s+(\d+)\s+([A-Z0-9]+)\)\s*$/i);
+  if (fullMatch) {
+    result.cardName = fullMatch[1].trim();
+    result.rarity = fullMatch[2].toUpperCase();
+    result.collectorNumber = fullMatch[3];
+    result.setCode = fullMatch[4].toUpperCase();
+    return result;
+  }
+
+  // Try to match format: (LCI) 0226 - set code + collector number
+  const setCollectorMatch = rest.match(/^(.+?)\s*\(([A-Z0-9]+)\)\s+([A-Z0-9\-]+)\s*$/i);
+  if (setCollectorMatch) {
+    result.cardName = setCollectorMatch[1].trim();
+    result.setCode = setCollectorMatch[2].toUpperCase();
+    result.collectorNumber = setCollectorMatch[3];
+    return result;
+  }
+
+  // Try to match format: (LCI) - set code only
+  const setOnlyMatch = rest.match(/^(.+?)\s*\(([A-Z0-9]+)\)\s*$/i);
+  if (setOnlyMatch) {
+    result.cardName = setOnlyMatch[1].trim();
+    result.setCode = setOnlyMatch[2].toUpperCase();
+    return result;
+  }
+
+  // No metadata found - plain card name
+  return result;
+}
+
+// Get all cards
+router.get('/', requireAuth, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const userId = getUserId(req);
+
+    // Check cache first
+    const cached = getFromCache('cards', userId);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    const query = buildUserQuery({}, req);
+    const cards = await Card.find(query).sort({ name: 1 });
+
+    // Store in cache
+    setInCache('cards', userId, cards);
+
+    res.json(cards);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get single card
+router.get('/:id', requireAuth, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const card = await Card.findOne(query);
+    if (!card) return res.status(404).json({ message: 'Card not found' });
+    res.json(card);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Update prices from Scryfall (with MTGGoldfish backup)
+router.post('/:id/update-price', requireAuth, requireEditor, activityLoggers.priceUpdate, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const { force, fullData } = req.query; // Optional: force update, fullData for complete card info
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const card = await Card.findOne(query);
+    if (!card) return res.status(404).json({ message: 'Card not found' });
+
+    // Capture price before update for lastPrice tracking
+    const oldPrice = card.price;
+
+    // Skip if card already has price and oracle text (unless force=true or fullData=true)
+    if (!force && !fullData && card.price > 0 && card.oracleText) {
+      return res.json({
+        ...card.toObject(),
+        skipped: true,
+        message: 'Card already has price and data. Use force=true to update anyway.'
+      });
+    }
+
+    // If fullData is requested, fetch complete card data from Scryfall
+    if (fullData === 'true') {
+      try {
+        const { cardData } = await fetchCardFromScryfall(card.name, card.setCode, card.collectorNumber);
+
+        // Get pricing
+        const priceData = await getPriceWithFallback(card.name, card.isFoil);
+
+        // Cache image and get local URL
+        const scryfallImageUrl = cardData.image_uris ? cardData.image_uris.normal : null;
+        const cachedImageUrl = await cacheCardImage(cardData.id, scryfallImageUrl);
+
+        // Update all card fields with Scryfall data
+        card.set = cardData.set_name;
+        card.setCode = cardData.set.toUpperCase();
+        card.collectorNumber = cardData.collector_number;
+        card.rarity = cardData.rarity[0].toUpperCase();
+        card.colors = cardData.colors || [];
+        card.types = cardData.type_line ? cardData.type_line.split('â€”')[0].trim().split(' ') : [];
+        card.manaCost = cardData.mana_cost || '';
+        card.scryfallId = cardData.id;
+        card.imageUrl = cachedImageUrl;
+        card.oracleText = cardData.oracle_text || '';
+        card.price = priceData.usd > 0 ? priceData.usd : card.price;
+      } catch (error) {
+        console.error(`Failed to fetch full data for ${card.name}:`, error.message);
+        // Fall back to just price update
+        const priceData = await getPriceWithFallback(card.name, card.isFoil);
+        card.price = priceData.usd > 0 ? priceData.usd : card.price;
+      }
+    } else {
+      // Just update price and oracle text
+      const priceData = await getPriceWithFallback(card.name, card.isFoil);
+      const price = priceData.usd > 0 ? priceData.usd : card.price;
+      card.price = price;
+
+      // Also fetch oracle text if missing
+      if (!card.oracleText) {
+        try {
+          const response = await axios.get(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(card.name)}`);
+          card.oracleText = response.data.oracle_text || '';
+        } catch (error) {
+          console.error(`Failed to fetch oracle text for ${card.name}:`, error.message);
+        }
+      }
+    }
+
+    // Track price change: store old price in lastPrice if price changed
+    if (oldPrice > 0 && card.price !== oldPrice) {
+      card.lastPrice = oldPrice;
+    }
+
+    await card.save();
+
+    // Save daily price snapshot for this card
+    try {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const existingSnap = await CardPriceSnapshot.findOne({ cardId: card._id, createdAt: { $gte: todayStart } });
+      if (!existingSnap) {
+        const snapData = { cardId: card._id, price: card.price };
+        if (req.userId) snapData.userId = req.userId;
+        await CardPriceSnapshot.create(snapData);
+      }
+    } catch {
+      // Non-critical: don't fail if snapshot fails
+    }
+
+    const userId = getUserId(req);
+    clearCache(userId);
+
+    res.json(card);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Bulk update all prices from Scryfall (with MTGGoldfish backup)
+router.post('/update-all-prices', requireAuth, requireEditor, activityLoggers.priceBulkUpdate, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const { force, fullData } = req.query; // Optional: force update, fullData for complete card info
+    const cardQuery = buildUserQuery({}, req);
+    const cards = await Card.find(cardQuery);
+    let updated = 0;
+    let skipped = 0;
+
+    for (const card of cards) {
+      try {
+        // Capture price before update for lastPrice tracking
+        const oldPrice = card.price;
+
+        // Skip if card already has price and oracle text (unless force=true or fullData=true)
+        if (!force && !fullData && card.price > 0 && card.oracleText) {
+          console.log(`Skipping ${card.name} - already has price and data`);
+          skipped++;
+          continue;
+        }
+
+        // If fullData is requested, fetch complete card data from Scryfall
+        if (fullData === 'true') {
+          try {
+            const { cardData } = await fetchCardFromScryfall(card.name, card.setCode, card.collectorNumber);
+
+            // Pricing is already included in cardData - reuse it instead of a
+            // second Scryfall round-trip. Only fall through to the MTGGoldfish
+            // backup (via getPriceWithFallback) if Scryfall itself has no price.
+            const scryfallPrice = card.isFoil
+              ? (cardData.prices?.usd_foil ? parseFloat(cardData.prices.usd_foil) : 0)
+              : (cardData.prices?.usd ? parseFloat(cardData.prices.usd) : 0);
+            const priceData = scryfallPrice > 0
+              ? { usd: scryfallPrice }
+              : await getPriceWithFallback(card.name, card.isFoil);
+
+            // Cache image and get local URL
+            const scryfallImageUrl = cardData.image_uris ? cardData.image_uris.normal : null;
+            const cachedImageUrl = await cacheCardImage(cardData.id, scryfallImageUrl);
+
+            // Update all card fields with Scryfall data
+            card.set = cardData.set_name;
+            card.setCode = cardData.set.toUpperCase();
+            card.collectorNumber = cardData.collector_number;
+            card.rarity = cardData.rarity[0].toUpperCase();
+            card.colors = cardData.colors || [];
+            card.types = cardData.type_line ? cardData.type_line.split('â€”')[0].trim().split(' ') : [];
+            card.manaCost = cardData.mana_cost || '';
+            card.scryfallId = cardData.id;
+            card.imageUrl = cachedImageUrl;
+            card.oracleText = cardData.oracle_text || '';
+            card.price = priceData.usd > 0 ? priceData.usd : card.price;
+          } catch (error) {
+            console.error(`Failed to fetch full data for ${card.name}:`, error.message);
+            // Fall back to just price update
+            const priceData = await getPriceWithFallback(card.name, card.isFoil);
+            card.price = priceData.usd > 0 ? priceData.usd : card.price;
+          }
+        } else {
+          // Just update price and oracle text
+          const priceData = await getPriceWithFallback(card.name, card.isFoil);
+          const price = priceData.usd > 0 ? priceData.usd : card.price;
+          card.price = price;
+
+          // Also fetch oracle text if missing
+          if (!card.oracleText) {
+            try {
+              const response = await axios.get(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(card.name)}`);
+              card.oracleText = response.data.oracle_text || '';
+            } catch (error) {
+              console.error(`Failed to fetch oracle text for ${card.name}:`, error.message);
+            }
+          }
+        }
+
+        // Track price change: store old price in lastPrice if price changed
+        if (oldPrice > 0 && card.price !== oldPrice) {
+          card.lastPrice = oldPrice;
+        }
+
+        await card.save();
+        updated++;
+
+        // Save daily price snapshot for this card
+        try {
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          const existingSnap = await CardPriceSnapshot.findOne({ cardId: card._id, createdAt: { $gte: todayStart } });
+          if (!existingSnap) {
+            const snapData = { cardId: card._id, price: card.price };
+            if (req.userId) snapData.userId = req.userId;
+            await CardPriceSnapshot.create(snapData);
+          }
+        } catch {
+          // Non-critical
+        }
+
+        // Rate limiting - be respectful to servers. Lowered from 500ms since
+        // the fullData path now makes ~1 Scryfall call per card instead of ~2
+        // (price is read from the already-fetched cardData, see above).
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } catch (error) {
+        console.error(`Error updating ${card.name}:`, error.message);
+      }
+    }
+
+    // Clear cache if any cards were updated
+    if (updated > 0) {
+      const userId = getUserId(req);
+      clearCache(userId);
+    }
+
+    res.json({
+      message: `Updated ${updated} of ${cards.length} cards (${skipped} skipped)`,
+      updated,
+      skipped,
+      total: cards.length
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Bulk import cards from list (with offline fallback)
+router.post('/bulk-import', requireAuth, requireEditor, activityLoggers.cardBulkImport, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const { cardList, offlineMode } = req.body; // Array of strings like "4 Lightning Bolt" or "Lightning Bolt"
+    const userId = getUserId(req);
+    const results = {
+      added: [],
+      failed: [],
+      merged: [],
+      offline: [],
+      total: cardList.length
+    };
+
+    for (const line of cardList) {
+      try {
+        // Parse card line to extract name, quantity, and metadata
+        const parsed = parseCardLine(line);
+        const { cardName, quantity, setCode, collectorNumber, rarity } = parsed;
+
+        if (!cardName) continue;
+
+        let cardInfo;
+        let isOffline = offlineMode;
+
+        // Try to fetch from Scryfall (unless explicitly in offline mode)
+        if (!offlineMode) {
+          try {
+            // Use new fetchCardFromScryfall with exact lookup and fallback
+            const { cardData } = await fetchCardFromScryfall(cardName, setCode, collectorNumber);
+
+            // Get pricing
+            const priceData = await getPriceWithFallback(cardName);
+
+            // Cache image and get local URL
+            const scryfallImageUrl = cardData.image_uris ? cardData.image_uris.normal : null;
+            const cachedImageUrl = await cacheCardImage(cardData.id, scryfallImageUrl);
+
+            // Prepare card object with full data including new fields
+            cardInfo = {
+              name: cardData.name,
+              set: cardData.set_name,
+              setCode: setCode || cardData.set.toUpperCase(),
+              collectorNumber: collectorNumber || cardData.collector_number,
+              rarity: rarity || cardData.rarity[0].toUpperCase(),
+              quantity: quantity,
+              condition: 'NM',
+              price: priceData.usd,
+              colors: cardData.colors || [],
+              types: cardData.type_line ? cardData.type_line.split('â€”')[0].trim().split(' ') : [],
+              manaCost: cardData.mana_cost || '',
+              scryfallId: cardData.id,
+              imageUrl: cachedImageUrl,
+              isFoil: false,
+              oracleText: cardData.oracle_text || '',
+              tags: []
+            };
+          } catch (scryfallError) {
+            // Scryfall failed - fall back to offline mode for this card
+            console.log(`Scryfall failed for ${cardName}, using offline mode`);
+            isOffline = true;
+          }
+        }
+
+        // If offline or Scryfall failed, create card with minimal data
+        if (isOffline) {
+          cardInfo = {
+            name: cardName,
+            set: 'Unknown',
+            setCode: setCode || null,
+            collectorNumber: collectorNumber || null,
+            rarity: rarity || null,
+            quantity: quantity,
+            condition: 'NM',
+            price: 0,
+            colors: [],
+            types: [],
+            manaCost: '',
+            scryfallId: null,
+            imageUrl: null,
+            isFoil: false,
+            oracleText: '',
+            tags: []
+          };
+        }
+
+        // Check for existing card with smart duplicate detection
+        // Priority: use collector number if available for exact matching
+        let baseQuery = {
+          name: cardInfo.name,
+          condition: cardInfo.condition,
+          isFoil: cardInfo.isFoil || false
+        };
+
+        // If we have exact collector number data, use it for duplicate detection (more precise)
+        if (cardInfo.setCode && cardInfo.collectorNumber) {
+          baseQuery.setCode = cardInfo.setCode;
+          baseQuery.collectorNumber = cardInfo.collectorNumber;
+        } else {
+          // Fall back to set name matching (backward compatible)
+          baseQuery.set = cardInfo.set;
+        }
+
+        const query = buildUserQuery(baseQuery, req);
+        const existingCard = await Card.findOne(query);
+
+        if (existingCard) {
+          existingCard.quantity += quantity;
+          await existingCard.save();
+          if (isOffline) {
+            results.offline.push(`${cardInfo.name} - merged ${quantity} (offline)`);
+          } else {
+            results.merged.push(`${cardInfo.name} (${cardInfo.set}) - merged ${quantity}`);
+          }
+        } else {
+          if (userId) cardInfo.userId = userId;
+          const newCard = new Card(cardInfo);
+          await newCard.save();
+          if (isOffline) {
+            results.offline.push(`${cardInfo.name} - added ${quantity} (offline, no details)`);
+          } else {
+            results.added.push(`${cardInfo.name} (${cardInfo.set}) - added ${quantity}`);
+          }
+        }
+
+        // Rate limiting (skip in offline mode)
+        if (!isOffline) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+      } catch (error) {
+        console.error(`Error importing ${line}:`, error.message);
+        results.failed.push(`${line} - ${error.message}`);
+      }
+    }
+
+    // Clear cache if any cards were added or merged
+    if (results.added.length > 0 || results.merged.length > 0 || results.offline.length > 0) {
+      clearCache(userId);
+      // Non-blocking milestone check once after all cards are imported
+      if (userId) {
+        const { checkCollectionMilestones } = require('../utils/milestoneAwards');
+        checkCollectionMilestones(userId, Card).catch(() => {});
+      }
+    }
+
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Bulk import full card data (for JSON/CSV imports)
+router.post('/bulk-import-full', requireAuth, requireEditor, activityLoggers.cardBulkImport, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const { cards } = req.body; // Array of card objects with full data
+    const userId = getUserId(req);
+    const results = {
+      added: [],
+      failed: [],
+      merged: [],
+      total: cards.length
+    };
+
+    for (const cardData of cards) {
+      try {
+        if (!cardData.name) {
+          results.failed.push('Unknown - missing card name');
+          continue;
+        }
+
+        // Normalize the card data
+        const cardInfo = {
+          name: cardData.name,
+          set: cardData.set || 'Unknown',
+          setCode: cardData.setCode || '',
+          collectorNumber: cardData.collectorNumber || '',
+          rarity: cardData.rarity || '',
+          quantity: parseInt(cardData.quantity) || 1,
+          condition: cardData.condition || 'NM',
+          price: parseFloat(cardData.price) || 0,
+          colors: Array.isArray(cardData.colors) ? cardData.colors :
+                  (typeof cardData.colors === 'string' && cardData.colors ? cardData.colors.split(';') : []),
+          types: Array.isArray(cardData.types) ? cardData.types :
+                 (typeof cardData.types === 'string' && cardData.types ? cardData.types.split(';') : []),
+          manaCost: cardData.manaCost || '',
+          scryfallId: cardData.scryfallId || null,
+          imageUrl: cardData.imageUrl || null,
+          isFoil: cardData.isFoil === true || cardData.isFoil === 'true',
+          isToken: cardData.isToken === true || cardData.isToken === 'true',
+          oracleText: cardData.oracleText || '',
+          tags: Array.isArray(cardData.tags) ? cardData.tags :
+                (typeof cardData.tags === 'string' && cardData.tags ? cardData.tags.split(';') : [])
+        };
+
+        // Check for existing card (auto-merge by name + set + condition + isFoil)
+        const existingQuery = buildUserQuery({
+          name: cardInfo.name,
+          set: cardInfo.set,
+          condition: cardInfo.condition,
+          isFoil: cardInfo.isFoil
+        }, req);
+        const existingCard = await Card.findOne(existingQuery);
+
+        if (existingCard) {
+          existingCard.quantity += cardInfo.quantity;
+          await existingCard.save();
+          results.merged.push(`${cardInfo.name} (${cardInfo.set}) - merged ${cardInfo.quantity}`);
+        } else {
+          if (userId) cardInfo.userId = userId;
+          const newCard = new Card(cardInfo);
+          await newCard.save();
+          results.added.push(`${cardInfo.name} (${cardInfo.set}) - added ${cardInfo.quantity}`);
+        }
+
+      } catch (error) {
+        console.error(`Error importing card:`, error.message);
+        results.failed.push(`${cardData.name || 'Unknown'} - ${error.message}`);
+      }
+    }
+
+    // Clear cache if any cards were added or merged
+    if (results.added.length > 0 || results.merged.length > 0) {
+      clearCache(userId);
+    }
+
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Offline-only bulk import (no API calls)
+router.post('/bulk-import-offline', requireAuth, requireEditor, activityLoggers.cardBulkImport, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const { cardList } = req.body;
+    const userId = getUserId(req);
+    const results = {
+      added: [],
+      failed: [],
+      merged: [],
+      total: cardList.length
+    };
+
+    for (const line of cardList) {
+      try {
+        // Parse quantity and card name
+        const match = line.trim().match(/^(\d+)\s+(.+)$/);
+        let quantity = 1;
+        let cardName = line.trim();
+
+        if (match) {
+          quantity = parseInt(match[1]);
+          cardName = match[2];
+        }
+
+        // Remove set code and collector number if present
+        cardName = cardName.replace(/\s*\([A-Z0-9]+\)\s*[A-Z0-9\-]*$/i, '').trim();
+
+        if (!cardName) continue;
+
+        // Create card with minimal data (no API calls)
+        const cardInfo = {
+          name: cardName,
+          set: 'Unknown',
+          quantity: quantity,
+          condition: 'NM',
+          price: 0,
+          colors: [],
+          types: [],
+          manaCost: '',
+          scryfallId: null,
+          imageUrl: null,
+          isFoil: false,
+          oracleText: '',
+          tags: []
+        };
+
+        // Check for existing card (auto-merge) scoped to user
+        const existingQuery = buildUserQuery({
+          name: cardInfo.name,
+          set: cardInfo.set,
+          condition: cardInfo.condition,
+          isFoil: cardInfo.isFoil
+        }, req);
+        const existingCard = await Card.findOne(existingQuery);
+
+        if (existingCard) {
+          existingCard.quantity += quantity;
+          await existingCard.save();
+          results.merged.push(`${cardInfo.name} - merged ${quantity} (offline)`);
+        } else {
+          if (userId) cardInfo.userId = userId;
+          const newCard = new Card(cardInfo);
+          await newCard.save();
+          results.added.push(`${cardInfo.name} - added ${quantity} (offline, no details)`);
+        }
+
+      } catch (error) {
+        console.error(`Error importing ${line}:`, error.message);
+        results.failed.push(`${line} - ${error.message}`);
+      }
+    }
+
+    // Clear cache if any cards were added or merged
+    if (results.added.length > 0 || results.merged.length > 0) {
+      clearCache(userId);
+    }
+
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Create new card (or merge with existing if duplicate)
+router.post('/', requireAuth, requireEditor, activityLoggers.cardCreate, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const { name, set, condition, quantity, isFoil } = req.body;
+    const userId = getUserId(req);
+
+    // Check if card with same name, set, condition, and foil status already exists (for this user)
+    const existingQuery = buildUserQuery({ name, set, condition, isFoil: isFoil || false }, req);
+    const existingCard = await Card.findOne(existingQuery);
+
+    if (existingCard) {
+      // Card exists - increment quantity instead of creating duplicate
+      existingCard.quantity += quantity || 1;
+      const updatedCard = await existingCard.save();
+      clearCache(userId);
+      // Non-blocking milestone check after merge
+      if (userId) {
+        const { checkCollectionMilestones } = require('../utils/milestoneAwards');
+        checkCollectionMilestones(userId, Card).catch(() => {});
+      }
+      return res.status(200).json({
+        ...updatedCard.toObject(),
+        merged: true,
+        message: `Merged with existing card. New quantity: ${updatedCard.quantity}`
+      });
+    }
+
+    // Card doesn't exist - create new entry
+    const cardData = { ...req.body };
+    if (userId) cardData.userId = userId;
+    const card = new Card(cardData);
+    const newCard = await card.save();
+    clearCache(userId);
+    // Non-blocking milestone check after card creation
+    if (newCard.userId) {
+      const { checkCollectionMilestones } = require('../utils/milestoneAwards');
+      checkCollectionMilestones(newCard.userId, Card).catch(() => {});
+    }
+    res.status(201).json(newCard);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Update card
+router.put('/:id', requireAuth, requireEditor, activityLoggers.cardUpdate, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const userId = getUserId(req);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const card = await Card.findOne(query);
+    if (!card) return res.status(404).json({ message: 'Card not found' });
+
+    // Don't allow changing userId
+    const { userId: _, ...updateData } = req.body;
+    Object.assign(card, updateData);
+    const updatedCard = await card.save();
+
+    // Record price history point for trend tracking
+    if (updatedCard.price > 0) {
+      try {
+        await CardPriceHistory.create({
+          cardId: updatedCard._id,
+          userId: userId,
+          price: updatedCard.price
+        });
+      } catch (histErr) {
+        console.error('Error recording price history:', histErr.message);
+      }
+    }
+
+    clearCache(userId);
+    // Non-blocking milestone check after card update (quantity may have changed)
+    if (updatedCard.userId) {
+      const { checkCollectionMilestones } = require('../utils/milestoneAwards');
+      checkCollectionMilestones(updatedCard.userId, Card).catch(() => {});
+    }
+    res.json(updatedCard);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Delete card
+router.delete('/:id', requireAuth, requireEditor, activityLoggers.cardDelete, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const userId = getUserId(req);
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const card = await Card.findOne(query);
+    if (!card) return res.status(404).json({ message: 'Card not found' });
+
+    await card.deleteOne();
+    clearCache(userId);
+    res.json({ message: 'Card deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get price history for a specific card
+router.get('/:id/price-history', requireAuth, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const card = await Card.findOne(query);
+    if (!card) return res.status(404).json({ message: 'Card not found' });
+
+    const days = Math.max(1, Math.min(parseInt(req.query.days) || 90, 365));
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    const snapshots = await CardPriceSnapshot.find({
+      cardId: card._id,
+      createdAt: { $gte: startDate }
+    }).sort({ createdAt: 1 }).lean();
+
+    // Also include points recorded via CardPriceHistory (e.g. on card edits)
+    const historyPoints = await CardPriceHistory.find({
+      cardId: card._id,
+      date: { $gte: startDate }
+    }).sort({ date: 1 }).lean();
+
+    // Normalize to a unified { price, date } shape and merge chronologically
+    const merged = [
+      ...snapshots.map(s => ({ ...s, date: s.createdAt })),
+      ...historyPoints
+    ].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    res.json(merged);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Update a card's finance fields (buylist/sell values, price alert)
+router.put('/:id/finance', requireAuth, requireEditor, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const { buylistValue, sellValue, priceAlert } = req.body;
+    const userId = getUserId(req);
+    const card = await Card.findOne(buildUserQuery({ _id: req.params.id }, req));
+
+    if (!card) {
+      return res.status(404).json({ message: 'Card not found' });
+    }
+
+    if (buylistValue !== undefined) card.buylistValue = buylistValue;
+    if (sellValue !== undefined) card.sellValue = sellValue;
+    if (priceAlert !== undefined) card.priceAlert = priceAlert;
+
+    await card.save();
+    clearCache(userId);
+
+    res.json(card);
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating card finance', error: err.message });
+  }
+});
+
+// Add tag to a card
+router.post('/:id/tags', requireAuth, requireEditor, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const { tag } = req.body;
+    if (!tag || typeof tag !== 'string') {
+      return res.status(400).json({ message: 'Tag must be a non-empty string' });
+    }
+
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const card = await Card.findOne(query);
+    if (!card) return res.status(404).json({ message: 'Card not found' });
+
+    // Prevent duplicates, normalize to lowercase
+    const normalizedTag = tag.toLowerCase().trim();
+    if (!card.tags) {
+      card.tags = [];
+    }
+    if (!card.tags.includes(normalizedTag)) {
+      card.tags.push(normalizedTag);
+      await card.save();
+    }
+
+    res.json(card);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Remove tag from a card
+router.delete('/:id/tags/:tag', requireAuth, requireEditor, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const card = await Card.findOne(query);
+    if (!card) return res.status(404).json({ message: 'Card not found' });
+
+    if (card.tags) {
+      card.tags = card.tags.filter(t => t !== req.params.tag);
+      await card.save();
+    }
+
+    res.json(card);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Bulk update oracle text for existing cards (one-time migration/backfill)
+router.post('/update-all-oracle-text', requireAuth, requireEditor, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const cardQuery = buildUserQuery({}, req);
+    const cards = await Card.find(cardQuery);
+    let updated = 0;
+    let failed = 0;
+
+    for (const card of cards) {
+      try {
+        // Skip if already has oracle text
+        if (card.oracleText && card.oracleText.length > 0) {
+          continue;
+        }
+
+        // Fetch from Scryfall using card name
+        const response = await axios.get(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(card.name)}`);
+        card.oracleText = response.data.oracle_text || '';
+        await card.save();
+        updated++;
+
+        // Rate limiting - be respectful to Scryfall (100ms delay)
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(`Error updating oracle text for ${card.name}:`, error.message);
+        failed++;
+      }
+    }
+
+    res.json({
+      message: `Updated ${updated} cards, ${failed} failed`,
+      updated,
+      failed,
+      total: cards.length
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Migrate existing cards to use cached images
+router.post('/migrate-images-to-cache', requireAuth, requireEditor, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const query = buildUserQuery({ scryfallId: { $ne: null } }, req);
+    const cards = await Card.find(query);
+    let migrated = 0;
+    let failed = 0;
+
+    for (const card of cards) {
+      try {
+        // Skip if already using cached URL
+        if (card.imageUrl && card.imageUrl.startsWith('/api/images/')) {
+          continue;
+        }
+
+        // If card has Scryfall ID but no image URL, fetch from Scryfall
+        if (!card.imageUrl && card.scryfallId) {
+          try {
+            const response = await axios.get(`https://api.scryfall.com/cards/${card.scryfallId}`);
+            card.imageUrl = response.data.image_uris ? response.data.image_uris.normal : null;
+          } catch (error) {
+            console.error(`Failed to fetch image URL for ${card.name}:`, error.message);
+            failed++;
+            continue;
+          }
+        }
+
+        // Cache the image
+        if (card.imageUrl) {
+          const cachedUrl = await cacheCardImage(card.scryfallId, card.imageUrl);
+          if (cachedUrl !== card.imageUrl) {
+            card.imageUrl = cachedUrl;
+            await card.save();
+            migrated++;
+          }
+        }
+
+        // Rate limiting - be respectful to Scryfall
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(`Error migrating ${card.name}:`, error.message);
+        failed++;
+      }
+    }
+
+    res.json({
+      message: `Migrated ${migrated} cards, ${failed} failed`,
+      migrated,
+      failed,
+      total: cards.length
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Bulk update multiple cards
+router.post('/bulk-update', requireAuth, requireEditor, activityLoggers.cardBulkUpdate, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const userId = getUserId(req);
+    const { cardIds, updates } = req.body;
+
+    if (!cardIds || !Array.isArray(cardIds) || cardIds.length === 0) {
+      return res.status(400).json({ message: 'cardIds array is required' });
+    }
+
+    if (!updates || Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: 'updates object is required' });
+    }
+
+    let updatedCount = 0;
+    const results = [];
+
+    for (const cardId of cardIds) {
+      try {
+        const query = buildUserQuery({ _id: cardId }, req);
+        const card = await Card.findOne(query);
+        if (!card) {
+          results.push({ id: cardId, status: 'not found' });
+          continue;
+        }
+
+        // Apply updates
+        if (updates.condition) card.condition = updates.condition;
+        if (updates.location !== undefined) card.location = updates.location;
+
+        // Handle tag operations
+        if (updates.addTags && Array.isArray(updates.addTags)) {
+          if (!card.tags) card.tags = [];
+          for (const tag of updates.addTags) {
+            const normalizedTag = tag.toLowerCase().trim();
+            if (!card.tags.includes(normalizedTag)) {
+              card.tags.push(normalizedTag);
+            }
+          }
+        }
+
+        if (updates.removeTags && Array.isArray(updates.removeTags)) {
+          if (card.tags) {
+            card.tags = card.tags.filter(t => !updates.removeTags.includes(t));
+          }
+        }
+
+        await card.save();
+        updatedCount++;
+        results.push({ id: cardId, status: 'updated' });
+      } catch (error) {
+        results.push({ id: cardId, status: 'error', error: error.message });
+      }
+    }
+
+    if (updatedCount > 0) {
+      clearCache(userId);
+    }
+
+    res.json({
+      message: `Updated ${updatedCount} of ${cardIds.length} cards`,
+      updated: updatedCount,
+      total: cardIds.length,
+      results
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Bulk delete multiple cards
+router.delete('/bulk-delete', requireAuth, requireEditor, activityLoggers.cardBulkDelete, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const userId = getUserId(req);
+    const { cardIds } = req.body;
+
+    if (!cardIds || !Array.isArray(cardIds) || cardIds.length === 0) {
+      return res.status(400).json({ message: 'cardIds array is required' });
+    }
+
+    let deletedCount = 0;
+    const results = [];
+
+    for (const cardId of cardIds) {
+      try {
+        const query = buildUserQuery({ _id: cardId }, req);
+        const card = await Card.findOne(query);
+        if (!card) {
+          results.push({ id: cardId, status: 'not found' });
+          continue;
+        }
+
+        await card.deleteOne();
+        deletedCount++;
+        results.push({ id: cardId, status: 'deleted' });
+      } catch (error) {
+        results.push({ id: cardId, status: 'error', error: error.message });
+      }
+    }
+
+    if (deletedCount > 0) {
+      clearCache(userId);
+    }
+
+    res.json({
+      message: `Deleted ${deletedCount} of ${cardIds.length} cards`,
+      deleted: deletedCount,
+      total: cardIds.length,
+      results
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+module.exports = router;
