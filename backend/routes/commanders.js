@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const axios = require('axios');
 const { verifyToken, requireAuth } = require('../middleware/auth');
 const { buildUserQuery } = require('../middleware/multiUser');
+const { cachedApiCall } = require('../utils/apiCache');
 
 router.use(verifyToken);
 
@@ -71,11 +72,18 @@ router.get('/recommend', requireAuth, async (req, res) => {
 
     const searchQuery = `t:legendary t:creature ${colorQuery} ${themeQuery}`.trim();
     try {
-      const response = await axios.get(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}&order=edhrec&unique=cards`);
-      return res.json(response.data.data.slice(0, 20));
+      const data = await cachedApiCall(`scryfall-search:${searchQuery}`, async () => {
+        const response = await axios.get(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}&order=edhrec&unique=cards`);
+        return response.data;
+      });
+      return res.json(data.data.slice(0, 20));
     } catch (scryfallError) {
-      const fallback = await axios.get('https://api.scryfall.com/cards/search?q=t:legendary+t:creature&order=edhrec&unique=cards');
-      return res.json(fallback.data.data.slice(0, 20));
+      const fallbackQuery = 't:legendary+t:creature';
+      const fallbackData = await cachedApiCall(`scryfall-search:${fallbackQuery}`, async () => {
+        const fallback = await axios.get(`https://api.scryfall.com/cards/search?q=${fallbackQuery}&order=edhrec&unique=cards`);
+        return fallback.data;
+      });
+      return res.json(fallbackData.data.slice(0, 20));
     }
   } catch (error) {
     res.status(500).json({ message: error.message });

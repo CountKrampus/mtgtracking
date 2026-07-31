@@ -26,6 +26,7 @@ const Card = mongoose.models.Card || mongoose.model('Card', cardSchema);
 
 const User = require('../models/User');
 const { verifyToken } = require('../middleware/auth');
+const { ApiCache } = require('../utils/apiCache');
 
 let mongod;
 
@@ -42,6 +43,7 @@ afterAll(async () => {
 afterEach(async () => {
   await User.deleteMany({});
   await Card.deleteMany({});
+  await ApiCache.deleteMany({});
   jest.clearAllMocks();
 });
 
@@ -104,5 +106,16 @@ describe('GET /api/commanders/recommend', () => {
       .expect(200);
 
     expect(res.body).toEqual([{ name: 'The Ur-Dragon' }]);
+  });
+
+  test('caches the Scryfall query so a second identical request does not re-call Scryfall', async () => {
+    const user = await User.create({ email: 'd@test.com', username: 'user4', passwordHash: 'x', role: 'editor' });
+    axios.get.mockResolvedValue({ data: { data: [{ name: 'Krenko, Mob Boss' }] } });
+
+    const app = buildApp();
+    await request(app).get('/api/commanders/recommend').set('Authorization', `Bearer ${makeToken(user)}`).expect(200);
+    await request(app).get('/api/commanders/recommend').set('Authorization', `Bearer ${makeToken(user)}`).expect(200);
+
+    expect(axios.get).toHaveBeenCalledTimes(1);
   });
 });
