@@ -2,15 +2,13 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-const fs = require('fs');
-const path = require('path');
 const axios = require('axios');
 const { verifyToken, requireAuth, requireEditor } = require('../middleware/auth');
 const { buildUserQuery, getUserId } = require('../middleware/multiUser');
 const { activityLoggers } = require('../middleware/activityLogger');
 const { getPriceWithFallback } = require('../utils/pricing');
 const { getFromCache, setInCache, clearCache } = require('../utils/statsCache');
-const { CACHE_DIR, cacheCardImage } = require('../utils/imageCache');
+const { cacheCardImage } = require('../utils/imageCache');
 const { fetchCardFromScryfall } = require('../utils/scryfallLookup');
 const CardPriceSnapshot = require('../models/CardPriceSnapshot');
 const CardPriceHistory = require('../models/CardPriceHistory');
