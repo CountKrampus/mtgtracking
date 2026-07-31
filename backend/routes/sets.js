@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const axios = require('axios');
 const { verifyToken, requireAuth } = require('../middleware/auth');
 const { buildUserQuery } = require('../middleware/multiUser');
+const { cachedApiCall } = require('../utils/apiCache');
 
 router.use(verifyToken);
 
@@ -31,8 +32,10 @@ router.get('/completion', requireAuth, async (req, res) => {
 
     for (const code of setCodes.slice(0, 20)) {
       try {
-        const setResponse = await axios.get(`https://api.scryfall.com/sets/${code}`);
-        const setInfo = setResponse.data;
+        const setInfo = await cachedApiCall(`scryfall-set:${code}`, async () => {
+          const setResponse = await axios.get(`https://api.scryfall.com/sets/${code}`);
+          return setResponse.data;
+        });
         completionData.push({
           setCode: code.toUpperCase(),
           setName: setInfo.name,
@@ -42,7 +45,6 @@ router.get('/completion', requireAuth, async (req, res) => {
           releasedAt: setInfo.released_at,
           setType: setInfo.set_type
         });
-        await new Promise(resolve => setTimeout(resolve, 100));
       } catch (e) {
         // Skip sets Scryfall can't find - matches frontend behavior at App.js:508-511
       }

@@ -25,6 +25,7 @@ const Card = mongoose.models.Card || mongoose.model('Card', cardSchema);
 
 const User = require('../models/User');
 const { verifyToken } = require('../middleware/auth');
+const { ApiCache } = require('../utils/apiCache');
 
 let mongod;
 
@@ -41,6 +42,7 @@ afterAll(async () => {
 afterEach(async () => {
   await User.deleteMany({});
   await Card.deleteMany({});
+  await ApiCache.deleteMany({});
   jest.clearAllMocks();
 });
 
@@ -96,5 +98,17 @@ describe('GET /api/sets/completion', () => {
       .expect(200);
 
     expect(res.body).toEqual([]);
+  });
+
+  test('caches set metadata so a second request does not re-call Scryfall', async () => {
+    const user = await User.create({ email: 'c@test.com', username: 'user3', passwordHash: 'x', role: 'editor' });
+    await Card.create({ userId: user._id, name: 'Card A', set: 'Alpha', setCode: 'lea', quantity: 1, condition: 'NM', price: 0 });
+    axios.get.mockResolvedValue({ data: { name: 'Limited Edition Alpha', card_count: 100, released_at: '1993-08-05', set_type: 'core' } });
+
+    const app = buildApp();
+    await request(app).get('/api/sets/completion').set('Authorization', `Bearer ${makeToken(user)}`).expect(200);
+    await request(app).get('/api/sets/completion').set('Authorization', `Bearer ${makeToken(user)}`).expect(200);
+
+    expect(axios.get).toHaveBeenCalledTimes(1);
   });
 });
