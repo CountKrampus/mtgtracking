@@ -19,7 +19,7 @@ const notificationsRouter = require('./routes/notifications');
 const messagesRouter = require('./routes/messages');
 const { cachedApiCall } = require('./utils/apiCache');
 const { getFromCache, setInCache, clearCache } = require('./utils/statsCache');
-const { CACHE_DIR, cacheCardImage } = require('./utils/imageCache');
+const { CACHE_DIR, cacheCardImage, resolveCachedFilepath } = require('./utils/imageCache');
 const path = require('path');
 const fs = require('fs');
 const { isMultiUserEnabled, verifyToken, requireAuth, requireEditor, requirePermission, checkMaintenanceMode } = require('./middleware/auth');
@@ -447,7 +447,7 @@ app.delete('/api/cache/clear', requireAuth, requireEditor, async (req, res) => {
   try {
     let deletedCount = 0;
     if (fs.existsSync(CACHE_DIR)) {
-      const files = fs.readdirSync(CACHE_DIR);
+      const files = fs.readdirSync(CACHE_DIR, { recursive: true });
       for (const file of files) {
         if (file.endsWith('.jpg') || file.endsWith('.png')) {
           fs.unlinkSync(path.join(CACHE_DIR, file));
@@ -584,7 +584,7 @@ app.get('/api/stats', requireAuth, async (req, res) => {
     let cachedImageCount = 0;
     try {
       if (fs.existsSync(CACHE_DIR)) {
-        const files = fs.readdirSync(CACHE_DIR);
+        const files = fs.readdirSync(CACHE_DIR, { recursive: true });
         cachedImageCount = files.filter(f => f.endsWith('.jpg') || f.endsWith('.png')).length;
       }
     } catch {
@@ -900,10 +900,10 @@ app.delete('/api/tags/:name', requireAuth, requireEditor, activityLoggers.tagDel
 // Serve cached images
 app.get('/api/images/:scryfallId', (req, res) => {
   const { scryfallId } = req.params;
-  const filepath = path.join(CACHE_DIR, `${scryfallId}.jpg`);
+  const filepath = resolveCachedFilepath(scryfallId);
 
   // Check if file exists
-  if (!fs.existsSync(filepath)) {
+  if (!filepath) {
     return res.status(404).json({ message: 'Image not found in cache' });
   }
 
@@ -1252,9 +1252,9 @@ async function buildHashIndex() {
     let errors = 0;
 
     for (const card of cards) {
-      const imagePath = path.join(CACHE_DIR, `${card.scryfallId}.jpg`);
+      const imagePath = resolveCachedFilepath(card.scryfallId);
 
-      if (fs.existsSync(imagePath)) {
+      if (imagePath) {
         try {
           const imageBuffer = fs.readFileSync(imagePath);
           const hash = await computeImageHash(imageBuffer);
