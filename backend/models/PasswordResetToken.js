@@ -26,7 +26,6 @@ const passwordResetTokenSchema = new mongoose.Schema({
 });
 
 // Indexes for efficient queries
-passwordResetTokenSchema.index({ token: 1 });
 passwordResetTokenSchema.index({ expiresAt: 1 });
 passwordResetTokenSchema.index({ used: 1 });
 

@@ -55,7 +55,6 @@ const categorySchema = new mongoose.Schema({
 });
 
 categorySchema.index({ parentCategoryId: 1, displayOrder: 1 });
-categorySchema.index({ slug: 1 });
 categorySchema.index({ isActive: 1 });
 
 categorySchema.pre('save', function(next) {
