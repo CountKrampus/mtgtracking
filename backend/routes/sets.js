@@ -32,8 +32,12 @@ router.get('/completion', requireAuth, async (req, res) => {
 
     for (const code of setCodes.slice(0, 20)) {
       try {
+        // The 100ms delay only runs on a cache miss (real Scryfall request) -
+        // cache hits return instantly, but a cold cache with many owned sets
+        // still respects Scryfall's requested spacing between requests.
         const setInfo = await cachedApiCall(`scryfall-set:${code}`, async () => {
           const setResponse = await axios.get(`https://api.scryfall.com/sets/${code}`);
+          await new Promise(resolve => setTimeout(resolve, 100));
           return setResponse.data;
         });
         completionData.push({
