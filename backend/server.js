@@ -18,6 +18,7 @@ const forumRouter = require('./routes/forum');
 const notificationsRouter = require('./routes/notifications');
 const messagesRouter = require('./routes/messages');
 const { cachedApiCall } = require('./utils/apiCache');
+const { getFromCache, setInCache, clearCache } = require('./utils/statsCache');
 const path = require('path');
 const fs = require('fs');
 const { pipeline } = require('stream/promises');
@@ -108,33 +109,6 @@ mongoose.connect(MONGODB_URI)
   console.log('Roles seeded and permission cache loaded');
 })
 .catch(err => console.error('MongoDB connection error:', err));
-
-// In-memory cache for cards and stats
-const cache = {
-  cards: new Map(),
-  stats: new Map(),
-  ttl: 5 * 60 * 1000 // 5 minute TTL
-};
-
-function getFromCache(key, userId) {
-  const entry = cache[key]?.get(userId?.toString());
-  if (!entry) return null;
-  if (Date.now() - entry.timestamp > cache.ttl) {
-    cache[key].delete(userId?.toString());
-    return null;
-  }
-  return entry.data;
-}
-
-function setInCache(key, userId, data) {
-  if (!cache[key]) cache[key] = new Map();
-  cache[key].set(userId?.toString(), { data, timestamp: Date.now() });
-}
-
-function clearCache(userId) {
-  cache.cards.delete(userId?.toString());
-  cache.stats.delete(userId?.toString());
-}
 
 // Serve user avatars (public endpoint - must be before auth middleware)
 const AVATAR_DIR = path.join(__dirname, 'user-avatars');
