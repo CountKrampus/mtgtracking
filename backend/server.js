@@ -22,7 +22,6 @@ const { getFromCache, setInCache, clearCache } = require('./utils/statsCache');
 const { CACHE_DIR, cacheCardImage } = require('./utils/imageCache');
 const path = require('path');
 const fs = require('fs');
-const { pipeline } = require('stream/promises');
 const { isMultiUserEnabled, verifyToken, requireAuth, requireEditor, requirePermission, checkMaintenanceMode } = require('./middleware/auth');
 const { buildUserQuery, getUserId } = require('./middleware/multiUser');
 const { activityLoggers } = require('./middleware/activityLogger');
