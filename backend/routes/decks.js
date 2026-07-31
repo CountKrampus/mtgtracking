@@ -17,6 +17,7 @@ const { requireAuth, requireEditor } = require('../middleware/auth');
 const { buildUserQuery, getUserId } = require('../middleware/multiUser');
 const { activityLoggers } = require('../middleware/activityLogger');
 const { checkAndAwardBadges } = require('../utils/badgeManager');
+const { calculateSaltScore, estimatePowerLevel } = require('../utils/deckAnalysis');
 const User = require('../models/User');
 
 // Import Card model and getPriceWithFallback from parent scope
@@ -472,8 +473,44 @@ router.get('/:id/stats', requireAuth, async (req, res) => {
     const deck = await Deck.findOne(query);
     if (!deck) return res.status(404).json({ message: 'Deck not found' });
 
+    // Compute deck value from the owned collection (mirrors /:id/ownership's
+    // owned/missing-value pass) so estimatePowerLevel can factor in deckValue.
+    let deckValue = 0;
+    if (Card) {
+      const cardQuery = buildUserQuery({}, req);
+      const collectionCards = await Card.find(cardQuery);
+      const collectionMap = new Map();
+      collectionCards.forEach(card => {
+        if (card.scryfallId) {
+          if (!collectionMap.has(card.scryfallId)) {
+            collectionMap.set(card.scryfallId, []);
+          }
+          collectionMap.get(card.scryfallId).push(card);
+        }
+      });
+
+      const allDeckCards = [
+        deck.commander,
+        ...(deck.partnerCommander ? [deck.partnerCommander] : []),
+        ...deck.mainDeck
+      ];
+
+      for (const deckCard of allDeckCards) {
+        const owned = collectionMap.get(deckCard.scryfallId) || [];
+        const totalOwned = owned.reduce((sum, c) => sum + c.quantity, 0);
+        if (totalOwned > 0) {
+          deckValue += owned[0].price;
+        } else {
+          deckValue += deckCard.price || 0;
+        }
+      }
+    }
+
+    const saltScore = calculateSaltScore(deck);
+    const powerLevel = estimatePowerLevel(deck, deckValue);
+
     if (!GameSession) {
-      return res.json({ gamesPlayed: 0, wins: 0, winRate: 0, avgPlacement: 0, avgTurns: 0, avgDuration: 0, bestMatchups: [], worstMatchups: [] });
+      return res.json({ gamesPlayed: 0, wins: 0, winRate: 0, avgPlacement: 0, avgTurns: 0, avgDuration: 0, bestMatchups: [], worstMatchups: [], powerLevel, saltScore });
     }
 
     const deckId = deck._id;
@@ -518,7 +555,9 @@ router.get('/:id/stats', requireAuth, async (req, res) => {
       avgTurns: gamesWithTurns > 0 ? Math.round(totalTurns / gamesWithTurns) : 0,
       avgDuration: gamesWithDuration > 0 ? Math.round(totalDuration / gamesWithDuration) : 0,
       bestMatchups,
-      worstMatchups
+      worstMatchups,
+      powerLevel,
+      saltScore
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
