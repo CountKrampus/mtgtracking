@@ -46,6 +46,23 @@ const commands = [
 
   new SlashCommandBuilder().setName('deck').setDescription('View a deck')
     .addStringOption(o => o.setName('name').setDescription('Deck name').setRequired(true)),
+
+  new SlashCommandBuilder().setName('similar').setDescription('Find cards similar to one you own')
+    .addStringOption(o => o.setName('card').setDescription('Card name').setRequired(true)),
+
+  new SlashCommandBuilder().setName('synergy').setDescription('Find cards that synergize with one you own')
+    .addStringOption(o => o.setName('card').setDescription('Card name').setRequired(true)),
+
+  new SlashCommandBuilder().setName('commander').setDescription('Get commander recommendations based on your collection')
+    .addStringOption(o => o.setName('colors').setDescription('Restrict to a color identity, e.g. UB or WUBRG')),
+
+  new SlashCommandBuilder().setName('sets').setDescription('Show your set completion progress'),
+
+  new SlashCommandBuilder().setName('location').setDescription('List cards stored at a location')
+    .addStringOption(o => o.setName('name').setDescription('Location name').setRequired(true)),
+
+  new SlashCommandBuilder().setName('deckstats').setDescription("Show a deck's power level and salt score")
+    .addStringOption(o => o.setName('name').setDescription('Deck name').setRequired(true)),
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);

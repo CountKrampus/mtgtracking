@@ -15,6 +15,12 @@ const commands = new Map([
   require('./commands/wishlist'),
   require('./commands/decks'),
   require('./commands/deck'),
+  require('./commands/similar'),
+  require('./commands/synergy'),
+  require('./commands/commander'),
+  require('./commands/sets'),
+  require('./commands/location'),
+  require('./commands/deckstats'),
 ].map(cmd => [cmd.name, cmd]));
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
