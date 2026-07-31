@@ -26,6 +26,7 @@ const Card = mongoose.models.Card || mongoose.model('Card', cardSchema);
 
 const User = require('../models/User');
 const { verifyToken } = require('../middleware/auth');
+const { ApiCache } = require('../utils/apiCache');
 
 let mongod;
 
@@ -42,6 +43,7 @@ afterAll(async () => {
 afterEach(async () => {
   await User.deleteMany({});
   await Card.deleteMany({});
+  await ApiCache.deleteMany({});
   jest.clearAllMocks();
 });
 
@@ -83,6 +85,21 @@ describe('GET /api/cards/:id/similar', () => {
       .get(`/api/cards/${new mongoose.Types.ObjectId()}/similar`)
       .set('Authorization', `Bearer ${makeToken(user)}`)
       .expect(404);
+  });
+
+  test('caches the Scryfall query so a second identical request does not re-call Scryfall', async () => {
+    const user = await User.create({ email: 'd@test.com', username: 'user4', passwordHash: 'x', role: 'editor' });
+    const card = await Card.create({
+      userId: user._id, name: 'Grizzly Bears', quantity: 1, condition: 'NM',
+      price: 0, types: ['Creature'], colors: ['G']
+    });
+    axios.get.mockResolvedValue({ data: { data: [{ name: 'Runeclaw Bear' }] } });
+
+    const app = buildApp();
+    await request(app).get(`/api/cards/${card._id}/similar`).set('Authorization', `Bearer ${makeToken(user)}`).expect(200);
+    await request(app).get(`/api/cards/${card._id}/similar`).set('Authorization', `Bearer ${makeToken(user)}`).expect(200);
+
+    expect(axios.get).toHaveBeenCalledTimes(1);
   });
 });
 
