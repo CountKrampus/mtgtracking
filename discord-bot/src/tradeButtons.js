@@ -15,7 +15,7 @@ async function handleTradeButton(interaction) {
   const res = await api.put(`/trades/offers/${offerId}/${ACTIONS[action].verb}`);
 
   if (res.status === 401) {
-    return interaction.update({ content: `❌ ${NOT_LINKED_MESSAGE}`, components: [] });
+    return interaction.update({ content: `❌ ${NOT_LINKED_MESSAGE}`, embeds: [], components: [] });
   }
 
   if (res.status !== 200) {
