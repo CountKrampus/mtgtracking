@@ -2,6 +2,7 @@ const { StringSelectMenuBuilder, ActionRowBuilder, ComponentType, ButtonBuilder,
 const { client } = require('../apiClient');
 const { replyNotLinked } = require('../lib/notLinked');
 const { resolveCard } = require('../lib/resolveCard');
+const { browseCollection } = require('../lib/collectionBrowser');
 
 const TYPE_EMOJI = { have: '🟢', want: '🔵' };
 
@@ -50,16 +51,26 @@ async function myListings(interaction, api) {
 
 async function create(interaction, api) {
   const type = interaction.options.getString('type', true);
-  const cardName = interaction.options.getString('card', true);
+  const cardName = interaction.options.getString('card');
   const message = interaction.options.getString('message');
+
+  if (type === 'want' && !cardName) {
+    return interaction.reply({ content: '❌ Please specify a card name for a "want" listing.', ephemeral: true });
+  }
 
   await interaction.deferReply({ ephemeral: true });
 
   if (type === 'have') {
-    const resolved = await resolveCard(interaction, api, cardName);
+    const resolved = cardName
+      ? await resolveCard(interaction, api, cardName)
+      : await browseCollection(interaction, api);
+
     if (resolved.status === 'not_linked') return replyNotLinked(interaction);
     if (resolved.status === 'no_match') {
       return interaction.followUp({ content: `❌ Couldn't find "${cardName}" in your collection.`, ephemeral: true });
+    }
+    if (resolved.status === 'no_cards') {
+      return interaction.followUp({ content: "You don't have any cards in your collection to list.", ephemeral: true });
     }
     if (resolved.status === 'timed_out') {
       return interaction.followUp({ content: '⌛ Selection timed out.', ephemeral: true });

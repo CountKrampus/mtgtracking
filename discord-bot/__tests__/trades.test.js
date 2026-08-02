@@ -1,6 +1,7 @@
 jest.mock('../src/apiClient');
 const { client } = require('../src/apiClient');
 jest.mock('../src/lib/resolveCard');
+jest.mock('../src/lib/collectionBrowser');
 const tradesCommand = require('../src/commands/trades');
 
 function mockInteraction(subcommand, opts = {}) {
@@ -477,5 +478,78 @@ describe('/trades sent', () => {
     await tradesCommand.execute(interaction);
 
     expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('link') }));
+  });
+});
+
+describe('/trades create — collection browser (no card name given)', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  test('type=have with no card name opens the browser and posts using the selected card', async () => {
+    const { browseCollection } = require('../src/lib/collectionBrowser');
+    browseCollection.mockResolvedValue({
+      status: 'found',
+      card: { _id: 'card-9', name: 'Ragavan', set: 'Modern Horizons 2', setCode: 'MH2', scryfallId: 'sf-9', imageUrl: '/img/sf-9', condition: 'NM', price: 50 }
+    });
+    const api = { post: jest.fn().mockResolvedValue({ status: 201, data: {} }) };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('create', { type: 'have', card: null, message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(browseCollection).toHaveBeenCalledWith(interaction, api);
+    expect(api.post).toHaveBeenCalledWith('/trades', expect.objectContaining({ cardName: 'Ragavan', scryfallId: 'sf-9' }));
+  });
+
+  test('type=have with no cards in the collection reports it and posts nothing', async () => {
+    const { browseCollection } = require('../src/lib/collectionBrowser');
+    browseCollection.mockResolvedValue({ status: 'no_cards' });
+    const api = { post: jest.fn() };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('create', { type: 'have', card: null, message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(api.post).not.toHaveBeenCalled();
+    expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining("don't have any cards") }));
+  });
+
+  test('type=have browser timeout is reported and nothing is posted', async () => {
+    const { browseCollection } = require('../src/lib/collectionBrowser');
+    browseCollection.mockResolvedValue({ status: 'timed_out' });
+    const api = { post: jest.fn() };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('create', { type: 'have', card: null, message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(api.post).not.toHaveBeenCalled();
+    expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('timed out') }));
+  });
+
+  test('type=want with no card name is rejected before deferring, without calling the browser', async () => {
+    const { browseCollection } = require('../src/lib/collectionBrowser');
+    const api = { post: jest.fn() };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('create', { type: 'want', card: null, message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(browseCollection).not.toHaveBeenCalled();
+    expect(api.post).not.toHaveBeenCalled();
+    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('specify a card name') }));
+  });
+
+  test('type=have WITH a card name still uses resolveCard, not the browser', async () => {
+    const { resolveCard } = require('../src/lib/resolveCard');
+    const { browseCollection } = require('../src/lib/collectionBrowser');
+    resolveCard.mockResolvedValue({ status: 'found', card: { _id: 'card-1', name: 'Sol Ring', set: 'Commander 2021', setCode: 'C21', scryfallId: 'sf-1', imageUrl: '/img/sf-1', condition: 'NM', price: 2 } });
+    const api = { post: jest.fn().mockResolvedValue({ status: 201, data: {} }) };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('create', { type: 'have', card: 'Sol Ring', message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(resolveCard).toHaveBeenCalled();
+    expect(browseCollection).not.toHaveBeenCalled();
   });
 });

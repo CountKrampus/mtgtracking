@@ -78,7 +78,7 @@ const commands = [
     .addSubcommand(sub => sub.setName('create').setDescription('List a card you have or want to trade')
       .addStringOption(o => o.setName('type').setDescription('Listing type').setRequired(true)
         .addChoices({ name: 'have', value: 'have' }, { name: 'want', value: 'want' }))
-      .addStringOption(o => o.setName('card').setDescription('Card name').setRequired(true))
+      .addStringOption(o => o.setName('card').setDescription('Card name (required for "want"; leave blank with "have" to browse your collection)'))
       .addStringOption(o => o.setName('message').setDescription('Optional note')))
     .addSubcommand(sub => sub.setName('offer').setDescription('Offer one or more of your cards on a listing')
       .addStringOption(o => o.setName('listing').setDescription('Card name of the listing to offer on').setRequired(true))
