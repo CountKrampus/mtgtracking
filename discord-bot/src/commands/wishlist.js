@@ -35,7 +35,7 @@ module.exports = {
       if (deals.length === 0) {
         return interaction.reply({ content: 'No deals right now.', ephemeral: true });
       }
-      const lines = deals.slice(0, 20).map(item => `• ${item.name}: $${item.currentPrice} (target $${item.targetPrice})`);
+      const lines = deals.slice(0, 20).map(item => `• ${item.name} (${item.priority}): $${item.currentPrice} (target $${item.targetPrice})`);
       return interaction.reply({
         embeds: [{ title: 'Wishlist Deals', description: lines.join('\n') }],
         ephemeral: true

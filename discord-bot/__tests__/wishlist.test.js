@@ -68,11 +68,11 @@ describe('/wishlist', () => {
         get: jest.fn().mockResolvedValue({
           status: 200,
           data: [
-            { name: 'Sol Ring', currentPrice: 2, targetPrice: 5 },
-            { name: 'Mana Crypt', currentPrice: 50, targetPrice: 10 },
-            { name: 'Rhystic Study', currentPrice: 0, targetPrice: 40 },
-            { name: 'Cyclonic Rift', currentPrice: 15, targetPrice: 0 },
-            { name: 'Smothering Tithe', currentPrice: 20, targetPrice: 20 }
+            { name: 'Sol Ring', priority: 'high', currentPrice: 2, targetPrice: 5 },
+            { name: 'Mana Crypt', priority: 'medium', currentPrice: 50, targetPrice: 10 },
+            { name: 'Rhystic Study', priority: 'low', currentPrice: 0, targetPrice: 40 },
+            { name: 'Cyclonic Rift', priority: 'medium', currentPrice: 15, targetPrice: 0 },
+            { name: 'Smothering Tithe', priority: 'high', currentPrice: 20, targetPrice: 20 }
           ]
         })
       };
@@ -90,8 +90,8 @@ describe('/wishlist', () => {
       );
       const call = interaction.reply.mock.calls[0][0];
       const description = call.embeds[0].description;
-      expect(description).toContain('Sol Ring');
-      expect(description).toContain('Smothering Tithe');
+      expect(description).toContain('Sol Ring (high): $2 (target $5)');
+      expect(description).toContain('Smothering Tithe (high): $20 (target $20)');
       expect(description).not.toContain('Mana Crypt');
       expect(description).not.toContain('Rhystic Study');
       expect(description).not.toContain('Cyclonic Rift');
