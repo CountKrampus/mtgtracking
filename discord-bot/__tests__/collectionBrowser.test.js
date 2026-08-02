@@ -6,6 +6,7 @@ const {
   buildTypeOptions,
   buildCardOptions
 } = require('../src/lib/collectionBrowser');
+const { buildBrowserRows } = require('../src/lib/collectionBrowser');
 
 const CARDS = [
   { _id: '1', name: 'Sol Ring', set: 'Commander 2021', condition: 'NM', colors: [], types: ['Artifact'] },
@@ -98,5 +99,50 @@ describe('buildCardOptions', () => {
 
   test('returns a single disabled placeholder option when the page is empty', () => {
     expect(buildCardOptions([])).toEqual([{ label: 'No matching cards', value: '__none__' }]);
+  });
+});
+
+describe('buildBrowserRows', () => {
+  test('builds exactly 5 rows: set, type, colors, controls, card select', () => {
+    const state = { set: null, type: null, colors: new Set(), page: 0 };
+    const { rows } = buildBrowserRows(CARDS, state);
+    expect(rows).toHaveLength(5);
+  });
+
+  test('color buttons render Success when active, Secondary when inactive', () => {
+    const state = { set: null, type: null, colors: new Set(['G']), page: 0 };
+    const { rows } = buildBrowserRows(CARDS, state);
+    const colorRow = rows[2].toJSON();
+    const gButton = colorRow.components.find(b => b.custom_id === 'browse-color:G');
+    const uButton = colorRow.components.find(b => b.custom_id === 'browse-color:U');
+    expect(gButton.style).toBe(3); // ButtonStyle.Success
+    expect(uButton.style).toBe(2); // ButtonStyle.Secondary
+  });
+
+  test('Prev is disabled on page 0, Next is disabled on the last page', () => {
+    const state = { set: null, type: null, colors: new Set(), page: 0 };
+    const { rows } = buildBrowserRows(CARDS, state);
+    const controlsRow = rows[3].toJSON();
+    const prev = controlsRow.components.find(b => b.custom_id === 'browse-prev');
+    const next = controlsRow.components.find(b => b.custom_id === 'browse-next');
+    expect(prev.disabled).toBe(true);
+    expect(next.disabled).toBe(true); // only 4 cards, fits on page 0
+  });
+
+  test('card select is disabled with a placeholder when the filtered page is empty', () => {
+    const state = { set: 'Nonexistent Set', type: null, colors: new Set(), page: 0 };
+    const { rows, filtered } = buildBrowserRows(CARDS, state);
+    expect(filtered).toHaveLength(0);
+    const cardSelect = rows[4].toJSON().components[0];
+    expect(cardSelect.disabled).toBe(true);
+    expect(cardSelect.options).toEqual([{ label: 'No matching cards', value: '__none__' }]);
+  });
+
+  test('card select lists the current page of filtered results', () => {
+    const state = { set: 'M19', type: null, colors: new Set(), page: 0 };
+    const { rows, pageCards } = buildBrowserRows(CARDS, state);
+    expect(pageCards.map(c => c.name)).toEqual(['Llanowar Elves', 'Counterspell', 'Boros Charm']);
+    const cardSelect = rows[4].toJSON().components[0];
+    expect(cardSelect.options.map(o => o.value)).toEqual(['2', '3', '4']);
   });
 });

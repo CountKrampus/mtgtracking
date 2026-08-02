@@ -1,3 +1,5 @@
+const { StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+
 const PAGE_SIZE = 25;
 const COLORS = ['W', 'U', 'B', 'R', 'G'];
 
@@ -48,6 +50,69 @@ function buildCardOptions(pageCards) {
   }));
 }
 
+function buildBrowserRows(cards, state) {
+  const filtered = filterCards(cards, state);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageCards = paginate(filtered, state.page);
+
+  const toSelectOptions = options =>
+    options.map(o => ({ ...o, value: o.value === '' ? '__all__' : o.value }));
+
+  const setRow = new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId('browse-set-select')
+      .setPlaceholder(state.set || 'All Sets')
+      .addOptions(toSelectOptions(buildSetOptions(cards, state.set)))
+  );
+
+  const typeRow = new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId('browse-type-select')
+      .setPlaceholder(state.type || 'All Types')
+      .addOptions(toSelectOptions(buildTypeOptions(cards, state.type)))
+  );
+
+  const colorRow = new ActionRowBuilder().addComponents(
+    ...COLORS.map(color =>
+      new ButtonBuilder()
+        .setCustomId(`browse-color:${color}`)
+        .setLabel(color)
+        .setStyle(state.colors.has(color) ? ButtonStyle.Success : ButtonStyle.Secondary)
+    )
+  );
+
+  const controlsRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('browse-color:C')
+      .setLabel('Colorless')
+      .setStyle(state.colors.has('C') ? ButtonStyle.Success : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId('browse-color-reset')
+      .setLabel('All Colors')
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId('browse-prev')
+      .setLabel('◀ Prev')
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(state.page === 0),
+    new ButtonBuilder()
+      .setCustomId('browse-next')
+      .setLabel('Next ▶')
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(state.page >= totalPages - 1)
+  );
+
+  const cardRow = new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId('browse-card-select')
+      .setPlaceholder(pageCards.length === 0 ? 'No matching cards' : 'Select a card to list')
+      .setDisabled(pageCards.length === 0)
+      .addOptions(buildCardOptions(pageCards))
+  );
+
+  return { rows: [setRow, typeRow, colorRow, controlsRow, cardRow], filtered, pageCards, totalPages };
+}
+
 module.exports = {
   PAGE_SIZE,
   COLORS,
@@ -55,5 +120,6 @@ module.exports = {
   paginate,
   buildSetOptions,
   buildTypeOptions,
-  buildCardOptions
+  buildCardOptions,
+  buildBrowserRows
 };
