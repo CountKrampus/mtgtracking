@@ -1,4 +1,4 @@
-const { StringSelectMenuBuilder, ActionRowBuilder, ComponentType } = require('discord.js');
+const { StringSelectMenuBuilder, ActionRowBuilder, ComponentType, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { client } = require('../apiClient');
 const { replyNotLinked } = require('../lib/notLinked');
 const { resolveCard } = require('../lib/resolveCard');
@@ -198,6 +198,77 @@ async function offer(interaction, api) {
   await selectInteraction.update({ content: `✅ Offered ${cardList} on "${listing.cardName}".`, components: [] });
 }
 
+async function received(interaction, api) {
+  const res = await api.get('/trades/offers/received');
+  if (res.status === 401) return replyNotLinked(interaction);
+  if (res.status !== 200) {
+    return interaction.reply({ content: `❌ Something went wrong (${res.status}).`, ephemeral: true });
+  }
+
+  const pending = res.data.filter(o => o.status === 'pending').slice(0, 5);
+  if (pending.length === 0) {
+    return interaction.reply({ content: 'No pending offers to review.', ephemeral: true });
+  }
+
+  const offer = pending[0];
+  const cardsList = offer.offeredCards.map(c => `${c.cardName} x${c.quantity}`).join(', ');
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId(`trade-accept:${offer._id}`).setLabel('Accept').setStyle(ButtonStyle.Success),
+    new ButtonBuilder().setCustomId(`trade-reject:${offer._id}`).setLabel('Reject').setStyle(ButtonStyle.Danger)
+  );
+
+  await interaction.reply({
+    embeds: [{
+      title: `Offer on "${offer.listingId?.cardName || 'your listing'}"`,
+      description: `From **${offer.fromUsername}**: ${cardsList}${offer.message ? `\n"${offer.message}"` : ''}`
+    }],
+    components: [row],
+    ephemeral: true
+  });
+
+  for (const extra of pending.slice(1)) {
+    const extraCardsList = extra.offeredCards.map(c => `${c.cardName} x${c.quantity}`).join(', ');
+    const extraRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId(`trade-accept:${extra._id}`).setLabel('Accept').setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId(`trade-reject:${extra._id}`).setLabel('Reject').setStyle(ButtonStyle.Danger)
+    );
+    await interaction.followUp({
+      embeds: [{
+        title: `Offer on "${extra.listingId?.cardName || 'your listing'}"`,
+        description: `From **${extra.fromUsername}**: ${extraCardsList}${extra.message ? `\n"${extra.message}"` : ''}`
+      }],
+      components: [extraRow],
+      ephemeral: true
+    });
+  }
+}
+
+async function sent(interaction, api) {
+  const res = await api.get('/trades/offers/sent');
+  if (res.status === 401) return replyNotLinked(interaction);
+  if (res.status !== 200) {
+    return interaction.reply({ content: `❌ Something went wrong (${res.status}).`, ephemeral: true });
+  }
+  if (res.data.length === 0) {
+    return interaction.reply({ content: "You haven't sent any trade offers.", ephemeral: true });
+  }
+
+  const offer = res.data[0];
+  const lines = res.data.slice(0, 10).map(o => `**${o.listingId?.cardName || 'Unknown listing'}** — to ${o.toUsername} (${o.status})`);
+  const components = [];
+  if (offer.status === 'pending') {
+    components.push(new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId(`trade-cancel:${offer._id}`).setLabel('Cancel').setStyle(ButtonStyle.Danger)
+    ));
+  }
+
+  return interaction.reply({
+    embeds: [{ title: 'Your Sent Offers', description: lines.join('\n') }],
+    components,
+    ephemeral: true
+  });
+}
+
 module.exports = {
   name: 'trades',
   async execute(interaction) {
@@ -208,6 +279,8 @@ module.exports = {
     if (sub === 'my-listings') return myListings(interaction, api);
     if (sub === 'create') return create(interaction, api);
     if (sub === 'offer') return offer(interaction, api);
+    if (sub === 'received') return received(interaction, api);
+    if (sub === 'sent') return sent(interaction, api);
 
     return interaction.reply({ content: 'Unknown subcommand.', ephemeral: true });
   }

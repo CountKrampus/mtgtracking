@@ -82,7 +82,9 @@ const commands = [
       .addStringOption(o => o.setName('message').setDescription('Optional note')))
     .addSubcommand(sub => sub.setName('offer').setDescription('Offer one or more of your cards on a listing')
       .addStringOption(o => o.setName('listing').setDescription('Card name of the listing to offer on').setRequired(true))
-      .addStringOption(o => o.setName('message').setDescription('Optional note'))),
+      .addStringOption(o => o.setName('message').setDescription('Optional note')))
+    .addSubcommand(sub => sub.setName('received').setDescription('Review pending trade offers you\'ve received'))
+    .addSubcommand(sub => sub.setName('sent').setDescription('View trade offers you\'ve sent')),
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);

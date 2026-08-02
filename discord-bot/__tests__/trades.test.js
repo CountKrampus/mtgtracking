@@ -360,3 +360,99 @@ describe('/trades offer', () => {
     expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('500') }));
   });
 });
+
+describe('/trades received', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  test('shows pending received offers with Accept/Reject buttons', async () => {
+    const api = {
+      get: jest.fn().mockResolvedValue({
+        status: 200,
+        data: [{
+          _id: 'offer-1', status: 'pending', fromUsername: 'bob', message: 'trade?',
+          listingId: { cardName: 'Sol Ring' },
+          offeredCards: [{ cardName: 'Mana Crypt', quantity: 1 }]
+        }]
+      })
+    };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('received', {});
+    await tradesCommand.execute(interaction);
+
+    expect(api.get).toHaveBeenCalledWith('/trades/offers/received');
+    const call = interaction.reply.mock.calls[0][0];
+    expect(call.embeds[0].description).toContain('bob');
+    expect(call.embeds[0].description).toContain('Mana Crypt');
+    const button = call.components[0].components[0].data;
+    expect(button.custom_id).toBe('trade-accept:offer-1');
+  });
+
+  test('reports no pending offers', async () => {
+    const api = { get: jest.fn().mockResolvedValue({ status: 200, data: [] }) };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('received', {});
+    await tradesCommand.execute(interaction);
+
+    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('No pending') }));
+  });
+
+  test('replies not-linked on 401', async () => {
+    const api = { get: jest.fn().mockResolvedValue({ status: 401 }) };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('received', {});
+    await tradesCommand.execute(interaction);
+
+    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('link') }));
+  });
+});
+
+describe('/trades sent', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  test('shows sent offers, with a Cancel button on pending ones', async () => {
+    const api = {
+      get: jest.fn().mockResolvedValue({
+        status: 200,
+        data: [{ _id: 'offer-2', status: 'pending', toUsername: 'carol', listingId: { cardName: 'Rhystic Study' } }]
+      })
+    };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('sent', {});
+    await tradesCommand.execute(interaction);
+
+    const call = interaction.reply.mock.calls[0][0];
+    expect(call.embeds[0].description).toContain('carol');
+    const button = call.components[0].components[0].data;
+    expect(button.custom_id).toBe('trade-cancel:offer-2');
+  });
+
+  test('does not show a Cancel button on a non-pending offer', async () => {
+    const api = {
+      get: jest.fn().mockResolvedValue({
+        status: 200,
+        data: [{ _id: 'offer-3', status: 'accepted', toUsername: 'carol', listingId: { cardName: 'Rhystic Study' } }]
+      })
+    };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('sent', {});
+    await tradesCommand.execute(interaction);
+
+    const call = interaction.reply.mock.calls[0][0];
+    expect(call.components).toEqual([]);
+  });
+
+  test('replies not-linked on 401', async () => {
+    const api = { get: jest.fn().mockResolvedValue({ status: 401 }) };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('sent', {});
+    await tradesCommand.execute(interaction);
+
+    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('link') }));
+  });
+});
