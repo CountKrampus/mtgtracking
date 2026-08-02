@@ -64,6 +64,8 @@ const commands = [
 
   new SlashCommandBuilder().setName('deckstats').setDescription("Show a deck's power level and salt score")
     .addStringOption(o => o.setName('name').setDescription('Deck name').setRequired(true)),
+
+  new SlashCommandBuilder().setName('achievements').setDescription('Show your earned collector achievements'),
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
