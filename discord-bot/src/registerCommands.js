@@ -40,7 +40,8 @@ const commands = [
     .addSubcommand(sub => sub.setName('add').setDescription('Add a card to your wishlist')
       .addStringOption(o => o.setName('name').setDescription('Card name').setRequired(true)))
     .addSubcommand(sub => sub.setName('remove').setDescription('Remove a card from your wishlist')
-      .addStringOption(o => o.setName('name').setDescription('Card name').setRequired(true))),
+      .addStringOption(o => o.setName('name').setDescription('Card name').setRequired(true)))
+    .addSubcommand(sub => sub.setName('deals').setDescription('Show wishlist items at or below your target price')),
 
   new SlashCommandBuilder().setName('decks').setDescription('List your decks'),
 

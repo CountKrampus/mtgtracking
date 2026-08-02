@@ -23,6 +23,25 @@ module.exports = {
       });
     }
 
+    if (sub === 'deals') {
+      const res = await api.get('/wishlist');
+      if (res.status === 401) return replyNotLinked(interaction);
+      if (res.status !== 200) {
+        return interaction.reply({ content: `❌ Something went wrong (${res.status}).`, ephemeral: true });
+      }
+      const deals = res.data.filter(item =>
+        item.currentPrice > 0 && item.targetPrice > 0 && item.currentPrice <= item.targetPrice
+      );
+      if (deals.length === 0) {
+        return interaction.reply({ content: 'No deals right now.', ephemeral: true });
+      }
+      const lines = deals.slice(0, 20).map(item => `• ${item.name}: $${item.currentPrice} (target $${item.targetPrice})`);
+      return interaction.reply({
+        embeds: [{ title: 'Wishlist Deals', description: lines.join('\n') }],
+        ephemeral: true
+      });
+    }
+
     if (sub === 'add') {
       const name = interaction.options.getString('name', true);
       const res = await api.post('/wishlist', { name, priority: 'medium' });
