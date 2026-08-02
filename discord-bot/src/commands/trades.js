@@ -80,6 +80,7 @@ async function create(interaction, api) {
       estimatedValue: card.price,
       notes: message || ''
     });
+    if (postRes.status === 401) return replyNotLinked(interaction);
     if (postRes.status !== 201) {
       return interaction.followUp({ content: `❌ Couldn't create listing (${postRes.status}).`, ephemeral: true });
     }
@@ -103,6 +104,7 @@ async function create(interaction, api) {
     estimatedValue: cardData.prices?.usd ? parseFloat(cardData.prices.usd) : 0,
     notes: message || ''
   });
+  if (postRes.status === 401) return replyNotLinked(interaction);
   if (postRes.status !== 201) {
     return interaction.followUp({ content: `❌ Couldn't create listing (${postRes.status}).`, ephemeral: true });
   }

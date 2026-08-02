@@ -132,4 +132,69 @@ describe('/trades create', () => {
 
     expect(api.post).not.toHaveBeenCalled();
   });
+
+  test('type=want replies not-linked when POST /trades returns 401', async () => {
+    const api = {
+      get: jest.fn().mockResolvedValue({ status: 200, data: { name: 'Mana Crypt', set: 'Eternal Masters', setCode: 'EMA', scryfallId: 'sf-2', imageUrl: '/img/sf-2', prices: { usd: '200.00' } } }),
+      post: jest.fn().mockResolvedValue({ status: 401 })
+    };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('create', { type: 'want', card: 'Mana Crypt', message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('link') }));
+  });
+
+  test('type=have reports timeout without posting anything', async () => {
+    const { resolveCard } = require('../src/lib/resolveCard');
+    resolveCard.mockResolvedValue({ status: 'timed_out' });
+    const api = { post: jest.fn() };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('create', { type: 'have', card: 'Sol Ring', message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('timed out') }));
+    expect(api.post).not.toHaveBeenCalled();
+  });
+
+  test('type=have reports an error with the http status without posting anything', async () => {
+    const { resolveCard } = require('../src/lib/resolveCard');
+    resolveCard.mockResolvedValue({ status: 'error', httpStatus: 500 });
+    const api = { post: jest.fn() };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('create', { type: 'have', card: 'Sol Ring', message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('500') }));
+    expect(api.post).not.toHaveBeenCalled();
+  });
+
+  test('type=want reports an error when the Scryfall search fails without posting anything', async () => {
+    const api = {
+      get: jest.fn().mockResolvedValue({ status: 404 }),
+      post: jest.fn()
+    };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('create', { type: 'want', card: 'Nonexistent Card', message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Couldn\'t find') }));
+    expect(api.post).not.toHaveBeenCalled();
+  });
+
+  test('type=have reports a generic error when POST /trades returns an unexpected status', async () => {
+    const { resolveCard } = require('../src/lib/resolveCard');
+    resolveCard.mockResolvedValue({ status: 'found', card: { _id: 'card-1', name: 'Sol Ring', set: 'Commander 2021', setCode: 'C21', scryfallId: 'sf-1', imageUrl: '/img/sf-1', condition: 'NM', price: 2 } });
+    const api = { post: jest.fn().mockResolvedValue({ status: 500 }) };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('create', { type: 'have', card: 'Sol Ring', message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining("Couldn't create listing") }));
+  });
 });
