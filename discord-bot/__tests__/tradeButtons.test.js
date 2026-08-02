@@ -26,6 +26,7 @@ describe('handleTradeButton', () => {
     expect(api.put).toHaveBeenCalledWith('/trades/offers/offer-1/accept');
     expect(interaction.update).toHaveBeenCalledWith(expect.objectContaining({
       content: expect.stringContaining('Accepted'),
+      embeds: [],
       components: []
     }));
   });
@@ -59,7 +60,10 @@ describe('handleTradeButton', () => {
     const interaction = mockButtonInteraction('trade-accept:offer-4');
     await handleTradeButton(interaction);
 
-    expect(interaction.update).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Offer is no longer pending') }));
+    expect(interaction.update).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('Offer is no longer pending'),
+      embeds: []
+    }));
   });
 
   test('surfaces a not-linked message on 401 without crashing', async () => {

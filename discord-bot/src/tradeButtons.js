@@ -20,10 +20,10 @@ async function handleTradeButton(interaction) {
 
   if (res.status !== 200) {
     const message = res.data?.message || `Something went wrong (${res.status}).`;
-    return interaction.update({ content: `❌ ${message}`, components: [] });
+    return interaction.update({ content: `❌ ${message}`, embeds: [], components: [] });
   }
 
-  return interaction.update({ content: `✅ ${ACTIONS[action].pastTense} the offer.`, components: [] });
+  return interaction.update({ content: `✅ ${ACTIONS[action].pastTense} the offer.`, embeds: [], components: [] });
 }
 
 module.exports = { handleTradeButton };
