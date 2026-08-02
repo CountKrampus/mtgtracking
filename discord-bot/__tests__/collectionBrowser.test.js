@@ -257,6 +257,152 @@ describe('browseCollection', () => {
     expect(result).toEqual({ status: 'found', card: CARDS[0] });
   });
 
+  test('a type-select interaction narrows to matching types before a final selection', async () => {
+    const api = { get: jest.fn().mockResolvedValue({ status: 200, data: CARDS }) };
+    const interaction = mockBrowseInteraction();
+
+    const typeSelectInteraction = {
+      customId: 'browse-type-select',
+      values: ['Instant'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    const cardSelectInteraction = {
+      customId: 'browse-card-select',
+      values: ['4'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    interaction.channel.awaitMessageComponent
+      .mockResolvedValueOnce(typeSelectInteraction)
+      .mockResolvedValueOnce(cardSelectInteraction);
+
+    const result = await browseCollection(interaction, api);
+    expect(typeSelectInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) }));
+    expect(result).toEqual({ status: 'found', card: CARDS[3] });
+  });
+
+  test('browse-color-reset clears an active color filter, widening results back out', async () => {
+    const api = { get: jest.fn().mockResolvedValue({ status: 200, data: CARDS }) };
+    const interaction = mockBrowseInteraction();
+
+    const colorToggleInteraction = {
+      customId: 'browse-color:G',
+      values: [],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    const colorResetInteraction = {
+      customId: 'browse-color-reset',
+      values: [],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    const cardSelectInteraction = {
+      customId: 'browse-card-select',
+      values: ['1'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    interaction.channel.awaitMessageComponent
+      .mockResolvedValueOnce(colorToggleInteraction)
+      .mockResolvedValueOnce(colorResetInteraction)
+      .mockResolvedValueOnce(cardSelectInteraction);
+
+    const result = await browseCollection(interaction, api);
+    expect(colorResetInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) }));
+    // Sol Ring doesn't match the G filter, so its selection only succeeds if the reset
+    // actually widened the results back out.
+    expect(result).toEqual({ status: 'found', card: CARDS[0] });
+  });
+
+  test('browse-next advances to the next page of a collection larger than one page', async () => {
+    const manyCards = Array.from({ length: 30 }, (_, i) => ({
+      _id: String(i),
+      name: `Card ${i}`,
+      set: 'TestSet',
+      condition: 'NM',
+      colors: [],
+      types: ['Land']
+    }));
+    const api = { get: jest.fn().mockResolvedValue({ status: 200, data: manyCards }) };
+    const interaction = mockBrowseInteraction();
+
+    const nextInteraction = {
+      customId: 'browse-next',
+      values: [],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    const cardSelectInteraction = {
+      customId: 'browse-card-select',
+      values: ['25'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    interaction.channel.awaitMessageComponent
+      .mockResolvedValueOnce(nextInteraction)
+      .mockResolvedValueOnce(cardSelectInteraction);
+
+    const result = await browseCollection(interaction, api);
+    expect(nextInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) }));
+    expect(result).toEqual({ status: 'found', card: manyCards[25] });
+  });
+
+  test('browse-prev moves back a page after a next', async () => {
+    const manyCards = Array.from({ length: 30 }, (_, i) => ({
+      _id: String(i),
+      name: `Card ${i}`,
+      set: 'TestSet',
+      condition: 'NM',
+      colors: [],
+      types: ['Land']
+    }));
+    const api = { get: jest.fn().mockResolvedValue({ status: 200, data: manyCards }) };
+    const interaction = mockBrowseInteraction();
+
+    const nextInteraction = {
+      customId: 'browse-next',
+      values: [],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    const prevInteraction = {
+      customId: 'browse-prev',
+      values: [],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    const cardSelectInteraction = {
+      customId: 'browse-card-select',
+      values: ['0'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    interaction.channel.awaitMessageComponent
+      .mockResolvedValueOnce(nextInteraction)
+      .mockResolvedValueOnce(prevInteraction)
+      .mockResolvedValueOnce(cardSelectInteraction);
+
+    const result = await browseCollection(interaction, api);
+    expect(prevInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) }));
+    expect(result).toEqual({ status: 'found', card: manyCards[0] });
+  });
+
+  test('selecting the disabled "__none__" placeholder takes the early-continue branch and the loop keeps going', async () => {
+    const api = { get: jest.fn().mockResolvedValue({ status: 200, data: CARDS }) };
+    const interaction = mockBrowseInteraction();
+
+    const noneInteraction = {
+      customId: 'browse-card-select',
+      values: ['__none__'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    const cardSelectInteraction = {
+      customId: 'browse-card-select',
+      values: ['1'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    interaction.channel.awaitMessageComponent
+      .mockResolvedValueOnce(noneInteraction)
+      .mockResolvedValueOnce(cardSelectInteraction);
+
+    const result = await browseCollection(interaction, api);
+    expect(noneInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) }));
+    expect(cardSelectInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Sol Ring'), components: [] }));
+    expect(result).toEqual({ status: 'found', card: CARDS[0] });
+  });
+
   test('times out if no selection is made within the window', async () => {
     const api = { get: jest.fn().mockResolvedValue({ status: 200, data: CARDS }) };
     const interaction = mockBrowseInteraction();
