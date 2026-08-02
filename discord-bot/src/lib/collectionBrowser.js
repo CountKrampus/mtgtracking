@@ -149,7 +149,14 @@ async function browseCollection(interaction, api) {
         await componentInteraction.update({ components: rows });
         continue;
       }
-      const chosen = cards.find(c => c._id === cardId);
+      const currentFiltered = filterCards(cards, state);
+      const currentPageCards = paginate(currentFiltered, state.page);
+      const chosen = currentPageCards.find(c => c._id === cardId);
+      if (!chosen) {
+        const { rows } = buildBrowserRows(cards, state);
+        await componentInteraction.update({ components: rows });
+        continue;
+      }
       await componentInteraction.update({ content: `Selected: ${chosen.name}`, components: [] });
       return { status: 'found', card: chosen };
     }

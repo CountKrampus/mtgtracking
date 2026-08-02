@@ -277,6 +277,12 @@ describe('browseCollection', () => {
 
     const result = await browseCollection(interaction, api);
     expect(typeSelectInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) }));
+    // Assert directly on the rendered card-select options after the type filter is applied:
+    // this must show ONLY the Instant cards (Counterspell, Boros Charm), not all 4 cards.
+    // If `state.type = ...` were never set, the rendered options would still be ['1','2','3','4'].
+    const renderedRows = typeSelectInteraction.update.mock.calls[0][0].components;
+    const renderedCardOptions = renderedRows[4].toJSON().components[0].options;
+    expect(renderedCardOptions.map(o => o.value)).toEqual(['3', '4']);
     expect(result).toEqual({ status: 'found', card: CARDS[3] });
   });
 
@@ -306,6 +312,12 @@ describe('browseCollection', () => {
 
     const result = await browseCollection(interaction, api);
     expect(colorResetInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) }));
+    // Assert directly on the rendered card-select options after the reset: this must show ALL
+    // 4 cards again, not just the 1 card ('Llanowar Elves') that matches the G filter.
+    // If `state.colors.clear()` were never called, the rendered options would still be ['2'].
+    const renderedRows = colorResetInteraction.update.mock.calls[0][0].components;
+    const renderedCardOptions = renderedRows[4].toJSON().components[0].options;
+    expect(renderedCardOptions.map(o => o.value)).toEqual(['1', '2', '3', '4']);
     // Sol Ring doesn't match the G filter, so its selection only succeeds if the reset
     // actually widened the results back out.
     expect(result).toEqual({ status: 'found', card: CARDS[0] });
@@ -339,6 +351,14 @@ describe('browseCollection', () => {
 
     const result = await browseCollection(interaction, api);
     expect(nextInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) }));
+    // Assert directly on the rendered card-select options after paging forward: this must show
+    // page 2 (ids 25-29), not page 1 (ids 0-24). If `state.page += 1` were never applied, the
+    // rendered options would still be ['0', ..., '24'].
+    const renderedRows = nextInteraction.update.mock.calls[0][0].components;
+    const renderedCardOptions = renderedRows[4].toJSON().components[0].options;
+    expect(renderedCardOptions.map(o => o.value)).toEqual(
+      manyCards.slice(25, 30).map(c => c._id)
+    );
     expect(result).toEqual({ status: 'found', card: manyCards[25] });
   });
 
@@ -376,6 +396,14 @@ describe('browseCollection', () => {
 
     const result = await browseCollection(interaction, api);
     expect(prevInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) }));
+    // Assert directly on the rendered card-select options after paging back: this must show
+    // page 1 (ids 0-24) again, not page 2 (ids 25-29). If the prev handler's page decrement were
+    // never applied, the rendered options would still be ['25', ..., '29'].
+    const renderedRows = prevInteraction.update.mock.calls[0][0].components;
+    const renderedCardOptions = renderedRows[4].toJSON().components[0].options;
+    expect(renderedCardOptions.map(o => o.value)).toEqual(
+      manyCards.slice(0, 25).map(c => c._id)
+    );
     expect(result).toEqual({ status: 'found', card: manyCards[0] });
   });
 
@@ -401,6 +429,39 @@ describe('browseCollection', () => {
     expect(noneInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) }));
     expect(cardSelectInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Sol Ring'), components: [] }));
     expect(result).toEqual({ status: 'found', card: CARDS[0] });
+  });
+
+  test('a stale card-select value not present on the current filtered page is ignored, re-rendering instead of crashing', async () => {
+    const api = { get: jest.fn().mockResolvedValue({ status: 200, data: CARDS }) };
+    const interaction = mockBrowseInteraction();
+
+    const typeSelectInteraction = {
+      customId: 'browse-type-select',
+      values: ['Instant'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    // '1' is Sol Ring, an Artifact - not part of the Instant-filtered page, so this selection
+    // is stale/forged and must not resolve against the full unfiltered `cards` array.
+    const staleCardSelectInteraction = {
+      customId: 'browse-card-select',
+      values: ['1'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    const cardSelectInteraction = {
+      customId: 'browse-card-select',
+      values: ['3'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    interaction.channel.awaitMessageComponent
+      .mockResolvedValueOnce(typeSelectInteraction)
+      .mockResolvedValueOnce(staleCardSelectInteraction)
+      .mockResolvedValueOnce(cardSelectInteraction);
+
+    const result = await browseCollection(interaction, api);
+    // The stale selection re-renders the current view rather than returning/crashing on chosen.name.
+    expect(staleCardSelectInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) }));
+    expect(staleCardSelectInteraction.update).not.toHaveBeenCalledWith(expect.objectContaining({ content: expect.anything() }));
+    expect(result).toEqual({ status: 'found', card: CARDS[2] });
   });
 
   test('times out if no selection is made within the window', async () => {
