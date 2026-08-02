@@ -383,7 +383,7 @@ describe('/trades received', () => {
     expect(api.get).toHaveBeenCalledWith('/trades/offers/received');
     const call = interaction.reply.mock.calls[0][0];
     expect(call.embeds[0].description).toContain('bob');
-    expect(call.embeds[0].description).toContain('Mana Crypt');
+    expect(call.embeds[0].description).toContain('• Mana Crypt x1');
     const button = call.components[0].components[0].data;
     expect(button.custom_id).toBe('trade-accept:offer-1');
   });
@@ -426,7 +426,10 @@ describe('/trades sent', () => {
 
     const call = interaction.reply.mock.calls[0][0];
     expect(call.embeds[0].description).toContain('carol');
-    const button = call.components[0].components[0].data;
+    expect(call.components).toBeUndefined();
+
+    const followUpCall = interaction.followUp.mock.calls[0][0];
+    const button = followUpCall.components[0].components[0].data;
     expect(button.custom_id).toBe('trade-cancel:offer-2');
   });
 
@@ -442,8 +445,28 @@ describe('/trades sent', () => {
     const interaction = mockInteraction('sent', {});
     await tradesCommand.execute(interaction);
 
-    const call = interaction.reply.mock.calls[0][0];
-    expect(call.components).toEqual([]);
+    expect(interaction.followUp).not.toHaveBeenCalled();
+  });
+
+  test('gives a non-first pending offer its own Cancel button', async () => {
+    const api = {
+      get: jest.fn().mockResolvedValue({
+        status: 200,
+        data: [
+          { _id: 'offer-a', status: 'accepted', toUsername: 'dana', listingId: { cardName: 'Sol Ring' } },
+          { _id: 'offer-b', status: 'pending', toUsername: 'erin', listingId: { cardName: 'Mana Crypt' } }
+        ]
+      })
+    };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('sent', {});
+    await tradesCommand.execute(interaction);
+
+    const allButtons = interaction.followUp.mock.calls
+      .map(call => call[0])
+      .flatMap(payload => payload.components?.[0]?.components?.map(c => c.data) || []);
+    expect(allButtons.some(b => b.custom_id === 'trade-cancel:offer-b')).toBe(true);
   });
 
   test('replies not-linked on 401', async () => {

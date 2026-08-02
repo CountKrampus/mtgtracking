@@ -211,7 +211,7 @@ async function received(interaction, api) {
   }
 
   const offer = pending[0];
-  const cardsList = offer.offeredCards.map(c => `${c.cardName} x${c.quantity}`).join(', ');
+  const cardsList = offer.offeredCards.map(c => `• ${c.cardName} x${c.quantity}`).join('\n');
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder().setCustomId(`trade-accept:${offer._id}`).setLabel('Accept').setStyle(ButtonStyle.Success),
     new ButtonBuilder().setCustomId(`trade-reject:${offer._id}`).setLabel('Reject').setStyle(ButtonStyle.Danger)
@@ -227,7 +227,7 @@ async function received(interaction, api) {
   });
 
   for (const extra of pending.slice(1)) {
-    const extraCardsList = extra.offeredCards.map(c => `${c.cardName} x${c.quantity}`).join(', ');
+    const extraCardsList = extra.offeredCards.map(c => `• ${c.cardName} x${c.quantity}`).join('\n');
     const extraRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId(`trade-accept:${extra._id}`).setLabel('Accept').setStyle(ButtonStyle.Success),
       new ButtonBuilder().setCustomId(`trade-reject:${extra._id}`).setLabel('Reject').setStyle(ButtonStyle.Danger)
@@ -253,20 +253,25 @@ async function sent(interaction, api) {
     return interaction.reply({ content: "You haven't sent any trade offers.", ephemeral: true });
   }
 
-  const offer = res.data[0];
-  const lines = res.data.slice(0, 10).map(o => `**${o.listingId?.cardName || 'Unknown listing'}** — to ${o.toUsername} (${o.status})`);
-  const components = [];
-  if (offer.status === 'pending') {
-    components.push(new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(`trade-cancel:${offer._id}`).setLabel('Cancel').setStyle(ButtonStyle.Danger)
-    ));
-  }
+  const listed = res.data.slice(0, 10);
+  const lines = listed.map(o => `**${o.listingId?.cardName || 'Unknown listing'}** — to ${o.toUsername} (${o.status})`);
 
-  return interaction.reply({
+  await interaction.reply({
     embeds: [{ title: 'Your Sent Offers', description: lines.join('\n') }],
-    components,
     ephemeral: true
   });
+
+  for (const o of listed) {
+    if (o.status !== 'pending') continue;
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId(`trade-cancel:${o._id}`).setLabel('Cancel').setStyle(ButtonStyle.Danger)
+    );
+    await interaction.followUp({
+      content: `Cancel your offer on "${o.listingId?.cardName || 'this listing'}"?`,
+      components: [row],
+      ephemeral: true
+    });
+  }
 }
 
 module.exports = {
