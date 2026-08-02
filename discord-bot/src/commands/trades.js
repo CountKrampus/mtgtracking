@@ -143,7 +143,7 @@ async function offer(interaction, api) {
   }
 
   const options = ownedCards.slice(0, 25).map((c, i) => ({
-    label: `${c.name} (${c.condition})`.slice(0, 100),
+    label: `${c.name} (${c.set || 'Unknown'}, ${c.condition})`.slice(0, 100),
     value: String(i)
   }));
   const row = new ActionRowBuilder().addComponents(
@@ -184,8 +184,13 @@ async function offer(interaction, api) {
   }));
 
   const postRes = await api.post(`/trades/${listing._id}/offers`, { offeredCards, message: message || '' });
+  if (postRes.status === 401) {
+    await selectInteraction.update({ components: [] });
+    return replyNotLinked(interaction);
+  }
   if (postRes.status !== 201) {
-    await selectInteraction.update({ content: `❌ Couldn't submit the offer (${postRes.status}).`, components: [] });
+    const errMsg = postRes.data?.message || `Couldn't submit the offer (${postRes.status}).`;
+    await selectInteraction.update({ content: `❌ ${errMsg}`, components: [] });
     return;
   }
 

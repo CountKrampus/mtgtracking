@@ -254,4 +254,109 @@ describe('/trades offer', () => {
 
     expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('No listing') }));
   });
+
+  test('reports a timeout when the card selection is not made in time', async () => {
+    const api = {
+      get: jest.fn()
+        .mockResolvedValueOnce({ status: 200, data: { listings: [{ _id: 'listing-1', cardName: 'Sol Ring' }], total: 1 } }) // /trades?card=
+        .mockResolvedValueOnce({ status: 200, data: [
+          { name: 'Mana Crypt', set: 'Eternal Masters', condition: 'NM', price: 200, scryfallId: 'sf-2', imageUrl: '/img/sf-2' }
+        ] }) // /cards
+    };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('offer', { listing: 'Sol Ring', message: null });
+    interaction.channel = { awaitMessageComponent: jest.fn().mockRejectedValue(new Error('time')) };
+
+    await tradesCommand.execute(interaction);
+
+    expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('timed out') }));
+  });
+
+  test('surfaces the backend error message when the offer POST fails (e.g. own listing)', async () => {
+    const api = {
+      get: jest.fn()
+        .mockResolvedValueOnce({ status: 200, data: { listings: [{ _id: 'listing-1', cardName: 'Sol Ring' }], total: 1 } }) // /trades?card=
+        .mockResolvedValueOnce({ status: 200, data: [
+          { name: 'Mana Crypt', set: 'Eternal Masters', condition: 'NM', price: 200, scryfallId: 'sf-2', imageUrl: '/img/sf-2' }
+        ] }), // /cards
+      post: jest.fn().mockResolvedValue({ status: 403, data: { message: 'Cannot offer on your own listing' } })
+    };
+    client.mockReturnValue(api);
+
+    const selectInteraction = {
+      values: ['0'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    const interaction = mockInteraction('offer', { listing: 'Sol Ring', message: null });
+    interaction.channel = { awaitMessageComponent: jest.fn().mockResolvedValue(selectInteraction) };
+
+    await tradesCommand.execute(interaction);
+
+    expect(selectInteraction.update).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('Cannot offer on your own listing')
+    }));
+  });
+
+  test('replies not-linked when the offer POST returns 401', async () => {
+    const api = {
+      get: jest.fn()
+        .mockResolvedValueOnce({ status: 200, data: { listings: [{ _id: 'listing-1', cardName: 'Sol Ring' }], total: 1 } }) // /trades?card=
+        .mockResolvedValueOnce({ status: 200, data: [
+          { name: 'Mana Crypt', set: 'Eternal Masters', condition: 'NM', price: 200, scryfallId: 'sf-2', imageUrl: '/img/sf-2' }
+        ] }), // /cards
+      post: jest.fn().mockResolvedValue({ status: 401 })
+    };
+    client.mockReturnValue(api);
+
+    const selectInteraction = {
+      values: ['0'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    const interaction = mockInteraction('offer', { listing: 'Sol Ring', message: null });
+    interaction.channel = { awaitMessageComponent: jest.fn().mockResolvedValue(selectInteraction) };
+
+    await tradesCommand.execute(interaction);
+
+    expect(selectInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ components: [] }));
+    expect(interaction.editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('link') }));
+  });
+
+  test('replies not-linked when GET /cards returns 401', async () => {
+    const api = {
+      get: jest.fn()
+        .mockResolvedValueOnce({ status: 200, data: { listings: [{ _id: 'listing-1', cardName: 'Sol Ring' }], total: 1 } }) // /trades?card=
+        .mockResolvedValueOnce({ status: 401 }) // /cards
+    };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('offer', { listing: 'Sol Ring', message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(interaction.editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('link') }));
+  });
+
+  test("reports the caller doesn't have any cards to offer", async () => {
+    const api = {
+      get: jest.fn()
+        .mockResolvedValueOnce({ status: 200, data: { listings: [{ _id: 'listing-1', cardName: 'Sol Ring' }], total: 1 } }) // /trades?card=
+        .mockResolvedValueOnce({ status: 200, data: [] }) // /cards
+    };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('offer', { listing: 'Sol Ring', message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining("don't have any cards") }));
+  });
+
+  test('reports a generic error when the initial listing search returns an unexpected status', async () => {
+    const api = { get: jest.fn().mockResolvedValueOnce({ status: 500 }) };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('offer', { listing: 'Sol Ring', message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('500') }));
+  });
 });
