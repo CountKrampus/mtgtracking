@@ -68,6 +68,13 @@ const commands = [
   new SlashCommandBuilder().setName('achievements').setDescription('Show your earned collector achievements'),
 
   new SlashCommandBuilder().setName('pricealerts').setDescription('List your cards with an active price alert'),
+
+  new SlashCommandBuilder().setName('trades').setDescription('Trading commands')
+    .addSubcommand(sub => sub.setName('browse').setDescription('Browse active trade listings')
+      .addStringOption(o => o.setName('type').setDescription('Filter by listing type')
+        .addChoices({ name: 'have', value: 'have' }, { name: 'want', value: 'want' }))
+      .addStringOption(o => o.setName('card').setDescription('Filter by card name')))
+    .addSubcommand(sub => sub.setName('my-listings').setDescription('Show your own active listings')),
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
