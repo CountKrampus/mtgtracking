@@ -3,12 +3,16 @@ const { client } = require('../src/apiClient');
 const achievementsCommand = require('../src/commands/achievements');
 
 function mockInteraction() {
-  return {
+  const interaction = {
     user: { id: 'discord-1' },
     reply: jest.fn().mockResolvedValue(undefined),
-    deferReply: jest.fn().mockResolvedValue(undefined),
-    followUp: jest.fn().mockResolvedValue(undefined)
+    editReply: jest.fn().mockResolvedValue(undefined),
+    followUp: jest.fn().mockResolvedValue(undefined),
+    deferred: false,
+    replied: false
   };
+  interaction.deferReply = jest.fn().mockImplementation(async () => { interaction.deferred = true; });
+  return interaction;
 }
 
 describe('/achievements', () => {
@@ -30,10 +34,10 @@ describe('/achievements', () => {
     const interaction = mockInteraction();
     await achievementsCommand.execute(interaction);
 
+    expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
     expect(api.get).toHaveBeenCalledWith('/achievements');
-    expect(interaction.deferReply).not.toHaveBeenCalled();
 
-    const call = interaction.reply.mock.calls[0][0];
+    const call = interaction.followUp.mock.calls[0][0];
     expect(call.ephemeral).toBe(true);
     const embed = call.embeds[0];
     expect(embed.title).toBe('Achievements (2/3)');
@@ -56,21 +60,21 @@ describe('/achievements', () => {
     const interaction = mockInteraction();
     await achievementsCommand.execute(interaction);
 
-    expect(interaction.reply).toHaveBeenCalledWith(
+    expect(interaction.followUp).toHaveBeenCalledWith(
       expect.objectContaining({ content: expect.stringContaining("haven't earned any achievements yet"), ephemeral: true })
     );
-    const call = interaction.reply.mock.calls[0][0];
+    const call = interaction.followUp.mock.calls[0][0];
     expect(call.embeds).toBeUndefined();
   });
 
-  test('replies via replyNotLinked on a 401', async () => {
+  test('replies via replyNotLinked (editReply, since already deferred) on a 401', async () => {
     const api = { get: jest.fn().mockResolvedValue({ status: 401, data: null }) };
     client.mockReturnValue(api);
 
     const interaction = mockInteraction();
     await achievementsCommand.execute(interaction);
 
-    expect(interaction.reply).toHaveBeenCalledWith(
+    expect(interaction.editReply).toHaveBeenCalledWith(
       expect.objectContaining({ content: expect.stringContaining('link') })
     );
   });
@@ -82,7 +86,7 @@ describe('/achievements', () => {
     const interaction = mockInteraction();
     await achievementsCommand.execute(interaction);
 
-    expect(interaction.reply).toHaveBeenCalledWith(
+    expect(interaction.followUp).toHaveBeenCalledWith(
       expect.objectContaining({ content: expect.stringContaining('500'), ephemeral: true })
     );
   });

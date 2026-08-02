@@ -40,12 +40,7 @@ client.on(Events.InteractionCreate, async interaction => {
       await handleTradeButton(interaction);
     } catch (error) {
       console.error(`Error handling button ${interaction.customId}:`, error);
-      const payload = { content: '❌ Something went wrong running that command.', ephemeral: true };
-      if (interaction.replied || interaction.deferred) {
-        await interaction.followUp(payload);
-      } else {
-        await interaction.reply(payload);
-      }
+      await safeErrorReply(interaction);
     }
     return;
   }
@@ -59,14 +54,27 @@ client.on(Events.InteractionCreate, async interaction => {
     await command.execute(interaction);
   } catch (error) {
     console.error(`Error executing /${interaction.commandName}:`, error);
-    const payload = { content: '❌ Something went wrong running that command.', ephemeral: true };
+    await safeErrorReply(interaction);
+  }
+});
+
+// The interaction itself may already be expired/unknown by the time we try to
+// report the original error (e.g. a command took too long and Discord's 3s
+// window closed), in which case reply/followUp throws too. That secondary
+// failure must not escape uncaught - discord.js emits it as an unhandled
+// 'error' event on the Client, which crashes the whole process.
+async function safeErrorReply(interaction) {
+  const payload = { content: '❌ Something went wrong running that command.', ephemeral: true };
+  try {
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp(payload);
     } else {
       await interaction.reply(payload);
     }
+  } catch (replyError) {
+    console.error('Failed to send error reply (interaction likely expired):', replyError.message);
   }
-});
+}
 
 // Polls for price-alert notifications across all linked users and DMs each
 // one. Keeps `since` in memory only - on a bot restart it resets to "now",
