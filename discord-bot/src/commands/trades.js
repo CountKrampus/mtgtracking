@@ -1,3 +1,4 @@
+const { StringSelectMenuBuilder, ActionRowBuilder, ComponentType } = require('discord.js');
 const { client } = require('../apiClient');
 const { replyNotLinked } = require('../lib/notLinked');
 const { resolveCard } = require('../lib/resolveCard');
@@ -111,6 +112,87 @@ async function create(interaction, api) {
   return interaction.followUp({ content: `✅ Listed "${cardData.name}" as wanted.`, ephemeral: true });
 }
 
+async function offer(interaction, api) {
+  const listingSearch = interaction.options.getString('listing', true);
+  const message = interaction.options.getString('message');
+
+  await interaction.deferReply({ ephemeral: true });
+
+  const listRes = await api.get('/trades', { params: { card: listingSearch } });
+  if (listRes.status !== 200) {
+    return interaction.followUp({ content: `❌ Something went wrong (${listRes.status}).`, ephemeral: true });
+  }
+  const matches = listRes.data.listings;
+  if (matches.length === 0) {
+    return interaction.followUp({ content: `❌ No listing matches "${listingSearch}". Try /trades browse to see what's available.`, ephemeral: true });
+  }
+  if (matches.length > 1) {
+    const names = matches.map(l => l.cardName).join(', ');
+    return interaction.followUp({ content: `❌ Multiple listings match "${listingSearch}": ${names}. Be more specific.`, ephemeral: true });
+  }
+  const listing = matches[0];
+
+  const cardsRes = await api.get('/cards');
+  if (cardsRes.status === 401) return replyNotLinked(interaction);
+  if (cardsRes.status !== 200) {
+    return interaction.followUp({ content: `❌ Something went wrong (${cardsRes.status}).`, ephemeral: true });
+  }
+  const ownedCards = cardsRes.data;
+  if (ownedCards.length === 0) {
+    return interaction.followUp({ content: "You don't have any cards to offer.", ephemeral: true });
+  }
+
+  const options = ownedCards.slice(0, 25).map((c, i) => ({
+    label: `${c.name} (${c.condition})`.slice(0, 100),
+    value: String(i)
+  }));
+  const row = new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId('trade-offer-select')
+      .setPlaceholder('Select one or more cards to offer')
+      .setMinValues(1)
+      .setMaxValues(options.length)
+      .addOptions(options)
+  );
+
+  await interaction.followUp({
+    content: `Offering on "${listing.cardName}" — pick the card(s) you want to offer:`,
+    components: [row],
+    ephemeral: true
+  });
+
+  let selectInteraction;
+  try {
+    selectInteraction = await interaction.channel.awaitMessageComponent({
+      componentType: ComponentType.StringSelect,
+      filter: i => i.customId === 'trade-offer-select' && i.user.id === interaction.user.id,
+      time: 30000
+    });
+  } catch {
+    return interaction.followUp({ content: '⌛ Selection timed out.', ephemeral: true });
+  }
+
+  const selectedCards = selectInteraction.values.map(v => ownedCards[Number(v)]);
+  const offeredCards = selectedCards.map(c => ({
+    cardName: c.name,
+    cardSet: c.set,
+    condition: c.condition,
+    quantity: 1,
+    estimatedValue: c.price,
+    scryfallId: c.scryfallId,
+    imageUrl: c.imageUrl
+  }));
+
+  const postRes = await api.post(`/trades/${listing._id}/offers`, { offeredCards, message: message || '' });
+  if (postRes.status !== 201) {
+    await selectInteraction.update({ content: `❌ Couldn't submit the offer (${postRes.status}).`, components: [] });
+    return;
+  }
+
+  const cardList = selectedCards.map(c => c.name).join(', ');
+  await selectInteraction.update({ content: `✅ Offered ${cardList} on "${listing.cardName}".`, components: [] });
+}
+
 module.exports = {
   name: 'trades',
   async execute(interaction) {
@@ -120,6 +202,7 @@ module.exports = {
     if (sub === 'browse') return browse(interaction, api);
     if (sub === 'my-listings') return myListings(interaction, api);
     if (sub === 'create') return create(interaction, api);
+    if (sub === 'offer') return offer(interaction, api);
 
     return interaction.reply({ content: 'Unknown subcommand.', ephemeral: true });
   }

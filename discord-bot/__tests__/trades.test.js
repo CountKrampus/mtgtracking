@@ -202,3 +202,56 @@ describe('/trades create', () => {
     expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining("Couldn't create listing") }));
   });
 });
+
+describe('/trades offer', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  test('resolves the listing, lets the caller multi-select their own cards, and posts the offer', async () => {
+    const api = {
+      get: jest.fn()
+        .mockResolvedValueOnce({ status: 200, data: { listings: [{ _id: 'listing-1', cardName: 'Sol Ring' }], total: 1 } }) // /trades?card=
+        .mockResolvedValueOnce({ status: 200, data: [
+          { name: 'Mana Crypt', set: 'Eternal Masters', condition: 'NM', price: 200, scryfallId: 'sf-2', imageUrl: '/img/sf-2' },
+          { name: 'Command Tower', set: 'Commander 2020', condition: 'NM', price: 0.5, scryfallId: 'sf-3', imageUrl: '/img/sf-3' }
+        ] }), // /cards
+      post: jest.fn().mockResolvedValue({ status: 201, data: {} })
+    };
+    client.mockReturnValue(api);
+
+    const selectInteraction = {
+      values: ['0'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    const interaction = mockInteraction('offer', { listing: 'Sol Ring', message: 'trade?' });
+    interaction.channel = { awaitMessageComponent: jest.fn().mockResolvedValue(selectInteraction) };
+
+    await tradesCommand.execute(interaction);
+
+    expect(api.post).toHaveBeenCalledWith('/trades/listing-1/offers', expect.objectContaining({
+      message: 'trade?',
+      offeredCards: [expect.objectContaining({ cardName: 'Mana Crypt', scryfallId: 'sf-2' })]
+    }));
+  });
+
+  test('asks for a more specific name when multiple listings match', async () => {
+    const api = {
+      get: jest.fn().mockResolvedValueOnce({ status: 200, data: { listings: [{ _id: 'a', cardName: 'Sol Ring' }, { _id: 'b', cardName: 'Sol Ring Foil' }], total: 2 } })
+    };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('offer', { listing: 'Sol Ring', message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('more specific') }));
+  });
+
+  test('reports no match when no listing matches', async () => {
+    const api = { get: jest.fn().mockResolvedValueOnce({ status: 200, data: { listings: [], total: 0 } }) };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('offer', { listing: 'Nonexistent', message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('No listing') }));
+  });
+});

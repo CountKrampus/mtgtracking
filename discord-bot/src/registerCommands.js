@@ -79,6 +79,9 @@ const commands = [
       .addStringOption(o => o.setName('type').setDescription('Listing type').setRequired(true)
         .addChoices({ name: 'have', value: 'have' }, { name: 'want', value: 'want' }))
       .addStringOption(o => o.setName('card').setDescription('Card name').setRequired(true))
+      .addStringOption(o => o.setName('message').setDescription('Optional note')))
+    .addSubcommand(sub => sub.setName('offer').setDescription('Offer one or more of your cards on a listing')
+      .addStringOption(o => o.setName('listing').setDescription('Card name of the listing to offer on').setRequired(true))
       .addStringOption(o => o.setName('message').setDescription('Optional note'))),
 ].map(c => c.toJSON());
 
