@@ -2,6 +2,7 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, Events } = require('discord.js');
 const { client: apiClient, resolveImageUrl } = require('./apiClient');
+const { handleTradeButton } = require('./tradeButtons');
 
 const commands = new Map([
   require('./commands/link'),
@@ -21,6 +22,9 @@ const commands = new Map([
   require('./commands/sets'),
   require('./commands/location'),
   require('./commands/deckstats'),
+  require('./commands/achievements'),
+  require('./commands/pricealerts'),
+  require('./commands/trades'),
 ].map(cmd => [cmd.name, cmd]));
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -31,6 +35,21 @@ client.once(Events.ClientReady, readyClient => {
 });
 
 client.on(Events.InteractionCreate, async interaction => {
+  if (interaction.isButton() && interaction.customId.startsWith('trade-')) {
+    try {
+      await handleTradeButton(interaction);
+    } catch (error) {
+      console.error(`Error handling button ${interaction.customId}:`, error);
+      const payload = { content: '❌ Something went wrong running that command.', ephemeral: true };
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp(payload);
+      } else {
+        await interaction.reply(payload);
+      }
+    }
+    return;
+  }
+
   if (!interaction.isChatInputCommand()) return;
 
   const command = commands.get(interaction.commandName);
