@@ -113,6 +113,78 @@ function buildBrowserRows(cards, state) {
   return { rows: [setRow, typeRow, colorRow, controlsRow, cardRow], filtered, pageCards, totalPages };
 }
 
+async function browseCollection(interaction, api) {
+  const res = await api.get('/cards');
+  if (res.status === 401) return { status: 'not_linked' };
+  if (res.status !== 200) return { status: 'error', httpStatus: res.status };
+  if (res.data.length === 0) return { status: 'no_cards' };
+
+  const cards = res.data;
+  const state = { set: null, type: null, colors: new Set(), page: 0 };
+
+  const initial = buildBrowserRows(cards, state);
+  await interaction.followUp({
+    content: 'Browse your collection — filter by set/color/type, then pick a card to list:',
+    components: initial.rows,
+    ephemeral: true
+  });
+
+  while (true) {
+    let componentInteraction;
+    try {
+      componentInteraction = await interaction.channel.awaitMessageComponent({
+        filter: i => i.user.id === interaction.user.id && i.customId.startsWith('browse-'),
+        time: 30000
+      });
+    } catch {
+      return { status: 'timed_out' };
+    }
+
+    const { customId } = componentInteraction;
+
+    if (customId === 'browse-card-select') {
+      const cardId = componentInteraction.values[0];
+      if (cardId === '__none__') {
+        const { rows } = buildBrowserRows(cards, state);
+        await componentInteraction.update({ components: rows });
+        continue;
+      }
+      const chosen = cards.find(c => c._id === cardId);
+      await componentInteraction.update({ content: `Selected: ${chosen.name}`, components: [] });
+      return { status: 'found', card: chosen };
+    }
+
+    if (customId === 'browse-set-select') {
+      const value = componentInteraction.values[0];
+      state.set = value === '__all__' ? null : value;
+      state.page = 0;
+    } else if (customId === 'browse-type-select') {
+      const value = componentInteraction.values[0];
+      state.type = value === '__all__' ? null : value;
+      state.page = 0;
+    } else if (customId.startsWith('browse-color:')) {
+      const color = customId.split(':')[1];
+      if (state.colors.has(color)) state.colors.delete(color);
+      else state.colors.add(color);
+      state.page = 0;
+    } else if (customId === 'browse-color-reset') {
+      state.colors.clear();
+      state.page = 0;
+    } else if (customId === 'browse-prev') {
+      state.page = Math.max(0, state.page - 1);
+    } else if (customId === 'browse-next') {
+      state.page += 1;
+    }
+
+    const filtered = filterCards(cards, state);
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (state.page >= totalPages) state.page = totalPages - 1;
+
+    const { rows } = buildBrowserRows(cards, state);
+    await componentInteraction.update({ components: rows });
+  }
+}
+
 module.exports = {
   PAGE_SIZE,
   COLORS,
@@ -121,5 +193,6 @@ module.exports = {
   buildSetOptions,
   buildTypeOptions,
   buildCardOptions,
-  buildBrowserRows
+  buildBrowserRows,
+  browseCollection
 };

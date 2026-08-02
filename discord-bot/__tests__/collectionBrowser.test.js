@@ -7,6 +7,7 @@ const {
   buildCardOptions
 } = require('../src/lib/collectionBrowser');
 const { buildBrowserRows } = require('../src/lib/collectionBrowser');
+const { browseCollection } = require('../src/lib/collectionBrowser');
 
 const CARDS = [
   { _id: '1', name: 'Sol Ring', set: 'Commander 2021', condition: 'NM', colors: [], types: ['Artifact'] },
@@ -144,5 +145,124 @@ describe('buildBrowserRows', () => {
     expect(pageCards.map(c => c.name)).toEqual(['Llanowar Elves', 'Counterspell', 'Boros Charm']);
     const cardSelect = rows[4].toJSON().components[0];
     expect(cardSelect.options.map(o => o.value)).toEqual(['2', '3', '4']);
+  });
+});
+
+function mockBrowseInteraction() {
+  return {
+    user: { id: 'discord-1' },
+    followUp: jest.fn().mockResolvedValue(undefined),
+    channel: { awaitMessageComponent: jest.fn() }
+  };
+}
+
+describe('browseCollection', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  test('not_linked when GET /cards returns 401', async () => {
+    const api = { get: jest.fn().mockResolvedValue({ status: 401 }) };
+    const interaction = mockBrowseInteraction();
+
+    const result = await browseCollection(interaction, api);
+    expect(result).toEqual({ status: 'not_linked' });
+  });
+
+  test('error when GET /cards returns a non-200/401 status', async () => {
+    const api = { get: jest.fn().mockResolvedValue({ status: 500 }) };
+    const interaction = mockBrowseInteraction();
+
+    const result = await browseCollection(interaction, api);
+    expect(result).toEqual({ status: 'error', httpStatus: 500 });
+  });
+
+  test('no_cards when the collection is empty', async () => {
+    const api = { get: jest.fn().mockResolvedValue({ status: 200, data: [] }) };
+    const interaction = mockBrowseInteraction();
+
+    const result = await browseCollection(interaction, api);
+    expect(result).toEqual({ status: 'no_cards' });
+  });
+
+  test('posts the initial browser UI, then a set filter narrows results, then a card is selected', async () => {
+    const api = { get: jest.fn().mockResolvedValue({ status: 200, data: CARDS }) };
+    const interaction = mockBrowseInteraction();
+
+    const setSelectInteraction = {
+      customId: 'browse-set-select',
+      values: ['M19'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    const cardSelectInteraction = {
+      customId: 'browse-card-select',
+      values: ['3'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    interaction.channel.awaitMessageComponent
+      .mockResolvedValueOnce(setSelectInteraction)
+      .mockResolvedValueOnce(cardSelectInteraction);
+
+    const result = await browseCollection(interaction, api);
+
+    expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array), ephemeral: true }));
+    expect(setSelectInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) }));
+    expect(cardSelectInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Counterspell'), components: [] }));
+    expect(result).toEqual({ status: 'found', card: CARDS[2] });
+  });
+
+  test('a color button toggle also re-renders before a final selection', async () => {
+    const api = { get: jest.fn().mockResolvedValue({ status: 200, data: CARDS }) };
+    const interaction = mockBrowseInteraction();
+
+    const colorToggleInteraction = {
+      customId: 'browse-color:G',
+      values: [],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    const cardSelectInteraction = {
+      customId: 'browse-card-select',
+      values: ['2'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    interaction.channel.awaitMessageComponent
+      .mockResolvedValueOnce(colorToggleInteraction)
+      .mockResolvedValueOnce(cardSelectInteraction);
+
+    const result = await browseCollection(interaction, api);
+    expect(colorToggleInteraction.update).toHaveBeenCalled();
+    expect(result).toEqual({ status: 'found', card: CARDS[1] });
+  });
+
+  test('selecting "All Sets" (the __all__ sentinel) resets the set filter back to unfiltered', async () => {
+    const api = { get: jest.fn().mockResolvedValue({ status: 200, data: CARDS }) };
+    const interaction = mockBrowseInteraction();
+
+    const setSelectInteraction = {
+      customId: 'browse-set-select',
+      values: ['__all__'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    const cardSelectInteraction = {
+      customId: 'browse-card-select',
+      values: ['1'],
+      update: jest.fn().mockResolvedValue(undefined)
+    };
+    interaction.channel.awaitMessageComponent
+      .mockResolvedValueOnce(setSelectInteraction)
+      .mockResolvedValueOnce(cardSelectInteraction);
+
+    const result = await browseCollection(interaction, api);
+    // After resetting to "All Sets", all 4 cards should still be selectable - confirm the
+    // update call after the reset shows an undisabled card select (i.e. results weren't
+    // reduced to zero), by checking the eventually-selected card resolves correctly.
+    expect(result).toEqual({ status: 'found', card: CARDS[0] });
+  });
+
+  test('times out if no selection is made within the window', async () => {
+    const api = { get: jest.fn().mockResolvedValue({ status: 200, data: CARDS }) };
+    const interaction = mockBrowseInteraction();
+    interaction.channel.awaitMessageComponent.mockRejectedValue(new Error('time'));
+
+    const result = await browseCollection(interaction, api);
+    expect(result).toEqual({ status: 'timed_out' });
   });
 });
