@@ -74,7 +74,12 @@ const commands = [
       .addStringOption(o => o.setName('type').setDescription('Filter by listing type')
         .addChoices({ name: 'have', value: 'have' }, { name: 'want', value: 'want' }))
       .addStringOption(o => o.setName('card').setDescription('Filter by card name')))
-    .addSubcommand(sub => sub.setName('my-listings').setDescription('Show your own active listings')),
+    .addSubcommand(sub => sub.setName('my-listings').setDescription('Show your own active listings'))
+    .addSubcommand(sub => sub.setName('create').setDescription('List a card you have or want to trade')
+      .addStringOption(o => o.setName('type').setDescription('Listing type').setRequired(true)
+        .addChoices({ name: 'have', value: 'have' }, { name: 'want', value: 'want' }))
+      .addStringOption(o => o.setName('card').setDescription('Card name').setRequired(true))
+      .addStringOption(o => o.setName('message').setDescription('Optional note'))),
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);

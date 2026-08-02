@@ -85,3 +85,51 @@ describe('/trades my-listings', () => {
     expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('link') }));
   });
 });
+
+describe('/trades create', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  test('type=have resolves against the caller\'s own collection and posts a listing', async () => {
+    const { resolveCard } = require('../src/lib/resolveCard');
+    resolveCard.mockResolvedValue({ status: 'found', card: { _id: 'card-1', name: 'Sol Ring', set: 'Commander 2021', setCode: 'C21', scryfallId: 'sf-1', imageUrl: '/img/sf-1', condition: 'NM', price: 2 } });
+    const api = { post: jest.fn().mockResolvedValue({ status: 201, data: {} }) };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('create', { type: 'have', card: 'Sol Ring', message: 'looking to trade' });
+    await tradesCommand.execute(interaction);
+
+    expect(api.post).toHaveBeenCalledWith('/trades', expect.objectContaining({
+      type: 'have', cardName: 'Sol Ring', cardSet: 'Commander 2021', cardSetCode: 'C21',
+      scryfallId: 'sf-1', imageUrl: '/img/sf-1', condition: 'NM', estimatedValue: 2, quantity: 1, notes: 'looking to trade'
+    }));
+  });
+
+  test('type=want looks up the card via Scryfall search, not the caller\'s collection', async () => {
+    const api = {
+      get: jest.fn().mockResolvedValue({ status: 200, data: { name: 'Mana Crypt', set: 'Eternal Masters', setCode: 'EMA', scryfallId: 'sf-2', imageUrl: '/img/sf-2', prices: { usd: '200.00' } } }),
+      post: jest.fn().mockResolvedValue({ status: 201, data: {} })
+    };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('create', { type: 'want', card: 'Mana Crypt', message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(api.get).toHaveBeenCalledWith('/scryfall/search', { params: { name: 'Mana Crypt' } });
+    expect(api.post).toHaveBeenCalledWith('/trades', expect.objectContaining({
+      type: 'want', cardName: 'Mana Crypt', cardSet: 'Eternal Masters', cardSetCode: 'EMA',
+      scryfallId: 'sf-2', imageUrl: '/img/sf-2', condition: 'NM', quantity: 1
+    }));
+  });
+
+  test('type=have reports no match without posting anything', async () => {
+    const { resolveCard } = require('../src/lib/resolveCard');
+    resolveCard.mockResolvedValue({ status: 'no_match' });
+    const api = { post: jest.fn() };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('create', { type: 'have', card: 'Nonexistent Card', message: null });
+    await tradesCommand.execute(interaction);
+
+    expect(api.post).not.toHaveBeenCalled();
+  });
+});
