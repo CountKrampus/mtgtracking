@@ -4,18 +4,22 @@ jest.mock('../src/lib/resolveCard');
 const tradesCommand = require('../src/commands/trades');
 
 function mockInteraction(subcommand, opts = {}) {
-  return {
+  const interaction = {
     user: { id: 'discord-1' },
     options: {
       getSubcommand: jest.fn().mockReturnValue(subcommand),
       getString: jest.fn((name) => opts[name] ?? null)
     },
-    deferReply: jest.fn().mockResolvedValue(undefined),
     reply: jest.fn().mockResolvedValue(undefined),
+    editReply: jest.fn().mockResolvedValue(undefined),
     followUp: jest.fn().mockResolvedValue(undefined),
     deferred: false,
     replied: false
   };
+  interaction.deferReply = jest.fn().mockImplementation(async () => {
+    interaction.deferred = true;
+  });
+  return interaction;
 }
 
 describe('/trades browse', () => {
@@ -143,7 +147,7 @@ describe('/trades create', () => {
     const interaction = mockInteraction('create', { type: 'want', card: 'Mana Crypt', message: null });
     await tradesCommand.execute(interaction);
 
-    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('link') }));
+    expect(interaction.editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('link') }));
   });
 
   test('type=have reports timeout without posting anything', async () => {
