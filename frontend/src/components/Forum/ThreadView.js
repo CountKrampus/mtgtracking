@@ -471,7 +471,7 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
 
       if (response.ok) {
         const updated = await response.json();
-        setThread(updated);
+        setThread({ ...updated, categoryId: updated.categoryId?._id || updated.categoryId });
         setShowMoveModal(false);
         onThreadUpdated?.();
       } else {
