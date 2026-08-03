@@ -1,8 +1,48 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Loader } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../../config';
 import DuplicateDetectionModal from './DuplicateDetectionModal';
+
+const BUG_REPORT_TEMPLATE = `**What happened?**
+
+
+**Steps to reproduce:**
+1.
+2.
+3.
+
+**Expected behavior:**
+
+
+**Actual behavior:**
+
+
+**Screenshots or error messages (if any):**
+`;
+
+const FEATURE_REQUEST_TEMPLATE = `**What would you like to see added?**
+
+
+**What problem would this solve, or what's the use case?**
+
+
+**Any additional context or examples?**
+`;
+
+function findCategorySlug(categoryTree, categoryId) {
+  if (!categoryId) return null;
+  const idStr = categoryId.toString();
+  for (const node of categoryTree) {
+    if (node._id === idStr) return node.slug;
+    if (node.children) {
+      for (const child of node.children) {
+        if (child._id === idStr) return child.slug;
+      }
+    }
+  }
+  return null;
+}
 
 export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = API_URL, user, onThreadCreated, categoryIsQA = false }) {
   const [title, setTitle] = useState('');
@@ -17,6 +57,10 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = A
   const [newThreadId, setNewThreadId] = useState(null);
   const [createdThread, setCreatedThread] = useState(null);
   const [isQA, setIsQA] = useState(categoryIsQA);
+  const [templateCategoryType, setTemplateCategoryType] = useState(null); // 'bug' | 'feature' | null, frozen once determined per open
+  const [reportArea, setReportArea] = useState(''); // '' | 'main-site' | 'discord-bot'
+  const [reportSiteSection, setReportSiteSection] = useState('');
+  const templateCheckedRef = useRef(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -38,6 +82,29 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = A
   }, [categoryId]);
 
   useEffect(() => { setIsQA(categoryIsQA); }, [categoryIsQA]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      templateCheckedRef.current = false;
+      setTemplateCategoryType(null);
+      setReportArea('');
+      setReportSiteSection('');
+      return;
+    }
+    if (templateCheckedRef.current) return;
+    if (categories.length === 0) return; // wait for categories to finish loading
+
+    const slug = findCategorySlug(categories, categoryId);
+    templateCheckedRef.current = true;
+
+    if (slug === 'bug-reports') {
+      setTemplateCategoryType('bug');
+      setContent(prev => (prev.trim() ? prev : BUG_REPORT_TEMPLATE));
+    } else if (slug === 'feature-requests') {
+      setTemplateCategoryType('feature');
+      setContent(prev => (prev.trim() ? prev : FEATURE_REQUEST_TEMPLATE));
+    }
+  }, [isOpen, categories, categoryId]);
 
   const handleCreateThread = async () => {
     if (!title.trim() || !content.trim() || !selectedCategoryId) {
