@@ -7,7 +7,11 @@ const request = require('supertest');
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Role = require('../models/Role');
 const ForumCategory = require('../models/ForumCategory');
+const ForumThread = require('../models/ForumThread');
+const { refreshRoleCache } = require('../utils/permissions');
+const forumCache = require('../cache/forumCache');
 
 let mongod;
 
@@ -19,6 +23,13 @@ beforeAll(async () => {
 afterAll(async () => {
   await mongoose.disconnect();
   await mongod.stop();
+});
+
+beforeEach(() => {
+  // forumCache is a module-level singleton, not reset between tests the way
+  // the database is - without this, a later test's "before" GET /categories
+  // call can serve a stale tree cached by an earlier test in this same file.
+  forumCache.del('categories:tree');
 });
 
 afterEach(async () => {
@@ -64,5 +75,42 @@ describe('POST /api/forum/threads invalidates the categories:tree cache', () => 
 
     const after = await request(app).get('/api/forum/categories').expect(200);
     expect(findCount(after.body)).toBe(1);
+  });
+});
+
+describe('DELETE /api/forum/threads/:threadId invalidates the categories:tree cache', () => {
+  test('a deleted thread\'s count is visible immediately via GET /categories', async () => {
+    await Role.syncIndexes();
+    await Role.seedBuiltInRoles();
+    await Role.grantMigrationPermissions();
+    await refreshRoleCache();
+
+    const app = buildApp();
+    const admin = await User.create({ email: 'admin@test.com', username: 'admin1', passwordHash: 'x', role: 'admin' });
+    const category = await ForumCategory.create({ name: 'General', slug: 'general-cache-delete-test', description: '', threadCount: 1 });
+    const thread = await ForumThread.create({ title: 'To be deleted', categoryId: category._id, authorId: admin._id, content: 'bye' });
+
+    const findCount = (nodes) => {
+      for (const n of nodes) {
+        if (n._id === category._id.toString()) return n.threadCount;
+        if (n.children) {
+          const found = findCount(n.children);
+          if (found !== undefined) return found;
+        }
+      }
+      return undefined;
+    };
+
+    // Populate the cache with the pre-deletion state (threadCount: 1).
+    const before = await request(app).get('/api/forum/categories').expect(200);
+    expect(findCount(before.body)).toBe(1);
+
+    await request(app)
+      .delete(`/api/forum/threads/${thread._id}`)
+      .set('Authorization', `Bearer ${makeToken(admin)}`)
+      .expect(200);
+
+    const after = await request(app).get('/api/forum/categories').expect(200);
+    expect(findCount(after.body)).toBe(0);
   });
 });

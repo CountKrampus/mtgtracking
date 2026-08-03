@@ -1258,6 +1258,7 @@ router.delete('/threads/:threadId', verifyToken, requireAuth, requirePermission(
       thread.categoryId,
       { $inc: { threadCount: -1 } }
     );
+    forumCache.del('categories:tree');
 
     // Keep authors' community stats in sync with actual content - without
     // this, threadCount/postCount (and any badges/UI reading them) stay
