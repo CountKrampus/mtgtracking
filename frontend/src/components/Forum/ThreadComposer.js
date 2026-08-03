@@ -8,9 +8,9 @@ const BUG_REPORT_TEMPLATE = `**What happened?**
 
 
 **Steps to reproduce:**
-1.
-2.
-3.
+1. 
+2. 
+3. 
 
 **Expected behavior:**
 
@@ -19,6 +19,7 @@ const BUG_REPORT_TEMPLATE = `**What happened?**
 
 
 **Screenshots or error messages (if any):**
+
 `;
 
 const FEATURE_REQUEST_TEMPLATE = `**What would you like to see added?**
@@ -28,6 +29,7 @@ const FEATURE_REQUEST_TEMPLATE = `**What would you like to see added?**
 
 
 **Any additional context or examples?**
+
 `;
 
 function findCategorySlug(categoryTree, categoryId) {
