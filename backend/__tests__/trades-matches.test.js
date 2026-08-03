@@ -144,7 +144,7 @@ describe('GET /api/trades/matches', () => {
     expect(res.body.havesTheyWant[0].matches).toHaveLength(2);
   });
 
-  test('does not crash and excludes a listing with an empty-string cardName', async () => {
+  test('does not crash and excludes a listing with a null cardName', async () => {
     await TradeListing.create({
       userId: me._id, username: 'meuser', type: 'have', cardName: 'Sol Ring', status: 'active',
     });
@@ -152,10 +152,12 @@ describe('GET /api/trades/matches', () => {
       userId: other._id, username: 'other', type: 'want', cardName: 'Sol Ring', status: 'active',
     });
     // Bypasses Mongoose validation on purpose (TradeListing.create() would reject
-    // an empty cardName - required rejects '' too, not just null/undefined) to
-    // simulate a malformed/legacy document that skipped schema validation.
+    // a null cardName - required rejects null/undefined) to simulate a malformed/
+    // legacy document that skipped schema validation. Using null (not '') because
+    // ''.toLowerCase() doesn't throw - only a genuinely missing cardName reproduces
+    // the crash this guard exists to prevent.
     await TradeListing.collection.insertOne({
-      userId: other._id, username: 'other', type: 'want', cardName: '', status: 'active',
+      userId: other._id, username: 'other', type: 'want', cardName: null, status: 'active',
       cardSet: '', cardSetCode: '', scryfallId: '', imageUrl: '', condition: 'NM',
       quantity: 1, estimatedValue: 0, notes: '', createdAt: new Date(), updatedAt: new Date(),
     });
@@ -168,7 +170,7 @@ describe('GET /api/trades/matches', () => {
     expect(res.body.havesTheyWant).toHaveLength(1);
     expect(res.body.havesTheyWant[0].matches).toHaveLength(1);
     expect(res.body.havesTheyWant[0].matches[0].username).toBe('other');
-    expect(res.body.havesTheyWant[0].matches.every(m => m.cardName !== '')).toBe(true);
+    expect(res.body.havesTheyWant[0].matches.every(m => m.cardName != null)).toBe(true);
   });
 
   test('omits a listing entirely when it has no matches', async () => {
