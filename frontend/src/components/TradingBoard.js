@@ -412,7 +412,7 @@ function OfferCard({ offer, mode, onAccept, onReject, onCounter, onCancel }) {
 export default function TradingBoard() {
   const { user } = useAuthContext();
   const {
-    listings, listingsTotal, myListings, offersReceived, offersSent,
+    listings, listingsTotal, myListings, offersReceived, offersSent, matches,
     loading, LIMIT,
     filterType, setFilterType, filterCard, setFilterCard,
     filterCondition, setFilterCondition, offset, setOffset,
@@ -426,9 +426,12 @@ export default function TradingBoard() {
 
   const pendingReceived = offersReceived.filter(o => o.status === 'pending').length;
 
+  const matchCount = matches.havesTheyWant.length + matches.wantsTheyHave.length;
+
   const tabs = [
     { id: 'browse', label: 'Browse' },
     { id: 'mine', label: 'My Listings' },
+    { id: 'matches', label: matchCount > 0 ? `Matches (${matchCount})` : 'Matches' },
     { id: 'received', label: pendingReceived > 0 ? `Received (${pendingReceived})` : 'Received' },
     { id: 'sent', label: 'Sent' },
   ];
@@ -543,6 +546,53 @@ export default function TradingBoard() {
                 )}
               </div>
             ))
+          )}
+        </div>
+      )}
+
+      {activeTab === 'matches' && (
+        <div className="space-y-6">
+          {!user ? (
+            <p className="text-white/40 text-center py-8">Sign in to see your matches</p>
+          ) : matchCount === 0 ? (
+            <p className="text-white/40 text-center py-12">No matches right now — list more cards or check back later.</p>
+          ) : (
+            <>
+              {matches.havesTheyWant.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-white/80 font-semibold text-sm">People want your cards</h3>
+                  {matches.havesTheyWant.map(group => (
+                    <div key={group.listing._id} className="space-y-2">
+                      <ListingCard listing={group.listing} isOwn />
+                      <div className="pl-4 space-y-2 border-l-2 border-green-500/30">
+                        {group.matches.map(m => (
+                          <ListingCard key={m._id} listing={m}
+                            onOffer={setOfferTarget}
+                            onCompare={setComparisonTarget} />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {matches.wantsTheyHave.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-white/80 font-semibold text-sm">People have your wants</h3>
+                  {matches.wantsTheyHave.map(group => (
+                    <div key={group.listing._id} className="space-y-2">
+                      <ListingCard listing={group.listing} isOwn />
+                      <div className="pl-4 space-y-2 border-l-2 border-blue-500/30">
+                        {group.matches.map(m => (
+                          <ListingCard key={m._id} listing={m}
+                            onOffer={setOfferTarget}
+                            onCompare={setComparisonTarget} />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
