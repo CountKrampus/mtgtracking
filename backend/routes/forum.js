@@ -452,7 +452,8 @@ router.post('/threads', verifyToken, requireAuth, checkMute, async (req, res) =>
     await thread.populate('authorId', 'username displayName');
 
     // Check for duplicate threads using Jaccard similarity
-    const suggestedDuplicates = await findDuplicates(title, categoryId, 0.6);
+    const rawSuggestedDuplicates = await findDuplicates(title, categoryId, 0.6);
+    const suggestedDuplicates = rawSuggestedDuplicates.filter(d => d.threadId.toString() !== thread._id.toString());
 
     // Rep + badge side effects (fire-and-forget, don't block response)
     User.findByIdAndUpdate(req.user._id, {
