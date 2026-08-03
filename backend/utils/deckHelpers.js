@@ -76,8 +76,11 @@ function calculateDeckStatistics(deck) {
   let totalCMC = 0;
   let nonLandCards = 0;
 
-  // Process commander(s)
-  [deck.commander, deck.partnerCommander].filter(Boolean).forEach(cmd => {
+  // Process commander(s). Checked via `?.name` rather than raw truthiness because a
+  // Mongoose document's nested-subdocument path (e.g. partnerCommander) is a truthy
+  // object even when its logical value is "no partner commander" (partnerCommander: null
+  // gets cast into an empty subdocument on `new Deck(...)`, not preserved as null).
+  [deck.commander, deck.partnerCommander].filter(cmd => cmd?.name).forEach(cmd => {
     updateStatsForCard(stats, cmd, 1);
     const cmc = parseCMC(cmd.manaCost);
     totalCMC += cmc;
@@ -96,7 +99,7 @@ function calculateDeckStatistics(deck) {
     }
   });
 
-  stats.totalCards += 1 + (deck.partnerCommander ? 1 : 0);
+  stats.totalCards += 1 + (deck.partnerCommander?.name ? 1 : 0);
   stats.avgManaCost = nonLandCards > 0 ? Math.round((totalCMC / nonLandCards) * 100) / 100 : 0;
 
   return stats;
@@ -109,7 +112,7 @@ function validateDeck(deck) {
   const basicLands = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes'];
 
   // 1. Card count (100 exactly)
-  const totalCards = 1 + (deck.partnerCommander ? 1 : 0) +
+  const totalCards = 1 + (deck.partnerCommander?.name ? 1 : 0) +
                      deck.mainDeck.reduce((sum, card) => sum + (card.quantity || 1), 0);
   if (totalCards !== 100) {
     errors.push(`Deck must have exactly 100 cards (currently ${totalCards})`);
