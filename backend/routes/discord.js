@@ -97,11 +97,15 @@ router.delete('/link', requireMultiUser, requireAuth, async (req, res) => {
 });
 
 // GET /api/discord/notifications/pending - bot-only. Polled on an interval;
-// returns price_alert Notifications for ALL linked users created after
-// ?since, mapped to their discordUserId so the bot can DM each one.
+// returns price_alert Notifications for ALL linked users that haven't been
+// marked as Discord-delivered yet, mapped to their discordUserId so the bot
+// can DM each one. Undelivered state lives on the Notification row itself
+// (discordDeliveredAt) rather than a poll-side "since" cursor, so a bot
+// restart or a single failed DM can't cause an alert to be silently skipped
+// forever - it just stays undelivered until a later poll's DM succeeds and
+// the bot calls POST /notifications/mark-delivered for it.
 router.get('/notifications/pending', requireBotServiceToken, async (req, res) => {
   try {
-    const since = req.query.since ? new Date(req.query.since) : new Date(0);
     const links = await DiscordLink.find({});
     const discordIdByUserId = new Map(links.map(l => [l.userId.toString(), l.discordUserId]));
     const userIds = links.map(l => l.userId);
@@ -109,10 +113,11 @@ router.get('/notifications/pending', requireBotServiceToken, async (req, res) =>
     const notifications = await Notification.find({
       userId: { $in: userIds },
       type: 'price_alert',
-      createdAt: { $gt: since }
+      discordDeliveredAt: null
     }).sort({ createdAt: 1 }).lean();
 
     const results = notifications.map(n => ({
+      id: n._id,
       discordUserId: discordIdByUserId.get(n.userId.toString()),
       content: n.content,
       cardId: n.cardId,
@@ -120,6 +125,22 @@ router.get('/notifications/pending', requireBotServiceToken, async (req, res) =>
     }));
 
     res.json({ notifications: results, polledAt: new Date().toISOString() });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST /api/discord/notifications/mark-delivered - bot-only. Called after
+// the bot successfully DMs a notification, so it drops out of future
+// /notifications/pending polls.
+router.post('/notifications/mark-delivered', requireBotServiceToken, async (req, res) => {
+  try {
+    const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
+    await Notification.updateMany(
+      { _id: { $in: ids } },
+      { $set: { discordDeliveredAt: new Date() } }
+    );
+    res.json({ marked: ids.length });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

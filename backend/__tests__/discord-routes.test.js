@@ -199,25 +199,26 @@ describe('DELETE /api/discord/link', () => {
 });
 
 describe('GET /api/discord/notifications/pending', () => {
-  test('returns price_alert notifications for linked users created after since', async () => {
+  test('returns only price_alert notifications not yet marked Discord-delivered', async () => {
     const user = await User.create({ email: 'f@test.com', username: 'user6', passwordHash: 'x', role: 'editor' });
     await DiscordLink.create({ userId: user._id, discordUserId: 'discord-333' });
 
     await Notification.create({
-      userId: user._id, type: 'price_alert', content: 'old alert',
-      createdAt: new Date(Date.now() - 60000)
+      userId: user._id, type: 'price_alert', content: 'already delivered',
+      discordDeliveredAt: new Date()
     });
     await Notification.create({ userId: user._id, type: 'price_alert', content: 'new alert' });
 
     const app = buildApp();
     const res = await request(app)
-      .get(`/api/discord/notifications/pending?since=${new Date(Date.now() - 30000).toISOString()}`)
+      .get('/api/discord/notifications/pending')
       .set('Authorization', 'Bearer test-bot-token')
       .expect(200);
 
     expect(res.body.notifications).toHaveLength(1);
     expect(res.body.notifications[0].discordUserId).toBe('discord-333');
     expect(res.body.notifications[0].content).toBe('new alert');
+    expect(res.body.notifications[0].id).toBeDefined();
   });
 
   test('rejects without the service token', async () => {
@@ -244,5 +245,33 @@ describe('GET /api/discord/notifications/pending', () => {
     const byDiscordId = Object.fromEntries(res.body.notifications.map(n => [n.discordUserId, n.content]));
     expect(byDiscordId['discord-444']).toBe('alert for user1');
     expect(byDiscordId['discord-555']).toBe('alert for user2');
+  });
+});
+
+describe('POST /api/discord/notifications/mark-delivered', () => {
+  test('marks the given notification ids as Discord-delivered so they drop out of pending', async () => {
+    const user = await User.create({ email: 'i@test.com', username: 'user9', passwordHash: 'x', role: 'editor' });
+    await DiscordLink.create({ userId: user._id, discordUserId: 'discord-666' });
+
+    const notif = await Notification.create({ userId: user._id, type: 'price_alert', content: 'alert to deliver' });
+
+    const app = buildApp();
+    await request(app)
+      .post('/api/discord/notifications/mark-delivered')
+      .set('Authorization', 'Bearer test-bot-token')
+      .send({ ids: [notif._id.toString()] })
+      .expect(200);
+
+    const res = await request(app)
+      .get('/api/discord/notifications/pending')
+      .set('Authorization', 'Bearer test-bot-token')
+      .expect(200);
+
+    expect(res.body.notifications).toHaveLength(0);
+  });
+
+  test('rejects without the service token', async () => {
+    const app = buildApp();
+    await request(app).post('/api/discord/notifications/mark-delivered').send({ ids: [] }).expect(401);
   });
 });

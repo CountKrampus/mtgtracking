@@ -76,33 +76,34 @@ async function safeErrorReply(interaction) {
   }
 }
 
-// Polls for price-alert notifications across all linked users and DMs each
-// one. Keeps `since` in memory only - on a bot restart it resets to "now",
-// so at most it silently skips alerts that fired during the downtime rather
-// than replaying old ones.
-let since = new Date();
-
+// Polls for undelivered price-alert notifications across all linked users
+// and DMs each one. Delivery state lives on the backend (Notification.discordDeliveredAt),
+// marked only after a DM actually succeeds - so a bot restart, or one DM
+// failing while others in the same batch succeed, can't cause an alert to
+// be silently lost. It just stays undelivered and gets retried next poll.
+//
 // Uses a recursive setTimeout rather than setInterval, since setInterval
 // would fire the next poll on schedule even if the previous one is still
-// in flight (e.g. slow backend, many DMs) - that overlap could read `since`
-// before it's updated and send duplicate DMs for the same alert.
+// in flight (e.g. slow backend, many DMs).
 async function startNotificationPoller() {
   const poll = async () => {
     try {
       const api = apiClient();
-      const res = await api.get('/discord/notifications/pending', { params: { since: since.toISOString() } });
+      const res = await api.get('/discord/notifications/pending');
       if (res.status === 200) {
+        const deliveredIds = [];
         for (const notif of res.data.notifications) {
           try {
             const user = await client.users.fetch(notif.discordUserId);
             await user.send({ content: `📉 Price Alert: ${notif.content}` });
+            deliveredIds.push(notif.id);
           } catch (dmError) {
             console.error(`Failed to DM ${notif.discordUserId}:`, dmError.message);
           }
         }
 
-        if (res.data.notifications.length > 0) {
-          since = new Date(res.data.notifications[res.data.notifications.length - 1].createdAt);
+        if (deliveredIds.length > 0) {
+          await api.post('/discord/notifications/mark-delivered', { ids: deliveredIds });
         }
       }
     } catch (error) {
