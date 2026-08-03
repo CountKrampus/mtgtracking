@@ -16,6 +16,7 @@ export function TradesProvider({ children }) {
   const [offersSent, setOffersSent] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [matches, setMatches] = useState({ havesTheyWant: [], wantsTheyHave: [] });
 
   const [filterType, setFilterType] = useState('all');
   const [filterCard, setFilterCard] = useState('');
@@ -64,6 +65,20 @@ export function TradesProvider({ children }) {
     }
   }, [authFetch, user]);
 
+  const fetchMatches = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await authFetch(`${API_URL}/trades/matches`);
+      const data = await res.json();
+      setMatches({
+        havesTheyWant: data.havesTheyWant || [],
+        wantsTheyHave: data.wantsTheyHave || [],
+      });
+    } catch (err) {
+      console.error('fetchMatches:', err);
+    }
+  }, [authFetch, user]);
+
   const createListing = useCallback(async (data) => {
     const res = await authFetch(`${API_URL}/trades`, {
       method: 'POST',
@@ -71,14 +86,14 @@ export function TradesProvider({ children }) {
       body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error((await res.json()).message);
-    await Promise.all([fetchListings(), fetchMyListings()]);
-  }, [authFetch, fetchListings, fetchMyListings]);
+    await Promise.all([fetchListings(), fetchMyListings(), fetchMatches()]);
+  }, [authFetch, fetchListings, fetchMyListings, fetchMatches]);
 
   const cancelListing = useCallback(async (id) => {
     const res = await authFetch(`${API_URL}/trades/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error((await res.json()).message);
-    await Promise.all([fetchListings(), fetchMyListings()]);
-  }, [authFetch, fetchListings, fetchMyListings]);
+    await Promise.all([fetchListings(), fetchMyListings(), fetchMatches()]);
+  }, [authFetch, fetchListings, fetchMyListings, fetchMatches]);
 
   const makeOffer = useCallback(async (listingId, offeredCards, message) => {
     const res = await authFetch(`${API_URL}/trades/${listingId}/offers`, {
@@ -101,21 +116,21 @@ export function TradesProvider({ children }) {
   }, [authFetch, fetchOffers, fetchMyListings, fetchListings]);
 
   useEffect(() => { fetchListings(); }, [fetchListings]);
-  useEffect(() => { if (user) { fetchMyListings(); fetchOffers(); } }, [user, fetchMyListings, fetchOffers]);
+  useEffect(() => { if (user) { fetchMyListings(); fetchOffers(); fetchMatches(); } }, [user, fetchMyListings, fetchOffers, fetchMatches]);
 
   const value = useMemo(() => ({
-    listings, listingsTotal, myListings, offersReceived, offersSent,
+    listings, listingsTotal, myListings, offersReceived, offersSent, matches,
     loading, error, LIMIT,
     filterType, setFilterType,
     filterCard, setFilterCard,
     filterCondition, setFilterCondition,
     offset, setOffset,
-    fetchListings, fetchMyListings, fetchOffers,
+    fetchListings, fetchMyListings, fetchOffers, fetchMatches,
     createListing, cancelListing, makeOffer, respondToOffer,
   }), [
-    listings, listingsTotal, myListings, offersReceived, offersSent,
+    listings, listingsTotal, myListings, offersReceived, offersSent, matches,
     loading, error, filterType, filterCard, filterCondition, offset,
-    fetchListings, fetchMyListings, fetchOffers,
+    fetchListings, fetchMyListings, fetchOffers, fetchMatches,
     createListing, cancelListing, makeOffer, respondToOffer,
   ]);
 
