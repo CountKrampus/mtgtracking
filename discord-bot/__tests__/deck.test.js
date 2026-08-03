@@ -66,8 +66,8 @@ describe('/deck view', () => {
 });
 
 jest.mock('../src/lib/deckImportSource', () => ({
-  detectDeckImportSource: jest.fn(),
-  SUPPORTED_SITES: ['Moxfield', 'Archidekt', 'TappedOut', 'MTGGoldfish']
+  ...jest.requireActual('../src/lib/deckImportSource'),
+  detectDeckImportSource: jest.fn()
 }));
 const { detectDeckImportSource } = require('../src/lib/deckImportSource');
 
@@ -160,6 +160,36 @@ describe('/deck import', () => {
 
     expect(api.post).toHaveBeenNthCalledWith(2, '/decks', expect.objectContaining({ name: 'Krenko Goblins', statistics: { totalCards: 100 } }));
     expect(confirmInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Krenko Goblins'), components: [] }));
+  });
+
+  test('surfaces validation warnings in the preview embed', async () => {
+    detectDeckImportSource.mockReturnValue('moxfield');
+    const parsedDeck = {
+      deckData: {
+        name: 'Krenko Goblins',
+        commander: { name: 'Krenko, Mob Boss', colorIdentity: ['R'] },
+        partnerCommander: null,
+        mainDeck: []
+      },
+      statistics: { totalCards: 99 },
+      validation: {
+        valid: true,
+        errors: [],
+        warnings: ['Some Card: May violate color identity (U vs commander R)']
+      }
+    };
+    const api = { post: jest.fn().mockResolvedValueOnce({ status: 200, data: parsedDeck }) };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('import', { url: 'https://moxfield.com/decks/abc' });
+    interaction.channel.awaitMessageComponent.mockRejectedValue(new Error('time'));
+
+    await deckCommand.execute(interaction);
+
+    const previewCall = interaction.followUp.mock.calls[0][0];
+    const warningField = previewCall.embeds[0].fields.find(f => f.name === '⚠️ Warnings');
+    expect(warningField).toBeDefined();
+    expect(warningField.value).toContain('May violate color identity');
   });
 
   test('Cancel does not persist anything', async () => {

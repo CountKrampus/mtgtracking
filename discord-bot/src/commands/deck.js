@@ -64,7 +64,7 @@ async function importDeck(interaction, api) {
     return interaction.followUp({ content: `❌ ${message}`, ephemeral: true });
   }
 
-  const { deckData, statistics } = parseRes.data;
+  const { deckData, statistics, validation } = parseRes.data;
   const commanderLine = deckData.partnerCommander
     ? `${deckData.commander.name} + ${deckData.partnerCommander.name}`
     : deckData.commander.name;
@@ -74,14 +74,23 @@ async function importDeck(interaction, api) {
     new ButtonBuilder().setCustomId('deck-import-cancel').setLabel('Cancel').setStyle(ButtonStyle.Danger)
   );
 
+  const fields = [
+    { name: 'Commander', value: commanderLine, inline: true },
+    { name: 'Cards', value: String(statistics?.totalCards ?? deckData.mainDeck?.length ?? 0), inline: true },
+    { name: 'Colors', value: colorIdentityLine(deckData), inline: true }
+  ];
+
+  if (validation?.errors?.length) {
+    fields.push({ name: '❌ Errors', value: validation.errors.join('\n') });
+  }
+  if (validation?.warnings?.length) {
+    fields.push({ name: '⚠️ Warnings', value: validation.warnings.join('\n') });
+  }
+
   await interaction.followUp({
     embeds: [{
       title: deckData.name,
-      fields: [
-        { name: 'Commander', value: commanderLine, inline: true },
-        { name: 'Cards', value: String(statistics?.totalCards ?? deckData.mainDeck?.length ?? 0), inline: true },
-        { name: 'Colors', value: colorIdentityLine(deckData), inline: true }
-      ]
+      fields
     }],
     components: [row],
     ephemeral: true
