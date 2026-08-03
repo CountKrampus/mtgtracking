@@ -670,6 +670,14 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
             </div>
           </div>
 
+          {thread.content && (
+            <div className="mb-6 pb-6 border-b border-slate-700">
+              <div className="text-slate-200 text-base leading-relaxed whitespace-pre-wrap">
+                {thread.content}
+              </div>
+            </div>
+          )}
+
           {/* Rename Modal */}
           {showRenameModal && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
