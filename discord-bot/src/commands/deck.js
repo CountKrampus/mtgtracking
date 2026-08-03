@@ -1,9 +1,7 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { client } = require('../apiClient');
 const { replyNotLinked } = require('../lib/notLinked');
-const { detectDeckImportSource } = require('../lib/deckImportSource');
-
-const SUPPORTED_SITES_LABEL = 'Moxfield, Archidekt, TappedOut, or MTGGoldfish';
+const { detectDeckImportSource, SUPPORTED_SITES } = require('../lib/deckImportSource');
 
 async function view(interaction, api) {
   const name = interaction.options.getString('name', true);
@@ -52,7 +50,7 @@ async function importDeck(interaction, api) {
 
   if (!source) {
     return interaction.reply({
-      content: `❌ That doesn't look like a supported deck URL. Supported sites: ${SUPPORTED_SITES_LABEL}.`,
+      content: `❌ That doesn't look like a supported deck URL. Supported sites: ${SUPPORTED_SITES.join(', ')}.`,
       ephemeral: true
     });
   }

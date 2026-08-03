@@ -65,7 +65,10 @@ describe('/deck view', () => {
   });
 });
 
-jest.mock('../src/lib/deckImportSource');
+jest.mock('../src/lib/deckImportSource', () => ({
+  detectDeckImportSource: jest.fn(),
+  SUPPORTED_SITES: ['Moxfield', 'Archidekt', 'TappedOut', 'MTGGoldfish']
+}));
 const { detectDeckImportSource } = require('../src/lib/deckImportSource');
 
 describe('/deck import', () => {
