@@ -2,7 +2,7 @@
 
 ## Overview
 
-Four real bugs found while using the forum feature, plus one confirmed new feature (pinning individual replies, not just threads).
+Five real bugs found while using the forum feature, plus two confirmed new features (pinning individual replies, and bookmarking threads).
 
 ## Bug 1: Lock/Pin/Rename/Move silently fail (missing auth header)
 
@@ -27,6 +27,16 @@ Four real bugs found while using the forum feature, plus one confirmed new featu
 `POST /api/forum/threads` calls `thread.save()` **before** calling `findDuplicateThreads(title, categoryId, 0.6)`. The duplicate scan queries all threads in that category with no exclusion of the thread's own `_id` — so the brand-new thread matches itself at 100% similarity, which is always `>= 0.6`, guaranteeing a false "duplicate" hit on every single thread creation regardless of whether a real duplicate exists.
 
 **Fix:** exclude the newly created thread's own `_id` from the duplicate-scan results, mirroring the existing exclusion filter already used by `GET /forum/threads/:threadId/duplicates` (`d.threadId.toString() !== thread._id.toString()`).
+
+## Bug 5: "Import Deck" button misparses any thread's prose as a decklist
+
+`DeckImportButton.js` is rendered unconditionally on every thread (`ThreadView.js`, regardless of category). Clicking it calls `POST /forum/threads/:threadId/extract-deck`, which runs `extractDeckFromText` (`backend/utils/deckExtractor.js`) against the thread's raw `content` — a naive line-splitter with a loose fallback rule ("any non-blank line longer than 2 chars that isn't ALL CAPS or a bare number counts as a card name, quantity 1"). This fallback is legitimate for real decklists (singleton Commander lists are commonly just bare card names, no quantity prefix) but fires just as readily on ordinary prose, since there's no check that the thread is actually decklist-shaped content in the first place.
+
+Confirming the "import" in that state calls `POST /cards/bulk-import`, which — because it silently falls back to creating an "offline" card record whenever a name's Scryfall lookup fails, rather than rejecting it — actually persisted garbage `Card` documents (full prose sentences as card names, set "Unknown", $0) into a real collection. This already happened once during testing and was manually cleaned up (9 bogus cards deleted from the affected account).
+
+**Fix:** gate `DeckImportButton`'s visibility to categories where people actually post decklists as thread content — the `Deck Ideas` category (slug `deck-ideas`) — hidden on every other category (Forum Rules, Help & Support, General Discussion, Site Updates, etc.). The loose per-line fallback heuristic itself is not being tightened, since doing so would break legitimate bare-card-name Commander decklist parsing; the real fix is not applying the extractor to content that was never a decklist to begin with.
+
+`GET /forum/threads/:threadId` doesn't populate `categoryId` (only `authorId`), so `thread.categoryId` in the frontend is a raw ObjectId string, not `{slug, name}`. No backend change needed, though — `ThreadView.js` already fetches the full category list separately (used for the move-thread dropdown), so the fix cross-references `thread.categoryId` against that already-fetched list to find the matching category's slug, purely client-side.
 
 ## Feature: Pin individual replies
 
@@ -56,5 +66,8 @@ A private, per-user "save for later" list, separate from moderation-only thread/
 - No author-level reply pinning (only `forum:moderate` can pin, matching thread-level pinning).
 - No limit on how many replies can be pinned in one thread.
 - Not fixing the duplicate-detection *feature* itself beyond the self-match bug (e.g. not tuning the 0.6 similarity threshold, not extending it to check content in addition to title).
+- Not tightening `extractDeckFromText`'s per-line fallback heuristic — category-gating the button is the fix, not the parser.
+- Not changing `POST /cards/bulk-import`'s Scryfall-failure fallback behavior (falling back to an "offline" card record) — that's existing, legitimate behavior for genuine offline-import use elsewhere in the app, out of scope here.
 - No bookmarking of individual replies (only threads) — a lighter-weight feature, and not the pattern being asked for.
+- (Already done, not part of this implementation: 9 bogus `Card` documents created by testing this exact bug were manually identified and deleted from the affected account before this spec was finalized.)
 - No bookmark counts/visibility to other users.
