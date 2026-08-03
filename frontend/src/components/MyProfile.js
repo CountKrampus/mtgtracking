@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { API_URL } from '../config';
@@ -19,6 +20,7 @@ function renderBadgeIcon(iconStr) {
 }
 
 export default function MyProfile({ user, onBack }) {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(user);
   const [linkCopied, setLinkCopied] = useState(false);
 
@@ -526,12 +528,19 @@ export default function MyProfile({ user, onBack }) {
           ) : (
             <div className="space-y-2">
               {bookmarkedThreads.map((t) => (
-                <div key={t._id} className="flex items-center justify-between bg-white/5 rounded-lg p-3">
+                <button
+                  key={t._id}
+                  onClick={() => {
+                    localStorage.setItem('forumSelectedThread', t._id);
+                    navigate('/forum');
+                  }}
+                  className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 rounded-lg p-3 text-left transition-colors"
+                >
                   <div className="min-w-0">
                     <div className="text-white text-sm font-medium truncate">{t.title}</div>
                     <div className="text-white/40 text-xs">{t.categoryId?.name || 'Unknown category'}</div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
