@@ -148,7 +148,7 @@ router.get('/categories/:categoryId/threads', async (req, res) => {
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const threads = await ForumThread.find({ categoryId, isLocked: false })
+    const threads = await ForumThread.find({ categoryId })
       .sort({ isPinned: -1, lastPostAt: -1 })
       .skip(skip)
       .limit(parseInt(limit))
@@ -2060,7 +2060,7 @@ router.get('/feed', verifyToken, async (req, res) => {
     const visibleFilter = { isFlagHidden: { $ne: true }, isShadowHidden: { $ne: true } };
 
     // Fetch recent threads
-    const threads = await ForumThread.find({ isLocked: false })
+    const threads = await ForumThread.find({ isHidden: { $ne: true } })
       .populate('authorId', 'username displayName avatar')
       .select('title content createdAt categoryId authorId')
       .sort({ createdAt: -1 })
