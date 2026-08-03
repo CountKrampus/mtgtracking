@@ -32,6 +32,12 @@ const FEATURE_REQUEST_TEMPLATE = `**What would you like to see added?**
 
 `;
 
+const SITE_AREAS = [
+  'Collection', 'Deck Builder', 'Wishlist', 'Trading Board', 'Forum',
+  'Life Counter', 'Commanders', 'Sets', 'Combos', 'Finance', 'Scan Card',
+  'Admin Panel', 'Other'
+];
+
 function findCategorySlug(categoryTree, categoryId) {
   if (!categoryId) return null;
   const idStr = categoryId.toString();
@@ -108,6 +114,25 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = A
     }
   }, [isOpen, categories, categoryId]);
 
+  const buildAreaLine = () => {
+    if (reportArea === 'discord-bot') return '**Area:** Discord Bot';
+    if (reportArea === 'main-site' && reportSiteSection) return `**Area:** Main Site — ${reportSiteSection}`;
+    if (reportArea === 'main-site') return '**Area:** Main Site';
+    return null;
+  };
+
+  const buildAreaTags = () => {
+    if (reportArea === 'discord-bot') return ['discord-bot'];
+    if (reportArea === 'main-site') {
+      const areaTags = ['main-site'];
+      if (reportSiteSection) {
+        areaTags.push(reportSiteSection.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''));
+      }
+      return areaTags;
+    }
+    return [];
+  };
+
   const handleCreateThread = async () => {
     if (!title.trim() || !content.trim() || !selectedCategoryId) {
       setError('Title, content, and category are required');
@@ -118,11 +143,16 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = A
     setError('');
 
     try {
+      const areaLine = buildAreaLine();
+      const finalContent = areaLine ? `${areaLine}\n\n${content.trim()}` : content.trim();
+      const userTags = tags.split(',').map(t => t.trim()).filter(t => t);
+      const finalTags = [...new Set([...userTags, ...buildAreaTags()])];
+
       const response = await axios.post(`${apiUrl}/forum/threads`, {
         categoryId: selectedCategoryId,
         title: title.trim(),
-        content: content.trim(),
-        tags: tags.split(',').map(t => t.trim()).filter(t => t),
+        content: finalContent,
+        tags: finalTags,
         contentFormat: 'markdown',
         isQA
       });
@@ -144,6 +174,8 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = A
         setTitle('');
         setContent('');
         setTags('');
+        setReportArea('');
+        setReportSiteSection('');
         onClose();
       }
     } catch (err) {
@@ -160,6 +192,8 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = A
     setTitle('');
     setContent('');
     setTags('');
+    setReportArea('');
+    setReportSiteSection('');
     onClose();
   };
 
@@ -170,6 +204,8 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = A
     setTitle('');
     setContent('');
     setTags('');
+    setReportArea('');
+    setReportSiteSection('');
     onClose();
   };
 
@@ -177,6 +213,8 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = A
     setTitle('');
     setContent('');
     setTags('');
+    setReportArea('');
+    setReportSiteSection('');
     setError('');
     onClose();
   };
@@ -225,6 +263,34 @@ export default function ThreadComposer({ isOpen, onClose, categoryId, apiUrl = A
               ])}
             </select>
           </div>
+
+          {/* Bug report / feature request area selector */}
+          {templateCategoryType && (
+            <div>
+              <label className="block text-sm font-medium text-white mb-2">Where does this apply?</label>
+              <select
+                value={reportArea}
+                onChange={(e) => { setReportArea(e.target.value); setReportSiteSection(''); }}
+                className="w-full p-3 bg-slate-800 border border-slate-700 rounded text-white focus:outline-none focus:border-purple-500"
+              >
+                <option value="">Select...</option>
+                <option value="main-site">Main Site</option>
+                <option value="discord-bot">Discord Bot</option>
+              </select>
+              {reportArea === 'main-site' && (
+                <select
+                  value={reportSiteSection}
+                  onChange={(e) => setReportSiteSection(e.target.value)}
+                  className="w-full p-3 mt-2 bg-slate-800 border border-slate-700 rounded text-white focus:outline-none focus:border-purple-500"
+                >
+                  <option value="">Which part of the site?</option>
+                  {SITE_AREAS.map(area => (
+                    <option key={area} value={area}>{area}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+          )}
 
           {/* Title */}
           <div>
