@@ -46,8 +46,10 @@ router.get('/matches', requireAuth, async (req, res) => {
       TradeListing.find({ userId: req.user._id, status: 'active', type: 'want' }).lean(),
     ]);
 
-    const myHaveNames = new Set(myHaves.map(l => l.cardName.toLowerCase()));
-    const myWantNames = new Set(myWants.map(l => l.cardName.toLowerCase()));
+    const hasName = l => typeof l.cardName === 'string' && l.cardName.trim().length > 0;
+
+    const myHaveNames = new Set(myHaves.filter(hasName).map(l => l.cardName.toLowerCase()));
+    const myWantNames = new Set(myWants.filter(hasName).map(l => l.cardName.toLowerCase()));
 
     const [othersWants, othersHaves] = await Promise.all([
       myHaveNames.size > 0
@@ -58,17 +60,22 @@ router.get('/matches', requireAuth, async (req, res) => {
         : [],
     ]);
 
+    const validOthersWants = othersWants.filter(hasName);
+    const validOthersHaves = othersHaves.filter(hasName);
+
     const havesTheyWant = myHaves
+      .filter(hasName)
       .map(listing => ({
         listing,
-        matches: othersWants.filter(w => w.cardName.toLowerCase() === listing.cardName.toLowerCase()),
+        matches: validOthersWants.filter(w => w.cardName.toLowerCase() === listing.cardName.toLowerCase()),
       }))
       .filter(group => group.matches.length > 0);
 
     const wantsTheyHave = myWants
+      .filter(hasName)
       .map(listing => ({
         listing,
-        matches: othersHaves.filter(h => h.cardName.toLowerCase() === listing.cardName.toLowerCase()),
+        matches: validOthersHaves.filter(h => h.cardName.toLowerCase() === listing.cardName.toLowerCase()),
       }))
       .filter(group => group.matches.length > 0);
 

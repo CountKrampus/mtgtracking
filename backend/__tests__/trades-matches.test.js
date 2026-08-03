@@ -144,6 +144,33 @@ describe('GET /api/trades/matches', () => {
     expect(res.body.havesTheyWant[0].matches).toHaveLength(2);
   });
 
+  test('does not crash and excludes a listing with an empty-string cardName', async () => {
+    await TradeListing.create({
+      userId: me._id, username: 'meuser', type: 'have', cardName: 'Sol Ring', status: 'active',
+    });
+    await TradeListing.create({
+      userId: other._id, username: 'other', type: 'want', cardName: 'Sol Ring', status: 'active',
+    });
+    // Bypasses Mongoose validation on purpose (TradeListing.create() would reject
+    // an empty cardName - required rejects '' too, not just null/undefined) to
+    // simulate a malformed/legacy document that skipped schema validation.
+    await TradeListing.collection.insertOne({
+      userId: other._id, username: 'other', type: 'want', cardName: '', status: 'active',
+      cardSet: '', cardSetCode: '', scryfallId: '', imageUrl: '', condition: 'NM',
+      quantity: 1, estimatedValue: 0, notes: '', createdAt: new Date(), updatedAt: new Date(),
+    });
+
+    const res = await request(app)
+      .get('/api/trades/matches')
+      .set('Authorization', `Bearer ${makeToken(me)}`)
+      .expect(200);
+
+    expect(res.body.havesTheyWant).toHaveLength(1);
+    expect(res.body.havesTheyWant[0].matches).toHaveLength(1);
+    expect(res.body.havesTheyWant[0].matches[0].username).toBe('other');
+    expect(res.body.havesTheyWant[0].matches.every(m => m.cardName !== '')).toBe(true);
+  });
+
   test('omits a listing entirely when it has no matches', async () => {
     await TradeListing.create({
       userId: me._id, username: 'meuser', type: 'have', cardName: 'Sol Ring', status: 'active',
