@@ -434,6 +434,7 @@ router.post('/threads', verifyToken, requireAuth, checkMute, async (req, res) =>
       $inc: { threadCount: 1 },
       lastActivityAt: new Date()
     });
+    forumCache.del('categories:tree');
 
     // Award XP and coins for creating a thread (async, non-blocking)
     setImmediate(async () => {
