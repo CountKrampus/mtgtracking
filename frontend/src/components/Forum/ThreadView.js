@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Trash2, History, Lock, Unlock, RefreshCw, X, Flag } from 'lucide-react';
+import { Edit2, Trash2, History, Lock, Unlock, RefreshCw, X, Flag, Pin, PinOff } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import PostComposer from './PostComposer';
 import PostEditHistory from './PostEditHistory';
@@ -152,7 +152,7 @@ const BADGE_EMOJI = {
   'Engaged Member': '🌟'
 };
 
-function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost, onEditPost, onReportPost, editingPostId, editBody, setEditingPostId, setEditBody, setHistoryPostId }) {
+function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost, onEditPost, onReportPost, onTogglePostPin, editingPostId, editBody, setEditingPostId, setEditBody, setHistoryPostId }) {
   const [hoverPos, setHoverPos] = useState(null);
   const ac = post.authorCosmetics || {};
 
@@ -230,6 +230,11 @@ function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost,
               )}
               {isOP && <span className="ml-1 text-[10px] bg-purple-800/50 text-purple-300 px-1.5 py-0.5 rounded">OP</span>}
               {isBestAnswer && <span className="text-[10px] bg-green-900/40 text-green-400 border border-green-700/30 px-1.5 py-0.5 rounded">✅ Best</span>}
+              {post.isPinned && (
+                <span className="text-[10px] bg-amber-900/30 text-amber-400 border border-amber-700/30 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                  <Pin size={10} /> Pinned
+                </span>
+              )}
               {post.authorReputation > 0 && (
                 <span className="text-amber-400 text-xs font-semibold ml-1">⚡ {post.authorReputation}</span>
               )}
@@ -274,6 +279,15 @@ function PostNode({ post, isOP, isBestAnswer, user, onViewProfile, onDeletePost,
             </div>
           </div>
         </div>
+        {user?.role === 'admin' && (
+          <button
+            onClick={() => onTogglePostPin(post._id)}
+            className={`p-1 hover:bg-slate-700 rounded ${post.isPinned ? 'text-amber-400' : 'text-slate-400'}`}
+            title={post.isPinned ? 'Unpin reply' : 'Pin reply'}
+          >
+            {post.isPinned ? <PinOff size={16} /> : <Pin size={16} />}
+          </button>
+        )}
         {user && user._id !== post.authorId._id && (
           <button
             onClick={() => onReportPost(post._id)}
@@ -551,6 +565,29 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
     }
   };
 
+  const handleTogglePostPin = async (postId) => {
+    try {
+      const token = localStorage.getItem('mtg_access_token');
+      const response = await fetch(`${apiUrl}/forum/posts/${postId}/pin`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({})
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPosts(prev => {
+          const updated = prev.map(p => p._id === postId ? data.post : p);
+          return [...updated].sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
+        });
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to pin/unpin reply');
+      }
+    } catch (error) {
+      alert('Failed to pin/unpin reply');
+    }
+  };
+
   const handlePostCreated = (newPost) => {
     setPosts([...posts, newPost]);
     setThread(prev => ({
@@ -798,6 +835,7 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
                 onDeletePost={handleDeletePost}
                 onEditPost={handleEditPost}
                 onReportPost={(postId) => setReportTarget({ contentId: postId, contentType: 'post' })}
+                onTogglePostPin={handleTogglePostPin}
                 editingPostId={editingPostId}
                 editBody={editBody}
                 setEditingPostId={setEditingPostId}

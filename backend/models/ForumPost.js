@@ -46,6 +46,10 @@ const postSchema = new mongoose.Schema({
     default: false
   },
   hiddenReason: String,
+  isPinned: {
+    type: Boolean,
+    default: false
+  },
   likes: {
     type: Number,
     default: 0

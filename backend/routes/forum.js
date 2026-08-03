@@ -318,7 +318,7 @@ router.get('/threads/:threadId', async (req, res) => {
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const posts = await ForumPost.find({ threadId, isHidden: false })
-      .sort({ createdAt: 1 })
+      .sort({ isPinned: -1, createdAt: 1 })
       .skip(skip)
       .limit(parseInt(limit))
       .populate('authorId', 'username displayName');
@@ -806,6 +806,26 @@ router.put('/threads/:threadId/pin', verifyToken, requireAuth, requirePermission
     res.json({ thread, pinned: thread.isPinned });
   } catch (error) {
     console.error('Pin thread error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /api/forum/posts/:postId/pin - Pin/unpin a reply (forum:moderate only)
+router.put('/posts/:postId/pin', verifyToken, requireAuth, requirePermission('forum:moderate'), async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    const post = await ForumPost.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    post.isPinned = !post.isPinned;
+    await post.save();
+
+    res.json({ post, pinned: post.isPinned });
+  } catch (error) {
+    console.error('Pin post error:', error);
     res.status(500).json({ message: error.message });
   }
 });
