@@ -38,8 +38,23 @@ Currently pinning only exists at the thread level (`ForumThread.isPinned`). Add 
 - **Visual treatment:** a pinned reply gets a small "📌 Pinned" badge (matching the thread-level badge's wording convention) rendered in **gold** (a new accent color for this state, distinct from the app's purple brand color) alongside the reply's author/timestamp line. The pin/unpin button itself uses lucide-react's `Pin`/`PinOff` icons: dim/neutral color when idle (not pinned), gold with a light gold-tinted background when active (pinned) — swapping to the `PinOff` icon on hover once pinned, so the click target's intent ("click to unpin") is clear without relying on color alone.
 - **Permission-gated button:** the pin/unpin control on a reply is only rendered for users with `forum:moderate` (same visibility gate already used for the thread-level moderation toolbar).
 
+## Feature: Bookmark a thread
+
+A private, per-user "save for later" list, separate from moderation-only thread/reply pinning — any signed-in user can bookmark any thread.
+
+- **Data model:** add `bookmarkedThreadIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ForumThread' }]` to `backend/models/User.js`, following the same array-on-User pattern already used for `badges`/`pinnedCards` (no separate join-table model needed at this scale).
+- **Routes:**
+  - `PUT /api/forum/threads/:threadId/bookmark` — `verifyToken, requireAuth` (no special permission — any authenticated user can bookmark). Toggles the thread's `_id` in/out of `req.user.bookmarkedThreadIds` and saves.
+  - `GET /api/forum/bookmarks` — `verifyToken, requireAuth`. Returns the current user's bookmarked threads (populated with enough fields to render a list: title, category, author, lastPostAt, etc. — same shape as other thread-list endpoints).
+- **Frontend:**
+  - A bookmark toggle button on `ThreadView.js`, visible to any signed-in user (not gated by `forum:moderate` — this is a personal action, unlike pinning). Uses lucide-react's `Bookmark` icon, toggling its `fill` between `none` (not bookmarked) and `currentColor` (bookmarked) — no new icon needed, no separate "bookmarked" vs "not bookmarked" icon pair.
+  - A new **Bookmarks** section on the user's profile page (`frontend/src/components/MyProfile.js` or wherever the profile's tabbed sections live), listing their bookmarked threads with a link into each one.
+- **Visibility:** private and per-user — no bookmark count is shown to anyone, including the thread's author. This is intentionally different from pinning, which is a moderator action visible to everyone.
+
 ## Non-goals
 
 - No author-level reply pinning (only `forum:moderate` can pin, matching thread-level pinning).
 - No limit on how many replies can be pinned in one thread.
 - Not fixing the duplicate-detection *feature* itself beyond the self-match bug (e.g. not tuning the 0.6 similarity threshold, not extending it to check content in addition to title).
+- No bookmarking of individual replies (only threads) — a lighter-weight feature, and not the pattern being asked for.
+- No bookmark counts/visibility to other users.
