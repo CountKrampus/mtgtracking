@@ -399,9 +399,10 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
     if (!newTitle.trim()) return;
 
     try {
+      const token = localStorage.getItem('mtg_access_token');
       const response = await fetch(`${apiUrl}/forum/threads/${threadId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ title: newTitle })
       });
 
@@ -411,6 +412,9 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
         setShowRenameModal(false);
         setNewTitle('');
         onThreadUpdated?.();
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to rename thread');
       }
     } catch (error) {
       alert('Failed to rename thread');
@@ -444,9 +448,10 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
     if (!selectedCategoryId) return;
 
     try {
+      const token = localStorage.getItem('mtg_access_token');
       const response = await fetch(`${apiUrl}/forum/threads/${threadId}/move`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ categoryId: selectedCategoryId })
       });
 
@@ -455,6 +460,9 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
         setThread(updated);
         setShowMoveModal(false);
         onThreadUpdated?.();
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to move thread');
       }
     } catch (error) {
       alert('Failed to move thread');
@@ -463,15 +471,19 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
 
   const handleToggleLock = async () => {
     try {
+      const token = localStorage.getItem('mtg_access_token');
       const response = await fetch(`${apiUrl}/forum/threads/${threadId}/lock`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({})
       });
 
       if (response.ok) {
         const data = await response.json();
         setThread(data.thread);
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to lock/unlock thread');
       }
     } catch (error) {
       alert('Failed to lock/unlock thread');
@@ -480,15 +492,19 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
 
   const handleTogglePin = async () => {
     try {
+      const token = localStorage.getItem('mtg_access_token');
       const response = await fetch(`${apiUrl}/forum/threads/${threadId}/pin`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({})
       });
 
       if (response.ok) {
         const data = await response.json();
         setThread(data.thread);
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to pin/unpin thread');
       }
     } catch (error) {
       alert('Failed to pin/unpin thread');
