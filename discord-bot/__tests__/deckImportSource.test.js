@@ -30,4 +30,15 @@ describe('detectDeckImportSource', () => {
   test('exports the list of supported site labels for error messages', () => {
     expect(SUPPORTED_SITES).toEqual(['Moxfield', 'Archidekt', 'TappedOut', 'MTGGoldfish']);
   });
+
+  test('does not match lookalike hosts that merely contain a supported domain as a substring', () => {
+    expect(detectDeckImportSource('https://eviltappedout.net/mtg-decks/my-deck/')).toBeNull();
+    expect(detectDeckImportSource('https://notmoxfield.com/decks/abc123')).toBeNull();
+    expect(detectDeckImportSource('https://short.link/r?u=moxfield.com/decks/1')).toBeNull();
+  });
+
+  test('still matches a bare (non-www) domain and any real subdomain', () => {
+    expect(detectDeckImportSource('https://moxfield.com/decks/abc123')).toBe('moxfield');
+    expect(detectDeckImportSource('https://cdn.archidekt.com/decks/123456')).toBe('archidekt');
+  });
 });

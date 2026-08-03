@@ -8,8 +8,13 @@ const DOMAIN_TO_SOURCE = [
 ];
 
 function detectDeckImportSource(url) {
-  const lower = url.toLowerCase();
-  const match = DOMAIN_TO_SOURCE.find(({ domain }) => lower.includes(domain));
+  let hostname;
+  try {
+    hostname = new URL(url).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+  const match = DOMAIN_TO_SOURCE.find(({ domain }) => hostname === domain || hostname.endsWith(`.${domain}`));
   return match ? match.source : null;
 }
 
