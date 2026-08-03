@@ -675,64 +675,66 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
           <div className="mb-6 pb-6 border-b border-slate-700">
             <div className="flex items-start justify-between mb-2">
               <h1 className="text-3xl font-bold text-white">{thread.title}</h1>
-              {user && user._id !== thread.authorId?._id && (
-                <button
-                  onClick={() => setReportTarget({ contentId: thread._id, contentType: 'thread' })}
-                  className="p-1 text-white/40 hover:text-red-400 transition-colors"
-                  title="Report thread"
-                  aria-label="Report thread"
-                >
-                  <Flag size={16} />
-                </button>
-              )}
-              {user && (
-                <button
-                  onClick={handleToggleBookmark}
-                  className={`p-1 transition-colors ${isBookmarked ? 'text-amber-400' : 'text-white/40 hover:text-amber-400'}`}
-                  title={isBookmarked ? 'Remove bookmark' : 'Bookmark this thread'}
-                  aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark this thread'}
-                >
-                  <Bookmark size={16} fill={isBookmarked ? 'currentColor' : 'none'} />
-                </button>
-              )}
-              {user?.role === 'admin' && (
-                <div className="flex gap-2">
+              <div className="flex items-center gap-2">
+                {user && user._id !== thread.authorId?._id && (
                   <button
-                    onClick={() => {
-                      setNewTitle(thread.title);
-                      setShowRenameModal(true);
-                    }}
-                    className="p-2 hover:bg-slate-700 rounded text-blue-400"
-                    title="Rename thread"
+                    onClick={() => setReportTarget({ contentId: thread._id, contentType: 'thread' })}
+                    className="p-1 text-white/40 hover:text-red-400 transition-colors"
+                    title="Report thread"
+                    aria-label="Report thread"
                   >
-                    <Edit2 size={18} />
+                    <Flag size={16} />
                   </button>
+                )}
+                {user && (
                   <button
-                    onClick={() => {
-                      setSelectedCategoryId(thread.categoryId);
-                      setShowMoveModal(true);
-                    }}
-                    className="p-2 hover:bg-slate-700 rounded text-purple-400"
-                    title="Move to category"
+                    onClick={handleToggleBookmark}
+                    className={`p-1 transition-colors ${isBookmarked ? 'text-amber-400' : 'text-white/40 hover:text-amber-400'}`}
+                    title={isBookmarked ? 'Remove bookmark' : 'Bookmark this thread'}
+                    aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark this thread'}
                   >
-                    <RefreshCw size={18} />
+                    <Bookmark size={16} fill={isBookmarked ? 'currentColor' : 'none'} />
                   </button>
-                  <button
-                    onClick={handleToggleLock}
-                    className={`p-2 hover:bg-slate-700 rounded ${thread.isLocked ? 'text-red-400' : 'text-slate-400'}`}
-                    title={thread.isLocked ? 'Unlock thread' : 'Lock thread'}
-                  >
-                    {thread.isLocked ? <Lock size={18} /> : <Unlock size={18} />}
-                  </button>
-                  <button
-                    onClick={handleDeleteThread}
-                    className="p-2 hover:bg-slate-700 rounded text-red-500"
-                    title="Delete thread"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              )}
+                )}
+                {user?.role === 'admin' && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setNewTitle(thread.title);
+                        setShowRenameModal(true);
+                      }}
+                      className="p-2 hover:bg-slate-700 rounded text-blue-400"
+                      title="Rename thread"
+                    >
+                      <Edit2 size={18} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedCategoryId(thread.categoryId);
+                        setShowMoveModal(true);
+                      }}
+                      className="p-2 hover:bg-slate-700 rounded text-purple-400"
+                      title="Move to category"
+                    >
+                      <RefreshCw size={18} />
+                    </button>
+                    <button
+                      onClick={handleToggleLock}
+                      className={`p-2 hover:bg-slate-700 rounded ${thread.isLocked ? 'text-red-400' : 'text-slate-400'}`}
+                      title={thread.isLocked ? 'Unlock thread' : 'Lock thread'}
+                    >
+                      {thread.isLocked ? <Lock size={18} /> : <Unlock size={18} />}
+                    </button>
+                    <button
+                      onClick={handleDeleteThread}
+                      className="p-2 hover:bg-slate-700 rounded text-red-500"
+                      title="Delete thread"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             {isDeckIdeasCategory && (
               <div className="flex items-center gap-2 mb-2">
