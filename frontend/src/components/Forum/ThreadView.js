@@ -43,6 +43,20 @@ function findPostById(nodes, id) {
   return null;
 }
 
+function findCategorySlug(categoryTree, categoryId) {
+  if (!categoryId) return null;
+  const idStr = categoryId.toString();
+  for (const node of categoryTree) {
+    if (node._id === idStr) return node.slug;
+    if (node.children) {
+      for (const child of node.children) {
+        if (child._id === idStr) return child.slug;
+      }
+    }
+  }
+  return null;
+}
+
 export function ReportModal({ apiUrl, contentId, contentType, onClose }) {
   const [reason, setReason] = useState('other');
   const [submitting, setSubmitting] = useState(false);
@@ -572,6 +586,9 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
     ? findPostById(posts, thread.bestAnswerPostId)
     : null;
 
+  const isDeckIdeasCategory = thread && categories.length > 0
+    && findCategorySlug(categories, thread.categoryId) === 'deck-ideas';
+
   if (!threadId) {
     return <div className="flex-1 p-6 text-slate-400">Select a thread</div>;
   }
@@ -643,9 +660,11 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2 mb-2">
-              <DeckImportButton threadId={threadId} user={user} />
-            </div>
+            {isDeckIdeasCategory && (
+              <div className="flex items-center gap-2 mb-2">
+                <DeckImportButton threadId={threadId} user={user} />
+              </div>
+            )}
             <div className="text-slate-400 text-sm flex items-center flex-wrap gap-x-1">
               By{' '}
               {onViewProfile ? (
