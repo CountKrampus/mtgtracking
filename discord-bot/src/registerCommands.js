@@ -45,8 +45,11 @@ const commands = [
 
   new SlashCommandBuilder().setName('decks').setDescription('List your decks'),
 
-  new SlashCommandBuilder().setName('deck').setDescription('View a deck')
-    .addStringOption(o => o.setName('name').setDescription('Deck name').setRequired(true)),
+  new SlashCommandBuilder().setName('deck').setDescription('View or import a deck')
+    .addSubcommand(sub => sub.setName('view').setDescription('View one of your existing decks')
+      .addStringOption(o => o.setName('name').setDescription('Deck name').setRequired(true)))
+    .addSubcommand(sub => sub.setName('import').setDescription('Import a deck from Moxfield, Archidekt, TappedOut, or MTGGoldfish')
+      .addStringOption(o => o.setName('url').setDescription('Deck URL').setRequired(true))),
 
   new SlashCommandBuilder().setName('similar').setDescription('Find cards similar to one you own')
     .addStringOption(o => o.setName('card').setDescription('Card name').setRequired(true)),
