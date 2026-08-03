@@ -97,6 +97,10 @@ const userSchema = new mongoose.Schema({
     name: { type: String, default: '' },
     imageUrl: { type: String, default: '' }
   }],
+  bookmarkedThreadIds: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ForumThread'
+  }],
   avatarUrl: {
     type: String,
     default: ''

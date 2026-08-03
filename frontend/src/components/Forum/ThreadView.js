@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Trash2, History, Lock, Unlock, RefreshCw, X, Flag, Pin, PinOff } from 'lucide-react';
+import { Edit2, Trash2, History, Lock, Unlock, RefreshCw, X, Flag, Pin, PinOff, Bookmark } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import PostComposer from './PostComposer';
 import PostEditHistory from './PostEditHistory';
@@ -385,6 +385,7 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
   const [categories, setCategories] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [reportTarget, setReportTarget] = useState(null); // { contentId, contentType }
+  const [isBookmarked, setIsBookmarked] = useState(false);
 
   useEffect(() => {
     if (!threadId) return;
@@ -422,6 +423,32 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
 
     fetchCategories();
   }, [apiUrl]);
+
+  useEffect(() => {
+    if (!user || !threadId) { setIsBookmarked(false); return; }
+    const token = localStorage.getItem('mtg_access_token');
+    fetch(`${apiUrl}/forum/bookmarks`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then(r => r.ok ? r.json() : [])
+      .then(list => setIsBookmarked(Array.isArray(list) && list.some(t => t._id === threadId)))
+      .catch(() => setIsBookmarked(false));
+  }, [user, threadId, apiUrl]);
+
+  const handleToggleBookmark = async () => {
+    try {
+      const token = localStorage.getItem('mtg_access_token');
+      const response = await fetch(`${apiUrl}/forum/threads/${threadId}/bookmark`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({})
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setIsBookmarked(data.bookmarked);
+      }
+    } catch (error) {
+      alert('Failed to bookmark thread');
+    }
+  };
 
   const handleRenameThread = async () => {
     if (!newTitle.trim()) return;
@@ -656,6 +683,16 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
                   aria-label="Report thread"
                 >
                   <Flag size={16} />
+                </button>
+              )}
+              {user && (
+                <button
+                  onClick={handleToggleBookmark}
+                  className={`p-1 transition-colors ${isBookmarked ? 'text-amber-400' : 'text-white/40 hover:text-amber-400'}`}
+                  title={isBookmarked ? 'Remove bookmark' : 'Bookmark this thread'}
+                  aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark this thread'}
+                >
+                  <Bookmark size={16} fill={isBookmarked ? 'currentColor' : 'none'} />
                 </button>
               )}
               {user?.role === 'admin' && (

@@ -877,6 +877,50 @@ router.put('/threads/:threadId/move', verifyToken, requireAuth, requirePermissio
   }
 });
 
+// PUT /api/forum/threads/:threadId/bookmark - toggle a personal bookmark (any authenticated user)
+router.put('/threads/:threadId/bookmark', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const { threadId } = req.params;
+
+    const thread = await ForumThread.findById(threadId);
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+
+    const user = await User.findById(req.user._id);
+    const alreadyBookmarked = user.bookmarkedThreadIds.some(id => id.toString() === threadId);
+
+    if (alreadyBookmarked) {
+      user.bookmarkedThreadIds = user.bookmarkedThreadIds.filter(id => id.toString() !== threadId);
+    } else {
+      user.bookmarkedThreadIds.push(threadId);
+    }
+    await user.save();
+
+    res.json({ bookmarked: !alreadyBookmarked });
+  } catch (error) {
+    console.error('Bookmark thread error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// GET /api/forum/bookmarks - the current user's bookmarked threads
+router.get('/bookmarks', verifyToken, requireAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    const threads = await ForumThread.find({ _id: { $in: user.bookmarkedThreadIds } })
+      .populate('authorId', 'username displayName')
+      .populate('categoryId', 'name slug')
+      .sort({ lastPostAt: -1 })
+      .lean();
+
+    res.json(threads);
+  } catch (error) {
+    console.error('Get bookmarks error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // POST /api/forum/threads/:threadId/posts - Create post in thread (authenticated)
 router.post('/threads/:threadId/posts', verifyToken, requireAuth, checkMute, async (req, res) => {
   try {

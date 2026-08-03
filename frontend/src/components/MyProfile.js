@@ -41,6 +41,7 @@ export default function MyProfile({ user, onBack }) {
   const [myDecks, setMyDecks] = useState(null);
   const [collectionStats, setCollectionStats] = useState(null);
   const [wishlistItems, setWishlistItems] = useState(null);
+  const [bookmarkedThreads, setBookmarkedThreads] = useState(null);
 
   useEffect(() => {
     if (user?.username) {
@@ -85,6 +86,14 @@ export default function MyProfile({ user, onBack }) {
       .then(data => setWishlistItems(Array.isArray(data) ? data.slice(0, 3) : []))
       .catch(() => setWishlistItems([]));
   }, [unlockStatus.wishlistPreview]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('mtg_access_token');
+    fetch(`${API_URL}/forum/bookmarks`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setBookmarkedThreads(Array.isArray(data) ? data : []))
+      .catch(() => setBookmarkedThreads([]));
+  }, []);
 
   const fetchForumActivity = async () => {
     try {
@@ -506,6 +515,27 @@ export default function MyProfile({ user, onBack }) {
             <p className="text-white/30 text-xs mt-3">Top 3 wishlist items are visible on your public profile.</p>
           </div>
         )}
+
+        {/* Bookmarked Threads */}
+        <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6">
+          <h2 className="text-xl font-bold text-white mb-4">Bookmarked Threads</h2>
+          {bookmarkedThreads === null ? (
+            <p className="text-white/40 text-sm">Loading...</p>
+          ) : bookmarkedThreads.length === 0 ? (
+            <p className="text-white/40 text-sm">You haven't bookmarked any threads yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {bookmarkedThreads.map((t) => (
+                <div key={t._id} className="flex items-center justify-between bg-white/5 rounded-lg p-3">
+                  <div className="min-w-0">
+                    <div className="text-white text-sm font-medium truncate">{t.title}</div>
+                    <div className="text-white/40 text-xs">{t.categoryId?.name || 'Unknown category'}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
