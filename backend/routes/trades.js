@@ -38,6 +38,46 @@ router.get('/my-listings', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/trades/matches — cards you have that others want, and cards you want that others have
+router.get('/matches', requireAuth, async (req, res) => {
+  try {
+    const [myHaves, myWants] = await Promise.all([
+      TradeListing.find({ userId: req.user._id, status: 'active', type: 'have' }).lean(),
+      TradeListing.find({ userId: req.user._id, status: 'active', type: 'want' }).lean(),
+    ]);
+
+    const myHaveNames = new Set(myHaves.map(l => l.cardName.toLowerCase()));
+    const myWantNames = new Set(myWants.map(l => l.cardName.toLowerCase()));
+
+    const [othersWants, othersHaves] = await Promise.all([
+      myHaveNames.size > 0
+        ? TradeListing.find({ status: 'active', type: 'want', userId: { $ne: req.user._id } }).lean()
+        : [],
+      myWantNames.size > 0
+        ? TradeListing.find({ status: 'active', type: 'have', userId: { $ne: req.user._id } }).lean()
+        : [],
+    ]);
+
+    const havesTheyWant = myHaves
+      .map(listing => ({
+        listing,
+        matches: othersWants.filter(w => w.cardName.toLowerCase() === listing.cardName.toLowerCase()),
+      }))
+      .filter(group => group.matches.length > 0);
+
+    const wantsTheyHave = myWants
+      .map(listing => ({
+        listing,
+        matches: othersHaves.filter(h => h.cardName.toLowerCase() === listing.cardName.toLowerCase()),
+      }))
+      .filter(group => group.matches.length > 0);
+
+    res.json({ havesTheyWant, wantsTheyHave });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // GET /api/trades/offers/received
 router.get('/offers/received', requireAuth, async (req, res) => {
   try {
