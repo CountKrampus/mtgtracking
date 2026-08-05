@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { WifiOff } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
@@ -9,6 +10,8 @@ export function AuthGuard({ children }) {
     isAuthenticated,
     isLoading,
     isMultiUserEnabled,
+    serverUnreachable,
+    retryConnection,
     login,
     register,
     error
@@ -53,6 +56,29 @@ export function AuthGuard({ children }) {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
           <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Online but the server isn't responding - show a retry screen instead of
+  // falling through to the single-user branch below (isMultiUserEnabled is
+  // still false during an outage, so that branch would wrongly render the app).
+  if (serverUnreachable) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-4">
+        <div className="text-center max-w-md">
+          <WifiOff size={48} className="mx-auto mb-4 text-purple-400" />
+          <h1 className="text-2xl font-bold text-white mb-2">Can't reach the server</h1>
+          <p className="text-gray-400 mb-6">
+            The MTG Tracker server isn't responding. Check that the backend is running, then retry.
+          </p>
+          <button
+            onClick={retryConnection}
+            className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
