@@ -30,9 +30,9 @@ npm start
 ## Features
 
 - 🔍 Card search with Scryfall autocomplete
-- 💰 Automatic pricing from Exor Games (CAD) with Scryfall backup
+- 💰 Automatic pricing from Scryfall with MTGGoldfish backup
 - 📦 Bulk import from text files
-- 🖼️ Offline card image caching
+- 🖼️ Offline support with image and collection cache
 - 📊 Collection statistics and filtering
 - 💾 Export to JSON/CSV
 - 🌐 Works offline with local MongoDB
@@ -59,7 +59,7 @@ npm start
 
 - **Backend:** Node.js + Express + MongoDB
 - **Frontend:** React + Tailwind CSS
-- **APIs:** Scryfall (card data) + Exor Games (pricing)
+- **APIs:** Scryfall (card data and pricing) + MTGGoldfish (pricing fallback)
 
 ## Documentation
 

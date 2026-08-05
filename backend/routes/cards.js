@@ -1,7 +1,6 @@
 // backend/routes/cards.js
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
 const axios = require('axios');
 const { verifyToken, requireAuth, requireEditor } = require('../middleware/auth');
 const { buildUserQuery, getUserId } = require('../middleware/multiUser');
@@ -10,88 +9,49 @@ const { getPriceWithFallback } = require('../utils/pricing');
 const { getFromCache, setInCache, clearCache } = require('../utils/statsCache');
 const { cacheCardImage } = require('../utils/imageCache');
 const { fetchCardFromScryfall } = require('../utils/scryfallLookup');
+const Card = require('../models/Card');
 const CardPriceSnapshot = require('../models/CardPriceSnapshot');
 const CardPriceHistory = require('../models/CardPriceHistory');
+const { parseCardLine, getDuplicateCardQuery, validateCardPayload, validateBulkUpdatePayload, buildCardListQuery, normalizeTag } = require('../utils/cardUtils');
 
 router.use(verifyToken);
 
-// Parse card line to extract name, quantity, and metadata (set code, collector number, rarity)
-// Supports formats:
-// - "Lightning Bolt" (plain name)
-// - "Lightning Bolt (M10)" (set code only)
-// - "Lightning Bolt (M10) 146" (set code + collector number)
-// - "Lightning Bolt (U 146 M10)" (rarity + collector number + set code)
-// - "4 Lightning Bolt" (quantity prefix for any format)
-function parseCardLine(line) {
-  // Parse quantity (e.g., "4 Lightning Bolt" -> quantity: 4, rest: "Lightning Bolt")
-  const qtyMatch = line.trim().match(/^(\d+)\s+(.+)$/);
-  let quantity = 1;
-  let rest = line.trim();
-
-  if (qtyMatch) {
-    quantity = parseInt(qtyMatch[1]);
-    rest = qtyMatch[2];
-  }
-
-  // Initialize result
-  const result = {
-    cardName: rest,
-    quantity: quantity,
-    setCode: null,
-    collectorNumber: null,
-    rarity: null
-  };
-
-  // Try to match format: (R 0226 LCI) - full format with rarity
-  const fullMatch = rest.match(/^(.+?)\s*\(([CURMLS])\s+(\d+)\s+([A-Z0-9]+)\)\s*$/i);
-  if (fullMatch) {
-    result.cardName = fullMatch[1].trim();
-    result.rarity = fullMatch[2].toUpperCase();
-    result.collectorNumber = fullMatch[3];
-    result.setCode = fullMatch[4].toUpperCase();
-    return result;
-  }
-
-  // Try to match format: (LCI) 0226 - set code + collector number
-  const setCollectorMatch = rest.match(/^(.+?)\s*\(([A-Z0-9]+)\)\s+([A-Z0-9\-]+)\s*$/i);
-  if (setCollectorMatch) {
-    result.cardName = setCollectorMatch[1].trim();
-    result.setCode = setCollectorMatch[2].toUpperCase();
-    result.collectorNumber = setCollectorMatch[3];
-    return result;
-  }
-
-  // Try to match format: (LCI) - set code only
-  const setOnlyMatch = rest.match(/^(.+?)\s*\(([A-Z0-9]+)\)\s*$/i);
-  if (setOnlyMatch) {
-    result.cardName = setOnlyMatch[1].trim();
-    result.setCode = setOnlyMatch[2].toUpperCase();
-    return result;
-  }
-
-  // No metadata found - plain card name
-  return result;
-}
 
 // Get all cards
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const userId = getUserId(req);
+    const { query, sort, pagination } = buildCardListQuery(req);
 
-    // Check cache first
-    const cached = getFromCache('cards', userId);
-    if (cached) {
-      return res.json(cached);
+    if (!pagination.enabled) {
+      const cached = getFromCache('cards', userId);
+      if (cached) {
+        return res.json(cached);
+      }
     }
 
-    const query = buildUserQuery({}, req);
-    const cards = await Card.find(query).sort({ name: 1 });
+    const cardQuery = Card.find(query).sort(sort);
+    let result;
 
-    // Store in cache
-    setInCache('cards', userId, cards);
+    if (pagination.enabled) {
+      const [cards, total] = await Promise.all([
+        cardQuery.skip(pagination.skip).limit(pagination.limit).exec(),
+        Card.countDocuments(query)
+      ]);
 
-    res.json(cards);
+      result = {
+        cards,
+        total,
+        page: pagination.page,
+        limit: pagination.limit
+      };
+    } else {
+      const cards = await cardQuery.exec();
+      setInCache('cards', userId, cards);
+      result = cards;
+    }
+
+    res.json(result);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -100,7 +60,6 @@ router.get('/', requireAuth, async (req, res) => {
 // Get single card
 router.get('/:id', requireAuth, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const query = buildUserQuery({ _id: req.params.id }, req);
     const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
@@ -113,7 +72,6 @@ router.get('/:id', requireAuth, async (req, res) => {
 // Update prices from Scryfall (with MTGGoldfish backup)
 router.post('/:id/update-price', requireAuth, requireEditor, activityLoggers.priceUpdate, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const { force, fullData } = req.query; // Optional: force update, fullData for complete card info
     const query = buildUserQuery({ _id: req.params.id }, req);
     const card = await Card.findOne(query);
@@ -211,7 +169,6 @@ router.post('/:id/update-price', requireAuth, requireEditor, activityLoggers.pri
 // Bulk update all prices from Scryfall (with MTGGoldfish backup)
 router.post('/update-all-prices', requireAuth, requireEditor, activityLoggers.priceBulkUpdate, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const { force, fullData } = req.query; // Optional: force update, fullData for complete card info
     const cardQuery = buildUserQuery({}, req);
     const cards = await Card.find(cardQuery);
@@ -335,7 +292,6 @@ router.post('/update-all-prices', requireAuth, requireEditor, activityLoggers.pr
 // Bulk import cards from list (with offline fallback)
 router.post('/bulk-import', requireAuth, requireEditor, activityLoggers.cardBulkImport, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const { cardList, offlineMode } = req.body; // Array of strings like "4 Lightning Bolt" or "Lightning Bolt"
     const userId = getUserId(req);
     const results = {
@@ -418,24 +374,7 @@ router.post('/bulk-import', requireAuth, requireEditor, activityLoggers.cardBulk
           };
         }
 
-        // Check for existing card with smart duplicate detection
-        // Priority: use collector number if available for exact matching
-        let baseQuery = {
-          name: cardInfo.name,
-          condition: cardInfo.condition,
-          isFoil: cardInfo.isFoil || false
-        };
-
-        // If we have exact collector number data, use it for duplicate detection (more precise)
-        if (cardInfo.setCode && cardInfo.collectorNumber) {
-          baseQuery.setCode = cardInfo.setCode;
-          baseQuery.collectorNumber = cardInfo.collectorNumber;
-        } else {
-          // Fall back to set name matching (backward compatible)
-          baseQuery.set = cardInfo.set;
-        }
-
-        const query = buildUserQuery(baseQuery, req);
+        const query = getDuplicateCardQuery(cardInfo, req);
         const existingCard = await Card.findOne(query);
 
         if (existingCard) {
@@ -487,7 +426,6 @@ router.post('/bulk-import', requireAuth, requireEditor, activityLoggers.cardBulk
 // Bulk import full card data (for JSON/CSV imports)
 router.post('/bulk-import-full', requireAuth, requireEditor, activityLoggers.cardBulkImport, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const { cards } = req.body; // Array of card objects with full data
     const userId = getUserId(req);
     const results = {
@@ -528,13 +466,7 @@ router.post('/bulk-import-full', requireAuth, requireEditor, activityLoggers.car
                 (typeof cardData.tags === 'string' && cardData.tags ? cardData.tags.split(';') : [])
         };
 
-        // Check for existing card (auto-merge by name + set + condition + isFoil)
-        const existingQuery = buildUserQuery({
-          name: cardInfo.name,
-          set: cardInfo.set,
-          condition: cardInfo.condition,
-          isFoil: cardInfo.isFoil
-        }, req);
+        const existingQuery = getDuplicateCardQuery(cardInfo, req);
         const existingCard = await Card.findOne(existingQuery);
 
         if (existingCard) {
@@ -568,7 +500,6 @@ router.post('/bulk-import-full', requireAuth, requireEditor, activityLoggers.car
 // Offline-only bulk import (no API calls)
 router.post('/bulk-import-offline', requireAuth, requireEditor, activityLoggers.cardBulkImport, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const { cardList } = req.body;
     const userId = getUserId(req);
     const results = {
@@ -612,13 +543,7 @@ router.post('/bulk-import-offline', requireAuth, requireEditor, activityLoggers.
           tags: []
         };
 
-        // Check for existing card (auto-merge) scoped to user
-        const existingQuery = buildUserQuery({
-          name: cardInfo.name,
-          set: cardInfo.set,
-          condition: cardInfo.condition,
-          isFoil: cardInfo.isFoil
-        }, req);
+        const existingQuery = getDuplicateCardQuery(cardInfo, req);
         const existingCard = await Card.findOne(existingQuery);
 
         if (existingCard) {
@@ -652,12 +577,14 @@ router.post('/bulk-import-offline', requireAuth, requireEditor, activityLoggers.
 // Create new card (or merge with existing if duplicate)
 router.post('/', requireAuth, requireEditor, activityLoggers.cardCreate, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
-    const { name, set, condition, quantity, isFoil } = req.body;
     const userId = getUserId(req);
+    const errors = validateCardPayload(req.body);
+    if (errors.length) {
+      return res.status(400).json({ message: 'Invalid card payload', errors });
+    }
 
-    // Check if card with same name, set, condition, and foil status already exists (for this user)
-    const existingQuery = buildUserQuery({ name, set, condition, isFoil: isFoil || false }, req);
+    const { quantity, isFoil } = req.body;
+    const existingQuery = getDuplicateCardQuery(req.body, req);
     const existingCard = await Card.findOne(existingQuery);
 
     if (existingCard) {
@@ -697,8 +624,12 @@ router.post('/', requireAuth, requireEditor, activityLoggers.cardCreate, async (
 // Update card
 router.put('/:id', requireAuth, requireEditor, activityLoggers.cardUpdate, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const userId = getUserId(req);
+    const errors = validateCardPayload(req.body, { allowPartial: true });
+    if (errors.length) {
+      return res.status(400).json({ message: 'Invalid card payload', errors });
+    }
+
     const query = buildUserQuery({ _id: req.params.id }, req);
     const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
@@ -736,7 +667,6 @@ router.put('/:id', requireAuth, requireEditor, activityLoggers.cardUpdate, async
 // Delete card
 router.delete('/:id', requireAuth, requireEditor, activityLoggers.cardDelete, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const userId = getUserId(req);
     const query = buildUserQuery({ _id: req.params.id }, req);
     const card = await Card.findOne(query);
@@ -753,7 +683,6 @@ router.delete('/:id', requireAuth, requireEditor, activityLoggers.cardDelete, as
 // Get price history for a specific card
 router.get('/:id/price-history', requireAuth, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const query = buildUserQuery({ _id: req.params.id }, req);
     const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
@@ -787,7 +716,6 @@ router.get('/:id/price-history', requireAuth, async (req, res) => {
 // Update a card's finance fields (buylist/sell values, price alert)
 router.put('/:id/finance', requireAuth, requireEditor, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const { buylistValue, sellValue, priceAlert } = req.body;
     const userId = getUserId(req);
     const card = await Card.findOne(buildUserQuery({ _id: req.params.id }, req));
@@ -812,7 +740,6 @@ router.put('/:id/finance', requireAuth, requireEditor, async (req, res) => {
 // Add tag to a card
 router.post('/:id/tags', requireAuth, requireEditor, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const { tag } = req.body;
     if (!tag || typeof tag !== 'string') {
       return res.status(400).json({ message: 'Tag must be a non-empty string' });
@@ -841,7 +768,6 @@ router.post('/:id/tags', requireAuth, requireEditor, async (req, res) => {
 // Remove tag from a card
 router.delete('/:id/tags/:tag', requireAuth, requireEditor, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const query = buildUserQuery({ _id: req.params.id }, req);
     const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
@@ -860,7 +786,6 @@ router.delete('/:id/tags/:tag', requireAuth, requireEditor, async (req, res) => 
 // Bulk update oracle text for existing cards (one-time migration/backfill)
 router.post('/update-all-oracle-text', requireAuth, requireEditor, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const cardQuery = buildUserQuery({}, req);
     const cards = await Card.find(cardQuery);
     let updated = 0;
@@ -901,7 +826,6 @@ router.post('/update-all-oracle-text', requireAuth, requireEditor, async (req, r
 // Migrate existing cards to use cached images
 router.post('/migrate-images-to-cache', requireAuth, requireEditor, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const query = buildUserQuery({ scryfallId: { $ne: null } }, req);
     const cards = await Card.find(query);
     let migrated = 0;
@@ -958,17 +882,13 @@ router.post('/migrate-images-to-cache', requireAuth, requireEditor, async (req, 
 // Bulk update multiple cards
 router.post('/bulk-update', requireAuth, requireEditor, activityLoggers.cardBulkUpdate, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const userId = getUserId(req);
+    const errors = validateBulkUpdatePayload(req.body);
+    if (errors.length) {
+      return res.status(400).json({ message: 'Invalid bulk update payload', errors });
+    }
+
     const { cardIds, updates } = req.body;
-
-    if (!cardIds || !Array.isArray(cardIds) || cardIds.length === 0) {
-      return res.status(400).json({ message: 'cardIds array is required' });
-    }
-
-    if (!updates || Object.keys(updates).length === 0) {
-      return res.status(400).json({ message: 'updates object is required' });
-    }
 
     let updatedCount = 0;
     const results = [];
@@ -1029,7 +949,6 @@ router.post('/bulk-update', requireAuth, requireEditor, activityLoggers.cardBulk
 // Bulk delete multiple cards
 router.delete('/bulk-delete', requireAuth, requireEditor, activityLoggers.cardBulkDelete, async (req, res) => {
   try {
-    const Card = mongoose.model('Card');
     const userId = getUserId(req);
     const { cardIds } = req.body;
 
@@ -1073,3 +992,4 @@ router.delete('/bulk-delete', requireAuth, requireEditor, activityLoggers.cardBu
 });
 
 module.exports = router;
+

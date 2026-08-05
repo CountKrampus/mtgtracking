@@ -38,6 +38,7 @@ const CardPriceSnapshot = require('./models/CardPriceSnapshot');
 const ValueSnapshot = require('./models/ValueSnapshot');
 const User = require('./models/User');
 const Role = require('./models/Role');
+const Card = require('./models/Card');
 const { refreshRoleCache } = require('./utils/permissions');
 
 // Try to load sharp for image hashing (optional dependency)
@@ -166,60 +167,6 @@ app.use('/api/achievements', achievementsRouter);
 // Check maintenance mode for all other routes
 app.use(checkMaintenanceMode);
 
-// Card Schema
-const cardSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
-  name: { type: String, required: true },
-  set: { type: String, required: false, default: 'Unknown' },
-  setCode: { type: String, required: false },
-  collectorNumber: { type: String, required: false },
-  rarity: { type: String, required: false },
-  quantity: { type: Number, required: true, default: 1 },
-  condition: { type: String, required: true, enum: ['NM', 'LP', 'MP', 'HP', 'DMG'] },
-  price: { type: Number, required: true, default: 0 },
-  lastPrice: { type: Number, default: null },
-  purchasePrice: { type: Number, default: null },
-  colors: [{ type: String }],
-  types: [{ type: String }],
-  manaCost: { type: String },
-  scryfallId: { type: String },
-  imageUrl: { type: String },
-  isFoil: { type: Boolean, default: false },
-  isToken: { type: Boolean, default: false },
-  oracleText: { type: String, default: '' },
-  tags: [{ type: String }],
-  location: { type: String, default: '' },
-  buylistValue: { type: Number, default: 0 },
-  sellValue: { type: Number, default: 0 },
-  priceAlert: {
-    targetPrice: Number, // notify when price drops to/below this
-    targetHigh: Number, // notify when price rises to/above this
-    emailNotification: { type: Boolean, default: false },
-    lastAlertFiredAt: { type: Date, default: null },
-    lastHighAlertFiredAt: { type: Date, default: null }
-  },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-});
-
-// Database indexes for query performance
-cardSchema.index({ name: 1 });
-cardSchema.index({ set: 1 });
-cardSchema.index({ setCode: 1 });
-cardSchema.index({ rarity: 1 });
-cardSchema.index({ condition: 1 });
-cardSchema.index({ location: 1 });
-cardSchema.index({ colors: 1 });
-cardSchema.index({ types: 1 });
-cardSchema.index({ tags: 1 });
-cardSchema.index({ name: 1, set: 1, condition: 1 }); // Compound index for duplicate detection
-
-// Multi-user specific indexes for faster queries
-cardSchema.index({ userId: 1, name: 1 });
-cardSchema.index({ userId: 1, set: 1 });
-cardSchema.index({ userId: 1, condition: 1 });
-cardSchema.index({ userId: 1, updatedAt: -1 });
-
 // Location Schema
 const locationSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
@@ -346,13 +293,6 @@ const sharedGameSchema = new mongoose.Schema({
 });
 
 const SharedGame = mongoose.model('SharedGame', sharedGameSchema);
-
-cardSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
-  next();
-});
-
-const Card = mongoose.model('Card', cardSchema);
 
 // Helper Functions
 
