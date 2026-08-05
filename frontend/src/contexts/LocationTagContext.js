@@ -19,10 +19,11 @@ export function LocationTagProvider({ children }) {
   // Location stats for QR labels
   const locationStats = useMemo(() => {
     const stats = {};
-    locations.forEach(loc => {
-      const cardsInLoc = cards.filter(c => c.location === loc.name);
-      const cardCount = cardsInLoc.reduce((sum, c) => sum + c.quantity, 0);
-      const totalValue = cardsInLoc.reduce((sum, c) => sum + (c.price * c.quantity), 0);
+    const locs = Array.isArray(locations) ? locations : [];
+    locs.forEach(loc => {
+      const cardsInLoc = Array.isArray(cards) ? cards.filter(c => c.location === loc.name) : [];
+      const cardCount = cardsInLoc.reduce((sum, c) => sum + (c.quantity || 0), 0);
+      const totalValue = cardsInLoc.reduce((sum, c) => sum + ((c.price || 0) * (c.quantity || 0)), 0);
       stats[loc.name] = { cardCount, totalValue };
     });
     return stats;
@@ -31,9 +32,10 @@ export function LocationTagProvider({ children }) {
   const fetchLocations = async () => {
     try {
       const response = await axios.get(`${API_URL}/locations`);
-      setLocations(response.data);
+      setLocations(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching locations:', error);
+      setLocations([]);
     }
   };
 
@@ -117,9 +119,10 @@ export function LocationTagProvider({ children }) {
   const fetchAvailableTags = async () => {
     try {
       const response = await axios.get(`${API_URL}/tags`);
-      setAvailableTags(response.data);
+      setAvailableTags(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching tags:', error);
+      setAvailableTags([]);
     }
   };
 

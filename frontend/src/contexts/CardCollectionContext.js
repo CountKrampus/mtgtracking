@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState, useRef, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { useToast } from './ToastContext';
 import { API_URL } from '../config';
-import { saveCardsToCache, getCachedCards } from '../utils/offlineDb';
+import { saveCardsToCache, getCachedCards, saveRequestToQueue, getQueuedRequests, removeQueuedRequest } from '../utils/offlineDb';
 
 const CardCollectionContext = createContext(null);
 
@@ -15,6 +15,9 @@ export function CardCollectionProvider({ children }) {
   const [editingId, setEditingId] = useState(null);
   const [isShowingCachedCards, setIsShowingCachedCards] = useState(false);
   const [cacheAge, setCacheAge] = useState(null);
+  const [offline, setOffline] = useState(!navigator.onLine);
+  const [syncStatus, setSyncStatus] = useState('idle');
+  const [queuedRequestCount, setQueuedRequestCount] = useState(0);
 
   // Hover / sparkline state
   const [hoveredCard, setHoveredCard] = useState(null);
@@ -29,20 +32,17 @@ export function CardCollectionProvider({ children }) {
   // the user to manually refresh.
   const isShowingCachedCardsRef = useRef(isShowingCachedCards);
   isShowingCachedCardsRef.current = isShowingCachedCards;
-  useEffect(() => {
-    const handleOnline = () => {
-      if (isShowingCachedCardsRef.current) {
-        fetchCards();
-      }
-    };
-    window.addEventListener('online', handleOnline);
-    return () => window.removeEventListener('online', handleOnline);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+  const refreshQueuedRequestCount = useCallback(async () => {
+    try {
+      const queued = await getQueuedRequests();
+      setQueuedRequestCount(queued.length);
+    } catch {
+      setQueuedRequestCount(0);
+    }
   }, []);
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
-
-  const fetchCards = async () => {
+  const fetchCards = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/cards`);
       setCards(response.data);
@@ -51,14 +51,87 @@ export function CardCollectionProvider({ children }) {
       saveCardsToCache(response.data); // fire-and-forget; best-effort offline cache
     } catch (error) {
       console.error('Error fetching cards:', error);
-      // Likely offline (or the server is unreachable) — fall back to the last
-      // successfully fetched collection instead of showing an empty page.
       const cached = await getCachedCards();
       if (cached) {
         setCards(cached.cards);
         setIsShowingCachedCards(true);
         setCacheAge(cached.cachedAt);
       }
+    }
+  }, []);
+
+  const processQueuedRequests = useCallback(async () => {
+    const queued = await getQueuedRequests();
+    if (!queued.length) {
+      setQueuedRequestCount(0);
+      return;
+    }
+
+    setSyncStatus('syncing');
+    for (const request of queued) {
+      try {
+        await axios({
+          method: request.method,
+          url: request.url,
+          data: request.data
+        });
+        await removeQueuedRequest(request.id);
+      } catch (err) {
+        console.error('Offline sync failed for request:', request, err);
+        setSyncStatus('error');
+        return;
+      }
+    }
+
+    setSyncStatus('idle');
+    setQueuedRequestCount(0);
+    fetchCards();
+  }, [fetchCards]);
+
+  useEffect(() => {
+    refreshQueuedRequestCount();
+    const handleConnectionChange = async () => {
+      const isOnline = navigator.onLine;
+      setOffline(!isOnline);
+      if (isOnline) {
+        await processQueuedRequests();
+      }
+    };
+
+    window.addEventListener('online', handleConnectionChange);
+    window.addEventListener('offline', handleConnectionChange);
+    return () => {
+      window.removeEventListener('online', handleConnectionChange);
+      window.removeEventListener('offline', handleConnectionChange);
+    };
+  }, [processQueuedRequests, refreshQueuedRequestCount]);
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
+
+  const queueOfflineRequest = async (request) => {
+    await saveRequestToQueue(request);
+    refreshQueuedRequestCount();
+    addToast('Offline: your change has been queued and will sync when online.', 'info');
+  };
+
+  const sendRequest = async ({ method, url, data, queueable = true }) => {
+    if (!navigator.onLine) {
+      if (queueable) {
+        await queueOfflineRequest({ method, url, data });
+      }
+      return { queued: true };
+    }
+
+    try {
+      const response = await axios({ method, url, data });
+      return response;
+    } catch (error) {
+      if (queueable && (!error.response || error.message === 'Network Error')) {
+        await queueOfflineRequest({ method, url, data });
+        return { queued: true };
+      }
+
+      throw error;
     }
   };
 
@@ -74,16 +147,17 @@ export function CardCollectionProvider({ children }) {
     }
 
     try {
-      let response;
-      if (editingId) {
-        response = await axios.put(`${API_URL}/cards/${editingId}`, formData);
-      } else {
-        response = await axios.post(`${API_URL}/cards`, formData);
+      const url = editingId ? `${API_URL}/cards/${editingId}` : `${API_URL}/cards`;
+      const method = editingId ? 'put' : 'post';
+      const response = await sendRequest({ method, url, data: formData });
+
+      if (response && response.data?.merged) {
+        addToast(`Card already exists! ${response.data.message}`, 'info');
       }
 
-      // Check if card was merged with existing entry
-      if (response.data.merged) {
-        addToast(`Card already exists! ${response.data.message}`, 'info');
+      if (!response || response.queued) {
+        if (onSuccess) onSuccess();
+        return;
       }
 
       fetchCards();
@@ -98,16 +172,24 @@ export function CardCollectionProvider({ children }) {
     if (!window.confirm('Are you sure you want to delete this card?')) return;
 
     try {
-      await axios.delete(`${API_URL}/cards/${id}`);
+      const response = await sendRequest({ method: 'delete', url: `${API_URL}/cards/${id}` });
+      if (!response || response.queued) return;
       fetchCards();
     } catch (error) {
       console.error('Error deleting card:', error);
+      addToast('Error deleting card', 'error');
     }
   };
 
   const updateCardPrice = async (id) => {
     try {
-      await axios.post(`${API_URL}/cards/${id}/update-price`);
+      const response = await sendRequest({
+        method: 'post',
+        url: `${API_URL}/cards/${id}/update-price`
+      });
+
+      if (response?.queued) return;
+
       fetchCards();
       addToast('Price updated successfully!', 'success');
     } catch (error) {
@@ -139,7 +221,10 @@ export function CardCollectionProvider({ children }) {
       if (updateFullData) params.append('fullData', 'true');
 
       const url = `${API_URL}/cards/update-all-prices${params.toString() ? '?' + params.toString() : ''}`;
-      const response = await axios.post(url);
+      const response = await sendRequest({ method: 'post', url });
+
+      if (response?.queued) return;
+
       fetchCards();
 
       // Show detailed results
@@ -159,7 +244,13 @@ export function CardCollectionProvider({ children }) {
 
     try {
       setLoading(true);
-      await axios.post(`${API_URL}/cards/update-all-oracle-text`);
+      const response = await sendRequest({
+        method: 'post',
+        url: `${API_URL}/cards/update-all-oracle-text`
+      });
+
+      if (response?.queued) return;
+
       fetchCards();
       addToast('Oracle text updated successfully!', 'success');
     } catch (error) {
@@ -182,29 +273,45 @@ export function CardCollectionProvider({ children }) {
     if (!newTag.trim()) return;
 
     try {
-      await axios.post(`${API_URL}/cards/${cardId}/tags`, { tag: newTag.trim() });
-      if (setNewTag) setNewTag('');
-      if (setShowTagInput) setShowTagInput(null);
-      fetchCards();
-      if (fetchTags) fetchTags();
-    } catch (error) {
-      console.error('Error adding tag:', error);
-      addToast('Error adding tag', 'error');
-    }
+     const response = await sendRequest({
+       method: 'post',
+       url: `${API_URL}/cards/${cardId}/tags`,
+       data: { tag: newTag.trim() }
+     });
+
+     if (!response || response.queued) {
+       if (setNewTag) setNewTag('');
+       if (setShowTagInput) setShowTagInput(null);
+       return;
+     }
+
+     if (setNewTag) setNewTag('');
+     if (setShowTagInput) setShowTagInput(null);
+     fetchCards();
+     if (fetchTags) fetchTags();
+   } catch (error) {
+     console.error('Error adding tag:', error);
+     addToast('Error adding tag', 'error');
+   }
   };
 
   /**
    * @param {Function} [fetchTags] - Optional callback to refresh available tags (owned by LocationTagContext in Task 5)
    */
   const handleRemoveTag = async (cardId, tag, fetchTags) => {
-    try {
-      await axios.delete(`${API_URL}/cards/${cardId}/tags/${encodeURIComponent(tag)}`);
-      fetchCards();
-      if (fetchTags) fetchTags();
-    } catch (error) {
-      console.error('Error removing tag:', error);
-      addToast('Error removing tag', 'error');
-    }
+   try {
+     const response = await sendRequest({
+       method: 'delete',
+       url: `${API_URL}/cards/${cardId}/tags/${encodeURIComponent(tag)}`
+     });
+
+     if (!response || response.queued) return;
+     fetchCards();
+     if (fetchTags) fetchTags();
+   } catch (error) {
+     console.error('Error removing tag:', error);
+     addToast('Error removing tag', 'error');
+   }
   };
 
   const handleCardHover = async (card) => {
@@ -222,9 +329,7 @@ export function CardCollectionProvider({ children }) {
     clearTimeout(sparklineTimerRef.current);
     sparklineTimerRef.current = setTimeout(async () => {
       try {
-        const res = await axios.get(`${API_URL}/cards/${card._id}/price-history?days=30`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('mtg_access_token')}` }
-        });
+        const res = await axios.get(`${API_URL}/cards/${card._id}/price-history?days=30`);
         const pts = (res.data || []).map(p => ({ price: p.price, date: p.date || p.createdAt }));
         setSparkline({
           cardId: card._id,
@@ -326,20 +431,39 @@ export function CardCollectionProvider({ children }) {
         const cards = JSON.parse(text);
         const cardArray = Array.isArray(cards) ? cards : [cards];
         setImportProgress({ current: 0, total: cardArray.length, cardName: '' });
-        response = await axios.post(`${API_URL}/cards/bulk-import-full`, { cards: cardArray });
+        response = await sendRequest({
+          method: 'post',
+          url: `${API_URL}/cards/bulk-import-full`,
+          data: { cards: cardArray }
+        });
 
       } else if (fileExtension === 'csv') {
         const cards = parseCSV(text);
         setImportProgress({ current: 0, total: cards.length, cardName: '' });
-        response = await axios.post(`${API_URL}/cards/bulk-import-full`, { cards });
+        response = await sendRequest({
+          method: 'post',
+          url: `${API_URL}/cards/bulk-import-full`,
+          data: { cards }
+        });
 
       } else {
         const cardList = text.split('\n').filter(line => line.trim());
         setImportProgress({ current: 0, total: cardList.length, cardName: '' });
-        response = await axios.post(`${API_URL}/cards/bulk-import`, {
-          cardList,
-          offlineMode
+        response = await sendRequest({
+          method: 'post',
+          url: `${API_URL}/cards/bulk-import`,
+          data: {
+            cardList,
+            offlineMode
+          }
         });
+      }
+
+      if (response?.queued) {
+        setImportResults(null);
+        setShowImportResults(false);
+        addToast('Import queued for sync once you are back online.', 'info');
+        return;
       }
 
       setImportResults(response.data);
@@ -382,8 +506,11 @@ export function CardCollectionProvider({ children }) {
     handlePriceCellEnter,
     handlePriceCellLeave,
     handleBulkImport,
+    offline,
+    syncStatus,
+    queuedRequestCount,
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [cards, loading, editingId, isShowingCachedCards, cacheAge, hoveredCard, hoveredCardPriceHistory, detailCard, sparkline]);
+  }), [cards, loading, editingId, isShowingCachedCards, cacheAge, hoveredCard, hoveredCardPriceHistory, detailCard, sparkline, offline, syncStatus, queuedRequestCount]);
 
   return (
     <CardCollectionContext.Provider value={value}>
@@ -397,3 +524,4 @@ export function useCardCollection() {
   if (!ctx) throw new Error('useCardCollection must be used inside CardCollectionProvider');
   return ctx;
 }
+

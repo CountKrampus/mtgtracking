@@ -30,6 +30,25 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  const isCardApi = url.pathname.startsWith('/api/cards');
+  const isCachedImage = url.pathname.startsWith('/api/images/');
+
+  if (isCardApi || isCachedImage) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
   if (url.pathname.startsWith('/api/')) return;
 
   event.respondWith(

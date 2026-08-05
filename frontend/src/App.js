@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
 import axios from 'axios';
+import lazyWithRetry from './utils/lazyWithRetry';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Search, Plus, Download, RefreshCw, DollarSign, Upload, Camera, Settings, Heart, Layers, Zap, Crown, BarChart3, Users, Home, BookOpen, Trophy, User, MessageSquare } from 'lucide-react';
 import QRCode from 'qrcode';
@@ -11,6 +12,7 @@ import CommandPalette from './components/CommandPalette';
 import useKeyboardShortcuts, { buildShortcutKey } from './hooks/useKeyboardShortcuts';
 import useSettings from './hooks/useSettings';
 import { AuthProvider, useAuthContext } from './contexts/AuthContext';
+import ChunkErrorBoundary from './components/ChunkErrorBoundary';
 import { AuthGuard } from './components/auth/AuthGuard';
 import { ToastProvider, useToast } from './contexts/ToastContext';
 import { CardCollectionProvider, useCardCollection } from './contexts/CardCollectionContext';
@@ -25,9 +27,8 @@ import SharedDeckView from './components/CommunityDecks/SharedDeckView';
 import CommunityDecks from './components/CommunityDecks/CommunityDecks';
 import ForumView from './components/ForumView';
 import { API_URL } from './config';
-import NotificationBell from './components/NotificationBell';
+import AppHeader from './components/AppHeader';
 import CardDetailPanel from './components/CardDetailPanel';
-import UserMenu from './components/UserMenu';
 import MessagesPage from './components/MessagesPage';
 import MyProfile from './components/MyProfile';
 import UserProfile from './components/UserProfile';
@@ -37,7 +38,7 @@ import BottomNav from './components/BottomNav';
 
 const DeckBuilder = React.lazy(() => import('./components/DeckBuilder'));
 const LifeCounter = React.lazy(() => import('./components/LifeCounter/LifeCounter'));
-const Dashboard = React.lazy(() => import('./components/Dashboard'));
+const Dashboard = lazyWithRetry(() => import('./components/Dashboard'), { retries: 2, retryDelay: 600 });
 
 // Learning components (lazy)
 const CardRulingsBrowser = React.lazy(() => import('./components/Learn/CardRulingsBrowser'));
@@ -71,6 +72,7 @@ const ChallengesView = React.lazy(() => import('./components/ChallengesView'));
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem('mtg_access_token');
   if (token) {
+    config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -99,6 +101,7 @@ axios.interceptors.response.use(
             localStorage.setItem('mtg_access_token', data.accessToken);
             localStorage.setItem('mtg_user', JSON.stringify(data.user));
 
+            originalRequest.headers = originalRequest.headers || {};
             originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
             return axios(originalRequest);
           }
@@ -156,6 +159,9 @@ function App() {
     fetchCards,
     updateAllOracleText,
     handleBulkImport,
+    offline,
+    syncStatus,
+    queuedRequestCount,
   } = useCardCollection();
 
   // Location and tag state and handlers from context
@@ -181,7 +187,7 @@ function App() {
   const [showImportResults, setShowImportResults] = useState(false);
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0, cardName: '' });
   const [isImporting, setIsImporting] = useState(false);
-  const [offlineMode, setOfflineMode] = useState(false);
+  const offlineMode = offline;
   const [openPanel, setOpenPanel] = useState(null); // null | 'notifications' | 'dms'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -230,7 +236,7 @@ function App() {
 
   useEffect(() => {
     fetchCards();
-  }, []);
+  }, [fetchCards]);
 
   // Handle ?location= URL parameter (for QR code scanning)
   useEffect(() => {
@@ -762,27 +768,19 @@ function App() {
   return (
     <div className={`h-screen ${rootBgClass} flex flex-col overflow-hidden`}>
       {/* Top Header with Notifications and DMs */}
-      {authUser && (
-        <div className="bg-slate-900/80 backdrop-blur border-b border-slate-700 px-3 sm:px-6 py-2 sm:py-3 flex items-center justify-between">
-          <div className="flex-1"></div>
-          <div className="flex items-center gap-4">
-            <NotificationBell apiUrl={API_URL} user={authUser} openPanel={openPanel} setOpenPanel={setOpenPanel} />
-            <button
-              onClick={() => navigate('/messages')}
-              className="relative p-2 hover:bg-white/10 rounded-lg transition text-white/70 hover:text-white"
-              title="Messages"
-            >
-              <MessageSquare size={20} />
-            </button>
-            <UserMenu
-              user={authUser}
-              onProfile={() => navigate('/profile')}
-              onSettings={() => setShowAccountSettings(true)}
-              onLogout={authLogout}
-            />
-          </div>
-        </div>
-      )}
+      <AppHeader
+        authUser={authUser}
+        apiUrl={API_URL}
+        offline={offline}
+        queuedRequestCount={queuedRequestCount}
+        syncStatus={syncStatus}
+        openPanel={openPanel}
+        setOpenPanel={setOpenPanel}
+        onOpenMessages={() => navigate('/messages')}
+        onOpenProfile={() => navigate('/profile')}
+        onOpenAccountSettings={() => setShowAccountSettings(true)}
+        onLogout={authLogout}
+      />
 
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
@@ -836,20 +834,22 @@ function App() {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
             <Route path="/dashboard" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <Dashboard
-                  cards={cards}
-                  totalCards={totalCards}
-                  totalValue={totalValue}
-                  ignoredValue={ignoredValue}
-                  onAddCard={() => navigate('/collection')}
-                  onImport={() => fileInputRef.current?.click()}
-                  onUpdatePrices={() => setShowPriceUpdateModal(true)}
-                  fileInputRef={fileInputRef}
-                  isImporting={isImporting}
-                  formatPrice={formatPrice}
-                />
-              </Suspense>
+              <ChunkErrorBoundary>
+                <Suspense fallback={<LoadingFallback />}>
+                  <Dashboard
+                    cards={cards}
+                    totalCards={totalCards}
+                    totalValue={totalValue}
+                    ignoredValue={ignoredValue}
+                    onAddCard={() => navigate('/collection')}
+                    onImport={() => fileInputRef.current?.click()}
+                    onUpdatePrices={() => setShowPriceUpdateModal(true)}
+                    fileInputRef={fileInputRef}
+                    isImporting={isImporting}
+                    formatPrice={formatPrice}
+                  />
+                </Suspense>
+              </ChunkErrorBoundary>
             } />
 
             <Route path="/collection" element={
@@ -1100,3 +1100,6 @@ function AppWithAuth() {
 }
 
 export default AppWithAuth;
+
+
+

@@ -3,8 +3,9 @@
 // cached as a single record — there's no need for per-card queries here,
 // just "give me the last known-good snapshot to show while offline."
 const DB_NAME = 'mtg-tracker-offline';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'collection';
+const QUEUE_STORE_NAME = 'queue';
 const CARDS_KEY = 'cards';
 
 function openDb() {
@@ -18,6 +19,9 @@ function openDb() {
       const db = request.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME);
+      }
+      if (!db.objectStoreNames.contains(QUEUE_STORE_NAME)) {
+        db.createObjectStore(QUEUE_STORE_NAME, { keyPath: 'id' });
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -55,5 +59,56 @@ export async function getCachedCards() {
   } catch (err) {
     console.warn('Failed to read cached collection:', err.message);
     return null;
+  }
+}
+
+export async function saveRequestToQueue(request) {
+  try {
+    const db = await openDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(QUEUE_STORE_NAME, 'readwrite');
+      tx.objectStore(QUEUE_STORE_NAME).put({
+        id: request.id || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        ...request,
+        createdAt: request.createdAt || Date.now()
+      });
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+  } catch (err) {
+    console.warn('Failed to queue offline request:', err.message);
+  }
+}
+
+export async function getQueuedRequests() {
+  try {
+    const db = await openDb();
+    const queued = await new Promise((resolve, reject) => {
+      const tx = db.transaction(QUEUE_STORE_NAME, 'readonly');
+      const request = tx.objectStore(QUEUE_STORE_NAME).getAll();
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
+    db.close();
+    return queued;
+  } catch (err) {
+    console.warn('Failed to read queued requests:', err.message);
+    return [];
+  }
+}
+
+export async function removeQueuedRequest(id) {
+  try {
+    const db = await openDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(QUEUE_STORE_NAME, 'readwrite');
+      tx.objectStore(QUEUE_STORE_NAME).delete(id);
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+  } catch (err) {
+    console.warn('Failed to remove queued request:', err.message);
   }
 }
