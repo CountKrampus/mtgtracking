@@ -15,6 +15,7 @@ export function useAuth() {
   const [error, setError] = useState(null);
   const [isMultiUserEnabled, setIsMultiUserEnabled] = useState(false);
   const [systemStatus, setSystemStatus] = useState(null);
+  const [serverUnreachable, setServerUnreachable] = useState(false);
 
   // Check system status on mount (with retries if backend isn't ready yet)
   useEffect(() => {
@@ -38,6 +39,7 @@ export function useAuth() {
       try {
         const response = await fetch(`${API_URL}/auth/status`);
         const data = await response.json();
+        setServerUnreachable(false);
         setIsMultiUserEnabled(data.multiUserEnabled);
         setSystemStatus(data);
         if (!data.multiUserEnabled) {
@@ -52,14 +54,36 @@ export function useAuth() {
           await new Promise(resolve => setTimeout(resolve, retryDelayMs * attempt));
           continue;
         }
-        // All retries exhausted - assume single-user fallback
         console.error('Failed to check system status after retries:', err);
-        setIsMultiUserEnabled(false);
+        if (navigator.onLine) {
+          // Online but the server isn't responding - surface it instead of
+          // silently pretending this is a single-user install.
+          setServerUnreachable(true);
+        } else {
+          // Device offline - preserve the offline PWA flow (cached collection).
+          setIsMultiUserEnabled(false);
+        }
         setIsLoading(false);
         return;
       }
     }
   };
+
+  const retryConnection = () => {
+    setServerUnreachable(false);
+    setIsLoading(true);
+    checkSystemStatus();
+  };
+
+  // One automatic retry when the browser regains connectivity while the
+  // unreachable screen is showing. No polling beyond this.
+  useEffect(() => {
+    if (!serverUnreachable) return;
+    const handleOnline = () => retryConnection();
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverUnreachable]);
 
   const validateSession = async () => {
     try {
@@ -332,6 +356,8 @@ export function useAuth() {
     error,
     isMultiUserEnabled,
     systemStatus,
+    serverUnreachable,
+    retryConnection,
     login,
     register,
     logout,
