@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+﻿import { useState, useCallback, useEffect } from 'react';
 import { API_URL } from '../config';
 
 // Token storage keys
@@ -16,7 +16,7 @@ export function useAuth() {
   const [isMultiUserEnabled, setIsMultiUserEnabled] = useState(false);
   const [systemStatus, setSystemStatus] = useState(null);
 
-  // Check system status on mount
+  // Check system status on mount (with retries if backend isn't ready yet)
   useEffect(() => {
     checkSystemStatus();
   }, []);
@@ -32,27 +32,41 @@ export function useAuth() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMultiUserEnabled]);
 
-  const checkSystemStatus = async () => {
-    try {
-      const response = await fetch(`${API_URL}/auth/status`);
-      const data = await response.json();
-      setIsMultiUserEnabled(data.multiUserEnabled);
-      setSystemStatus(data);
-      if (!data.multiUserEnabled) {
+  const checkSystemStatus = async (maxRetries = 3, retryDelayMs = 500) => {
+    let attempt = 0;
+    while (attempt < maxRetries) {
+      try {
+        const response = await fetch(`${API_URL}/auth/status`);
+        const data = await response.json();
+        setIsMultiUserEnabled(data.multiUserEnabled);
+        setSystemStatus(data);
+        if (!data.multiUserEnabled) {
+          setIsLoading(false);
+        }
+        return;
+      } catch (err) {
+        attempt += 1;
+        console.warn(`checkSystemStatus attempt ${attempt} failed:`, err.message || err);
+        // Small delay before retrying
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, retryDelayMs * attempt));
+          continue;
+        }
+        // All retries exhausted - assume single-user fallback
+        console.error('Failed to check system status after retries:', err);
+        setIsMultiUserEnabled(false);
         setIsLoading(false);
+        return;
       }
-    } catch (err) {
-      console.error('Failed to check system status:', err);
-      setIsMultiUserEnabled(false);
-      setIsLoading(false);
     }
   };
 
   const validateSession = async () => {
     try {
+      const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
       const response = await fetch(`${API_URL}/auth/me`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem(ACCESS_TOKEN_KEY)}`
+          'Authorization': `Bearer ${accessToken}`
         }
       });
 
@@ -333,3 +347,4 @@ export function useAuth() {
 }
 
 export default useAuth;
+
