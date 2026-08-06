@@ -45,6 +45,139 @@ const POWER_INDICATORS = {
                 'Mystic Remora', 'Esper Sentinel', 'Seedborn Muse', 'Prophet of Kruphix'],
 };
 
+const BASIC_LAND_COLORS = { Plains: 'W', Island: 'U', Swamp: 'B', Mountain: 'R', Forest: 'G' };
+
+// Nonbasic lands and mana rocks that produce specific colors. Not exhaustive
+// (same spirit as SALTY_CARDS/POWER_INDICATORS above) - covers the most common
+// Commander staples. Cards that produce colorless-only mana (Sol Ring, Mana
+// Crypt, Mana Vault, etc.) are deliberately absent - they live in
+// POWER_INDICATORS.fastMana instead, a different classification for a
+// different purpose, and must never be treated as a color source here.
+const COLOR_SOURCES = {
+  // True duals / original duals
+  'Tundra': ['W', 'U'], 'Underground Sea': ['U', 'B'], 'Badlands': ['B', 'R'],
+  'Taiga': ['R', 'G'], 'Savannah': ['G', 'W'], 'Scrubland': ['W', 'B'],
+  'Volcanic Island': ['U', 'R'], 'Bayou': ['B', 'G'], 'Plateau': ['R', 'W'],
+  'Tropical Island': ['G', 'U'],
+  // Shocklands
+  'Hallowed Fountain': ['W', 'U'], 'Watery Grave': ['U', 'B'], 'Blood Crypt': ['B', 'R'],
+  'Stomping Ground': ['R', 'G'], 'Temple Garden': ['G', 'W'], 'Godless Shrine': ['W', 'B'],
+  'Steam Vents': ['U', 'R'], 'Overgrown Tomb': ['B', 'G'], 'Sacred Foundry': ['R', 'W'],
+  'Breeding Pool': ['G', 'U'],
+  // Fetchlands (count toward both colors they can fetch, since which basic/dual
+  // they actually grab varies by deck - a simplification, not a precise model)
+  'Flooded Strand': ['W', 'U'], 'Polluted Delta': ['U', 'B'], 'Bloodstained Mire': ['B', 'R'],
+  'Wooded Foothills': ['R', 'G'], 'Windswept Heath': ['G', 'W'], 'Marsh Flats': ['W', 'B'],
+  'Scalding Tarn': ['U', 'R'], 'Verdant Catacombs': ['B', 'G'], 'Arid Mesa': ['R', 'W'],
+  'Misty Rainforest': ['G', 'U'],
+  // Universal fixers
+  'Command Tower': ['W', 'U', 'B', 'R', 'G'], 'Exotic Orchard': ['W', 'U', 'B', 'R', 'G'],
+  'Path of Ancestry': ['W', 'U', 'B', 'R', 'G'], 'Arcane Signet': ['W', 'U', 'B', 'R', 'G'],
+  'Fellwar Stone': ['W', 'U', 'B', 'R', 'G'], 'Chromatic Lantern': ['W', 'U', 'B', 'R', 'G'],
+  // Signets (two-color rocks)
+  'Azorius Signet': ['W', 'U'], 'Dimir Signet': ['U', 'B'], 'Rakdos Signet': ['B', 'R'],
+  'Gruul Signet': ['R', 'G'], 'Selesnya Signet': ['G', 'W'], 'Orzhov Signet': ['W', 'B'],
+  'Izzet Signet': ['U', 'R'], 'Golgari Signet': ['B', 'G'], 'Boros Signet': ['R', 'W'],
+  'Simic Signet': ['G', 'U'],
+};
+
+// COLOR_SOURCES mixes actual lands (duals/shocks/fetches/Command Tower/Exotic
+// Orchard/Path of Ancestry) with mana rocks that happen to fix color
+// (Signets/Arcane Signet/Fellwar Stone/Chromatic Lantern) - both belong in
+// that table since it's about "what colors does this produce," but only the
+// former group counts toward land count. Listed separately here rather than
+// tagging COLOR_SOURCES entries, since land-vs-rock and color-production are
+// two independent questions about the same card.
+const NONBASIC_LAND_NAMES = new Set([
+  'Tundra', 'Underground Sea', 'Badlands', 'Taiga', 'Savannah', 'Scrubland',
+  'Volcanic Island', 'Bayou', 'Plateau', 'Tropical Island',
+  'Hallowed Fountain', 'Watery Grave', 'Blood Crypt', 'Stomping Ground', 'Temple Garden',
+  'Godless Shrine', 'Steam Vents', 'Overgrown Tomb', 'Sacred Foundry', 'Breeding Pool',
+  'Flooded Strand', 'Polluted Delta', 'Bloodstained Mire', 'Wooded Foothills', 'Windswept Heath',
+  'Marsh Flats', 'Scalding Tarn', 'Verdant Catacombs', 'Arid Mesa', 'Misty Rainforest',
+  'Command Tower', 'Exotic Orchard', 'Path of Ancestry',
+]);
+
+function isLandCard(card) {
+  return (card.types || []).includes('Land')
+    || Object.prototype.hasOwnProperty.call(BASIC_LAND_COLORS, card.name)
+    || NONBASIC_LAND_NAMES.has(card.name);
+}
+
+// Frank Karsten's published mana-source-count research (ChannelFireball,
+// widely used as the community-standard reference), scaled from his 60-card
+// baseline (14/18/21+ sources for single/double/triple-pip) to Commander's
+// 99-card singleton format by the commonly-cited ~1.6x factor.
+const KARSTEN_TARGETS = { 1: 22, 2: 29, 3: 34 };
+
+function calculateManabaseScore(deck) {
+  if (!deck.mainDeck) return { grade: 'N/A', bySourceColor: {}, landCount: 0, recommendedLandRange: [36, 38] };
+
+  const allCards = [...deck.mainDeck];
+  if (deck.commander) allCards.push(deck.commander);
+  if (deck.partnerCommander?.name) allCards.push(deck.partnerCommander);
+
+  let landCount = 0;
+  const sourcesByColor = { W: 0, U: 0, B: 0, R: 0, G: 0 };
+  const demandByColor = { W: 0, U: 0, B: 0, R: 0, G: 0 };
+  const pipCountByColor = { W: 0, U: 0, B: 0, R: 0, G: 0 }; // for computing avg pips/card
+
+  allCards.forEach(card => {
+    const quantity = card.quantity || 1;
+
+    if (isLandCard(card)) landCount += quantity;
+
+    const basicColor = BASIC_LAND_COLORS[card.name];
+    if (basicColor) sourcesByColor[basicColor] += quantity;
+
+    const fixingColors = COLOR_SOURCES[card.name];
+    if (fixingColors) fixingColors.forEach(c => { sourcesByColor[c] += quantity; });
+
+    if (!isLandCard(card) && card.manaCost) {
+      const pipMatches = card.manaCost.match(/\{([WUBRG])\}/g) || [];
+      pipMatches.forEach(symbol => {
+        const color = symbol.replace(/[{}]/g, '');
+        demandByColor[color] += quantity;
+        pipCountByColor[color] += quantity;
+      });
+    }
+  });
+
+  const bySourceColor = {};
+  let worstGradeValue = null;
+
+  Object.keys(demandByColor).forEach(color => {
+    if (demandByColor[color] === 0) return; // color not actually played - no requirement
+
+    const nonLandCardsOfColor = allCards.filter(c => !isLandCard(c) && (c.manaCost || '').includes(`{${color}}`));
+    const cardCountOfColor = nonLandCardsOfColor.reduce((sum, c) => sum + (c.quantity || 1), 0) || 1;
+    const avgPipsPerCard = pipCountByColor[color] / cardCountOfColor;
+
+    let target;
+    if (avgPipsPerCard >= 3) target = KARSTEN_TARGETS[3];
+    else if (avgPipsPerCard >= 2) target = KARSTEN_TARGETS[2];
+    else target = KARSTEN_TARGETS[1];
+
+    const sources = sourcesByColor[color];
+    bySourceColor[color] = { sources, target };
+
+    const ratio = sources / target;
+    worstGradeValue = worstGradeValue === null ? ratio : Math.min(worstGradeValue, ratio);
+  });
+
+  let grade;
+  if (worstGradeValue === null) grade = 'N/A';
+  else if (worstGradeValue >= 1.1) grade = 'A';
+  else if (worstGradeValue >= 0.95) grade = 'A-';
+  else if (worstGradeValue >= 0.85) grade = 'B+';
+  else if (worstGradeValue >= 0.75) grade = 'B';
+  else if (worstGradeValue >= 0.65) grade = 'C';
+  else if (worstGradeValue >= 0.5) grade = 'D';
+  else grade = 'F';
+
+  return { grade, bySourceColor, landCount, recommendedLandRange: [36, 38] };
+}
+
 // Ported from frontend/src/components/DeckDetail.js:196-212 (was a useMemo over
 // `deck`; here it's a plain function since there's no React lifecycle server-side).
 function calculateSaltScore(deck) {
@@ -96,4 +229,4 @@ function estimatePowerLevel(deck, deckValue) {
   return { level: Math.min(10, Math.max(1, Math.round(3 + score))), breakdown };
 }
 
-module.exports = { calculateSaltScore, estimatePowerLevel, SALTY_CARDS, POWER_INDICATORS };
+module.exports = { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, SALTY_CARDS, POWER_INDICATORS, COLOR_SOURCES };
