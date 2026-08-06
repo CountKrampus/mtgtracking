@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Search, Trash2, Edit2, Save, X, RefreshCw, DollarSign, Camera, Settings,
-  CheckSquare, Square, MapPin, Layers, Zap, Crown, BarChart3, Heart, Plus, SlidersHorizontal, Bookmark,
+  CheckSquare, Square, MapPin, Layers, Zap, BarChart3, Heart, Plus, SlidersHorizontal, Bookmark,
   Upload, PlusCircle, ExternalLink, Mic, Bell, WifiOff, Flag, Copy
 } from 'lucide-react';
 import { standardTypes } from '../constants';
