@@ -12,7 +12,7 @@ const { fetchCardFromScryfall } = require('../utils/scryfallLookup');
 const Card = require('../models/Card');
 const CardPriceSnapshot = require('../models/CardPriceSnapshot');
 const CardPriceHistory = require('../models/CardPriceHistory');
-const { parseCardLine, getDuplicateCardQuery, validateCardPayload, validateBulkUpdatePayload, buildCardListQuery, normalizeTag } = require('../utils/cardUtils');
+const { parseCardLine, getDuplicateCardQuery, validateCardPayload, validateBulkUpdatePayload, buildCardListQuery, normalizeTag, findDuplicateGroups } = require('../utils/cardUtils');
 
 router.use(verifyToken);
 
@@ -52,6 +52,17 @@ router.get('/', requireAuth, async (req, res) => {
     }
 
     res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Find duplicate rows: exact duplicates plus Unknown-set merge suggestions
+router.get('/duplicates', requireAuth, async (req, res) => {
+  try {
+    const query = buildUserQuery({}, req);
+    const cards = await Card.find(query).sort({ createdAt: 1 }).lean();
+    res.json(findDuplicateGroups(cards));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

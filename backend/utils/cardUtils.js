@@ -225,6 +225,47 @@ function buildCardListQuery(req) {
   };
 }
 
+// Groups a user's cards into exact-duplicate groups (identical
+// name+set+condition+isFoil+collectorNumber) and Unknown-set merge
+// suggestions (same name+condition+isFoil, one row from an offline import).
+function findDuplicateGroups(cards) {
+  const exactKey = c =>
+    [c.name, c.set, c.condition, String(Boolean(c.isFoil)), c.collectorNumber || ''].join('||');
+
+  const byExactKey = new Map();
+  for (const card of cards) {
+    const key = exactKey(card);
+    if (!byExactKey.has(key)) byExactKey.set(key, []);
+    byExactKey.get(key).push(card);
+  }
+
+  const exactGroups = [];
+  const inExactGroup = new Set();
+  for (const group of byExactKey.values()) {
+    if (group.length > 1) {
+      exactGroups.push({ cards: group });
+      for (const card of group) inExactGroup.add(card._id.toString());
+    }
+  }
+
+  const suggestedGroups = [];
+  for (const card of cards) {
+    if (card.set !== 'Unknown') continue;
+    if (inExactGroup.has(card._id.toString())) continue;
+    const candidates = cards.filter(other =>
+      other.set !== 'Unknown' &&
+      other.name === card.name &&
+      other.condition === card.condition &&
+      Boolean(other.isFoil) === Boolean(card.isFoil)
+    );
+    if (candidates.length > 0) {
+      suggestedGroups.push({ unknownCard: card, candidates });
+    }
+  }
+
+  return { exactGroups, suggestedGroups };
+}
+
 module.exports = {
   VALID_CONDITIONS,
   VALID_PRIORITIES,
@@ -233,5 +274,6 @@ module.exports = {
   validateCardPayload,
   validateBulkUpdatePayload,
   buildCardListQuery,
-  normalizeTag
+  normalizeTag,
+  findDuplicateGroups
 };
