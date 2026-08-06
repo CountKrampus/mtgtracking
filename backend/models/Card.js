@@ -48,7 +48,16 @@ cardSchema.index({ colors: 1 });
 cardSchema.index({ types: 1 });
 cardSchema.index({ tags: 1 });
 cardSchema.index({ name: 1, set: 1, condition: 1, isFoil: 1 });
-cardSchema.index({ userId: 1, name: 1, set: 1, condition: 1, isFoil: 1 });
+// Duplicate prevention at the database level. collectorNumber is part of the
+// key so alt-art printings within one set coexist; rows without a collector
+// number (null) conflict with each other, which is exactly the exact-dupe
+// case the cleanup tool merges. If conflicting legacy rows still exist at
+// startup, Mongoose logs a failed index build and continues; run the
+// duplicate cleanup tool, then restart, and the build succeeds.
+cardSchema.index(
+  { userId: 1, name: 1, set: 1, condition: 1, isFoil: 1, collectorNumber: 1 },
+  { unique: true }
+);
 cardSchema.index({ userId: 1, setCode: 1, collectorNumber: 1, condition: 1, isFoil: 1 });
 cardSchema.index({ userId: 1, name: 1 });
 cardSchema.index({ userId: 1, set: 1 });
