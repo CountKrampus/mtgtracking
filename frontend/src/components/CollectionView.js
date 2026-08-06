@@ -17,6 +17,9 @@ import CommanderRecommendationsModal from './CollectionTools/CommanderRecommenda
 import SetCompletionModal from './CollectionTools/SetCompletionModal';
 import ComboFinderModal from './CollectionTools/ComboFinderModal';
 import FinancePanel from './CollectionTools/FinancePanel';
+import QRPreviewModal from './CollectionTools/QRPreviewModal';
+import PrintLabelsModal from './CollectionTools/PrintLabelsModal';
+import useQRLabels from '../hooks/useQRLabels';
 import { useAuthContext } from '../contexts/AuthContext';
 import { useCardCollection } from '../contexts/CardCollectionContext';
 import { useLocationTag } from '../contexts/LocationTagContext';
@@ -229,8 +232,6 @@ function CollectionView({
   fileInputRef,
   isImporting, setIsImporting, importProgress, setImportProgress, importResults, setImportResults,
   showImportResults, setShowImportResults,
-  showQRPreview, setShowQRPreview, qrPreviewLocation, setQRPreviewLocation,
-  qrDataUrls, setQrDataUrls, showPrintLabels, setShowPrintLabels, generateQR,
 }) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -269,6 +270,7 @@ function CollectionView({
   } = useCardCollection();
   const { locations, locationStats, availableTags, fetchAvailableTags } = useLocationTag();
   const { addToWishlist, fetchWishlist } = useWishlist();
+  const qrLabels = useQRLabels();
   const { settings } = useSettings();
   const { visibleColumns, isColumnVisible, toggleColumn, selectAllColumns, resetColumns, allColumns } = useColumnVisibility();
   const { addToast } = useToast();
@@ -2518,71 +2520,22 @@ function CollectionView({
           />
         )}
 
-        {/* QR Preview Modal */}
-        {showQRPreview && qrPreviewLocation && (
-          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
-            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-sm w-full p-6 border-2 border-purple-500 max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-white">QR Label</h3>
-                <button onClick={() => setShowQRPreview(false)} className="text-white/60 hover:text-white">
-                  <X size={24} />
-                </button>
-              </div>
-              <div className="bg-white rounded-lg p-4 text-center print-content">
-                {qrDataUrls[qrPreviewLocation.name] && (
-                  <img src={qrDataUrls[qrPreviewLocation.name]} alt="QR" className="mx-auto mb-2" />
-                )}
-                <div className="font-bold text-lg text-black">{qrPreviewLocation.name}</div>
-                <div className="text-gray-600 text-sm">
-                  {locationStats[qrPreviewLocation.name]?.cardCount || 0} cards | {formatPrice(locationStats[qrPreviewLocation.name]?.totalValue || 0)}
-                </div>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <button onClick={() => window.print()} className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold">
-                  Print
-                </button>
-                <button onClick={() => setShowQRPreview(false)} className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg">
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Print All Labels Modal */}
-        {showPrintLabels && (
-          <div className="fixed inset-0 bg-black/90 flex flex-col z-50 print:bg-white">
-            <div className="bg-gray-900 p-4 flex justify-between items-center print:hidden">
-              <h2 className="text-xl font-bold text-white">Print Location Labels ({locations.length})</h2>
-              <div className="flex gap-2">
-                <button onClick={() => window.print()} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold">
-                  Print
-                </button>
-                <button onClick={() => setShowPrintLabels(false)} className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg">
-                  Close
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-auto p-4 print:p-0 flex justify-center">
-              <div className="print-content bg-white p-4 print:p-2" style={{ width: '8.5in' }}>
-                <div className="grid grid-cols-3 gap-3">
-                  {locations.map(loc => (
-                    <div key={loc._id} className="label-item border border-gray-300 rounded p-2 flex items-center gap-2" style={{ height: '1in' }}>
-                      {qrDataUrls[loc.name] && (
-                        <img src={qrDataUrls[loc.name]} alt="QR" style={{ width: 70, height: 70 }} />
-                      )}
-                      <div className="flex-1 overflow-hidden">
-                        <div className="font-bold text-sm truncate text-black">{loc.name}</div>
-                        <div className="text-xs text-gray-600">{locationStats[loc.name]?.cardCount || 0} cards</div>
-                        <div className="text-xs text-gray-600">{formatPrice(locationStats[loc.name]?.totalValue || 0)}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <QRPreviewModal
+          showQRPreview={qrLabels.showQRPreview}
+          qrPreviewLocation={qrLabels.qrPreviewLocation}
+          setShowQRPreview={qrLabels.setShowQRPreview}
+          qrDataUrls={qrLabels.qrDataUrls}
+          locationStats={locationStats}
+          formatPrice={formatPrice}
+        />
+        <PrintLabelsModal
+          showPrintLabels={qrLabels.showPrintLabels}
+          setShowPrintLabels={qrLabels.setShowPrintLabels}
+          locations={locations}
+          qrDataUrls={qrLabels.qrDataUrls}
+          locationStats={locationStats}
+          formatPrice={formatPrice}
+        />
         {/* Camera OCR Modal */}
         {showCameraModal && (
           <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 text-white/50">Loading camera...</div>}>

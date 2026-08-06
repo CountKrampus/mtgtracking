@@ -3,7 +3,6 @@ import axios from 'axios';
 import lazyWithRetry from './utils/lazyWithRetry';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Search, Plus, Download, RefreshCw, DollarSign, Upload, Camera, Settings, Heart, Layers, Zap, Crown, BarChart3, Users, Home, BookOpen, Trophy, User, MessageSquare } from 'lucide-react';
-import QRCode from 'qrcode';
 import './App.css';
 import 'mana-font';
 import Sidebar from './components/Sidebar';
@@ -197,13 +196,6 @@ function App() {
 
   // Wishlist state is now in WishlistContext
 
-  // QR Labels
-  const [showQRPreview, setShowQRPreview] = useState(false);
-  const [qrPreviewLocation, setQRPreviewLocation] = useState(null);
-  const [qrDataUrls, setQrDataUrls] = useState({});
-  const [showPrintLabels, setShowPrintLabels] = useState(false);
-
-
   useEffect(() => {
     fetchCards();
   }, [fetchCards]);
@@ -213,17 +205,6 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('location')) navigate('/collection');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Generate QR code data URL for a location
-  const generateQR = async (locationName) => {
-    const url = `${window.location.origin}?location=${encodeURIComponent(locationName)}`;
-    try {
-      return await QRCode.toDataURL(url, { width: 150, margin: 1 });
-    } catch (err) {
-      console.error('QR generation failed:', err);
-      return null;
-    }
-  };
 
   const exportData = async (format) => {
     try {
@@ -319,7 +300,6 @@ function App() {
       }
       // Close any open modals
       if (showImportResults) { setShowImportResults(false); return; }
-      if (showQRPreview) { setShowQRPreview(false); return; }
       return;
     }
 
@@ -337,7 +317,7 @@ function App() {
       const cmd = paletteCommandsRef.current.find(c => c.id === commandId);
       if (cmd) cmd.action();
     }
-  }, [keyToCommand, showCommandPalette, showImportResults, showQRPreview]);
+  }, [keyToCommand, showCommandPalette, showImportResults]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyboardShortcut);
@@ -491,11 +471,6 @@ function App() {
                   importProgress={importProgress} setImportProgress={setImportProgress}
                   importResults={importResults} setImportResults={setImportResults}
                   showImportResults={showImportResults} setShowImportResults={setShowImportResults}
-                  showQRPreview={showQRPreview} setShowQRPreview={setShowQRPreview}
-                  qrPreviewLocation={qrPreviewLocation} setQRPreviewLocation={setQRPreviewLocation}
-                  qrDataUrls={qrDataUrls} setQrDataUrls={setQrDataUrls}
-                  showPrintLabels={showPrintLabels} setShowPrintLabels={setShowPrintLabels}
-                  generateQR={generateQR}
                 />
               </Suspense>
             } />
@@ -561,12 +536,6 @@ function App() {
                 handleCreateTag={handleCreateTag}
                 handleDeleteTag={handleDeleteTag}
                 handleToggleTagIgnorePrice={handleToggleTagIgnorePrice}
-                generateQR={generateQR}
-                qrDataUrls={qrDataUrls}
-                setQrDataUrls={setQrDataUrls}
-                setQRPreviewLocation={setQRPreviewLocation}
-                setShowQRPreview={setShowQRPreview}
-                setShowPrintLabels={setShowPrintLabels}
               />
             } />
 

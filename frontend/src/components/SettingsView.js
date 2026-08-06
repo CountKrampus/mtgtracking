@@ -4,6 +4,9 @@ import { Settings, Plus, Trash2, Edit2, MapPin, QrCode, Printer, Layers, Heart, 
 import { API_URL } from '../config';
 import DeckFoldersTab from './DeckFoldersTab';
 import WebhooksTab from './WebhooksTab';
+import useQRLabels from '../hooks/useQRLabels';
+import QRPreviewModal from './CollectionTools/QRPreviewModal';
+import PrintLabelsModal from './CollectionTools/PrintLabelsModal';
 
 export default function SettingsView({
   settings, updateSettings, resetSettings, formatPrice,
@@ -12,8 +15,8 @@ export default function SettingsView({
   editingLocation, handleCreateLocation, handleUpdateLocation, cancelEditLocation,
   startEditLocation, handleDeleteLocation, handleToggleLocationIgnorePrice,
   newTagName, setNewTagName, handleCreateTag, handleDeleteTag, handleToggleTagIgnorePrice,
-  generateQR, qrDataUrls, setQrDataUrls, setQRPreviewLocation, setShowQRPreview, setShowPrintLabels
 }) {
+    const qrLabels = useQRLabels();
     const [settingsTab, setSettingsTab] = React.useState('display');
     const [clearCollectionConfirm, setClearCollectionConfirm] = React.useState(false);
     const [clearCacheConfirm, setClearCacheConfirm] = React.useState(false);
@@ -391,10 +394,10 @@ export default function SettingsView({
                   onClick={async () => {
                     const urls = {};
                     for (const loc of locations) {
-                      urls[loc.name] = await generateQR(loc.name);
+                      urls[loc.name] = await qrLabels.generateQR(loc.name);
                     }
-                    setQrDataUrls(urls);
-                    setShowPrintLabels(true);
+                    qrLabels.setQrDataUrls(urls);
+                    qrLabels.setShowPrintLabels(true);
                   }}
                   className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold flex items-center gap-1 transition"
                 >
@@ -435,10 +438,10 @@ export default function SettingsView({
                       </button>
                       <button
                         onClick={async () => {
-                          const dataUrl = await generateQR(location.name);
-                          setQrDataUrls(prev => ({ ...prev, [location.name]: dataUrl }));
-                          setQRPreviewLocation(location);
-                          setShowQRPreview(true);
+                          const dataUrl = await qrLabels.generateQR(location.name);
+                          qrLabels.setQrDataUrls(prev => ({ ...prev, [location.name]: dataUrl }));
+                          qrLabels.setQRPreviewLocation(location);
+                          qrLabels.setShowQRPreview(true);
                         }}
                         className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded transition"
                         title="Generate QR Label"
@@ -537,6 +540,23 @@ export default function SettingsView({
         {settingsTab === 'webhooks' && (
           <WebhooksTab />
         )}
+
+        <QRPreviewModal
+          showQRPreview={qrLabels.showQRPreview}
+          qrPreviewLocation={qrLabels.qrPreviewLocation}
+          setShowQRPreview={qrLabels.setShowQRPreview}
+          qrDataUrls={qrLabels.qrDataUrls}
+          locationStats={locationStats}
+          formatPrice={formatPrice}
+        />
+        <PrintLabelsModal
+          showPrintLabels={qrLabels.showPrintLabels}
+          setShowPrintLabels={qrLabels.setShowPrintLabels}
+          locations={locations}
+          qrDataUrls={qrLabels.qrDataUrls}
+          locationStats={locationStats}
+          formatPrice={formatPrice}
+        />
       </div>
     );
 }
