@@ -119,8 +119,7 @@ function calculateManabaseScore(deck) {
 
   let landCount = 0;
   const sourcesByColor = { W: 0, U: 0, B: 0, R: 0, G: 0 };
-  const demandByColor = { W: 0, U: 0, B: 0, R: 0, G: 0 };
-  const pipCountByColor = { W: 0, U: 0, B: 0, R: 0, G: 0 }; // for computing avg pips/card
+  const pipCountByColor = { W: 0, U: 0, B: 0, R: 0, G: 0 }; // both "is this color played" and "avg pips/card"
 
   allCards.forEach(card => {
     const quantity = card.quantity || 1;
@@ -137,7 +136,6 @@ function calculateManabaseScore(deck) {
       const pipMatches = card.manaCost.match(/\{([WUBRG])\}/g) || [];
       pipMatches.forEach(symbol => {
         const color = symbol.replace(/[{}]/g, '');
-        demandByColor[color] += quantity;
         pipCountByColor[color] += quantity;
       });
     }
@@ -146,8 +144,16 @@ function calculateManabaseScore(deck) {
   const bySourceColor = {};
   let worstGradeValue = null;
 
-  Object.keys(demandByColor).forEach(color => {
-    if (demandByColor[color] === 0) return; // color not actually played - no requirement
+  // Grade is driven by the single worst-performing color with any pip
+  // demand, not an average - a deck's manabase is only as good as its
+  // weakest requirement, per the spec. Known tradeoff: a deliberately light
+  // splash (1-2 low-pip cards in a color with few dedicated sources) can
+  // still drag the whole grade down, even though light splashes are an
+  // accepted, low-risk pattern in real deckbuilding. Not fixed here since the
+  // spec calls for worst-color grading explicitly; revisit only if this
+  // proves misleading in practice against real decks.
+  Object.keys(pipCountByColor).forEach(color => {
+    if (pipCountByColor[color] === 0) return; // color not actually played - no requirement
 
     const nonLandCardsOfColor = allCards.filter(c => !isLandCard(c) && (c.manaCost || '').includes(`{${color}}`));
     const cardCountOfColor = nonLandCardsOfColor.reduce((sum, c) => sum + (c.quantity || 1), 0) || 1;
