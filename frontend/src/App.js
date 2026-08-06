@@ -223,10 +223,6 @@ function App() {
   const [loadingCombos, setLoadingCombos] = useState(false);
   const [comboTab, setComboTab] = useState('complete'); // 'complete' or 'partial'
 
-  const [forceUpdate, setForceUpdate] = useState(false); // Force update cards even if they have data
-  const [updateFullData, setUpdateFullData] = useState(false); // Update full card data (set, rarity, etc.)
-  const [showPriceUpdateModal, setShowPriceUpdateModal] = useState(false);
-
   // QR Labels
   const [showQRPreview, setShowQRPreview] = useState(false);
   const [qrPreviewLocation, setQRPreviewLocation] = useState(null);
@@ -683,7 +679,6 @@ function App() {
         return;
       }
       // Close any open modals
-      if (showPriceUpdateModal) { setShowPriceUpdateModal(false); return; }
       if (showCommanderRecs) { setShowCommanderRecs(false); setCommanderFinderMode('collection'); return; }
       if (showSetCompletion) { setShowSetCompletion(false); return; }
       if (showComboFinder) { setShowComboFinder(false); return; }
@@ -706,7 +701,7 @@ function App() {
       const cmd = paletteCommandsRef.current.find(c => c.id === commandId);
       if (cmd) cmd.action();
     }
-  }, [keyToCommand, showCommandPalette, showPriceUpdateModal, showCommanderRecs, showSetCompletion, showComboFinder, showImportResults, showQRPreview]);
+  }, [keyToCommand, showCommandPalette, showCommanderRecs, showSetCompletion, showComboFinder, showImportResults, showQRPreview]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyboardShortcut);
@@ -730,7 +725,7 @@ function App() {
       { id: 'act-import', label: 'Import Cards', icon: Upload, category: 'Actions', action: () => fileInputRef.current?.click() },
       { id: 'act-export-json', label: 'Export as JSON', icon: Download, category: 'Actions', action: () => exportData('json') },
       { id: 'act-export-csv', label: 'Export as CSV', icon: Download, category: 'Actions', action: () => exportData('csv') },
-      { id: 'act-prices', label: 'Update Prices', icon: RefreshCw, category: 'Actions', action: () => setShowPriceUpdateModal(true) },
+      { id: 'act-prices', label: 'Update Prices', icon: RefreshCw, category: 'Actions', action: () => navigate('/collection?tool=priceUpdate') },
       { id: 'act-text', label: 'Fetch Card Text', icon: RefreshCw, category: 'Actions', action: () => updateAllOracleText() },
       { id: 'act-finance', label: 'View Finance', icon: DollarSign, category: 'Actions', action: () => openFinancePanel() },
       { id: 'act-search', label: 'Focus Search', icon: Search, category: 'Actions', action: () => navigate('/collection') },
@@ -793,7 +788,7 @@ function App() {
         onImport={() => fileInputRef.current?.click()}
         onExportJSON={() => exportData('json')}
         onExportCSV={() => exportData('csv')}
-        onUpdatePrices={() => setShowPriceUpdateModal(true)}
+        onUpdatePrices={() => navigate('/collection?tool=priceUpdate')}
         onFetchCardText={updateAllOracleText}
         onCommanders={getCommanderRecommendations}
         onSets={getSetCompletionData}
@@ -843,7 +838,7 @@ function App() {
                     ignoredValue={ignoredValue}
                     onAddCard={() => navigate('/collection')}
                     onImport={() => fileInputRef.current?.click()}
-                    onUpdatePrices={() => setShowPriceUpdateModal(true)}
+                    onUpdatePrices={() => navigate('/collection?tool=priceUpdate')}
                     fileInputRef={fileInputRef}
                     isImporting={isImporting}
                     formatPrice={formatPrice}
@@ -856,9 +851,6 @@ function App() {
               <Suspense fallback={<LoadingFallback />}>
                 <CollectionView
                   fileInputRef={fileInputRef}
-                  showPriceUpdateModal={showPriceUpdateModal} setShowPriceUpdateModal={setShowPriceUpdateModal}
-                  forceUpdate={forceUpdate} setForceUpdate={setForceUpdate}
-                  updateFullData={updateFullData} setUpdateFullData={setUpdateFullData}
                   isImporting={isImporting} setIsImporting={setIsImporting}
                   importProgress={importProgress} setImportProgress={setImportProgress}
                   importResults={importResults} setImportResults={setImportResults}
