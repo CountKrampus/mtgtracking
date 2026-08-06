@@ -248,16 +248,33 @@ function CollectionView({
     // below removes 'tool' from searchParams, which re-triggers this effect
     // once more with tool now absent, so it self-terminates without looping.
     const tool = searchParams.get('tool');
+    if (!tool) return;
     const validTools = ['priceUpdate', 'commanderRecs', 'setCompletion', 'comboFinder', 'finance'];
-    if (tool && validTools.includes(tool)) {
+    if (validTools.includes(tool)) {
       setActiveTool(tool);
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        next.delete('tool');
-        return next;
-      }, { replace: true });
     }
+    // Strip 'tool' even when it's not a recognized value, so a mistyped or
+    // stale query param doesn't linger in the URL forever.
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('tool');
+      return next;
+    }, { replace: true });
   }, [searchParams, setSearchParams]);
+
+  // Restores the Escape-to-close behavior these five tools had when their
+  // open/closed state lived in App.js's own global keydown handler - that
+  // handler can no longer reach activeTool now that it's local to this
+  // component, so it's re-implemented here instead of dropped.
+  useEffect(() => {
+    if (!activeTool) return;
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') setActiveTool(null);
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [activeTool]);
+
   const { user: currentUser } = useAuthContext() || {};
 
   const {
