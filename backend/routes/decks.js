@@ -679,8 +679,14 @@ router.get('/:id/recommendations', requireAuth, async (req, res) => {
 // afterward - that route's duplicate-check compares scryfallId, and
 // getPriceWithFallback doesn't return one (price-only). Fetching the full
 // card once gives price + scryfallId + image + mana cost together.
+// Cached (24h, via cachedApiCall) since the same candidate pool is refetched
+// every time a user re-runs the builder at a different budget for the same
+// deck colors; `fromNetwork` tells the caller whether this call actually hit
+// Scryfall, so the 500ms courtesy delay can be skipped on cache hits.
 async function fetchCandidateCardData(name) {
-  try {
+  let fromNetwork = false;
+  const data = await cachedApiCall(`manabase-candidate:${name}`, async () => {
+    fromNetwork = true;
     const response = await axios.get(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(name)}`);
     return {
       scryfallId: response.data.id,
@@ -688,9 +694,11 @@ async function fetchCandidateCardData(name) {
       imageUrl: response.data.image_uris?.normal || response.data.card_faces?.[0]?.image_uris?.normal || null,
       price: response.data.prices?.usd ? parseFloat(response.data.prices.usd) : 0,
     };
-  } catch (error) {
+  }).catch(error => {
+    console.error(`Manabase builder: failed to fetch Scryfall data for "${name}":`, error.message);
     return { scryfallId: null, manaCost: '', imageUrl: null, price: 0 };
-  }
+  });
+  return { ...data, fromNetwork };
 }
 
 // Suggests a budget-constrained fixing-land package for a deck: candidates
@@ -725,9 +733,9 @@ router.get('/:id/manabase-builder', requireAuth, async (req, res) => {
     const priced = [];
     for (const [name, entry] of candidateEntries) {
       const relevantColorCount = entry.colors.filter(c => deckColors.includes(c)).length;
-      const cardData = await fetchCandidateCardData(name);
+      const { fromNetwork, ...cardData } = await fetchCandidateCardData(name);
       priced.push({ name, colors: entry.colors, cycle: entry.cycle, relevantColorCount, ...cardData });
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (fromNetwork) await new Promise(resolve => setTimeout(resolve, 500));
     }
 
     const byValue = [...priced].sort((a, b) => {
