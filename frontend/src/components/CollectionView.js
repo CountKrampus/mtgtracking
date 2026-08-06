@@ -4,13 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import {
   Search, Trash2, Edit2, Save, X, RefreshCw, DollarSign, Camera, Settings,
   CheckSquare, Square, MapPin, Layers, Zap, Crown, BarChart3, Heart, Plus, SlidersHorizontal, Bookmark,
-  Upload, PlusCircle, ExternalLink, Mic, Bell, WifiOff, Flag
+  Upload, PlusCircle, ExternalLink, Mic, Bell, WifiOff, Flag, Copy
 } from 'lucide-react';
 import { standardTypes } from '../constants';
 import { buildScryfallSearchUrl } from '../utils/scryfallDeeplink';
 import useVoiceSearch from '../hooks/useVoiceSearch';
 import PriceAlertModal from './PriceAlertModal';
 import PriceFlagModal from './PriceFlagModal';
+import DuplicateCleanup from './DuplicateCleanup';
 import { useAuthContext } from '../contexts/AuthContext';
 import { useCardCollection } from '../contexts/CardCollectionContext';
 import { useLocationTag } from '../contexts/LocationTagContext';
@@ -280,6 +281,7 @@ function CollectionView({
   const [showTagInput, setShowTagInput] = useState(null);
   const [newTag, setNewTag] = useState('');
   const [showCameraModal, setShowCameraModal] = useState(false);
+  const [showDuplicateCleanup, setShowDuplicateCleanup] = useState(false);
   const [formData, setFormData] = useState({
     name: '', set: '', setCode: '', collectorNumber: '', rarity: '',
     quantity: 1, condition: settings.defaultCondition, price: 0,
@@ -1037,6 +1039,14 @@ function CollectionView({
                 <span>View on Scryfall</span>
               </a>
             )}
+            <button
+              onClick={() => setShowDuplicateCleanup(true)}
+              className="flex items-center gap-1 px-3 py-1 bg-white/10 hover:bg-white/20 text-white/70 hover:text-white rounded-lg text-sm transition"
+              title="Find and merge duplicate cards"
+            >
+              <Copy size={14} />
+              <span>Find Duplicates</span>
+            </button>
           </div>
             </div>
               )}
@@ -3150,6 +3160,12 @@ function CollectionView({
             />
           </Suspense>
         )}
+
+        <DuplicateCleanup
+          isOpen={showDuplicateCleanup}
+          onClose={() => setShowDuplicateCleanup(false)}
+          onMerged={fetchCards}
+        />
 
         <CollectionFAB
           onAddCard={() => {
