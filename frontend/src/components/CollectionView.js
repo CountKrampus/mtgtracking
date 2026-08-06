@@ -244,6 +244,13 @@ function CollectionView({
   // these tools only render while /collection is actually mounted.
   const [activeTool, setActiveTool] = useState(null);
   useEffect(() => {
+    // Depends on searchParams (not mount-only) because navigating here while
+    // ALREADY on /collection - e.g. clicking a Sidebar tool button, which is
+    // rendered outside <Routes> and never unmounts this component - only
+    // changes the query string, it doesn't remount CollectionView. A
+    // mount-only effect would silently miss that case. Stripping the param
+    // below removes 'tool' from searchParams, which re-triggers this effect
+    // once more with tool now absent, so it self-terminates without looping.
     const tool = searchParams.get('tool');
     const validTools = ['priceUpdate', 'commanderRecs', 'setCompletion', 'comboFinder', 'finance'];
     if (tool && validTools.includes(tool)) {
@@ -254,8 +261,7 @@ function CollectionView({
         return next;
       }, { replace: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParams, setSearchParams]);
   const { user: currentUser } = useAuthContext() || {};
 
   const {
