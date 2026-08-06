@@ -615,17 +615,36 @@ router.get('/:id/recommendations', requireAuth, async (req, res) => {
     ].filter(Boolean));
 
     const searchQuery = `(${RECOMMENDATION_CATEGORIES[category]}) ${colorQuery}`;
-    const data = await cachedApiCall(`scryfall-search:${searchQuery}`, async () => {
-      const response = await axios.get(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}&order=edhrec&unique=cards`);
-      return response.data;
-    });
+    let data;
+    try {
+      data = await cachedApiCall(`scryfall-search:${searchQuery}`, async () => {
+        const response = await axios.get(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}&order=edhrec&unique=cards`);
+        return response.data;
+      });
+    } catch (scryfallError) {
+      // Matches cardInsights.js's similar/synergies pattern: a failed/rate-
+      // limited Scryfall call degrades to a fallback query rather than 500ing
+      // the whole route. Here the fallback drops the color-identity filter
+      // (the category query alone still returns something useful).
+      try {
+        data = await cachedApiCall(`scryfall-search:${RECOMMENDATION_CATEGORIES[category]}`, async () => {
+          const fallback = await axios.get(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(RECOMMENDATION_CATEGORIES[category])}&order=edhrec&unique=cards`);
+          return fallback.data;
+        });
+      } catch (fallbackError) {
+        data = { data: [] };
+      }
+    }
 
-    let candidates = (data.data || [])
-      .filter(c => !excludedNames.has(c.name))
-      .slice(0, 20);
+    // Ownership is determined and filtered BEFORE truncating to a display
+    // count - candidates are Scryfall-popularity-ordered, so a user's owned
+    // matches often rank outside any small fixed window. Truncating first
+    // would make scope=owned look sparse/empty for real collections even
+    // when good matches exist further down the same result page.
+    const candidates = (data.data || []).filter(c => !excludedNames.has(c.name));
 
-    let ownedScryfallIds = new Set();
-    let ownedNames = new Set();
+    const ownedScryfallIds = new Set();
+    const ownedNames = new Set();
     if (Card) {
       const cardQuery = buildUserQuery({}, req);
       const collectionCards = await Card.find(cardQuery);
@@ -638,7 +657,8 @@ router.get('/:id/recommendations', requireAuth, async (req, res) => {
     const isOwned = (scryfallCard) => ownedScryfallIds.has(scryfallCard.id) || ownedNames.has(scryfallCard.name);
 
     const cardsWithOwnership = candidates.map(c => ({ ...c, owned: isOwned(c) }));
-    const cards = scope === 'owned' ? cardsWithOwnership.filter(c => c.owned) : cardsWithOwnership;
+    const scoped = scope === 'owned' ? cardsWithOwnership.filter(c => c.owned) : cardsWithOwnership;
+    const cards = scoped.slice(0, 20);
 
     res.json({ category, scope, cards });
   } catch (error) {
