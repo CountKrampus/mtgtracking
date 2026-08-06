@@ -17,7 +17,7 @@ const { requireAuth, requireEditor } = require('../middleware/auth');
 const { buildUserQuery, getUserId } = require('../middleware/multiUser');
 const { activityLoggers } = require('../middleware/activityLogger');
 const { checkAndAwardBadges } = require('../utils/badgeManager');
-const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore } = require('../utils/deckAnalysis');
+const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore, COLOR_SOURCES } = require('../utils/deckAnalysis');
 const { cachedApiCall } = require('../utils/apiCache');
 const User = require('../models/User');
 
@@ -48,7 +48,13 @@ const RECOMMENDATION_CATEGORIES = {
 // calculateManabaseScore/estimatePowerLevel in utils/deckAnalysis.js.
 function getDeckColorIdentity(deck) {
   const colors = new Set();
-  [deck.commander, deck.partnerCommander, ...deck.mainDeck].forEach(card => {
+  // commander/partnerCommander store color identity under `colorIdentity`
+  // (per the Deck schema), while mainDeck cards store it under `colors` -
+  // these are genuinely different field names, not interchangeable.
+  [deck.commander, deck.partnerCommander].forEach(card => {
+    (card?.colorIdentity || []).forEach(c => colors.add(c));
+  });
+  deck.mainDeck.forEach(card => {
     (card?.colors || []).forEach(c => colors.add(c));
   });
   return Array.from(colors);
@@ -661,6 +667,85 @@ router.get('/:id/recommendations', requireAuth, async (req, res) => {
     const cards = scoped.slice(0, 20);
 
     res.json({ category, scope, cards });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Looks up each candidate directly via Scryfall's /cards/named (the same
+// endpoint utils/pricing.js's getPriceWithFallback calls internally) instead
+// of calling getPriceWithFallback itself, because every candidate here needs
+// a real, distinct scryfallId for POST /:id/add-card to work correctly
+// afterward - that route's duplicate-check compares scryfallId, and
+// getPriceWithFallback doesn't return one (price-only). Fetching the full
+// card once gives price + scryfallId + image + mana cost together.
+async function fetchCandidateCardData(name) {
+  try {
+    const response = await axios.get(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(name)}`);
+    return {
+      scryfallId: response.data.id,
+      manaCost: response.data.mana_cost || '',
+      imageUrl: response.data.image_uris?.normal || response.data.card_faces?.[0]?.image_uris?.normal || null,
+      price: response.data.prices?.usd ? parseFloat(response.data.prices.usd) : 0,
+    };
+  } catch (error) {
+    return { scryfallId: null, manaCost: '', imageUrl: null, price: 0 };
+  }
+}
+
+// Suggests a budget-constrained fixing-land package for a deck: candidates
+// are drawn from COLOR_SOURCES filtered to the deck's actual color identity
+// and priced live via Scryfall, then greedily packed by color-fixing-value-
+// per-dollar until the budget runs out.
+router.get('/:id/manabase-builder', requireAuth, async (req, res) => {
+  try {
+    const budget = parseFloat(req.query.budget);
+    if (!budget || budget <= 0) {
+      return res.status(400).json({ message: 'budget is required and must be a positive number' });
+    }
+
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(query);
+    if (!deck) return res.status(404).json({ message: 'Deck not found' });
+
+    const deckColors = getDeckColorIdentity(deck);
+    const existingNames = new Set([
+      ...deck.mainDeck.map(c => c.name),
+      deck.commander?.name,
+      deck.partnerCommander?.name,
+    ].filter(Boolean));
+
+    const candidateEntries = Object.entries(COLOR_SOURCES).filter(([name, entry]) =>
+      !existingNames.has(name) && entry.colors.some(c => deckColors.includes(c))
+    );
+
+    // Sequential with a small delay, matching this codebase's existing
+    // convention for repeated Scryfall lookups (bulk price updates elsewhere
+    // in this app use the same 500ms-between-calls courtesy).
+    const priced = [];
+    for (const [name, entry] of candidateEntries) {
+      const relevantColorCount = entry.colors.filter(c => deckColors.includes(c)).length;
+      const cardData = await fetchCandidateCardData(name);
+      priced.push({ name, colors: entry.colors, cycle: entry.cycle, relevantColorCount, ...cardData });
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    const byValue = [...priced].sort((a, b) => {
+      const aValue = a.price > 0 ? a.relevantColorCount / a.price : 0;
+      const bValue = b.price > 0 ? b.relevantColorCount / b.price : 0;
+      return bValue - aValue;
+    });
+
+    const suggested = [];
+    let runningTotal = 0;
+    for (const card of byValue) {
+      if (card.price === 0) continue; // no price data - skip from auto-suggestion, still listed in candidates
+      if (runningTotal + card.price > budget) continue;
+      suggested.push(card);
+      runningTotal += card.price;
+    }
+
+    res.json({ budget, suggested, candidates: priced });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -61,7 +61,7 @@ function scryfallCard(overrides) {
 describe('GET /api/decks/:id/recommendations', () => {
   test('requires a valid category', async () => {
     const user = await makeUser();
-    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['G'] }, mainDeck: [] });
+    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colorIdentity: ['G'] }, mainDeck: [] });
     const token = tokenFor(user);
 
     await request(app)
@@ -75,7 +75,7 @@ describe('GET /api/decks/:id/recommendations', () => {
     const deck = await Deck.create({
       userId: user._id,
       name: 'Test Deck',
-      commander: { name: 'Test Commander', colors: ['G'] },
+      commander: { name: 'Test Commander', colorIdentity: ['G'] },
       mainDeck: [{ name: 'Rampant Growth', manaCost: '{1}{G}', types: ['Sorcery'], colors: ['G'], scryfallId: 'already-in-deck' }]
     });
     const token = tokenFor(user);
@@ -96,9 +96,32 @@ describe('GET /api/decks/:id/recommendations', () => {
     expect(requestedUrl).toContain('id%3C%3Dg'); // id<=g, url-encoded
   });
 
+  test('uses the commander color identity even with an empty mainDeck', async () => {
+    // Regression: getDeckColorIdentity must read colorIdentity off the
+    // commander (the actual Deck schema field), not `colors` - a deck with
+    // no mainDeck cards has no other source of color signal, so this would
+    // silently degrade to id:c (colorless) if the commander were misread.
+    const user = await makeUser();
+    const deck = await Deck.create({
+      userId: user._id, name: 'Test Deck',
+      commander: { name: 'Test Commander', colorIdentity: ['G', 'U'] }, mainDeck: []
+    });
+    const token = tokenFor(user);
+
+    axios.get.mockResolvedValueOnce({ data: { data: [] } });
+
+    await request(app)
+      .get(`/api/decks/${deck._id}/recommendations?category=ramp&scope=all`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    const requestedUrl = axios.get.mock.calls[0][0];
+    expect(requestedUrl).toContain('id%3C%3Dgu'); // id<=gu, url-encoded
+  });
+
   test('scope=owned filters results down to cards in the collection by scryfallId', async () => {
     const user = await makeUser();
-    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['G'] }, mainDeck: [] });
+    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colorIdentity: ['G'] }, mainDeck: [] });
     await Card.create({ userId: user._id, name: 'Cultivate', condition: 'NM', scryfallId: 'candidate-1', quantity: 1 });
     const token = tokenFor(user);
 
@@ -117,7 +140,7 @@ describe('GET /api/decks/:id/recommendations', () => {
 
   test('scope=owned falls back to name matching for collection cards missing a scryfallId', async () => {
     const user = await makeUser();
-    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['G'] }, mainDeck: [] });
+    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colorIdentity: ['G'] }, mainDeck: [] });
     await Card.create({ userId: user._id, name: 'Cultivate', condition: 'NM', quantity: 1 }); // no scryfallId (offline import)
     const token = tokenFor(user);
 
@@ -135,7 +158,7 @@ describe('GET /api/decks/:id/recommendations', () => {
 
   test('scope=owned name-fallback match is case-insensitive', async () => {
     const user = await makeUser();
-    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['G'] }, mainDeck: [] });
+    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colorIdentity: ['G'] }, mainDeck: [] });
     // Offline imports can store non-canonical casing; Scryfall's name is the
     // canonical "Cultivate".
     await Card.create({ userId: user._id, name: 'cultivate', condition: 'NM', quantity: 1 });
@@ -155,7 +178,7 @@ describe('GET /api/decks/:id/recommendations', () => {
 
   test('scope=all marks each card with the correct owned flag rather than filtering', async () => {
     const user = await makeUser();
-    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['G'] }, mainDeck: [] });
+    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colorIdentity: ['G'] }, mainDeck: [] });
     await Card.create({ userId: user._id, name: 'Cultivate', condition: 'NM', scryfallId: 'candidate-1', quantity: 1 });
     const token = tokenFor(user);
 
@@ -176,7 +199,7 @@ describe('GET /api/decks/:id/recommendations', () => {
 
   test('scope=owned finds an owned card ranked outside the top 20 Scryfall results, not just the first page', async () => {
     const user = await makeUser();
-    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['G'] }, mainDeck: [] });
+    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colorIdentity: ['G'] }, mainDeck: [] });
     // The owned card is ranked 21st by Scryfall/EDHREC popularity - a naive
     // slice(0, 20) applied before ownership filtering would never see it.
     await Card.create({ userId: user._id, name: 'Card 21', condition: 'NM', scryfallId: 'candidate-21', quantity: 1 });
@@ -195,14 +218,14 @@ describe('GET /api/decks/:id/recommendations', () => {
 
   test('rejects unauthenticated requests', async () => {
     const user = await makeUser();
-    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['G'] }, mainDeck: [] });
+    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colorIdentity: ['G'] }, mainDeck: [] });
     await request(app).get(`/api/decks/${deck._id}/recommendations?category=ramp`).expect(401);
   });
 
   test('404s for a deck that does not belong to the requesting user', async () => {
     const owner = await makeUser();
     const otherUser = await User.create({ email: 'other@test.com', username: 'other', passwordHash: 'x', role: 'editor' });
-    const deck = await Deck.create({ userId: owner._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['G'] }, mainDeck: [] });
+    const deck = await Deck.create({ userId: owner._id, name: 'Test Deck', commander: { name: 'Test Commander', colorIdentity: ['G'] }, mainDeck: [] });
 
     await request(app)
       .get(`/api/decks/${deck._id}/recommendations?category=ramp`)
