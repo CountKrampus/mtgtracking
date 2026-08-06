@@ -360,10 +360,10 @@ function calculateDeckHealthScore(deck) {
   });
 
   // Curve smoothness: penalize decks that are too top-heavy (fewer than 30% of
-  // nonland cards at CMC 0-2) or too thin early (fewer than 10% at CMC 0-1).
+  // nonland cards at CMC 0-2) or too thin early (fewer than 10% at CMC 1-2).
   const nonLandTotal = totalCards - landCards;
   const cheapCards = curveBuckets[0] + curveBuckets[1] + curveBuckets[2];
-  const veryCheapCards = curveBuckets[0] + curveBuckets[1];
+  const veryCheapCards = curveBuckets[1] + curveBuckets[2];
   let curveSmoothness = 100;
   if (nonLandTotal > 0) {
     const cheapRatio = cheapCards / nonLandTotal;
