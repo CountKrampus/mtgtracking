@@ -202,16 +202,6 @@ function App() {
 
   // Wishlist state is now in WishlistContext
 
-  // Commander Recommendations
-  const [showCommanderRecs, setShowCommanderRecs] = useState(false);
-  const [commanderRecs, setCommanderRecs] = useState([]);
-  const [loadingCommanders, setLoadingCommanders] = useState(false);
-  const [commanderColorFilter, setCommanderColorFilter] = useState('auto');
-  const [commanderFinderMode, setCommanderFinderMode] = useState('collection'); // 'collection' | 'finder'
-  const [finderColors, setFinderColors] = useState([]);
-  const [finderThemes, setFinderThemes] = useState([]);
-  const [finderCreatureType, setFinderCreatureType] = useState('');
-
   // Set Completion Tracker
   const [showSetCompletion, setShowSetCompletion] = useState(false);
   const [completionData, setCompletionData] = useState([]);
@@ -258,206 +248,6 @@ function App() {
       setShowFinancePanel(true);
     } catch (error) {
       console.error('Error fetching finance data:', error);
-    }
-  };
-
-  // Commander Recommendations Functions
-  const getCommanderRecommendations = async () => {
-    setShowCommanderRecs(true);
-    setLoadingCommanders(true);
-    setCommanderRecs([]);
-
-    try {
-      // Analyze collection to find dominant colors
-      const colorCounts = { W: 0, U: 0, B: 0, R: 0, G: 0 };
-      const themeCounts = {};
-
-      cards.forEach(card => {
-        // Count colors
-        if (card.colors) {
-          card.colors.forEach(color => {
-            const c = color[0].toUpperCase();
-            if (colorCounts[c] !== undefined) {
-              colorCounts[c] += card.quantity;
-            }
-          });
-        }
-
-        // Detect themes from oracle text
-        const oracleText = (card.oracleText || '').toLowerCase();
-        const themes = [
-          { name: 'tokens', patterns: [/create.*token/, /token.*creature/] },
-          { name: 'graveyard', patterns: [/from.*graveyard/, /into.*graveyard/, /mill/] },
-          { name: 'counters', patterns: [/\+1\/\+1 counter/, /proliferate/] },
-          { name: 'lifegain', patterns: [/gain.*life/, /lifelink/] },
-          { name: 'sacrifice', patterns: [/sacrifice.*creature/, /when.*dies/] },
-          { name: 'spellslinger', patterns: [/instant.*sorcery/, /when.*cast.*spell/] },
-          { name: 'artifacts', patterns: [/artifact.*enter/, /artifact.*you.*control/] },
-          { name: 'enchantments', patterns: [/enchantment.*enter/, /constellation/] },
-          { name: 'tribal', patterns: [/creature.*type/, /creatures.*you.*control.*get/] },
-          { name: 'ramp', patterns: [/add.*mana/, /search.*land/] },
-          { name: 'draw', patterns: [/draw.*card/, /whenever.*draw/] },
-          { name: 'control', patterns: [/counter.*spell/, /destroy.*target/, /exile.*target/] }
-        ];
-
-        themes.forEach(({ name, patterns }) => {
-          if (patterns.some(p => p.test(oracleText))) {
-            themeCounts[name] = (themeCounts[name] || 0) + card.quantity;
-          }
-        });
-      });
-
-      // Determine color identity to search
-      let colorQuery = '';
-      if (commanderColorFilter === 'auto') {
-        // Find top 2-3 colors
-        const sortedColors = Object.entries(colorCounts)
-          .sort((a, b) => b[1] - a[1])
-          .filter(([_, count]) => count > 0);
-
-        if (sortedColors.length >= 2) {
-          const topColors = sortedColors.slice(0, 3).map(([c]) => c.toLowerCase());
-          colorQuery = `id:${topColors.join('')}`;
-        }
-      } else if (commanderColorFilter !== 'all') {
-        colorQuery = `id:${commanderColorFilter}`;
-      }
-
-      // Determine top theme
-      const topTheme = Object.entries(themeCounts).sort((a, b) => b[1] - a[1])[0];
-      let themeQuery = '';
-      if (topTheme) {
-        const themeSearches = {
-          tokens: 'o:"create" o:"token"',
-          graveyard: 'o:"graveyard"',
-          counters: 'o:"+1/+1 counter"',
-          lifegain: 'o:"gain" o:"life"',
-          sacrifice: 'o:"sacrifice"',
-          spellslinger: 'o:"instant" o:"sorcery"',
-          artifacts: 'o:"artifact"',
-          enchantments: 'o:"enchantment"',
-          tribal: 'o:"creature" o:"type"',
-          ramp: 'o:"add" o:"mana"',
-          draw: 'o:"draw" o:"card"',
-          control: 'o:"counter" OR o:"destroy"'
-        };
-        themeQuery = themeSearches[topTheme[0]] || '';
-      }
-
-      // Search for legendary creatures
-      const searchQuery = `t:legendary t:creature ${colorQuery} ${themeQuery}`.trim();
-      const response = await axios.get(
-        `https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}&order=edhrec&unique=cards`
-      );
-
-      setCommanderRecs(response.data.data.slice(0, 20));
-    } catch (error) {
-      console.error('Error getting commander recommendations:', error);
-      // Fallback: just get popular commanders
-      try {
-        const response = await axios.get(
-          'https://api.scryfall.com/cards/search?q=t:legendary+t:creature&order=edhrec&unique=cards'
-        );
-        setCommanderRecs(response.data.data.slice(0, 20));
-      } catch (e) {
-        setCommanderRecs([]);
-      }
-    } finally {
-      setLoadingCommanders(false);
-    }
-  };
-
-  const addCommanderToCollection = async (scryfallCard) => {
-    try {
-      const response = await axios.get(`${API_URL}/scryfall/search?name=${encodeURIComponent(scryfallCard.name)}`);
-      const cardData = response.data;
-
-      await axios.post(`${API_URL}/cards`, {
-        name: cardData.name,
-        set: cardData.set,
-        setCode: cardData.setCode,
-        collectorNumber: cardData.collectorNumber,
-        rarity: cardData.rarity,
-        quantity: 1,
-        condition: 'NM',
-        price: cardData.prices?.usd || 0,
-        colors: cardData.colors,
-        types: cardData.types,
-        manaCost: cardData.manaCost,
-        scryfallId: cardData.scryfallId,
-        imageUrl: cardData.imageUrl,
-        oracleText: cardData.oracleText,
-        tags: ['commander'],
-        location: ''
-      });
-
-      alert(`Added ${cardData.name} to your collection!`);
-      fetchCards();
-    } catch (error) {
-      console.error('Error adding commander:', error);
-      alert('Error adding commander to collection');
-    }
-  };
-
-  const searchCommandersByPreference = async () => {
-    setLoadingCommanders(true);
-    setCommanderRecs([]);
-
-    const themeSearches = {
-      tokens: 'o:"create" o:"token"',
-      graveyard: 'o:"graveyard"',
-      counters: 'o:"+1/+1 counter"',
-      lifegain: 'o:"gain" o:"life"',
-      sacrifice: 'o:"sacrifice"',
-      spellslinger: '(o:"instant" o:"sorcery")',
-      artifacts: 'o:"artifact"',
-      enchantments: 'o:"enchantment"',
-      tribal: 'o:"creature you control"',
-      ramp: 'o:"search your library" o:"land"',
-      draw: 'o:"draw" o:"card"',
-      control: '(o:"counter target" OR o:"destroy target")',
-      voltron: '(o:"equip" OR o:"aura" OR o:"attach")',
-      mill: 'o:"mill"',
-      blink: '(o:"exile" o:"return" o:"battlefield")',
-      stax: '(o:"can\'t" OR o:"don\'t untap")',
-      grouphug: '(o:"each player" o:"draw")',
-      aristocrats: '(o:"when" o:"dies")',
-      storm: '(o:"copy" o:"spell")',
-      landfall: 'o:"landfall"',
-    };
-
-    try {
-      let parts = ['t:legendary', 't:creature'];
-
-      // Color identity
-      if (finderColors.length > 0) {
-        parts.push(`id<=${finderColors.join('').toLowerCase()}`);
-      }
-
-      // Themes (OR them together if multiple)
-      const themeQueries = finderThemes.map(t => themeSearches[t]).filter(Boolean);
-      if (themeQueries.length === 1) {
-        parts.push(themeQueries[0]);
-      } else if (themeQueries.length > 1) {
-        parts.push(`(${themeQueries.join(' OR ')})`);
-      }
-
-      // Creature type
-      if (finderCreatureType.trim()) {
-        parts.push(`t:${finderCreatureType.trim().toLowerCase()}`);
-      }
-
-      const searchQuery = parts.join(' ');
-      const response = await axios.get(
-        `https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}&order=edhrec&unique=cards`
-      );
-
-      setCommanderRecs(response.data.data.slice(0, 20));
-    } catch (error) {
-      console.error('Error searching commanders by preference:', error);
-      setCommanderRecs([]);
-    } finally {
-      setLoadingCommanders(false);
     }
   };
 
@@ -679,7 +469,6 @@ function App() {
         return;
       }
       // Close any open modals
-      if (showCommanderRecs) { setShowCommanderRecs(false); setCommanderFinderMode('collection'); return; }
       if (showSetCompletion) { setShowSetCompletion(false); return; }
       if (showComboFinder) { setShowComboFinder(false); return; }
       if (showImportResults) { setShowImportResults(false); return; }
@@ -701,7 +490,7 @@ function App() {
       const cmd = paletteCommandsRef.current.find(c => c.id === commandId);
       if (cmd) cmd.action();
     }
-  }, [keyToCommand, showCommandPalette, showCommanderRecs, showSetCompletion, showComboFinder, showImportResults, showQRPreview]);
+  }, [keyToCommand, showCommandPalette, showSetCompletion, showComboFinder, showImportResults, showQRPreview]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyboardShortcut);
@@ -730,7 +519,7 @@ function App() {
       { id: 'act-finance', label: 'View Finance', icon: DollarSign, category: 'Actions', action: () => openFinancePanel() },
       { id: 'act-search', label: 'Focus Search', icon: Search, category: 'Actions', action: () => navigate('/collection') },
       // Tools
-      { id: 'tool-commanders', label: 'Commander Recommendations', icon: Crown, category: 'Tools', action: () => getCommanderRecommendations(), feature: 'commanderRecs' },
+      { id: 'tool-commanders', label: 'Commander Recommendations', icon: Crown, category: 'Tools', action: () => navigate('/collection?tool=commanderRecs'), feature: 'commanderRecs' },
       { id: 'tool-sets', label: 'Set Completion Tracker', icon: BarChart3, category: 'Tools', action: () => getSetCompletionData(), feature: 'setCompletion' },
       { id: 'tool-combos', label: 'Find Combos', icon: Zap, category: 'Tools', action: () => findCombos(), feature: 'comboFinder' },
       { id: 'tool-camera', label: 'Scan Card with Camera', icon: Camera, category: 'Tools', action: () => navigate('/collection') },
@@ -790,7 +579,7 @@ function App() {
         onExportCSV={() => exportData('csv')}
         onUpdatePrices={() => navigate('/collection?tool=priceUpdate')}
         onFetchCardText={updateAllOracleText}
-        onCommanders={getCommanderRecommendations}
+        onCommanders={() => navigate('/collection?tool=commanderRecs')}
         onSets={getSetCompletionData}
         onCombos={findCombos}
         onFinance={openFinancePanel}
@@ -860,17 +649,6 @@ function App() {
                   qrDataUrls={qrDataUrls} setQrDataUrls={setQrDataUrls}
                   showPrintLabels={showPrintLabels} setShowPrintLabels={setShowPrintLabels}
                   generateQR={generateQR}
-                  showCommanderRecs={showCommanderRecs} setShowCommanderRecs={setShowCommanderRecs}
-                  commanderRecs={commanderRecs} setCommanderRecs={setCommanderRecs}
-                  loadingCommanders={loadingCommanders} setLoadingCommanders={setLoadingCommanders}
-                  commanderColorFilter={commanderColorFilter} setCommanderColorFilter={setCommanderColorFilter}
-                  commanderFinderMode={commanderFinderMode} setCommanderFinderMode={setCommanderFinderMode}
-                  finderColors={finderColors} setFinderColors={setFinderColors}
-                  finderThemes={finderThemes} setFinderThemes={setFinderThemes}
-                  finderCreatureType={finderCreatureType} setFinderCreatureType={setFinderCreatureType}
-                  getCommanderRecommendations={getCommanderRecommendations}
-                  searchCommandersByPreference={searchCommandersByPreference}
-                  addCommanderToCollection={addCommanderToCollection}
                   showSetCompletion={showSetCompletion} setShowSetCompletion={setShowSetCompletion}
                   completionData={completionData} setCompletionData={setCompletionData} loadingSetCompletion={loadingSetCompletion}
                   getSetCompletionData={getSetCompletionData}
