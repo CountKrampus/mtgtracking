@@ -121,4 +121,33 @@ describe('POST /api/cards/merge-duplicates', () => {
       .send({ targetId: card._id.toString(), sourceIds: [] })
       .expect(400);
   });
+
+  test('returns a clean 400 (not 500) if backfilling a field would collide with another card under the unique index', async () => {
+    await Card.syncIndexes();
+    const user = await makeUser();
+    const token = tokenFor(user);
+
+    // Target has no collectorNumber yet; a source will backfill '5', but a
+    // third, unrelated card already occupies that exact resulting key.
+    const collision = await Card.create({
+      userId: user._id, name: 'Opt', set: 'Ixalan', condition: 'NM', isFoil: false, collectorNumber: '5', quantity: 1
+    });
+    const target = await Card.create({
+      userId: user._id, name: 'Opt', set: 'Ixalan', condition: 'NM', isFoil: false, quantity: 1
+    });
+    const source = await Card.create({
+      userId: user._id, name: 'Opt', set: 'Unknown', condition: 'NM', isFoil: false, collectorNumber: '5', quantity: 1
+    });
+
+    const res = await request(app)
+      .post('/api/cards/merge-duplicates')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ targetId: target._id.toString(), sourceIds: [source._id.toString()] })
+      .expect(400);
+
+    expect(res.body.message).toMatch(/duplicate/i);
+    // Nothing was deleted - the failure happens on target.save(), before deleteMany.
+    expect(await Card.findById(source._id)).not.toBeNull();
+    expect(await Card.findById(collision._id)).not.toBeNull();
+  });
 });

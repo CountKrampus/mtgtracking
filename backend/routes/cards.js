@@ -69,7 +69,7 @@ router.get('/duplicates', requireAuth, async (req, res) => {
 });
 
 // Merge duplicate rows into a target card, deleting the sources
-router.post('/merge-duplicates', requireAuth, requireEditor, activityLoggers.cardUpdate, async (req, res) => {
+router.post('/merge-duplicates', requireAuth, requireEditor, activityLoggers.cardMerge, async (req, res) => {
   try {
     const { targetId, sourceIds } = req.body;
     if (!targetId || !Array.isArray(sourceIds) || sourceIds.length === 0) {
@@ -108,6 +108,14 @@ router.post('/merge-duplicates', requireAuth, requireEditor, activityLoggers.car
     clearCache(userId);
     res.json({ merged: true, target, removedCount: sources.length });
   } catch (error) {
+    // Backfilling an empty target field (e.g. collectorNumber) from a source
+    // can, in rare hand-edited-data cases, make the target's new unique-index
+    // key collide with some other untouched card - surface that as a normal
+    // 400 rather than a generic 500. The source rows are untouched (this
+    // failure happens on target.save(), before any deleteMany runs).
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Merging these cards would create a duplicate of another card in your collection' });
+    }
     res.status(500).json({ message: error.message });
   }
 });

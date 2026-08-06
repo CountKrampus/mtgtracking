@@ -99,6 +99,13 @@ const activityLoggers = {
     targetName: data?.name
   })),
 
+  cardMerge: createActivityLogger('card_merge', 'collection', (req, data) => ({
+    targetType: 'card',
+    targetId: data?.target?._id,
+    targetName: data?.target?.name,
+    extra: { removedCount: data?.removedCount }
+  })),
+
   cardDelete: createActivityLogger('card_delete', 'collection', (req) => ({
     targetType: 'card',
     targetId: req.params.id

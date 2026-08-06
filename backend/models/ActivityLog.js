@@ -27,6 +27,7 @@ const activityLogSchema = new mongoose.Schema({
       'card_create',
       'card_update',
       'card_delete',
+      'card_merge',
       'card_bulk_import',
       'card_bulk_update',
       'card_bulk_delete',
