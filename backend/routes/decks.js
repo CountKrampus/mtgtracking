@@ -650,11 +650,11 @@ router.get('/:id/recommendations', requireAuth, async (req, res) => {
       const collectionCards = await Card.find(cardQuery);
       collectionCards.forEach(c => {
         if (c.scryfallId) ownedScryfallIds.add(c.scryfallId);
-        else ownedNames.add(c.name);
+        else ownedNames.add(c.name.toLowerCase());
       });
     }
 
-    const isOwned = (scryfallCard) => ownedScryfallIds.has(scryfallCard.id) || ownedNames.has(scryfallCard.name);
+    const isOwned = (scryfallCard) => ownedScryfallIds.has(scryfallCard.id) || ownedNames.has(scryfallCard.name.toLowerCase());
 
     const cardsWithOwnership = candidates.map(c => ({ ...c, owned: isOwned(c) }));
     const scoped = scope === 'owned' ? cardsWithOwnership.filter(c => c.owned) : cardsWithOwnership;

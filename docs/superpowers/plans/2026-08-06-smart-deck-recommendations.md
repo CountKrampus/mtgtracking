@@ -158,6 +158,26 @@ describe('GET /api/decks/:id/recommendations', () => {
     expect(res.body.cards.map(c => c.name)).toEqual(['Cultivate']);
   });
 
+  test('scope=owned name-fallback match is case-insensitive', async () => {
+    const user = await makeUser();
+    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['G'] }, mainDeck: [] });
+    // Offline imports can store non-canonical casing; Scryfall's name is the
+    // canonical "Cultivate".
+    await Card.create({ userId: user._id, name: 'cultivate', condition: 'NM', quantity: 1 });
+    const token = tokenFor(user);
+
+    axios.get.mockResolvedValueOnce({
+      data: { data: [scryfallCard({ id: 'candidate-1', name: 'Cultivate' })] }
+    });
+
+    const res = await request(app)
+      .get(`/api/decks/${deck._id}/recommendations?category=ramp&scope=owned`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(res.body.cards.map(c => c.name)).toEqual(['Cultivate']);
+  });
+
   test('scope=all marks each card with the correct owned flag rather than filtering', async () => {
     const user = await makeUser();
     const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['G'] }, mainDeck: [] });
@@ -313,11 +333,11 @@ router.get('/:id/recommendations', requireAuth, async (req, res) => {
       const collectionCards = await Card.find(cardQuery);
       collectionCards.forEach(c => {
         if (c.scryfallId) ownedScryfallIds.add(c.scryfallId);
-        else ownedNames.add(c.name);
+        else ownedNames.add(c.name.toLowerCase());
       });
     }
 
-    const isOwned = (scryfallCard) => ownedScryfallIds.has(scryfallCard.id) || ownedNames.has(scryfallCard.name);
+    const isOwned = (scryfallCard) => ownedScryfallIds.has(scryfallCard.id) || ownedNames.has(scryfallCard.name.toLowerCase());
 
     const cardsWithOwnership = candidates.map(c => ({ ...c, owned: isOwned(c) }));
     const scoped = scope === 'owned' ? cardsWithOwnership.filter(c => c.owned) : cardsWithOwnership;

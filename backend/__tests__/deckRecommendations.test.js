@@ -133,6 +133,26 @@ describe('GET /api/decks/:id/recommendations', () => {
     expect(res.body.cards.map(c => c.name)).toEqual(['Cultivate']);
   });
 
+  test('scope=owned name-fallback match is case-insensitive', async () => {
+    const user = await makeUser();
+    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['G'] }, mainDeck: [] });
+    // Offline imports can store non-canonical casing; Scryfall's name is the
+    // canonical "Cultivate".
+    await Card.create({ userId: user._id, name: 'cultivate', condition: 'NM', quantity: 1 });
+    const token = tokenFor(user);
+
+    axios.get.mockResolvedValueOnce({
+      data: { data: [scryfallCard({ id: 'candidate-1', name: 'Cultivate' })] }
+    });
+
+    const res = await request(app)
+      .get(`/api/decks/${deck._id}/recommendations?category=ramp&scope=owned`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(res.body.cards.map(c => c.name)).toEqual(['Cultivate']);
+  });
+
   test('scope=all marks each card with the correct owned flag rather than filtering', async () => {
     const user = await makeUser();
     const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['G'] }, mainDeck: [] });
