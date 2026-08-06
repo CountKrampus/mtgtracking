@@ -71,4 +71,14 @@ cardSchema.pre('save', function(next) {
 
 const Card = mongoose.model('Card', cardSchema);
 
+// Mongoose builds indexes in the background on connect and only surfaces a
+// failure (e.g. the unique duplicate-prevention index above rejecting on
+// pre-existing conflicting rows) via this 'index' event - with no listener
+// the failure is completely silent. Log it so it's actually visible.
+Card.on('index', (err) => {
+  if (err) {
+    console.error('[Card] Index build failed:', err.message);
+  }
+});
+
 module.exports = Card;
