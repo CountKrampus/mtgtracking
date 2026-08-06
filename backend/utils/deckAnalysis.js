@@ -256,8 +256,7 @@ function calculateDeckHealthScore(deck) {
   allCards.forEach(card => {
     const quantity = card.quantity || 1;
     totalCards += quantity;
-    const isLand = (card.types || []).includes('Land');
-    if (isLand) { landCards += quantity; return; }
+    if (isLandCard(card)) { landCards += quantity; return; }
 
     const cmc = parseCMC(card.manaCost);
     const bucket = cmc >= 7 ? '7+' : cmc.toString();

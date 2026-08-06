@@ -330,7 +330,7 @@ In `backend/utils/deckAnalysis.js`, add two new keys to the existing `POWER_INDI
 
 (The `ramp` list's last two entries, `'Signet'`/`'Talisman'`, are intentionally partial strings — `calculateDeckHealthScore` below matches them via substring `.includes()` against card names like "Azorius Signet"/"Boros Talisman" rather than exact equality, since there are ~10 of each and enumerating every color combination twice — once here, once in `COLOR_SOURCES` from Task 1 — would be pure duplication. Every other list in `POWER_INDICATORS` continues to match by exact name.)
 
-Add `calculateDeckHealthScore` after `estimatePowerLevel`:
+Add `calculateDeckHealthScore` after `estimatePowerLevel`. It reuses Task 1's `isLandCard` (not a fresh `(card.types||[]).includes('Land')` check) so this function's land count agrees with `calculateManabaseScore`'s — offline-imported cards can be missing `types` metadata until "Update Full Card Data" is run, and only `isLandCard`'s name-based fallback (`BASIC_LAND_COLORS`/`NONBASIC_LAND_NAMES`) catches those correctly:
 
 ```js
 function calculateDeckHealthScore(deck) {
@@ -344,8 +344,7 @@ function calculateDeckHealthScore(deck) {
   allCards.forEach(card => {
     const quantity = card.quantity || 1;
     totalCards += quantity;
-    const isLand = (card.types || []).includes('Land');
-    if (isLand) { landCards += quantity; return; }
+    if (isLandCard(card)) { landCards += quantity; return; }
 
     const cmc = parseCMC(card.manaCost);
     const bucket = cmc >= 7 ? '7+' : cmc.toString();
@@ -697,8 +696,7 @@ function calculateDeckHealthScore(deck) {
   allCards.forEach(card => {
     const quantity = card.quantity || 1;
     totalCards += quantity;
-    const isLand = (card.types || []).includes('Land');
-    if (isLand) { landCards += quantity; return; }
+    if (isLandCard(card)) { landCards += quantity; return; }
 
     const cmc = parseCmcFromManaCost(card.manaCost);
     const bucket = cmc >= 7 ? '7+' : cmc.toString();
