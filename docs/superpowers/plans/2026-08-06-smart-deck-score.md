@@ -27,14 +27,14 @@ describe('calculateManabaseScore', () => {
   test('grades a mono-color deck as A when it has enough basics', () => {
     const deck = {
       mainDeck: [
-        ...Array(20).fill({ name: 'Forest' }),
+        ...Array(25).fill({ name: 'Forest' }),
         { name: 'Llanowar Elves', manaCost: '{G}' },
         { name: 'Craterhoof Behemoth', manaCost: '{5}{G}{G}' }
       ]
     };
     const result = calculateManabaseScore(deck);
-    expect(result.landCount).toBe(20);
-    expect(result.bySourceColor.G.sources).toBe(20);
+    expect(result.landCount).toBe(25);
+    expect(result.bySourceColor.G.sources).toBe(25);
     expect(['A', 'A-']).toContain(result.grade);
   });
 
@@ -131,8 +131,27 @@ const COLOR_SOURCES = {
   'Simic Signet': ['G', 'U'],
 };
 
+// COLOR_SOURCES mixes actual lands (duals/shocks/fetches/Command Tower/Exotic
+// Orchard/Path of Ancestry) with mana rocks that happen to fix color
+// (Signets/Arcane Signet/Fellwar Stone/Chromatic Lantern) - both belong in
+// that table since it's about "what colors does this produce," but only the
+// former group counts toward land count. Listed separately here rather than
+// tagging COLOR_SOURCES entries, since land-vs-rock and color-production are
+// two independent questions about the same card.
+const NONBASIC_LAND_NAMES = new Set([
+  'Tundra', 'Underground Sea', 'Badlands', 'Taiga', 'Savannah', 'Scrubland',
+  'Volcanic Island', 'Bayou', 'Plateau', 'Tropical Island',
+  'Hallowed Fountain', 'Watery Grave', 'Blood Crypt', 'Stomping Ground', 'Temple Garden',
+  'Godless Shrine', 'Steam Vents', 'Overgrown Tomb', 'Sacred Foundry', 'Breeding Pool',
+  'Flooded Strand', 'Polluted Delta', 'Bloodstained Mire', 'Wooded Foothills', 'Windswept Heath',
+  'Marsh Flats', 'Scalding Tarn', 'Verdant Catacombs', 'Arid Mesa', 'Misty Rainforest',
+  'Command Tower', 'Exotic Orchard', 'Path of Ancestry',
+]);
+
 function isLandCard(card) {
-  return (card.types || []).includes('Land') || Object.prototype.hasOwnProperty.call(BASIC_LAND_COLORS, card.name);
+  return (card.types || []).includes('Land')
+    || Object.prototype.hasOwnProperty.call(BASIC_LAND_COLORS, card.name)
+    || NONBASIC_LAND_NAMES.has(card.name);
 }
 
 // Frank Karsten's published mana-source-count research (ChannelFireball,
@@ -577,8 +596,27 @@ const COLOR_SOURCES = {
 
 const KARSTEN_TARGETS = { 1: 22, 2: 29, 3: 34 };
 
+// COLOR_SOURCES mixes actual lands (duals/shocks/fetches/Command Tower/Exotic
+// Orchard/Path of Ancestry) with mana rocks that happen to fix color
+// (Signets/Arcane Signet/Fellwar Stone/Chromatic Lantern) - both belong in
+// that table since it's about "what colors does this produce," but only the
+// former group counts toward land count. Listed separately here rather than
+// tagging COLOR_SOURCES entries, since land-vs-rock and color-production are
+// two independent questions about the same card.
+const NONBASIC_LAND_NAMES = new Set([
+  'Tundra', 'Underground Sea', 'Badlands', 'Taiga', 'Savannah', 'Scrubland',
+  'Volcanic Island', 'Bayou', 'Plateau', 'Tropical Island',
+  'Hallowed Fountain', 'Watery Grave', 'Blood Crypt', 'Stomping Ground', 'Temple Garden',
+  'Godless Shrine', 'Steam Vents', 'Overgrown Tomb', 'Sacred Foundry', 'Breeding Pool',
+  'Flooded Strand', 'Polluted Delta', 'Bloodstained Mire', 'Wooded Foothills', 'Windswept Heath',
+  'Marsh Flats', 'Scalding Tarn', 'Verdant Catacombs', 'Arid Mesa', 'Misty Rainforest',
+  'Command Tower', 'Exotic Orchard', 'Path of Ancestry',
+]);
+
 function isLandCard(card) {
-  return (card.types || []).includes('Land') || Object.prototype.hasOwnProperty.call(BASIC_LAND_COLORS, card.name);
+  return (card.types || []).includes('Land')
+    || Object.prototype.hasOwnProperty.call(BASIC_LAND_COLORS, card.name)
+    || NONBASIC_LAND_NAMES.has(card.name);
 }
 
 function calculateManabaseScore(deck) {
