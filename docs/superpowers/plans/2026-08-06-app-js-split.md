@@ -121,6 +121,13 @@ Add near the top of the `CollectionView` function body, right after the existing
   // these tools only render while /collection is actually mounted.
   const [activeTool, setActiveTool] = useState(null);
   useEffect(() => {
+    // Depends on searchParams (not mount-only) because the Sidebar is
+    // rendered outside <Routes> and never unmounts CollectionView - clicking
+    // a tool button while ALREADY on /collection only changes the query
+    // string, it doesn't remount this component. A mount-only effect would
+    // silently miss that case. Stripping the param below removes 'tool' from
+    // searchParams, which re-triggers this effect once more with tool now
+    // absent, so it self-terminates without looping.
     const tool = searchParams.get('tool');
     const validTools = ['priceUpdate', 'commanderRecs', 'setCompletion', 'comboFinder', 'finance'];
     if (tool && validTools.includes(tool)) {
@@ -131,8 +138,7 @@ Add near the top of the `CollectionView` function body, right after the existing
         return next;
       }, { replace: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParams, setSearchParams]);
 ```
 
 Import `PriceUpdateModal` at the top of the file: `import PriceUpdateModal from './CollectionTools/PriceUpdateModal';`
