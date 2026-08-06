@@ -99,6 +99,10 @@ router.post('/merge-duplicates', requireAuth, requireEditor, activityLoggers.car
 
     applyMerge(target, sources);
     await target.save();
+    // Not run in a transaction (no other multi-step mutation in this file uses
+    // one either) - if deleteMany fails after save succeeds, the target keeps
+    // its merged quantity and the sources survive too, so re-running the merge
+    // is idempotent-ish but would double the sources' quantity into the target.
     await Card.deleteMany({ _id: { $in: sources.map(s => s._id) } });
 
     clearCache(userId);
