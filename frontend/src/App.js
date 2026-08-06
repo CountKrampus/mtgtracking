@@ -202,11 +202,6 @@ function App() {
 
   // Wishlist state is now in WishlistContext
 
-  // Set Completion Tracker
-  const [showSetCompletion, setShowSetCompletion] = useState(false);
-  const [completionData, setCompletionData] = useState([]);
-  const [loadingSetCompletion, setLoadingSetCompletion] = useState(false);
-
   // Combo Finder
   const [showComboFinder, setShowComboFinder] = useState(false);
   const [comboResults, setComboResults] = useState({ combos: [], partialCombos: [], found: 0, partialFound: 0 });
@@ -248,69 +243,6 @@ function App() {
       setShowFinancePanel(true);
     } catch (error) {
       console.error('Error fetching finance data:', error);
-    }
-  };
-
-  // Set Completion Tracker Functions
-  const getSetCompletionData = async () => {
-    setShowSetCompletion(true);
-    setLoadingSetCompletion(true);
-
-    try {
-      // Group cards by set code
-      const cardsBySet = {};
-      cards.forEach(card => {
-        if (card.setCode) {
-          const code = card.setCode.toLowerCase();
-          if (!cardsBySet[code]) {
-            cardsBySet[code] = {
-              setCode: code,
-              setName: card.set,
-              ownedCards: new Set(),
-              totalOwned: 0
-            };
-          }
-          cardsBySet[code].ownedCards.add(card.name);
-          cardsBySet[code].totalOwned += card.quantity;
-        }
-      });
-
-      // Fetch set info from Scryfall for sets we have cards from
-      const completionData = [];
-      const setCodes = Object.keys(cardsBySet);
-
-      for (const code of setCodes.slice(0, 20)) { // Limit to 20 sets to avoid too many API calls
-        try {
-          const setResponse = await axios.get(`https://api.scryfall.com/sets/${code}`);
-          const setInfo = setResponse.data;
-
-          completionData.push({
-            setCode: code.toUpperCase(),
-            setName: setInfo.name,
-            icon: setInfo.icon_svg_uri,
-            ownedUnique: cardsBySet[code].ownedCards.size,
-            totalInSet: setInfo.card_count,
-            totalOwned: cardsBySet[code].totalOwned,
-            releasedAt: setInfo.released_at,
-            setType: setInfo.set_type
-          });
-
-          // Small delay to respect rate limits
-          await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (e) {
-          // Skip sets that can't be found
-          console.log(`Could not fetch set info for ${code}`);
-        }
-      }
-
-      // Sort by completion percentage descending
-      completionData.sort((a, b) => (b.ownedUnique / b.totalInSet) - (a.ownedUnique / a.totalInSet));
-
-      setCompletionData(completionData);
-    } catch (error) {
-      console.error('Error getting set completion data:', error);
-    } finally {
-      setLoadingSetCompletion(false);
     }
   };
 
@@ -469,7 +401,6 @@ function App() {
         return;
       }
       // Close any open modals
-      if (showSetCompletion) { setShowSetCompletion(false); return; }
       if (showComboFinder) { setShowComboFinder(false); return; }
       if (showImportResults) { setShowImportResults(false); return; }
       if (showQRPreview) { setShowQRPreview(false); return; }
@@ -490,7 +421,7 @@ function App() {
       const cmd = paletteCommandsRef.current.find(c => c.id === commandId);
       if (cmd) cmd.action();
     }
-  }, [keyToCommand, showCommandPalette, showSetCompletion, showComboFinder, showImportResults, showQRPreview]);
+  }, [keyToCommand, showCommandPalette, showComboFinder, showImportResults, showQRPreview]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyboardShortcut);
@@ -520,7 +451,7 @@ function App() {
       { id: 'act-search', label: 'Focus Search', icon: Search, category: 'Actions', action: () => navigate('/collection') },
       // Tools
       { id: 'tool-commanders', label: 'Commander Recommendations', icon: Crown, category: 'Tools', action: () => navigate('/collection?tool=commanderRecs'), feature: 'commanderRecs' },
-      { id: 'tool-sets', label: 'Set Completion Tracker', icon: BarChart3, category: 'Tools', action: () => getSetCompletionData(), feature: 'setCompletion' },
+      { id: 'tool-sets', label: 'Set Completion Tracker', icon: BarChart3, category: 'Tools', action: () => navigate('/collection?tool=setCompletion'), feature: 'setCompletion' },
       { id: 'tool-combos', label: 'Find Combos', icon: Zap, category: 'Tools', action: () => findCombos(), feature: 'comboFinder' },
       { id: 'tool-camera', label: 'Scan Card with Camera', icon: Camera, category: 'Tools', action: () => navigate('/collection') },
       // Learning
@@ -580,7 +511,7 @@ function App() {
         onUpdatePrices={() => navigate('/collection?tool=priceUpdate')}
         onFetchCardText={updateAllOracleText}
         onCommanders={() => navigate('/collection?tool=commanderRecs')}
-        onSets={getSetCompletionData}
+        onSets={() => navigate('/collection?tool=setCompletion')}
         onCombos={findCombos}
         onFinance={openFinancePanel}
         onOpenSettings={() => navigate('/settings')}
@@ -649,9 +580,6 @@ function App() {
                   qrDataUrls={qrDataUrls} setQrDataUrls={setQrDataUrls}
                   showPrintLabels={showPrintLabels} setShowPrintLabels={setShowPrintLabels}
                   generateQR={generateQR}
-                  showSetCompletion={showSetCompletion} setShowSetCompletion={setShowSetCompletion}
-                  completionData={completionData} setCompletionData={setCompletionData} loadingSetCompletion={loadingSetCompletion}
-                  getSetCompletionData={getSetCompletionData}
                   showComboFinder={showComboFinder} setShowComboFinder={setShowComboFinder}
                   comboResults={comboResults} setComboResults={setComboResults} loadingCombos={loadingCombos}
                   comboTab={comboTab} setComboTab={setComboTab}
