@@ -232,8 +232,7 @@ function calculateManabaseScore(deck) {
 
   let landCount = 0;
   const sourcesByColor = { W: 0, U: 0, B: 0, R: 0, G: 0 };
-  const demandByColor = { W: 0, U: 0, B: 0, R: 0, G: 0 };
-  const pipCountByColor = { W: 0, U: 0, B: 0, R: 0, G: 0 }; // for computing avg pips/card
+  const pipCountByColor = { W: 0, U: 0, B: 0, R: 0, G: 0 }; // both "is this color played" and "avg pips/card"
 
   allCards.forEach(card => {
     const quantity = card.quantity || 1;
@@ -250,7 +249,6 @@ function calculateManabaseScore(deck) {
       const pipMatches = card.manaCost.match(/\{([WUBRG])\}/g) || [];
       pipMatches.forEach(symbol => {
         const color = symbol.replace(/[{}]/g, '');
-        demandByColor[color] += quantity;
         pipCountByColor[color] += quantity;
       });
     }
@@ -259,8 +257,16 @@ function calculateManabaseScore(deck) {
   const bySourceColor = {};
   let worstGradeValue = null;
 
-  Object.keys(demandByColor).forEach(color => {
-    if (demandByColor[color] === 0) return; // color not actually played - no requirement
+  // Grade is driven by the single worst-performing color with any pip
+  // demand, not an average - a deck's manabase is only as good as its
+  // weakest requirement, per the spec. Known tradeoff: a deliberately light
+  // splash (1-2 low-pip cards in a color with few dedicated sources) can
+  // still drag the whole grade down, even though light splashes are an
+  // accepted, low-risk pattern in real deckbuilding. Not fixed here since the
+  // spec calls for worst-color grading explicitly; revisit only if this
+  // proves misleading in practice against real decks.
+  Object.keys(pipCountByColor).forEach(color => {
+    if (pipCountByColor[color] === 0) return; // color not actually played - no requirement
 
     const nonLandCardsOfColor = allCards.filter(c => !isLandCard(c) && (c.manaCost || '').includes(`{${color}}`));
     const cardCountOfColor = nonLandCardsOfColor.reduce((sum, c) => sum + (c.quantity || 1), 0) || 1;
@@ -985,6 +991,19 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
                       }`}>{powerLevel.level}</span>
                       <span className="text-white/40 text-lg ml-1">/10</span>
                     </div>
+                    <div className="flex justify-center mb-4">
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                        powerLevel.level >= 9 ? 'bg-red-500/20 text-red-300' :
+                        powerLevel.level >= 7 ? 'bg-orange-500/20 text-orange-300' :
+                        powerLevel.level >= 5 ? 'bg-yellow-500/20 text-yellow-300' :
+                        powerLevel.level >= 3 ? 'bg-green-500/20 text-green-300' : 'bg-blue-500/20 text-blue-300'
+                      }`}>
+                        {powerLevel.level >= 9 ? 'cEDH / Competitive' :
+                         powerLevel.level >= 7 ? 'High Power' :
+                         powerLevel.level >= 5 ? 'Optimized' :
+                         powerLevel.level >= 3 ? 'Casual / Precon' : 'Jank / Meme'}
+                      </span>
+                    </div>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between"><span className="text-white/60">Fast Mana:</span><span className="text-white">{powerLevel.breakdown.fastMana} cards</span></div>
                       <div className="flex justify-between"><span className="text-white/60">Tutors:</span><span className="text-white">{powerLevel.breakdown.tutors} cards</span></div>
@@ -1004,8 +1023,20 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
                         saltScore.score >= 5 ? 'text-yellow-500' : 'text-green-500'
                       }`}>{saltScore.score}</span>
                     </div>
+                    <div className="flex justify-center mb-4">
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                        saltScore.score >= 20 ? 'bg-red-500/20 text-red-300' :
+                        saltScore.score >= 10 ? 'bg-orange-500/20 text-orange-300' :
+                        saltScore.score >= 5 ? 'bg-yellow-500/20 text-yellow-300' : 'bg-green-500/20 text-green-300'
+                      }`}>
+                        {saltScore.score >= 20 ? 'Maximum Salt - Prepare for groans' :
+                         saltScore.score >= 10 ? 'Pretty Salty - May cause frustration' :
+                         saltScore.score >= 5 ? 'Mild Salt - Some annoying cards' : 'Low Salt - Friendly deck'}
+                      </span>
+                    </div>
                     {saltScore.cards.length > 0 ? (
                       <div className="space-y-2 max-h-40 overflow-y-auto">
+                        <div className="text-white/60 text-sm mb-2">Salty cards in this deck:</div>
                         {saltScore.cards.map((card, idx) => (
                           <div key={idx} className="flex justify-between items-center text-sm">
                             <span className="text-white">{card.name}</span>
