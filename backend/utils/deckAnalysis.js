@@ -65,30 +65,36 @@ const BASIC_LAND_COLORS = { Plains: 'W', Island: 'U', Swamp: 'B', Mountain: 'R',
 // different purpose, and must never be treated as a color source here.
 const COLOR_SOURCES = {
   // True duals / original duals
-  'Tundra': ['W', 'U'], 'Underground Sea': ['U', 'B'], 'Badlands': ['B', 'R'],
-  'Taiga': ['R', 'G'], 'Savannah': ['G', 'W'], 'Scrubland': ['W', 'B'],
-  'Volcanic Island': ['U', 'R'], 'Bayou': ['B', 'G'], 'Plateau': ['R', 'W'],
-  'Tropical Island': ['G', 'U'],
+  'Tundra': { colors: ['W', 'U'], cycle: 'trueDual' }, 'Underground Sea': { colors: ['U', 'B'], cycle: 'trueDual' },
+  'Badlands': { colors: ['B', 'R'], cycle: 'trueDual' }, 'Taiga': { colors: ['R', 'G'], cycle: 'trueDual' },
+  'Savannah': { colors: ['G', 'W'], cycle: 'trueDual' }, 'Scrubland': { colors: ['W', 'B'], cycle: 'trueDual' },
+  'Volcanic Island': { colors: ['U', 'R'], cycle: 'trueDual' }, 'Bayou': { colors: ['B', 'G'], cycle: 'trueDual' },
+  'Plateau': { colors: ['R', 'W'], cycle: 'trueDual' }, 'Tropical Island': { colors: ['G', 'U'], cycle: 'trueDual' },
   // Shocklands
-  'Hallowed Fountain': ['W', 'U'], 'Watery Grave': ['U', 'B'], 'Blood Crypt': ['B', 'R'],
-  'Stomping Ground': ['R', 'G'], 'Temple Garden': ['G', 'W'], 'Godless Shrine': ['W', 'B'],
-  'Steam Vents': ['U', 'R'], 'Overgrown Tomb': ['B', 'G'], 'Sacred Foundry': ['R', 'W'],
-  'Breeding Pool': ['G', 'U'],
-  // Fetchlands (count toward both colors they can fetch, since which basic/dual
-  // they actually grab varies by deck - a simplification, not a precise model)
-  'Flooded Strand': ['W', 'U'], 'Polluted Delta': ['U', 'B'], 'Bloodstained Mire': ['B', 'R'],
-  'Wooded Foothills': ['R', 'G'], 'Windswept Heath': ['G', 'W'], 'Marsh Flats': ['W', 'B'],
-  'Scalding Tarn': ['U', 'R'], 'Verdant Catacombs': ['B', 'G'], 'Arid Mesa': ['R', 'W'],
-  'Misty Rainforest': ['G', 'U'],
+  'Hallowed Fountain': { colors: ['W', 'U'], cycle: 'shockland' }, 'Watery Grave': { colors: ['U', 'B'], cycle: 'shockland' },
+  'Blood Crypt': { colors: ['B', 'R'], cycle: 'shockland' }, 'Stomping Ground': { colors: ['R', 'G'], cycle: 'shockland' },
+  'Temple Garden': { colors: ['G', 'W'], cycle: 'shockland' }, 'Godless Shrine': { colors: ['W', 'B'], cycle: 'shockland' },
+  'Steam Vents': { colors: ['U', 'R'], cycle: 'shockland' }, 'Overgrown Tomb': { colors: ['B', 'G'], cycle: 'shockland' },
+  'Sacred Foundry': { colors: ['R', 'W'], cycle: 'shockland' }, 'Breeding Pool': { colors: ['G', 'U'], cycle: 'shockland' },
+  // Fetchlands
+  'Flooded Strand': { colors: ['W', 'U'], cycle: 'fetchland' }, 'Polluted Delta': { colors: ['U', 'B'], cycle: 'fetchland' },
+  'Bloodstained Mire': { colors: ['B', 'R'], cycle: 'fetchland' }, 'Wooded Foothills': { colors: ['R', 'G'], cycle: 'fetchland' },
+  'Windswept Heath': { colors: ['G', 'W'], cycle: 'fetchland' }, 'Marsh Flats': { colors: ['W', 'B'], cycle: 'fetchland' },
+  'Scalding Tarn': { colors: ['U', 'R'], cycle: 'fetchland' }, 'Verdant Catacombs': { colors: ['B', 'G'], cycle: 'fetchland' },
+  'Arid Mesa': { colors: ['R', 'W'], cycle: 'fetchland' }, 'Misty Rainforest': { colors: ['G', 'U'], cycle: 'fetchland' },
   // Universal fixers
-  'Command Tower': ['W', 'U', 'B', 'R', 'G'], 'Exotic Orchard': ['W', 'U', 'B', 'R', 'G'],
-  'Path of Ancestry': ['W', 'U', 'B', 'R', 'G'], 'Arcane Signet': ['W', 'U', 'B', 'R', 'G'],
-  'Fellwar Stone': ['W', 'U', 'B', 'R', 'G'], 'Chromatic Lantern': ['W', 'U', 'B', 'R', 'G'],
+  'Command Tower': { colors: ['W', 'U', 'B', 'R', 'G'], cycle: 'universalFixer' },
+  'Exotic Orchard': { colors: ['W', 'U', 'B', 'R', 'G'], cycle: 'universalFixer' },
+  'Path of Ancestry': { colors: ['W', 'U', 'B', 'R', 'G'], cycle: 'universalFixer' },
+  'Arcane Signet': { colors: ['W', 'U', 'B', 'R', 'G'], cycle: 'universalFixer' },
+  'Fellwar Stone': { colors: ['W', 'U', 'B', 'R', 'G'], cycle: 'universalFixer' },
+  'Chromatic Lantern': { colors: ['W', 'U', 'B', 'R', 'G'], cycle: 'universalFixer' },
   // Signets (two-color rocks)
-  'Azorius Signet': ['W', 'U'], 'Dimir Signet': ['U', 'B'], 'Rakdos Signet': ['B', 'R'],
-  'Gruul Signet': ['R', 'G'], 'Selesnya Signet': ['G', 'W'], 'Orzhov Signet': ['W', 'B'],
-  'Izzet Signet': ['U', 'R'], 'Golgari Signet': ['B', 'G'], 'Boros Signet': ['R', 'W'],
-  'Simic Signet': ['G', 'U'],
+  'Azorius Signet': { colors: ['W', 'U'], cycle: 'signet' }, 'Dimir Signet': { colors: ['U', 'B'], cycle: 'signet' },
+  'Rakdos Signet': { colors: ['B', 'R'], cycle: 'signet' }, 'Gruul Signet': { colors: ['R', 'G'], cycle: 'signet' },
+  'Selesnya Signet': { colors: ['G', 'W'], cycle: 'signet' }, 'Orzhov Signet': { colors: ['W', 'B'], cycle: 'signet' },
+  'Izzet Signet': { colors: ['U', 'R'], cycle: 'signet' }, 'Golgari Signet': { colors: ['B', 'G'], cycle: 'signet' },
+  'Boros Signet': { colors: ['R', 'W'], cycle: 'signet' }, 'Simic Signet': { colors: ['G', 'U'], cycle: 'signet' },
 };
 
 // COLOR_SOURCES mixes actual lands (duals/shocks/fetches/Command Tower/Exotic
@@ -139,8 +145,8 @@ function calculateManabaseScore(deck) {
     const basicColor = BASIC_LAND_COLORS[card.name];
     if (basicColor) sourcesByColor[basicColor] += quantity;
 
-    const fixingColors = COLOR_SOURCES[card.name];
-    if (fixingColors) fixingColors.forEach(c => { sourcesByColor[c] += quantity; });
+    const fixingEntry = COLOR_SOURCES[card.name];
+    if (fixingEntry) fixingEntry.colors.forEach(c => { sourcesByColor[c] += quantity; });
 
     if (!isLandCard(card) && card.manaCost) {
       const pipMatches = card.manaCost.match(/\{([WUBRG])\}/g) || [];

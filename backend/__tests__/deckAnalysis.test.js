@@ -1,4 +1,4 @@
-const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore } = require('../utils/deckAnalysis');
+const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore, COLOR_SOURCES } = require('../utils/deckAnalysis');
 
 describe('calculateSaltScore', () => {
   test('sums salt values for salty cards in mainDeck and commander', () => {
@@ -126,6 +126,11 @@ describe('calculateManabaseScore', () => {
   test('handles a deck with no mainDeck', () => {
     const result = calculateManabaseScore({});
     expect(result).toEqual({ grade: 'N/A', bySourceColor: {}, landCount: 0, recommendedLandRange: [36, 38] });
+  });
+
+  test('COLOR_SOURCES entries expose both colors and a cycle label', () => {
+    expect(COLOR_SOURCES['Tundra']).toEqual({ colors: ['W', 'U'], cycle: 'trueDual' });
+    expect(COLOR_SOURCES['Command Tower']).toEqual({ colors: ['W', 'U', 'B', 'R', 'G'], cycle: 'universalFixer' });
   });
 });
 
