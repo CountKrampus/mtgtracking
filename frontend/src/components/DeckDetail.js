@@ -431,7 +431,7 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
 
   useEffect(() => {
     if (!deck._id) return;
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('mtg_access_token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     setLoadingRecs(true);
     fetch(`${API_URL}/decks/${deck._id}/recommendations?category=${recCategory}&scope=${recScope}`, { headers })

@@ -383,7 +383,7 @@ Add this `useEffect` near the other data-fetching `useEffect` (the one that fetc
 ```js
   useEffect(() => {
     if (!deck._id) return;
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('mtg_access_token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     setLoadingRecs(true);
     fetch(`${API_URL}/decks/${deck._id}/recommendations?category=${recCategory}&scope=${recScope}`, { headers })
@@ -401,8 +401,11 @@ Add these functions in the component body, near the other handler functions:
 ```js
   const addRecommendationToDeck = async (scryfallCard) => {
     try {
-      const token = localStorage.getItem('authToken');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      // No manual auth header here - App.js already registers a global
+      // axios.interceptors.request.use() that attaches the token to every
+      // axios request. Every other axios call in this file relies on that
+      // interceptor rather than building headers manually; only the plain
+      // fetch() calls above need the header built by hand.
       const response = await axios.post(`${API_URL}/decks/${deck._id}/add-card`, {
         scryfallId: scryfallCard.id,
         name: scryfallCard.name,
@@ -410,7 +413,7 @@ Add these functions in the component body, near the other handler functions:
         types: (scryfallCard.type_line || '').split('—')[0].trim().split(' '),
         colors: scryfallCard.colors || [],
         imageUrl: scryfallCard.image_uris?.normal || scryfallCard.card_faces?.[0]?.image_uris?.normal,
-      }, { headers });
+      });
       if (response.status === 200) {
         setRecommendations(prev => prev.filter(c => c.id !== scryfallCard.id));
         onRefresh?.();
