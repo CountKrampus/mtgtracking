@@ -8,6 +8,9 @@ export default function FinancePanel({ isOpen, onClose }) {
 
   useEffect(() => {
     if (!isOpen) return;
+    // Clear stale data from a previous open so, if reopened before the new
+    // fetch resolves, the old numbers don't briefly flash back on screen.
+    setFinanceData(null);
     (async () => {
       try {
         const response = await axios.get(`${API_URL}/finance`);
