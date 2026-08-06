@@ -17,7 +17,7 @@ import { AuthGuard } from './components/auth/AuthGuard';
 import { ToastProvider, useToast } from './contexts/ToastContext';
 import { CardCollectionProvider, useCardCollection } from './contexts/CardCollectionContext';
 import { LocationTagProvider, useLocationTag } from './contexts/LocationTagContext';
-import { WishlistProvider, useWishlist } from './contexts/WishlistContext';
+import { WishlistProvider } from './contexts/WishlistContext';
 import { TradesProvider } from './contexts/TradesContext';
 import { AccountSettings } from './components/auth/AccountSettings';
 import { AdminPanel } from './components/admin/AdminPanel';
@@ -175,9 +175,6 @@ function App() {
     handleCreateTag, handleDeleteTag, handleToggleTagIgnorePrice,
   } = useLocationTag();
 
-  // Wishlist context - WishlistView handles UI; App.js only needs fetchWishlist for combo-to-wishlist
-  const { fetchWishlist } = useWishlist();
-
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -201,12 +198,6 @@ function App() {
   // Location management state is now in LocationTagContext
 
   // Wishlist state is now in WishlistContext
-
-  // Combo Finder
-  const [showComboFinder, setShowComboFinder] = useState(false);
-  const [comboResults, setComboResults] = useState({ combos: [], partialCombos: [], found: 0, partialFound: 0 });
-  const [loadingCombos, setLoadingCombos] = useState(false);
-  const [comboTab, setComboTab] = useState('complete'); // 'complete' or 'partial'
 
   // QR Labels
   const [showQRPreview, setShowQRPreview] = useState(false);
@@ -243,68 +234,6 @@ function App() {
       setShowFinancePanel(true);
     } catch (error) {
       console.error('Error fetching finance data:', error);
-    }
-  };
-
-  // Combo Finder Functions
-  const findCombos = async () => {
-    setShowComboFinder(true);
-    setLoadingCombos(true);
-    setComboResults({ combos: [], partialCombos: [], found: 0, partialFound: 0 });
-    setComboTab('complete');
-
-    try {
-      const response = await axios.get(`${API_URL}/combos/find`);
-      setComboResults(response.data);
-      // Auto-switch to partial tab if no complete combos but there are partial ones
-      if (response.data.found === 0 && response.data.partialFound > 0) {
-        setComboTab('partial');
-      }
-    } catch (error) {
-      console.error('Error finding combos:', error);
-      setComboResults({ combos: [], partialCombos: [], found: 0, partialFound: 0, error: error.message });
-    } finally {
-      setLoadingCombos(false);
-    }
-  };
-
-  // Add missing combo card to wishlist
-  const addToWishlistFromCombo = async (cardName) => {
-    try {
-      // First search Scryfall to get card data
-      const searchResponse = await axios.get(`${API_URL}/scryfall/search?name=${encodeURIComponent(cardName)}`);
-      const cardData = searchResponse.data;
-
-      // Add to wishlist
-      await axios.post(`${API_URL}/wishlist`, {
-        name: cardData.name,
-        set: cardData.set || 'Unknown',
-        imageUrl: cardData.imageUrl,
-        currentPrice: cardData.price || 0,
-        targetPrice: cardData.price || 0,
-        priority: 'medium',
-        notes: 'Added from Combo Finder'
-      });
-
-      alert(`${cardData.name} added to wishlist!`);
-      fetchWishlist();
-    } catch (error) {
-      console.error('Error adding to wishlist:', error);
-      // Try adding with just the name if Scryfall search fails
-      try {
-        await axios.post(`${API_URL}/wishlist`, {
-          name: cardName,
-          set: 'Unknown',
-          currentPrice: 0,
-          targetPrice: 0,
-          priority: 'medium',
-          notes: 'Added from Combo Finder'
-        });
-        alert(`${cardName} added to wishlist!`);
-        fetchWishlist();
-      } catch (e) {
-        alert('Failed to add card to wishlist');
-      }
     }
   };
 
@@ -401,7 +330,6 @@ function App() {
         return;
       }
       // Close any open modals
-      if (showComboFinder) { setShowComboFinder(false); return; }
       if (showImportResults) { setShowImportResults(false); return; }
       if (showQRPreview) { setShowQRPreview(false); return; }
       return;
@@ -421,7 +349,7 @@ function App() {
       const cmd = paletteCommandsRef.current.find(c => c.id === commandId);
       if (cmd) cmd.action();
     }
-  }, [keyToCommand, showCommandPalette, showComboFinder, showImportResults, showQRPreview]);
+  }, [keyToCommand, showCommandPalette, showImportResults, showQRPreview]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyboardShortcut);
@@ -452,7 +380,7 @@ function App() {
       // Tools
       { id: 'tool-commanders', label: 'Commander Recommendations', icon: Crown, category: 'Tools', action: () => navigate('/collection?tool=commanderRecs'), feature: 'commanderRecs' },
       { id: 'tool-sets', label: 'Set Completion Tracker', icon: BarChart3, category: 'Tools', action: () => navigate('/collection?tool=setCompletion'), feature: 'setCompletion' },
-      { id: 'tool-combos', label: 'Find Combos', icon: Zap, category: 'Tools', action: () => findCombos(), feature: 'comboFinder' },
+      { id: 'tool-combos', label: 'Find Combos', icon: Zap, category: 'Tools', action: () => navigate('/collection?tool=comboFinder'), feature: 'comboFinder' },
       { id: 'tool-camera', label: 'Scan Card with Camera', icon: Camera, category: 'Tools', action: () => navigate('/collection') },
       // Learning
       { id: 'learn-rulings', label: 'Card Rulings Browser', icon: BookOpen, category: 'Learning', action: () => navigate('/learn/card-rulings') },
@@ -512,7 +440,7 @@ function App() {
         onFetchCardText={updateAllOracleText}
         onCommanders={() => navigate('/collection?tool=commanderRecs')}
         onSets={() => navigate('/collection?tool=setCompletion')}
-        onCombos={findCombos}
+        onCombos={() => navigate('/collection?tool=comboFinder')}
         onFinance={openFinancePanel}
         onOpenSettings={() => navigate('/settings')}
         onOpenCamera={() => navigate('/collection')}
@@ -580,10 +508,6 @@ function App() {
                   qrDataUrls={qrDataUrls} setQrDataUrls={setQrDataUrls}
                   showPrintLabels={showPrintLabels} setShowPrintLabels={setShowPrintLabels}
                   generateQR={generateQR}
-                  showComboFinder={showComboFinder} setShowComboFinder={setShowComboFinder}
-                  comboResults={comboResults} setComboResults={setComboResults} loadingCombos={loadingCombos}
-                  comboTab={comboTab} setComboTab={setComboTab}
-                  findCombos={findCombos} addToWishlistFromCombo={addToWishlistFromCombo}
                   showFinancePanel={showFinancePanel} setShowFinancePanel={setShowFinancePanel}
                   financeData={financeData} openFinancePanel={openFinancePanel}
                 />
