@@ -1,4 +1,4 @@
-const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore } = require('../utils/deckAnalysis');
+const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore } = require('../utils/deckAnalysis');
 
 describe('calculateSaltScore', () => {
   test('sums salt values for salty cards in mainDeck and commander', () => {
@@ -168,5 +168,31 @@ describe('calculateDeckHealthScore', () => {
 
   test('handles a deck with no mainDeck', () => {
     expect(calculateDeckHealthScore({})).toEqual({ score: 0, breakdown: { curveSmoothness: 0, ramp: 0, draw: 0, removal: 0, landRatio: 0 } });
+  });
+});
+
+describe('calculateGlobalScore', () => {
+  test('averages a strong deck across all four inputs toward the high end', () => {
+    const score = calculateGlobalScore(
+      { level: 8 },
+      { score: 2 },
+      { grade: 'A' },
+      { score: 90 }
+    );
+    expect(score).toBeGreaterThan(70);
+    expect(score).toBeLessThanOrEqual(100);
+  });
+
+  test('a high salt score pulls the global score down without dominating it', () => {
+    const lowSalt = calculateGlobalScore({ level: 6 }, { score: 0 }, { grade: 'B' }, { score: 70 });
+    const highSalt = calculateGlobalScore({ level: 6 }, { score: 30 }, { grade: 'B' }, { score: 70 });
+    expect(highSalt).toBeLessThan(lowSalt);
+    expect(highSalt).toBeGreaterThan(0);
+  });
+
+  test('handles an N/A manabase grade (empty deck) without throwing', () => {
+    const score = calculateGlobalScore({ level: 1 }, { score: 0 }, { grade: 'N/A' }, { score: 0 });
+    expect(score).toBeGreaterThanOrEqual(0);
+    expect(score).toBeLessThanOrEqual(100);
   });
 });

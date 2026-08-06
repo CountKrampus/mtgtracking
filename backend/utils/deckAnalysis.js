@@ -307,4 +307,22 @@ function calculateDeckHealthScore(deck) {
   return { score, breakdown: { curveSmoothness, ramp: rampScore, draw: drawScore, removal: removalScore, landRatio } };
 }
 
-module.exports = { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, SALTY_CARDS, POWER_INDICATORS, COLOR_SOURCES };
+const GRADE_TO_PERCENT = { 'A': 100, 'A-': 92, 'B+': 85, 'B': 77, 'C': 65, 'D': 50, 'F': 30, 'N/A': 50 };
+
+function calculateGlobalScore(powerLevel, saltScore, manabaseScore, healthScore) {
+  const powerPercent = ((powerLevel?.level || 1) / 10) * 100;
+  // Salt inverted and capped at 30 so a single extremely salty deck doesn't
+  // zero out the whole average - most decks land well under this.
+  const saltPercent = 100 - Math.min(30, saltScore?.score || 0) * (100 / 30);
+  const manabasePercent = GRADE_TO_PERCENT[manabaseScore?.grade] ?? 50;
+  const healthPercent = healthScore?.score || 0;
+
+  return Math.round(
+    powerPercent * 0.25 + saltPercent * 0.15 + manabasePercent * 0.3 + healthPercent * 0.3
+  );
+}
+
+module.exports = {
+  calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore,
+  SALTY_CARDS, POWER_INDICATORS, COLOR_SOURCES
+};

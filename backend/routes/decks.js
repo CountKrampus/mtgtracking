@@ -17,7 +17,7 @@ const { requireAuth, requireEditor } = require('../middleware/auth');
 const { buildUserQuery, getUserId } = require('../middleware/multiUser');
 const { activityLoggers } = require('../middleware/activityLogger');
 const { checkAndAwardBadges } = require('../utils/badgeManager');
-const { calculateSaltScore, estimatePowerLevel } = require('../utils/deckAnalysis');
+const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore } = require('../utils/deckAnalysis');
 const User = require('../models/User');
 
 // Import Card model and getPriceWithFallback from parent scope
@@ -508,9 +508,12 @@ router.get('/:id/stats', requireAuth, async (req, res) => {
 
     const saltScore = calculateSaltScore(deck);
     const powerLevel = estimatePowerLevel(deck, deckValue);
+    const manabaseScore = calculateManabaseScore(deck);
+    const healthScore = calculateDeckHealthScore(deck);
+    const globalScore = calculateGlobalScore(powerLevel, saltScore, manabaseScore, healthScore);
 
     if (!GameSession) {
-      return res.json({ gamesPlayed: 0, wins: 0, winRate: 0, avgPlacement: 0, avgTurns: 0, avgDuration: 0, bestMatchups: [], worstMatchups: [], powerLevel, saltScore });
+      return res.json({ gamesPlayed: 0, wins: 0, winRate: 0, avgPlacement: 0, avgTurns: 0, avgDuration: 0, bestMatchups: [], worstMatchups: [], powerLevel, saltScore, manabaseScore, healthScore, globalScore });
     }
 
     const deckId = deck._id;
@@ -557,7 +560,10 @@ router.get('/:id/stats', requireAuth, async (req, res) => {
       bestMatchups,
       worstMatchups,
       powerLevel,
-      saltScore
+      saltScore,
+      manabaseScore,
+      healthScore,
+      globalScore
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
