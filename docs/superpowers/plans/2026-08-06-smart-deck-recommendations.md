@@ -383,14 +383,18 @@ Add this `useEffect` near the other data-fetching `useEffect` (the one that fetc
 ```js
   useEffect(() => {
     if (!deck._id) return;
+    // cancelled guards against a stale response from a previous
+    // category/scope overwriting a newer one on rapid tab switching.
+    let cancelled = false;
     const token = localStorage.getItem('mtg_access_token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     setLoadingRecs(true);
     fetch(`${API_URL}/decks/${deck._id}/recommendations?category=${recCategory}&scope=${recScope}`, { headers })
       .then(r => r.ok ? r.json() : { cards: [] })
-      .then(data => setRecommendations(data.cards || []))
-      .catch(() => setRecommendations([]))
-      .finally(() => setLoadingRecs(false));
+      .then(data => { if (!cancelled) setRecommendations(data.cards || []); })
+      .catch(() => { if (!cancelled) setRecommendations([]); })
+      .finally(() => { if (!cancelled) setLoadingRecs(false); });
+    return () => { cancelled = true; };
   }, [deck._id, recCategory, recScope]);
 ```
 
@@ -410,7 +414,7 @@ Add these functions in the component body, near the other handler functions:
         scryfallId: scryfallCard.id,
         name: scryfallCard.name,
         manaCost: scryfallCard.mana_cost,
-        types: (scryfallCard.type_line || '').split('—')[0].trim().split(' '),
+        types: (scryfallCard.type_line || '').split('—')[0].trim().split(' ').filter(Boolean),
         colors: scryfallCard.colors || [],
         imageUrl: scryfallCard.image_uris?.normal || scryfallCard.card_faces?.[0]?.image_uris?.normal,
       });
@@ -425,6 +429,8 @@ Add these functions in the component body, near the other handler functions:
   };
 
   const addRecommendationToWishlist = (scryfallCard) => {
+    // addToWishlist (WishlistContext.js) already catches its own errors and
+    // alerts the user - no need to duplicate that handling here.
     addToWishlist(scryfallCard, deck.name);
   };
 ```
