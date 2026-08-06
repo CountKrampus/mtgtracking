@@ -4,10 +4,14 @@ import axios from 'axios';
 import { API_URL } from '../config';
 
 function CardRow({ card, selected, selectable, onSelect }) {
+  const Wrapper = selectable ? 'button' : 'div';
   return (
-    <div
+    <Wrapper
+      type={selectable ? 'button' : undefined}
       onClick={selectable ? onSelect : undefined}
-      className={`flex items-center justify-between p-2 rounded border text-sm ${
+      role={selectable ? 'radio' : undefined}
+      aria-checked={selectable ? selected : undefined}
+      className={`w-full flex items-center justify-between p-2 rounded border text-sm text-left ${
         selectable ? 'cursor-pointer' : ''
       } ${selected ? 'border-purple-500 bg-purple-600/20' : 'border-slate-700 bg-slate-800/50'}`}
     >
@@ -22,7 +26,7 @@ function CardRow({ card, selected, selectable, onSelect }) {
         <span className="text-slate-500">{card.condition}{card.isFoil ? ' · Foil' : ''}</span>
       </div>
       <div className="text-slate-300">×{card.quantity}</div>
-    </div>
+    </Wrapper>
   );
 }
 
@@ -86,15 +90,25 @@ export default function DuplicateCleanup({ isOpen, onClose, onMerged }) {
   const handleMergeAllExact = async () => {
     setMerging(true);
     setError('');
+    let mergedCount = 0;
+    let failureMessage = null;
     try {
       for (const group of exactGroups) {
         const [target, ...sources] = group.cards;
         await merge(target._id, sources.map(c => c._id));
+        mergedCount++;
       }
-      await afterMerge();
     } catch (err) {
-      setError(err.response?.data?.message || 'Merge failed');
+      const remaining = exactGroups.length - mergedCount;
+      failureMessage = `${err.response?.data?.message || 'Merge failed'} (merged ${mergedCount} of ${exactGroups.length} groups before this happened; the list below has been refreshed to reflect that — ${remaining} group(s) still need attention.)`;
     } finally {
+      // Refresh regardless of success/failure: even a partial run already
+      // deleted some source cards server-side, so re-fetching keeps the
+      // group list from referencing rows that no longer exist. Do this
+      // before restoring the failure message, since fetchDuplicates clears
+      // `error` as part of its own request lifecycle.
+      await afterMerge();
+      if (failureMessage) setError(failureMessage);
       setMerging(false);
     }
   };
