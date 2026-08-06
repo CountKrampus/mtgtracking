@@ -4,6 +4,7 @@ import ManaCurveChart from './ManaCurveChart';
 import DeckAnalysis from './DeckAnalysis';
 import DeckHandSimulator from './DeckHandSimulator';
 import { API_URL } from '../config';
+import { useWishlist } from '../contexts/WishlistContext';
 
 // ── CMC helpers ───────────────────────────────────────────────────────────────
 function parseCmcFromManaCost(manaCost) {
@@ -381,6 +382,7 @@ function calculateGlobalScore(powerLevel, saltScore, manabaseScore, healthScore)
 
 // ── Component ─────────────────────────────────────────────────────────────────
 function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, onEdit }) {
+  const { addToWishlist } = useWishlist();
   const [isEditingName, setIsEditingName] = useState(false);
   const [newDeckName, setNewDeckName] = useState(deck.name);
   const [deckStats, setDeckStats] = useState(null);
@@ -396,6 +398,10 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
   const [shareCopied, setShareCopied] = useState(false);
   const [shareError, setShareError] = useState('');
   const [addAllProgress, setAddAllProgress] = useState(null);
+  const [recCategory, setRecCategory] = useState('ramp'); // 'ramp' | 'draw' | 'removal'
+  const [recScope, setRecScope] = useState('owned'); // 'owned' | 'all'
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecs, setLoadingRecs] = useState(false);
 
   useEffect(() => {
     setShareCode(deck.shareCode || null);
@@ -422,6 +428,18 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
       .then(data => setChangelog(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, [deck._id]);
+
+  useEffect(() => {
+    if (!deck._id) return;
+    const token = localStorage.getItem('authToken');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    setLoadingRecs(true);
+    fetch(`${API_URL}/decks/${deck._id}/recommendations?category=${recCategory}&scope=${recScope}`, { headers })
+      .then(r => r.ok ? r.json() : { cards: [] })
+      .then(data => setRecommendations(data.cards || []))
+      .catch(() => setRecommendations([]))
+      .finally(() => setLoadingRecs(false));
+  }, [deck._id, recCategory, recScope]);
 
   // ── Salt Score ────────────────────────────────────────────────────────────
   const saltScore = useMemo(() => {
@@ -557,6 +575,30 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
     setAddAllProgress(null);
     alert(`Added ${added} cards to collection`);
     onRefresh();
+  };
+
+  const addRecommendationToDeck = async (scryfallCard) => {
+    try {
+      const response = await axios.post(`${API_URL}/decks/${deck._id}/add-card`, {
+        scryfallId: scryfallCard.id,
+        name: scryfallCard.name,
+        manaCost: scryfallCard.mana_cost,
+        types: (scryfallCard.type_line || '').split('—')[0].trim().split(' '),
+        colors: scryfallCard.colors || [],
+        imageUrl: scryfallCard.image_uris?.normal || scryfallCard.card_faces?.[0]?.image_uris?.normal,
+      });
+      if (response.status === 200) {
+        setRecommendations(prev => prev.filter(c => c.id !== scryfallCard.id));
+        onRefresh?.();
+      }
+    } catch (error) {
+      console.error('Error adding recommendation to deck:', error);
+      alert('Error adding card to deck');
+    }
+  };
+
+  const addRecommendationToWishlist = (scryfallCard) => {
+    addToWishlist(scryfallCard, deck.name);
   };
 
   const handleSaveRename = async () => {
@@ -1099,6 +1141,90 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+
+          {/* Recommendations */}
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30 mb-6">
+            <h3 className="text-lg font-bold text-white mb-4">Recommendations</h3>
+
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex gap-2">
+                {['ramp', 'draw', 'removal'].map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setRecCategory(cat)}
+                    className={`px-3 py-1 rounded text-sm font-medium capitalize transition ${
+                      recCategory === cat ? 'bg-purple-600 text-white' : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setRecScope('owned')}
+                  className={`px-3 py-1 rounded text-xs font-medium transition ${
+                    recScope === 'owned' ? 'bg-purple-600 text-white' : 'bg-white/10 text-white/60 hover:bg-white/20'
+                  }`}
+                >
+                  My Collection
+                </button>
+                <button
+                  onClick={() => setRecScope('all')}
+                  className={`px-3 py-1 rounded text-xs font-medium transition ${
+                    recScope === 'all' ? 'bg-purple-600 text-white' : 'bg-white/10 text-white/60 hover:bg-white/20'
+                  }`}
+                >
+                  All of Magic
+                </button>
+              </div>
+            </div>
+
+            {loadingRecs ? (
+              <div className="text-white/40 text-center text-sm py-8">Loading recommendations...</div>
+            ) : recommendations.length === 0 ? (
+              <div className="text-white/40 text-center text-sm py-8">
+                No {recCategory} recommendations found for this deck's colors.
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {recommendations.map(card => (
+                  <div key={card.id} className="bg-white/5 rounded-lg overflow-hidden">
+                    {(card.image_uris?.normal || card.card_faces?.[0]?.image_uris?.normal) ? (
+                      <img
+                        src={card.image_uris?.normal || card.card_faces[0].image_uris.normal}
+                        alt={card.name}
+                        className="w-full h-auto"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="aspect-[2.5/3.5] bg-gray-700 flex items-center justify-center">
+                        <span className="text-white/60 text-xs text-center p-2">{card.name}</span>
+                      </div>
+                    )}
+                    <div className="p-2">
+                      <h4 className="text-white text-xs font-semibold truncate" title={card.name}>{card.name}</h4>
+                      {card.owned ? (
+                        <button
+                          onClick={() => addRecommendationToDeck(card)}
+                          className="w-full mt-1 px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded transition"
+                        >
+                          + Add to Deck
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => addRecommendationToWishlist(card)}
+                          className="w-full mt-1 px-2 py-1 bg-pink-600 hover:bg-pink-700 text-white text-xs rounded transition"
+                        >
+                          + Add to Wishlist
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
