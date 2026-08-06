@@ -16,6 +16,7 @@ import PriceUpdateModal from './CollectionTools/PriceUpdateModal';
 import CommanderRecommendationsModal from './CollectionTools/CommanderRecommendationsModal';
 import SetCompletionModal from './CollectionTools/SetCompletionModal';
 import ComboFinderModal from './CollectionTools/ComboFinderModal';
+import FinancePanel from './CollectionTools/FinancePanel';
 import { useAuthContext } from '../contexts/AuthContext';
 import { useCardCollection } from '../contexts/CardCollectionContext';
 import { useLocationTag } from '../contexts/LocationTagContext';
@@ -230,7 +231,6 @@ function CollectionView({
   showImportResults, setShowImportResults,
   showQRPreview, setShowQRPreview, qrPreviewLocation, setQRPreviewLocation,
   qrDataUrls, setQrDataUrls, showPrintLabels, setShowPrintLabels, generateQR,
-  showFinancePanel, setShowFinancePanel, financeData, openFinancePanel,
 }) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -2498,40 +2498,10 @@ function CollectionView({
           updateAllPrices={updateAllPrices}
         />
 
-        {/* Finance Panel Modal */}
-        {showFinancePanel && financeData && (
-          <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
-            <div className="bg-slate-900 rounded-t-2xl sm:rounded-lg border border-slate-700 sm:max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-white">Portfolio Finance</h2>
-                <button onClick={() => setShowFinancePanel(false)} className="text-slate-400 hover:text-white">
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <div className="bg-slate-800/50 p-3 rounded">
-                  <p className="text-slate-400 text-sm">Collection Value</p>
-                  <p className="text-white font-bold text-xl">${financeData.collectionValue.toFixed(2)}</p>
-                </div>
-                <div className="bg-slate-800/50 p-3 rounded">
-                  <p className="text-slate-400 text-sm">Buylist Value</p>
-                  <p className="text-green-400 font-bold text-xl">${financeData.buylistValue.toFixed(2)}</p>
-                </div>
-                <div className="bg-slate-800/50 p-3 rounded">
-                  <p className="text-slate-400 text-sm">Sell Value</p>
-                  <p className="text-yellow-400 font-bold text-xl">${financeData.sellValue.toFixed(2)}</p>
-                </div>
-                <div className="bg-slate-800/50 p-3 rounded">
-                  <p className="text-slate-400 text-sm">Spread (Collection - Buylist)</p>
-                  <p className={`font-bold text-xl ${financeData.spread > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    ${financeData.spread.toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <FinancePanel
+          isOpen={activeTool === 'finance'}
+          onClose={() => setActiveTool(null)}
+        />
 
         {priceAlertCard && (
           <PriceAlertModal
@@ -2636,7 +2606,7 @@ function CollectionView({
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           onImport={() => fileInputRef.current?.click()}
-          disabled={selectedCards.size > 0 || activeTool === 'priceUpdate' || showImportResults || !!bulkUpdateModal || showPrintPreview || showSimilarCards || showSynergies || showFinancePanel}
+          disabled={selectedCards.size > 0 || activeTool === 'priceUpdate' || activeTool === 'finance' || showImportResults || !!bulkUpdateModal || showPrintPreview || showSimilarCards || showSynergies}
         />
     </>
   );

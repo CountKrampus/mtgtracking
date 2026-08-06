@@ -178,8 +178,6 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [showFinancePanel, setShowFinancePanel] = useState(false);
-  const [financeData, setFinanceData] = useState(null);
   const [importResults, setImportResults] = useState(null);
   const [showImportResults, setShowImportResults] = useState(false);
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0, cardName: '' });
@@ -224,16 +222,6 @@ function App() {
     } catch (err) {
       console.error('QR generation failed:', err);
       return null;
-    }
-  };
-
-  const openFinancePanel = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/finance`);
-      setFinanceData(response.data);
-      setShowFinancePanel(true);
-    } catch (error) {
-      console.error('Error fetching finance data:', error);
     }
   };
 
@@ -375,7 +363,7 @@ function App() {
       { id: 'act-export-csv', label: 'Export as CSV', icon: Download, category: 'Actions', action: () => exportData('csv') },
       { id: 'act-prices', label: 'Update Prices', icon: RefreshCw, category: 'Actions', action: () => navigate('/collection?tool=priceUpdate') },
       { id: 'act-text', label: 'Fetch Card Text', icon: RefreshCw, category: 'Actions', action: () => updateAllOracleText() },
-      { id: 'act-finance', label: 'View Finance', icon: DollarSign, category: 'Actions', action: () => openFinancePanel() },
+      { id: 'act-finance', label: 'View Finance', icon: DollarSign, category: 'Actions', action: () => navigate('/collection?tool=finance') },
       { id: 'act-search', label: 'Focus Search', icon: Search, category: 'Actions', action: () => navigate('/collection') },
       // Tools
       { id: 'tool-commanders', label: 'Commander Recommendations', icon: Crown, category: 'Tools', action: () => navigate('/collection?tool=commanderRecs'), feature: 'commanderRecs' },
@@ -441,7 +429,7 @@ function App() {
         onCommanders={() => navigate('/collection?tool=commanderRecs')}
         onSets={() => navigate('/collection?tool=setCompletion')}
         onCombos={() => navigate('/collection?tool=comboFinder')}
-        onFinance={openFinancePanel}
+        onFinance={() => navigate('/collection?tool=finance')}
         onOpenSettings={() => navigate('/settings')}
         onOpenCamera={() => navigate('/collection')}
         onCommandPalette={() => setShowCommandPalette(true)}
@@ -508,8 +496,6 @@ function App() {
                   qrDataUrls={qrDataUrls} setQrDataUrls={setQrDataUrls}
                   showPrintLabels={showPrintLabels} setShowPrintLabels={setShowPrintLabels}
                   generateQR={generateQR}
-                  showFinancePanel={showFinancePanel} setShowFinancePanel={setShowFinancePanel}
-                  financeData={financeData} openFinancePanel={openFinancePanel}
                 />
               </Suspense>
             } />
