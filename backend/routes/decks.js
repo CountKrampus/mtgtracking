@@ -18,6 +18,7 @@ const { buildUserQuery, getUserId } = require('../middleware/multiUser');
 const { activityLoggers } = require('../middleware/activityLogger');
 const { checkAndAwardBadges } = require('../utils/badgeManager');
 const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore } = require('../utils/deckAnalysis');
+const { cachedApiCall } = require('../utils/apiCache');
 const User = require('../models/User');
 
 // Import Card model and getPriceWithFallback from parent scope
@@ -30,6 +31,27 @@ function injectDependencies(cardModel, priceFunction, gameSessionModel) {
   Card = cardModel;
   getPriceWithFallback = priceFunction;
   GameSession = gameSessionModel;
+}
+
+// Category search queries for GET /:id/recommendations - matches the style
+// of cardInsights.js's MECHANIC_PATTERNS/KEYWORD_PATTERNS, but lives here
+// (not cardInsights.js) since this route is deck-scoped, not card-scoped,
+// and needs the Deck model this file already has access to.
+const RECOMMENDATION_CATEGORIES = {
+  ramp: 'o:"search your library" o:"land" OR o:"add" o:"mana"',
+  draw: 'o:"draw a card" OR o:"draw two cards"',
+  removal: 'o:"destroy target" OR o:"exile target"',
+};
+
+// Union of colors from the commander(s) and every mainDeck card - the same
+// "what colors does this deck actually play" signal already used by
+// calculateManabaseScore/estimatePowerLevel in utils/deckAnalysis.js.
+function getDeckColorIdentity(deck) {
+  const colors = new Set();
+  [deck.commander, deck.partnerCommander, ...deck.mainDeck].forEach(card => {
+    (card?.colors || []).forEach(c => colors.add(c));
+  });
+  return Array.from(colors);
 }
 
 // Get all decks
@@ -565,6 +587,60 @@ router.get('/:id/stats', requireAuth, async (req, res) => {
       healthScore,
       globalScore
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get card recommendations (ramp/draw/removal) for a deck, scoped to the
+// user's collection by default or expanded to all of Magic
+router.get('/:id/recommendations', requireAuth, async (req, res) => {
+  try {
+    const { category, scope = 'owned' } = req.query;
+    if (!RECOMMENDATION_CATEGORIES[category]) {
+      return res.status(400).json({ message: `category must be one of: ${Object.keys(RECOMMENDATION_CATEGORIES).join(', ')}` });
+    }
+
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(query);
+    if (!deck) return res.status(404).json({ message: 'Deck not found' });
+
+    const colors = getDeckColorIdentity(deck);
+    const colorQuery = colors.length > 0 ? `id<=${colors.map(c => c.toLowerCase()).join('')}` : 'id:c';
+
+    const excludedNames = new Set([
+      ...deck.mainDeck.map(c => c.name),
+      deck.commander?.name,
+      deck.partnerCommander?.name,
+    ].filter(Boolean));
+
+    const searchQuery = `(${RECOMMENDATION_CATEGORIES[category]}) ${colorQuery}`;
+    const data = await cachedApiCall(`scryfall-search:${searchQuery}`, async () => {
+      const response = await axios.get(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}&order=edhrec&unique=cards`);
+      return response.data;
+    });
+
+    let candidates = (data.data || [])
+      .filter(c => !excludedNames.has(c.name))
+      .slice(0, 20);
+
+    let ownedScryfallIds = new Set();
+    let ownedNames = new Set();
+    if (Card) {
+      const cardQuery = buildUserQuery({}, req);
+      const collectionCards = await Card.find(cardQuery);
+      collectionCards.forEach(c => {
+        if (c.scryfallId) ownedScryfallIds.add(c.scryfallId);
+        else ownedNames.add(c.name);
+      });
+    }
+
+    const isOwned = (scryfallCard) => ownedScryfallIds.has(scryfallCard.id) || ownedNames.has(scryfallCard.name);
+
+    const cardsWithOwnership = candidates.map(c => ({ ...c, owned: isOwned(c) }));
+    const cards = scope === 'owned' ? cardsWithOwnership.filter(c => c.owned) : cardsWithOwnership;
+
+    res.json({ category, scope, cards });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
