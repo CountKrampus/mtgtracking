@@ -1,4 +1,4 @@
-const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore } = require('../utils/deckAnalysis');
+const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore } = require('../utils/deckAnalysis');
 
 describe('calculateSaltScore', () => {
   test('sums salt values for salty cards in mainDeck and commander', () => {
@@ -126,5 +126,47 @@ describe('calculateManabaseScore', () => {
   test('handles a deck with no mainDeck', () => {
     const result = calculateManabaseScore({});
     expect(result).toEqual({ grade: 'N/A', bySourceColor: {}, landCount: 0, recommendedLandRange: [36, 38] });
+  });
+});
+
+describe('calculateDeckHealthScore', () => {
+  test('scores a deck with good curve, ramp, draw, and removal highly', () => {
+    const deck = {
+      mainDeck: [
+        ...Array(36).fill({ name: 'Forest', types: ['Land'] }),
+        { name: 'Llanowar Elves', manaCost: '{G}', types: ['Creature'] },
+        { name: 'Rampant Growth', manaCost: '{1}{G}', types: ['Sorcery'] },
+        { name: 'Sylvan Library', manaCost: '{G}', types: ['Enchantment'] },
+        { name: 'Beast Within', manaCost: '{2}{G}', types: ['Instant'] },
+        ...Array(60).fill({ name: 'Grizzly Bears', manaCost: '{1}{G}', types: ['Creature'] })
+      ]
+    };
+    const result = calculateDeckHealthScore(deck);
+    expect(result.score).toBeGreaterThan(50);
+    expect(result.breakdown.ramp).toBeGreaterThan(0);
+    expect(result.breakdown.draw).toBeGreaterThan(0);
+  });
+
+  test('scores a deck with no ramp, draw, or removal lower than one with all three', () => {
+    const bareDeck = {
+      mainDeck: [
+        ...Array(36).fill({ name: 'Forest', types: ['Land'] }),
+        ...Array(64).fill({ name: 'Grizzly Bears', manaCost: '{1}{G}', types: ['Creature'] })
+      ]
+    };
+    const equippedDeck = {
+      mainDeck: [
+        ...Array(36).fill({ name: 'Forest', types: ['Land'] }),
+        { name: 'Rampant Growth', manaCost: '{1}{G}', types: ['Sorcery'] },
+        { name: 'Sylvan Library', manaCost: '{G}', types: ['Enchantment'] },
+        { name: 'Beast Within', manaCost: '{2}{G}', types: ['Instant'] },
+        ...Array(61).fill({ name: 'Grizzly Bears', manaCost: '{1}{G}', types: ['Creature'] })
+      ]
+    };
+    expect(calculateDeckHealthScore(equippedDeck).score).toBeGreaterThan(calculateDeckHealthScore(bareDeck).score);
+  });
+
+  test('handles a deck with no mainDeck', () => {
+    expect(calculateDeckHealthScore({})).toEqual({ score: 0, breakdown: { curveSmoothness: 0, ramp: 0, draw: 0, removal: 0, landRatio: 0 } });
   });
 });

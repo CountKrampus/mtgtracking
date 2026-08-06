@@ -1,3 +1,5 @@
+const { parseCMC } = require('./deckHelpers');
+
 // Ported verbatim from frontend/src/components/DeckDetail.js:107-127.
 // Keep both tables in sync if MTG's meta/salt consensus changes.
 const SALTY_CARDS = {
@@ -43,6 +45,14 @@ const POWER_INDICATORS = {
   powerhouses: ['Rhystic Study', 'Smothering Tithe', 'Dockside Extortionist',
                 'Consecrated Sphinx', 'Necropotence', 'Ad Nauseam', 'Sylvan Library',
                 'Mystic Remora', 'Esper Sentinel', 'Seedborn Muse', 'Prophet of Kruphix'],
+  ramp: ['Rampant Growth', 'Cultivate', 'Kodama\'s Reach', 'Farseek', 'Nature\'s Lore',
+         'Three Visits', 'Sakura-Tribe Elder', 'Llanowar Elves', 'Elvish Mystic',
+         'Birds of Paradise', 'Arbor Elf', 'Wood Elves', 'Skyshroud Claim',
+         'Explosive Vegetation', 'Signet', 'Talisman'], // last two match by substring below, not exact name
+  draw: ['Sylvan Library', 'Phyrexian Arena', 'Mystic Remora', 'Rhystic Study',
+         'Fact or Fiction', 'Blue Sun\'s Zenith', 'Harmonize', 'Night\'s Whisper',
+         'Sign in Blood', 'Read the Bones', 'Divination', 'Concentrate',
+         'Windfall', 'Faithless Looting', 'Guardian Project'],
 };
 
 const BASIC_LAND_COLORS = { Plains: 'W', Island: 'U', Swamp: 'B', Mountain: 'R', Forest: 'G' };
@@ -235,4 +245,67 @@ function estimatePowerLevel(deck, deckValue) {
   return { level: Math.min(10, Math.max(1, Math.round(3 + score))), breakdown };
 }
 
-module.exports = { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, SALTY_CARDS, POWER_INDICATORS, COLOR_SOURCES };
+function calculateDeckHealthScore(deck) {
+  if (!deck.mainDeck) return { score: 0, breakdown: { curveSmoothness: 0, ramp: 0, draw: 0, removal: 0, landRatio: 0 } };
+
+  const allCards = deck.mainDeck;
+  let totalCards = 0, landCards = 0;
+  const curveBuckets = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, '7+': 0 };
+  let ramp = 0, draw = 0, removal = 0;
+
+  allCards.forEach(card => {
+    const quantity = card.quantity || 1;
+    totalCards += quantity;
+    const isLand = (card.types || []).includes('Land');
+    if (isLand) { landCards += quantity; return; }
+
+    const cmc = parseCMC(card.manaCost);
+    const bucket = cmc >= 7 ? '7+' : cmc.toString();
+    curveBuckets[bucket] += quantity;
+
+    const isRamp = POWER_INDICATORS.ramp.some(name =>
+      name === card.name || ((name === 'Signet' || name === 'Talisman') && card.name.includes(name))
+    );
+    if (isRamp) ramp += quantity;
+    if (POWER_INDICATORS.draw.includes(card.name)) draw += quantity;
+    if (POWER_INDICATORS.efficientRemoval.includes(card.name)) removal += quantity;
+  });
+
+  // Curve smoothness: penalize decks that are too top-heavy (fewer than 30% of
+  // nonland cards at CMC 0-2) or too thin early (fewer than 10% at CMC 1-2).
+  const nonLandTotal = totalCards - landCards;
+  const cheapCards = curveBuckets[0] + curveBuckets[1] + curveBuckets[2];
+  const veryCheapCards = curveBuckets[1] + curveBuckets[2];
+  let curveSmoothness = 100;
+  if (nonLandTotal > 0) {
+    const cheapRatio = cheapCards / nonLandTotal;
+    const veryCheapRatio = veryCheapCards / nonLandTotal;
+    if (cheapRatio < 0.3) curveSmoothness -= (0.3 - cheapRatio) * 200;
+    if (veryCheapRatio < 0.1) curveSmoothness -= (0.1 - veryCheapRatio) * 150;
+    curveSmoothness = Math.max(0, Math.min(100, Math.round(curveSmoothness)));
+  } else {
+    curveSmoothness = 0;
+  }
+
+  // Ramp/draw/removal: Commander norms are roughly 10/10/10 out of 99 - scale
+  // each count to a 0-100 sub-score capped at the norm (more isn't scored
+  // higher past the norm; this is a floor-check, not a maximize-everything score).
+  const rampScore = Math.min(100, Math.round((ramp / 10) * 100));
+  const drawScore = Math.min(100, Math.round((draw / 10) * 100));
+  const removalScore = Math.min(100, Math.round((removal / 10) * 100));
+
+  // Land ratio: 36-38 lands out of 99 is the target range (matches
+  // calculateManabaseScore's recommendedLandRange) - full marks inside it,
+  // tapering off outside.
+  let landRatio = 100;
+  if (landCards < 36) landRatio = Math.max(0, 100 - (36 - landCards) * 10);
+  else if (landCards > 38) landRatio = Math.max(0, 100 - (landCards - 38) * 10);
+
+  const score = Math.round(
+    curveSmoothness * 0.3 + rampScore * 0.2 + drawScore * 0.2 + removalScore * 0.15 + landRatio * 0.15
+  );
+
+  return { score, breakdown: { curveSmoothness, ramp: rampScore, draw: drawScore, removal: removalScore, landRatio } };
+}
+
+module.exports = { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, SALTY_CARDS, POWER_INDICATORS, COLOR_SOURCES };
