@@ -266,6 +266,30 @@ function findDuplicateGroups(cards) {
   return { exactGroups, suggestedGroups };
 }
 
+// Fields backfilled from sources when the target's value is empty/missing.
+const MERGE_BACKFILL_FIELDS = ['location', 'oracleText', 'manaCost', 'imageUrl', 'scryfallId', 'rarity', 'collectorNumber', 'setCode'];
+const MERGE_BACKFILL_ARRAY_FIELDS = ['colors', 'types'];
+
+function applyMerge(target, sources) {
+  for (const source of sources) {
+    target.quantity += source.quantity;
+
+    for (const tag of source.tags || []) {
+      if (!target.tags.includes(tag)) target.tags.push(tag);
+    }
+
+    for (const field of MERGE_BACKFILL_FIELDS) {
+      if (!target[field] && source[field]) target[field] = source[field];
+    }
+    for (const field of MERGE_BACKFILL_ARRAY_FIELDS) {
+      if ((!target[field] || target[field].length === 0) && source[field] && source[field].length > 0) {
+        target[field] = source[field];
+      }
+    }
+  }
+  return target;
+}
+
 module.exports = {
   VALID_CONDITIONS,
   VALID_PRIORITIES,
@@ -275,5 +299,6 @@ module.exports = {
   validateBulkUpdatePayload,
   buildCardListQuery,
   normalizeTag,
-  findDuplicateGroups
+  findDuplicateGroups,
+  applyMerge
 };

@@ -12,7 +12,7 @@ const { fetchCardFromScryfall } = require('../utils/scryfallLookup');
 const Card = require('../models/Card');
 const CardPriceSnapshot = require('../models/CardPriceSnapshot');
 const CardPriceHistory = require('../models/CardPriceHistory');
-const { parseCardLine, getDuplicateCardQuery, validateCardPayload, validateBulkUpdatePayload, buildCardListQuery, normalizeTag, findDuplicateGroups } = require('../utils/cardUtils');
+const { parseCardLine, getDuplicateCardQuery, validateCardPayload, validateBulkUpdatePayload, buildCardListQuery, normalizeTag, findDuplicateGroups, applyMerge } = require('../utils/cardUtils');
 
 router.use(verifyToken);
 
@@ -63,6 +63,46 @@ router.get('/duplicates', requireAuth, async (req, res) => {
     const query = buildUserQuery({}, req);
     const cards = await Card.find(query).sort({ createdAt: 1 }).lean();
     res.json(findDuplicateGroups(cards));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Merge duplicate rows into a target card, deleting the sources
+router.post('/merge-duplicates', requireAuth, requireEditor, activityLoggers.cardUpdate, async (req, res) => {
+  try {
+    const { targetId, sourceIds } = req.body;
+    if (!targetId || !Array.isArray(sourceIds) || sourceIds.length === 0) {
+      return res.status(400).json({ message: 'targetId and a non-empty sourceIds array are required' });
+    }
+    if (sourceIds.includes(targetId)) {
+      return res.status(400).json({ message: 'targetId cannot be one of sourceIds' });
+    }
+
+    const userId = getUserId(req);
+    const target = await Card.findOne(buildUserQuery({ _id: targetId }, req));
+    if (!target) return res.status(404).json({ message: 'Target card not found' });
+
+    const sources = await Card.find(buildUserQuery({ _id: { $in: sourceIds } }, req));
+    if (sources.length !== sourceIds.length) {
+      return res.status(404).json({ message: 'One or more source cards not found' });
+    }
+
+    const mismatched = sources.find(s =>
+      s.name !== target.name ||
+      s.condition !== target.condition ||
+      Boolean(s.isFoil) !== Boolean(target.isFoil)
+    );
+    if (mismatched) {
+      return res.status(400).json({ message: 'All cards in a merge must match on name, condition, and foil status' });
+    }
+
+    applyMerge(target, sources);
+    await target.save();
+    await Card.deleteMany({ _id: { $in: sources.map(s => s._id) } });
+
+    clearCache(userId);
+    res.json({ merged: true, target, removedCount: sources.length });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
