@@ -154,6 +154,25 @@ describe('GET /api/decks/:id/recommendations', () => {
     expect(byName["Kodama's Reach"]).toBe(false);
   });
 
+  test('scope=owned finds an owned card ranked outside the top 20 Scryfall results, not just the first page', async () => {
+    const user = await makeUser();
+    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['G'] }, mainDeck: [] });
+    // The owned card is ranked 21st by Scryfall/EDHREC popularity - a naive
+    // slice(0, 20) applied before ownership filtering would never see it.
+    await Card.create({ userId: user._id, name: 'Card 21', condition: 'NM', scryfallId: 'candidate-21', quantity: 1 });
+    const token = tokenFor(user);
+
+    const results = Array.from({ length: 25 }, (_, i) => scryfallCard({ id: `candidate-${i + 1}`, name: `Card ${i + 1}` }));
+    axios.get.mockResolvedValueOnce({ data: { data: results } });
+
+    const res = await request(app)
+      .get(`/api/decks/${deck._id}/recommendations?category=ramp&scope=owned`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(res.body.cards.map(c => c.name)).toEqual(['Card 21']);
+  });
+
   test('rejects unauthenticated requests', async () => {
     const user = await makeUser();
     const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['G'] }, mainDeck: [] });
