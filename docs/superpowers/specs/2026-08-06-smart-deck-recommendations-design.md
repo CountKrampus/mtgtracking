@@ -10,8 +10,10 @@ Phase 2 of the Smart Deck Score feature (see `docs/superpowers/specs/2026-08-06-
 
 Query params: `category` (`ramp` | `draw` | `removal`, required), `scope` (`owned` | `all`, defaults to `owned`).
 
+Lives in **`backend/routes/decks.js`**, not `cardInsights.js` — `cardInsights.js` is mounted at `/api/cards` and its `:id` refers to a card in the collection, not a deck; this route's `:id` is a deck id and needs `Deck` model access, which only `decks.js` has wired up. The Scryfall-search-plus-EDHREC-ordering *pattern* is borrowed from `cardInsights.js`'s `similar`/`synergies` routes (including reusing `cachedApiCall` from `utils/apiCache`), but the route itself and its curated category-query table live in `decks.js` alongside the rest of the deck-specific logic.
+
 1. **Color identity**: derived from the deck's commander(s) + colors already present in `mainDeck` (the same signal already used by `estimatePowerLevel`/`calculateManabaseScore` in `backend/utils/deckAnalysis.js` — no new color-detection logic, reuse what exists).
-2. **Category search query**: a new curated table in `backend/routes/cardInsights.js`, matching the file's existing `MECHANIC_PATTERNS`/`KEYWORD_PATTERNS` style:
+2. **Category search query**: a new curated table in `backend/routes/decks.js`, matching the style of `cardInsights.js`'s existing `MECHANIC_PATTERNS`/`KEYWORD_PATTERNS`:
    ```js
    const RECOMMENDATION_CATEGORIES = {
      ramp: 'o:"search your library" o:"land" OR o:"add" o:"mana"',
