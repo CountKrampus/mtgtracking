@@ -146,7 +146,232 @@ const POWER_INDICATORS = {
   powerhouses: ['Rhystic Study', 'Smothering Tithe', 'Dockside Extortionist',
                 'Consecrated Sphinx', 'Necropotence', 'Ad Nauseam', 'Sylvan Library',
                 'Mystic Remora', 'Esper Sentinel', 'Seedborn Muse', 'Prophet of Kruphix'],
+  ramp: ['Rampant Growth', 'Cultivate', 'Kodama\'s Reach', 'Farseek', 'Nature\'s Lore',
+         'Three Visits', 'Sakura-Tribe Elder', 'Llanowar Elves', 'Elvish Mystic',
+         'Birds of Paradise', 'Arbor Elf', 'Wood Elves', 'Skyshroud Claim',
+         'Explosive Vegetation', 'Signet', 'Talisman'], // last two match by substring below, not exact name
+  draw: ['Sylvan Library', 'Phyrexian Arena', 'Mystic Remora', 'Rhystic Study',
+         'Fact or Fiction', 'Blue Sun\'s Zenith', 'Harmonize', 'Night\'s Whisper',
+         'Sign in Blood', 'Read the Bones', 'Divination', 'Concentrate',
+         'Windfall', 'Faithless Looting', 'Guardian Project'],
 };
+
+// ── Manabase / Deck Health score helpers (ported from backend/utils/deckAnalysis.js;
+// kept in sync per the existing SALTY_CARDS/POWER_INDICATORS duplication convention) ──
+const BASIC_LAND_COLORS = { Plains: 'W', Island: 'U', Swamp: 'B', Mountain: 'R', Forest: 'G' };
+
+// Nonbasic lands and mana rocks that produce specific colors. Not exhaustive
+// (same spirit as SALTY_CARDS/POWER_INDICATORS above) - covers the most common
+// Commander staples. Cards that produce colorless-only mana (Sol Ring, Mana
+// Crypt, Mana Vault, etc.) are deliberately absent - they live in
+// POWER_INDICATORS.fastMana instead, a different classification for a
+// different purpose, and must never be treated as a color source here.
+const COLOR_SOURCES = {
+  // True duals / original duals
+  'Tundra': ['W', 'U'], 'Underground Sea': ['U', 'B'], 'Badlands': ['B', 'R'],
+  'Taiga': ['R', 'G'], 'Savannah': ['G', 'W'], 'Scrubland': ['W', 'B'],
+  'Volcanic Island': ['U', 'R'], 'Bayou': ['B', 'G'], 'Plateau': ['R', 'W'],
+  'Tropical Island': ['G', 'U'],
+  // Shocklands
+  'Hallowed Fountain': ['W', 'U'], 'Watery Grave': ['U', 'B'], 'Blood Crypt': ['B', 'R'],
+  'Stomping Ground': ['R', 'G'], 'Temple Garden': ['G', 'W'], 'Godless Shrine': ['W', 'B'],
+  'Steam Vents': ['U', 'R'], 'Overgrown Tomb': ['B', 'G'], 'Sacred Foundry': ['R', 'W'],
+  'Breeding Pool': ['G', 'U'],
+  // Fetchlands (count toward both colors they can fetch, since which basic/dual
+  // they actually grab varies by deck - a simplification, not a precise model)
+  'Flooded Strand': ['W', 'U'], 'Polluted Delta': ['U', 'B'], 'Bloodstained Mire': ['B', 'R'],
+  'Wooded Foothills': ['R', 'G'], 'Windswept Heath': ['G', 'W'], 'Marsh Flats': ['W', 'B'],
+  'Scalding Tarn': ['U', 'R'], 'Verdant Catacombs': ['B', 'G'], 'Arid Mesa': ['R', 'W'],
+  'Misty Rainforest': ['G', 'U'],
+  // Universal fixers
+  'Command Tower': ['W', 'U', 'B', 'R', 'G'], 'Exotic Orchard': ['W', 'U', 'B', 'R', 'G'],
+  'Path of Ancestry': ['W', 'U', 'B', 'R', 'G'], 'Arcane Signet': ['W', 'U', 'B', 'R', 'G'],
+  'Fellwar Stone': ['W', 'U', 'B', 'R', 'G'], 'Chromatic Lantern': ['W', 'U', 'B', 'R', 'G'],
+  // Signets (two-color rocks)
+  'Azorius Signet': ['W', 'U'], 'Dimir Signet': ['U', 'B'], 'Rakdos Signet': ['B', 'R'],
+  'Gruul Signet': ['R', 'G'], 'Selesnya Signet': ['G', 'W'], 'Orzhov Signet': ['W', 'B'],
+  'Izzet Signet': ['U', 'R'], 'Golgari Signet': ['B', 'G'], 'Boros Signet': ['R', 'W'],
+  'Simic Signet': ['G', 'U'],
+};
+
+// COLOR_SOURCES mixes actual lands (duals/shocks/fetches/Command Tower/Exotic
+// Orchard/Path of Ancestry) with mana rocks that happen to fix color
+// (Signets/Arcane Signet/Fellwar Stone/Chromatic Lantern) - both belong in
+// that table since it's about "what colors does this produce," but only the
+// former group counts toward land count. Listed separately here rather than
+// tagging COLOR_SOURCES entries, since land-vs-rock and color-production are
+// two independent questions about the same card.
+const NONBASIC_LAND_NAMES = new Set([
+  'Tundra', 'Underground Sea', 'Badlands', 'Taiga', 'Savannah', 'Scrubland',
+  'Volcanic Island', 'Bayou', 'Plateau', 'Tropical Island',
+  'Hallowed Fountain', 'Watery Grave', 'Blood Crypt', 'Stomping Ground', 'Temple Garden',
+  'Godless Shrine', 'Steam Vents', 'Overgrown Tomb', 'Sacred Foundry', 'Breeding Pool',
+  'Flooded Strand', 'Polluted Delta', 'Bloodstained Mire', 'Wooded Foothills', 'Windswept Heath',
+  'Marsh Flats', 'Scalding Tarn', 'Verdant Catacombs', 'Arid Mesa', 'Misty Rainforest',
+  'Command Tower', 'Exotic Orchard', 'Path of Ancestry',
+]);
+
+function isLandCard(card) {
+  return (card.types || []).includes('Land')
+    || Object.prototype.hasOwnProperty.call(BASIC_LAND_COLORS, card.name)
+    || NONBASIC_LAND_NAMES.has(card.name);
+}
+
+// Frank Karsten's published mana-source-count research (ChannelFireball,
+// widely used as the community-standard reference), scaled from his 60-card
+// baseline (14/18/21+ sources for single/double/triple-pip) to Commander's
+// 99-card singleton format by the commonly-cited ~1.6x factor.
+const KARSTEN_TARGETS = { 1: 22, 2: 29, 3: 34 };
+
+function calculateManabaseScore(deck) {
+  if (!deck.mainDeck) return { grade: 'N/A', bySourceColor: {}, landCount: 0, recommendedLandRange: [36, 38] };
+
+  const allCards = [...deck.mainDeck];
+  if (deck.commander) allCards.push(deck.commander);
+  if (deck.partnerCommander?.name) allCards.push(deck.partnerCommander);
+
+  let landCount = 0;
+  const sourcesByColor = { W: 0, U: 0, B: 0, R: 0, G: 0 };
+  const demandByColor = { W: 0, U: 0, B: 0, R: 0, G: 0 };
+  const pipCountByColor = { W: 0, U: 0, B: 0, R: 0, G: 0 }; // for computing avg pips/card
+
+  allCards.forEach(card => {
+    const quantity = card.quantity || 1;
+
+    if (isLandCard(card)) landCount += quantity;
+
+    const basicColor = BASIC_LAND_COLORS[card.name];
+    if (basicColor) sourcesByColor[basicColor] += quantity;
+
+    const fixingColors = COLOR_SOURCES[card.name];
+    if (fixingColors) fixingColors.forEach(c => { sourcesByColor[c] += quantity; });
+
+    if (!isLandCard(card) && card.manaCost) {
+      const pipMatches = card.manaCost.match(/\{([WUBRG])\}/g) || [];
+      pipMatches.forEach(symbol => {
+        const color = symbol.replace(/[{}]/g, '');
+        demandByColor[color] += quantity;
+        pipCountByColor[color] += quantity;
+      });
+    }
+  });
+
+  const bySourceColor = {};
+  let worstGradeValue = null;
+
+  Object.keys(demandByColor).forEach(color => {
+    if (demandByColor[color] === 0) return; // color not actually played - no requirement
+
+    const nonLandCardsOfColor = allCards.filter(c => !isLandCard(c) && (c.manaCost || '').includes(`{${color}}`));
+    const cardCountOfColor = nonLandCardsOfColor.reduce((sum, c) => sum + (c.quantity || 1), 0) || 1;
+    const avgPipsPerCard = pipCountByColor[color] / cardCountOfColor;
+
+    let target;
+    if (avgPipsPerCard >= 3) target = KARSTEN_TARGETS[3];
+    else if (avgPipsPerCard >= 2) target = KARSTEN_TARGETS[2];
+    else target = KARSTEN_TARGETS[1];
+
+    const sources = sourcesByColor[color];
+    bySourceColor[color] = { sources, target };
+
+    const ratio = sources / target;
+    worstGradeValue = worstGradeValue === null ? ratio : Math.min(worstGradeValue, ratio);
+  });
+
+  let grade;
+  if (worstGradeValue === null) grade = 'N/A';
+  else if (worstGradeValue >= 1.1) grade = 'A';
+  else if (worstGradeValue >= 0.95) grade = 'A-';
+  else if (worstGradeValue >= 0.85) grade = 'B+';
+  else if (worstGradeValue >= 0.75) grade = 'B';
+  else if (worstGradeValue >= 0.65) grade = 'C';
+  else if (worstGradeValue >= 0.5) grade = 'D';
+  else grade = 'F';
+
+  return { grade, bySourceColor, landCount, recommendedLandRange: [36, 38] };
+}
+
+// Reuses isLandCard (not a fresh `(card.types||[]).includes('Land')` check) so
+// this function's land count agrees with calculateManabaseScore's - offline-
+// imported cards can be missing `types` metadata until "Update Full Card Data"
+// is run, and only isLandCard's name-based fallback (BASIC_LAND_COLORS/
+// NONBASIC_LAND_NAMES) catches those correctly.
+function calculateDeckHealthScore(deck) {
+  if (!deck.mainDeck) return { score: 0, breakdown: { curveSmoothness: 0, ramp: 0, draw: 0, removal: 0, landRatio: 0 } };
+
+  const allCards = deck.mainDeck;
+  let totalCards = 0, landCards = 0;
+  const curveBuckets = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, '7+': 0 };
+  let ramp = 0, draw = 0, removal = 0;
+
+  allCards.forEach(card => {
+    const quantity = card.quantity || 1;
+    totalCards += quantity;
+    if (isLandCard(card)) { landCards += quantity; return; }
+
+    const cmc = parseCmcFromManaCost(card.manaCost);
+    const bucket = cmc >= 7 ? '7+' : cmc.toString();
+    curveBuckets[bucket] += quantity;
+
+    const isRamp = POWER_INDICATORS.ramp.some(name =>
+      name === card.name || ((name === 'Signet' || name === 'Talisman') && card.name.includes(name))
+    );
+    if (isRamp) ramp += quantity;
+    if (POWER_INDICATORS.draw.includes(card.name)) draw += quantity;
+    if (POWER_INDICATORS.efficientRemoval.includes(card.name)) removal += quantity;
+  });
+
+  // Curve smoothness: penalize decks that are too top-heavy (fewer than 30% of
+  // nonland cards at CMC 0-2) or too thin early (fewer than 10% at CMC 1-2).
+  const nonLandTotal = totalCards - landCards;
+  const cheapCards = curveBuckets[0] + curveBuckets[1] + curveBuckets[2];
+  const veryCheapCards = curveBuckets[1] + curveBuckets[2];
+  let curveSmoothness = 100;
+  if (nonLandTotal > 0) {
+    const cheapRatio = cheapCards / nonLandTotal;
+    const veryCheapRatio = veryCheapCards / nonLandTotal;
+    if (cheapRatio < 0.3) curveSmoothness -= (0.3 - cheapRatio) * 200;
+    if (veryCheapRatio < 0.1) curveSmoothness -= (0.1 - veryCheapRatio) * 150;
+    curveSmoothness = Math.max(0, Math.min(100, Math.round(curveSmoothness)));
+  } else {
+    curveSmoothness = 0;
+  }
+
+  // Ramp/draw/removal: Commander norms are roughly 10/10/10 out of 99 - scale
+  // each count to a 0-100 sub-score capped at the norm (more isn't scored
+  // higher past the norm; this is a floor-check, not a maximize-everything score).
+  const rampScore = Math.min(100, Math.round((ramp / 10) * 100));
+  const drawScore = Math.min(100, Math.round((draw / 10) * 100));
+  const removalScore = Math.min(100, Math.round((removal / 10) * 100));
+
+  // Land ratio: 36-38 lands out of 99 is the target range (matches
+  // calculateManabaseScore's recommendedLandRange) - full marks inside it,
+  // tapering off outside.
+  let landRatio = 100;
+  if (landCards < 36) landRatio = Math.max(0, 100 - (36 - landCards) * 10);
+  else if (landCards > 38) landRatio = Math.max(0, 100 - (landCards - 38) * 10);
+
+  const score = Math.round(
+    curveSmoothness * 0.3 + rampScore * 0.2 + drawScore * 0.2 + removalScore * 0.15 + landRatio * 0.15
+  );
+
+  return { score, breakdown: { curveSmoothness, ramp: rampScore, draw: drawScore, removal: removalScore, landRatio } };
+}
+
+const GRADE_TO_PERCENT = { 'A': 100, 'A-': 92, 'B+': 85, 'B': 77, 'C': 65, 'D': 50, 'F': 30, 'N/A': 50 };
+
+function calculateGlobalScore(powerLevel, saltScore, manabaseScore, healthScore) {
+  const powerPercent = ((powerLevel?.level || 1) / 10) * 100;
+  // Salt inverted and capped at 30 so a single extremely salty deck doesn't
+  // zero out the whole average - most decks land well under this.
+  const saltPercent = 100 - Math.min(30, saltScore?.score || 0) * (100 / 30);
+  const manabasePercent = GRADE_TO_PERCENT[manabaseScore?.grade] ?? 50;
+  const healthPercent = healthScore?.score || 0;
+
+  return Math.round(
+    powerPercent * 0.25 + saltPercent * 0.15 + manabasePercent * 0.3 + healthPercent * 0.3
+  );
+}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, onEdit }) {
@@ -240,6 +465,21 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
     if (breakdown.deckValue > 2500) score += 0.5;
     return { level: Math.min(10, Math.max(1, Math.round(3 + score))), breakdown };
   }, [deck, ownership]);
+
+  // ── Manabase Score ────────────────────────────────────────────────────────
+  const manabaseScore = useMemo(() => calculateManabaseScore(deck), [deck]);
+
+  // ── Deck Health Score ─────────────────────────────────────────────────────
+  const healthScore = useMemo(() => calculateDeckHealthScore(deck), [deck]);
+
+  // ── Global Score ──────────────────────────────────────────────────────────
+  const globalScore = useMemo(
+    () => calculateGlobalScore(powerLevel, saltScore, manabaseScore, healthScore),
+    [powerLevel, saltScore, manabaseScore, healthScore]
+  );
+
+  // ── Smart Deck Score panel: which sub-score's detail view is showing ──────
+  const [activeScoreDetail, setActiveScoreDetail] = useState(null); // null | 'power' | 'salt' | 'mana' | 'health'
 
   // ── Interactive Mana Curve: cards at selected CMC ─────────────────────────
   const cardsAtSelectedCmc = useMemo(() => {
@@ -695,84 +935,133 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
             </div>
           </div>
 
-          {/* Row: Power Level + Salt Score */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Power Level */}
-            <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30">
-              <h3 className="text-lg font-bold text-white mb-4">Power Level</h3>
-              <div className="flex items-center justify-center mb-4">
-                <div className={`text-6xl font-bold ${
-                  powerLevel.level >= 9 ? 'text-red-500' :
-                  powerLevel.level >= 7 ? 'text-orange-500' :
-                  powerLevel.level >= 5 ? 'text-yellow-500' :
-                  powerLevel.level >= 3 ? 'text-green-500' : 'text-blue-500'
-                }`}>
-                  {powerLevel.level}
-                </div>
-                <div className="text-white/40 text-2xl ml-1">/10</div>
-              </div>
-              <div className="flex justify-center mb-4">
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                  powerLevel.level >= 9 ? 'bg-red-500/20 text-red-300' :
-                  powerLevel.level >= 7 ? 'bg-orange-500/20 text-orange-300' :
-                  powerLevel.level >= 5 ? 'bg-yellow-500/20 text-yellow-300' :
-                  powerLevel.level >= 3 ? 'bg-green-500/20 text-green-300' : 'bg-blue-500/20 text-blue-300'
-                }`}>
-                  {powerLevel.level >= 9 ? 'cEDH / Competitive' :
-                   powerLevel.level >= 7 ? 'High Power' :
-                   powerLevel.level >= 5 ? 'Optimized' :
-                   powerLevel.level >= 3 ? 'Casual / Precon' : 'Jank / Meme'}
-                </span>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-white/60">Fast Mana:</span><span className="text-white">{powerLevel.breakdown.fastMana} cards</span></div>
-                <div className="flex justify-between"><span className="text-white/60">Tutors:</span><span className="text-white">{powerLevel.breakdown.tutors} cards</span></div>
-                <div className="flex justify-between"><span className="text-white/60">Combo Pieces:</span><span className="text-white">{powerLevel.breakdown.comboPieces} cards</span></div>
-                <div className="flex justify-between"><span className="text-white/60">Efficient Removal:</span><span className="text-white">{powerLevel.breakdown.efficientRemoval} cards</span></div>
-                <div className="flex justify-between"><span className="text-white/60">Powerhouses:</span><span className="text-white">{powerLevel.breakdown.powerhouses} cards</span></div>
+          {/* Smart Deck Score panel */}
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30 mb-6">
+            <div className="text-center mb-4">
+              <div className="text-white/60 text-xs uppercase tracking-wide mb-1">Smart Deck Score</div>
+              <div className="flex items-center justify-center">
+                <span className={`text-5xl font-bold ${
+                  globalScore >= 80 ? 'text-green-400' :
+                  globalScore >= 60 ? 'text-yellow-400' :
+                  globalScore >= 40 ? 'text-orange-400' : 'text-red-400'
+                }`}>{globalScore}</span>
+                <span className="text-white/40 text-xl ml-1">/100</span>
               </div>
             </div>
 
-            {/* Salt Score */}
-            <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30">
-              <h3 className="text-lg font-bold text-white mb-4">Salt Score</h3>
-              <div className="flex items-center justify-center mb-4">
-                <div className={`text-6xl font-bold ${
-                  saltScore.score >= 20 ? 'text-red-500' :
-                  saltScore.score >= 10 ? 'text-orange-500' :
-                  saltScore.score >= 5 ? 'text-yellow-500' : 'text-green-500'
-                }`}>
-                  {saltScore.score}
-                </div>
+            {activeScoreDetail === null ? (
+              <div className="grid grid-cols-4 gap-2">
+                <button onClick={() => setActiveScoreDetail('power')} className="bg-white/5 hover:bg-white/10 rounded p-3 text-center transition">
+                  <div className="text-white/50 text-xs mb-1">Power</div>
+                  <div className="text-white font-bold text-lg">{powerLevel.level}</div>
+                </button>
+                <button onClick={() => setActiveScoreDetail('salt')} className="bg-white/5 hover:bg-white/10 rounded p-3 text-center transition">
+                  <div className="text-white/50 text-xs mb-1">Salt</div>
+                  <div className="text-white font-bold text-lg">{saltScore.score}</div>
+                </button>
+                <button onClick={() => setActiveScoreDetail('mana')} className="bg-white/5 hover:bg-white/10 rounded p-3 text-center transition">
+                  <div className="text-white/50 text-xs mb-1">Mana</div>
+                  <div className="text-white font-bold text-lg">{manabaseScore.grade}</div>
+                </button>
+                <button onClick={() => setActiveScoreDetail('health')} className="bg-white/5 hover:bg-white/10 rounded p-3 text-center transition">
+                  <div className="text-white/50 text-xs mb-1">Health</div>
+                  <div className="text-white font-bold text-lg">{healthScore.score}</div>
+                </button>
               </div>
-              <div className="flex justify-center mb-4">
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                  saltScore.score >= 20 ? 'bg-red-500/20 text-red-300' :
-                  saltScore.score >= 10 ? 'bg-orange-500/20 text-orange-300' :
-                  saltScore.score >= 5 ? 'bg-yellow-500/20 text-yellow-300' : 'bg-green-500/20 text-green-300'
-                }`}>
-                  {saltScore.score >= 20 ? 'Maximum Salt - Prepare for groans' :
-                   saltScore.score >= 10 ? 'Pretty Salty - May cause frustration' :
-                   saltScore.score >= 5 ? 'Mild Salt - Some annoying cards' : 'Low Salt - Friendly deck'}
-                </span>
-              </div>
-              {saltScore.cards.length > 0 ? (
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  <div className="text-white/60 text-sm mb-2">Salty cards in this deck:</div>
-                  {saltScore.cards.map((card, idx) => (
-                    <div key={idx} className="flex justify-between items-center text-sm">
-                      <span className="text-white">{card.name}</span>
-                      <span className={`px-2 py-0.5 rounded text-xs ${
-                        card.salt >= 3 ? 'bg-red-500/30 text-red-300' :
-                        card.salt >= 2 ? 'bg-orange-500/30 text-orange-300' : 'bg-yellow-500/30 text-yellow-300'
-                      }`}>+{card.salt}</span>
+            ) : (
+              <div className="bg-white/5 rounded p-4">
+                <button onClick={() => setActiveScoreDetail(null)} className="text-white/60 hover:text-white text-sm mb-3 flex items-center gap-1">
+                  ← Back
+                </button>
+
+                {activeScoreDetail === 'power' && (
+                  <div>
+                    <div className="flex items-center justify-center mb-3">
+                      <span className={`text-4xl font-bold ${
+                        powerLevel.level >= 9 ? 'text-red-500' :
+                        powerLevel.level >= 7 ? 'text-orange-500' :
+                        powerLevel.level >= 5 ? 'text-yellow-500' :
+                        powerLevel.level >= 3 ? 'text-green-500' : 'text-blue-500'
+                      }`}>{powerLevel.level}</span>
+                      <span className="text-white/40 text-lg ml-1">/10</span>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-white/40 text-center text-sm">No salty cards detected! Your playgroup will thank you.</div>
-              )}
-            </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between"><span className="text-white/60">Fast Mana:</span><span className="text-white">{powerLevel.breakdown.fastMana} cards</span></div>
+                      <div className="flex justify-between"><span className="text-white/60">Tutors:</span><span className="text-white">{powerLevel.breakdown.tutors} cards</span></div>
+                      <div className="flex justify-between"><span className="text-white/60">Combo Pieces:</span><span className="text-white">{powerLevel.breakdown.comboPieces} cards</span></div>
+                      <div className="flex justify-between"><span className="text-white/60">Efficient Removal:</span><span className="text-white">{powerLevel.breakdown.efficientRemoval} cards</span></div>
+                      <div className="flex justify-between"><span className="text-white/60">Powerhouses:</span><span className="text-white">{powerLevel.breakdown.powerhouses} cards</span></div>
+                    </div>
+                  </div>
+                )}
+
+                {activeScoreDetail === 'salt' && (
+                  <div>
+                    <div className="text-center mb-3">
+                      <span className={`text-4xl font-bold ${
+                        saltScore.score >= 20 ? 'text-red-500' :
+                        saltScore.score >= 10 ? 'text-orange-500' :
+                        saltScore.score >= 5 ? 'text-yellow-500' : 'text-green-500'
+                      }`}>{saltScore.score}</span>
+                    </div>
+                    {saltScore.cards.length > 0 ? (
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {saltScore.cards.map((card, idx) => (
+                          <div key={idx} className="flex justify-between items-center text-sm">
+                            <span className="text-white">{card.name}</span>
+                            <span className={`px-2 py-0.5 rounded text-xs ${
+                              card.salt >= 3 ? 'bg-red-500/30 text-red-300' :
+                              card.salt >= 2 ? 'bg-orange-500/30 text-orange-300' : 'bg-yellow-500/30 text-yellow-300'
+                            }`}>+{card.salt}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-white/40 text-center text-sm">No salty cards detected! Your playgroup will thank you.</div>
+                    )}
+                  </div>
+                )}
+
+                {activeScoreDetail === 'mana' && (
+                  <div>
+                    <div className="text-center mb-3">
+                      <span className="text-4xl font-bold text-white">{manabaseScore.grade}</span>
+                    </div>
+                    <div className="text-white/60 text-sm mb-2">
+                      Lands: {manabaseScore.landCount} (recommended {manabaseScore.recommendedLandRange[0]}-{manabaseScore.recommendedLandRange[1]})
+                    </div>
+                    {Object.keys(manabaseScore.bySourceColor).length > 0 ? (
+                      <div className="space-y-2 text-sm">
+                        {Object.entries(manabaseScore.bySourceColor).map(([color, data]) => (
+                          <div key={color} className="flex justify-between">
+                            <span className="text-white/60">{color} sources:</span>
+                            <span className="text-white">{data.sources} / {data.target} target</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-white/40 text-center text-sm">No colored mana requirements found.</div>
+                    )}
+                  </div>
+                )}
+
+                {activeScoreDetail === 'health' && (
+                  <div>
+                    <div className="text-center mb-3">
+                      <span className="text-4xl font-bold text-white">{healthScore.score}</span>
+                      <span className="text-white/40 text-lg ml-1">/100</span>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between"><span className="text-white/60">Curve Smoothness:</span><span className="text-white">{healthScore.breakdown.curveSmoothness}</span></div>
+                      <div className="flex justify-between"><span className="text-white/60">Ramp:</span><span className="text-white">{healthScore.breakdown.ramp}</span></div>
+                      <div className="flex justify-between"><span className="text-white/60">Draw:</span><span className="text-white">{healthScore.breakdown.draw}</span></div>
+                      <div className="flex justify-between"><span className="text-white/60">Removal:</span><span className="text-white">{healthScore.breakdown.removal}</span></div>
+                      <div className="flex justify-between"><span className="text-white/60">Land Ratio:</span><span className="text-white">{healthScore.breakdown.landRatio}</span></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Game Performance */}
