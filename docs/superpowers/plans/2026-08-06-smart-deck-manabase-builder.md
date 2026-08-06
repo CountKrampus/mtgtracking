@@ -139,6 +139,12 @@ const axios = require('axios');
 
 jest.mock('axios');
 
+// The route fetches each COLOR_SOURCES candidate matching the deck's colors
+// sequentially with a real 500ms delay between calls. A 2-color deck's
+// candidate pool (any entry containing either color) runs well past Jest's
+// default 5s per-test timeout, so this whole file needs a longer one.
+jest.setTimeout(30000);
+
 const User = require('../models/User');
 const Deck = require('../models/Deck');
 const Card = require('../models/Card');
@@ -208,7 +214,7 @@ async function makeUser() {
 describe('GET /api/decks/:id/manabase-builder', () => {
   test('requires a budget query param', async () => {
     const user = await makeUser();
-    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['W', 'U'] }, mainDeck: [] });
+    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colorIdentity: ['W', 'U'] }, mainDeck: [] });
     await request(app)
       .get(`/api/decks/${deck._id}/manabase-builder`)
       .set('Authorization', `Bearer ${tokenFor(user)}`)
@@ -217,7 +223,7 @@ describe('GET /api/decks/:id/manabase-builder', () => {
 
   test('returns candidates matching the deck color identity, priced, with a greedy suggested package within budget', async () => {
     const user = await makeUser();
-    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['W', 'U'] }, mainDeck: [] });
+    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colorIdentity: ['W', 'U'] }, mainDeck: [] });
 
     mockScryfallNamedLookup({ 'Tundra': 200, 'Hallowed Fountain': 15, 'Azorius Signet': 3 });
 
@@ -250,7 +256,7 @@ describe('GET /api/decks/:id/manabase-builder', () => {
   test('excludes lands already in the deck from both candidates and suggested', async () => {
     const user = await makeUser();
     const deck = await Deck.create({
-      userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['W', 'U'] },
+      userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colorIdentity: ['W', 'U'] },
       mainDeck: [{ name: 'Hallowed Fountain', types: ['Land'], colors: [], scryfallId: 'already-owned' }]
     });
     mockScryfallNamedLookup({});
@@ -267,7 +273,7 @@ describe('GET /api/decks/:id/manabase-builder', () => {
     const user = await makeUser();
     // Mono-white deck: Command Tower (5-color) should not automatically
     // outrank a 2-color card just because it lists 5 colors on paper.
-    const deck = await Deck.create({ userId: user._id, name: 'Mono W', commander: { name: 'Test Commander', colors: ['W'] }, mainDeck: [] });
+    const deck = await Deck.create({ userId: user._id, name: 'Mono W', commander: { name: 'Test Commander', colorIdentity: ['W'] }, mainDeck: [] });
     mockScryfallNamedLookup({}, 2); // every candidate priced at $2 via the helper's default
 
     const res = await request(app)
@@ -283,14 +289,14 @@ describe('GET /api/decks/:id/manabase-builder', () => {
 
   test('rejects unauthenticated requests', async () => {
     const user = await makeUser();
-    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['W'] }, mainDeck: [] });
+    const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colorIdentity: ['W'] }, mainDeck: [] });
     await request(app).get(`/api/decks/${deck._id}/manabase-builder?budget=20`).expect(401);
   });
 
   test('404s for a deck that does not belong to the requesting user', async () => {
     const owner = await makeUser();
     const otherUser = await User.create({ email: 'o@test.com', username: 'other', passwordHash: 'x', role: 'editor' });
-    const deck = await Deck.create({ userId: owner._id, name: 'Test Deck', commander: { name: 'Test Commander', colors: ['W'] }, mainDeck: [] });
+    const deck = await Deck.create({ userId: owner._id, name: 'Test Deck', commander: { name: 'Test Commander', colorIdentity: ['W'] }, mainDeck: [] });
     await request(app)
       .get(`/api/decks/${deck._id}/manabase-builder?budget=20`)
       .set('Authorization', `Bearer ${tokenFor(otherUser)}`)
@@ -392,10 +398,28 @@ router.get('/:id/manabase-builder', requireAuth, async (req, res) => {
 
 Note: this route depends on `getDeckColorIdentity` (added to this same file by Phase 2's Task 1) already being present — if it isn't, this task cannot proceed (see the hard-dependency note at the top of this plan).
 
+**Real bug found while implementing this task:** `getDeckColorIdentity` read `card.colors` for the commander/partnerCommander, but the `Deck` schema actually stores their color identity under `colorIdentity` (`colors` is only a real field on `mainDeck` cards - see `backend/models/Deck.js`). This silently "worked" for Phase 2's `/recommendations` route only because most real decks' `mainDeck` cards happen to also carry the deck's colors; a deck whose color signal comes purely from the commander (e.g. this task's own test fixtures, which use an empty `mainDeck`) got treated as colorless. Fixed the shared helper:
+```js
+function getDeckColorIdentity(deck) {
+  const colors = new Set();
+  // commander/partnerCommander store color identity under `colorIdentity`
+  // (per the Deck schema), while mainDeck cards store it under `colors` -
+  // these are genuinely different field names, not interchangeable.
+  [deck.commander, deck.partnerCommander].forEach(card => {
+    (card?.colorIdentity || []).forEach(c => colors.add(c));
+  });
+  deck.mainDeck.forEach(card => {
+    (card?.colors || []).forEach(c => colors.add(c));
+  });
+  return Array.from(colors);
+}
+```
+This also required fixing the test fixtures above (and in the already-merged `backend/__tests__/deckRecommendations.test.js`) to create decks with `commander: { colorIdentity: [...] }` instead of `commander: { colors: [...] }`, and adding a regression test to `deckRecommendations.test.js` proving commander-only color identity (empty `mainDeck`) is respected.
+
 - [ ] **Step 4: Run tests, verify they pass**
 
 Run: `cd backend && npx jest deckManabaseBuilder --silent` (sandbox disabled)
-Expected: 6/6 pass. Note this test file has a real `setTimeout(..., 500)` per candidate in the route — with ~3-6 W/U candidates in the test fixtures this adds a few seconds of real wall-clock time per test; that's expected, not a hang.
+Expected: 6/6 pass. Note this test file has a real `setTimeout(..., 500)` per candidate in the route — a 2-color deck's real candidate pool is ~30+ `COLOR_SOURCES` entries (any entry containing either color), not the few originally estimated here, so this file needs `jest.setTimeout(30000)` (added near the top of the file) and takes tens of real seconds to run; that's expected, not a hang.
 
 - [ ] **Step 5: Run the full backend suite**
 
