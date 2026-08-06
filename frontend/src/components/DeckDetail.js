@@ -487,6 +487,14 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
   // ── Smart Deck Score panel: which sub-score's detail view is showing ──────
   const [activeScoreDetail, setActiveScoreDetail] = useState(null); // null | 'power' | 'salt' | 'mana' | 'health'
 
+  // Not currently reachable (DeckDetail unmounts/remounts on every deck
+  // switch today), but reset defensively in case a future change lets the
+  // parent swap `deck` without unmounting this component - otherwise a
+  // stale detail view could carry over from the previous deck.
+  useEffect(() => {
+    setActiveScoreDetail(null);
+  }, [deck._id]);
+
   // ── Interactive Mana Curve: cards at selected CMC ─────────────────────────
   const cardsAtSelectedCmc = useMemo(() => {
     if (selectedCmc === null || !deck.mainDeck) return [];
