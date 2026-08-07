@@ -80,6 +80,10 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
       return res.status(400).json({ message: 'deckId is required' });
     }
 
+    if (!mongoose.Types.ObjectId.isValid(deckId)) {
+      return res.status(400).json({ message: 'Invalid deckId' });
+    }
+
     const deck = await Deck.findById(deckId)
       .populate('userId', 'username displayName')
       .lean();
@@ -93,6 +97,11 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
     }
 
     const owner = deck.userId;
+
+    if (!owner) {
+      return res.status(400).json({ message: 'Deck owner not found' });
+    }
+
     const powerResult = estimatePowerLevel(deck);
     const saltResult  = calculateSaltScore(deck);
     const totalValue  = await computeTotalValue(deck.mainDeck);
