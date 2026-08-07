@@ -346,17 +346,25 @@ Add near the top with the other model imports:
 const Feedback = require('../models/Feedback');
 ```
 
-Add the routes after the Badges routes block (`router.delete('/badges/:id', ...)`, matching this file's grouping — Feedback lives in the same "Community" admin category as Badges/Challenges in the frontend nav):
+Add the routes after the Badges routes block (`router.delete('/badges/:id', ...)`, matching this file's grouping — Feedback lives in the same "Community" admin category as Badges/Challenges in the frontend nav).
+
+**Note (added after code-quality review):** `GET /feedback` is paginated (`limit`/`skip` query params, defaulting to 50/0, plus a `total` count) matching the convention already established by `GET /api/admin/users` — feedback is unbounded user-generated data like users, unlike small reference tables (e.g. badges) that are safely returned unpaginated.
 
 ```js
 // GET /api/admin/feedback — list all feedback submissions, newest first
 router.get('/feedback', requirePermission('feedback:read'), async (req, res) => {
   try {
-    const feedback = await Feedback.find()
-      .populate('submitter', 'username displayName')
-      .sort({ createdAt: -1 })
-      .lean();
-    res.json({ feedback });
+    const { limit = 50, skip = 0 } = req.query;
+    const [feedback, total] = await Promise.all([
+      Feedback.find()
+        .populate('submitter', 'username displayName')
+        .sort({ createdAt: -1 })
+        .skip(parseInt(skip))
+        .limit(parseInt(limit))
+        .lean(),
+      Feedback.countDocuments()
+    ]);
+    res.json({ feedback, total });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 

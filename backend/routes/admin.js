@@ -636,11 +636,17 @@ router.post('/badges/sync-icons', requirePermission('badges:manage'), async (req
 // GET /api/admin/feedback — list all feedback submissions, newest first
 router.get('/feedback', requirePermission('feedback:read'), async (req, res) => {
   try {
-    const feedback = await Feedback.find()
-      .populate('submitter', 'username displayName')
-      .sort({ createdAt: -1 })
-      .lean();
-    res.json({ feedback });
+    const { limit = 50, skip = 0 } = req.query;
+    const [feedback, total] = await Promise.all([
+      Feedback.find()
+        .populate('submitter', 'username displayName')
+        .sort({ createdAt: -1 })
+        .skip(parseInt(skip))
+        .limit(parseInt(limit))
+        .lean(),
+      Feedback.countDocuments()
+    ]);
+    res.json({ feedback, total });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
