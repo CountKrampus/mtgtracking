@@ -42,11 +42,20 @@ export default function NotificationBell({ apiUrl, user, openPanel, setOpenPanel
   useEffect(() => {
     if (isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
+      const margin = 8;
+      const width = Math.min(384, window.innerWidth - margin * 2);
+      // Align under the button by default, but clamp so the panel never
+      // overflows past the left edge of the viewport on narrow screens.
+      let right = window.innerWidth - rect.right;
+      if (right + width > window.innerWidth - margin) {
+        right = window.innerWidth - width - margin;
+      }
+      right = Math.max(margin, right);
       setPanelStyle({
         position: 'fixed',
         top: rect.bottom + 8,
-        right: window.innerWidth - rect.right,
-        width: 384,
+        right,
+        width,
         zIndex: 9999,
         maxHeight: 384,
         overflowY: 'auto'

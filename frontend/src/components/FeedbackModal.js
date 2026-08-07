@@ -34,7 +34,7 @@ function FeedbackModal({ onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
       <div className="bg-slate-900 rounded-t-2xl sm:rounded-xl border border-slate-700 w-full sm:max-w-md p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-white">Send Feedback</h2>
