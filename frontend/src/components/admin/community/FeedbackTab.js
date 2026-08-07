@@ -169,9 +169,13 @@ export default function FeedbackTab() {
       });
       if (!res.ok) throw new Error('Failed to update status');
       const data = await res.json();
-      setFeedback((prev) => prev.map((f) => (f._id === id ? data.feedback : f)));
-    } catch (error) {
-      console.error('Error updating feedback status:', error);
+      // Merge in just the updated status rather than replacing the whole row -
+      // the PATCH response's submitter is an unpopulated ObjectId (unlike
+      // GET's populated one), so replacing the full row would regress the
+      // Submitter column to a raw Mongo ID until the next full refresh.
+      setFeedback((prev) => prev.map((f) => (f._id === id ? { ...f, status: data.feedback.status } : f)));
+    } catch (err) {
+      console.error('Error updating feedback status:', err);
       alert('Failed to update feedback status');
     }
   }, [authFetch]);
