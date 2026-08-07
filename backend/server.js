@@ -165,6 +165,9 @@ app.use('/api/discord', require('./routes/discord'));
 const achievementsRouter = require('./routes/achievements');
 app.use('/api/achievements', achievementsRouter);
 
+// Mount deck spotlight routes
+app.use('/api/deck-spotlight', require('./routes/deckSpotlight'));
+
 // Check maintenance mode for all other routes
 app.use(checkMaintenanceMode);
 
