@@ -391,7 +391,7 @@ function RecentPostsTab({ authFetch }) {
     <div className="space-y-3">
       {successMsg && <SuccessMessage message={successMsg} />}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <button
           onClick={fetchPosts}
           className="flex items-center gap-1 text-purple-400 hover:text-purple-300 text-sm transition-colors"

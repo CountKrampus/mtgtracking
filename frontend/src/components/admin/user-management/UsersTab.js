@@ -223,7 +223,7 @@ export function UsersTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input
@@ -415,7 +415,7 @@ export function UsersTab() {
 
       {/* Floating action bar — fixed bottom, z-50, only shown when users are selected */}
       {selectedUserIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl px-5 py-3 flex items-center gap-4">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl px-5 py-3 flex flex-wrap items-center gap-4 max-w-[calc(100vw-2rem)]">
           <span className="text-white font-medium text-sm">
             {selectedUserIds.size} {selectedUserIds.size === 1 ? 'user' : 'users'} selected
           </span>

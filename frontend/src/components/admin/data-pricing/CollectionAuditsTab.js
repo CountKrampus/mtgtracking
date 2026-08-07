@@ -266,28 +266,30 @@ function AuditDetailPanel({ auditId, authFetch }) {
             </div>
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-gray-900/95 z-10">
-              <tr className="border-b border-gray-700/60">
-                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide w-36">Type</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Card / Info</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide w-28">Flagged</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide w-36">Resolved</th>
-              </tr>
-            </thead>
-            <tbody>
-              {issues.map((issue, idx) => (
-                <IssueRow
-                  key={idx}
-                  issue={issue}
-                  index={idx}
-                  auditId={audit._id}
-                  authFetch={authFetch}
-                  onResolved={fetchAudit}
-                />
-              ))}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-gray-900/95 z-10">
+                <tr className="border-b border-gray-700/60">
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide w-36">Type</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Card / Info</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide w-28">Flagged</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide w-36">Resolved</th>
+                </tr>
+              </thead>
+              <tbody>
+                {issues.map((issue, idx) => (
+                  <IssueRow
+                    key={idx}
+                    issue={issue}
+                    index={idx}
+                    auditId={audit._id}
+                    authFetch={authFetch}
+                    onResolved={fetchAudit}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
