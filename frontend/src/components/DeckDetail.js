@@ -504,14 +504,15 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
 
   // ── Physical Card Count ──────────────────────────────────────────────────
   // ownership.summary.ownedCount/missingCount count distinct card ENTRIES
-  // (e.g. "6x Forest" counts as 1), not physical cards. This counts actual
-  // copies, capped at what the deck needs per entry (owning 3x a card the
-  // deck only wants 1 of shouldn't inflate the total).
+  // (e.g. "6x Forest" counts as 1), not physical cards. This counts the full
+  // deck-needed quantity for every OWNED entry (owning at least 1 copy of a
+  // card counts its whole needed quantity as covered - basics/commons are
+  // typically not logged 1-for-1 in the collection, so requiring an exact
+  // per-copy match would understate ownership for cards the user genuinely
+  // has enough of).
   const physicalOwnership = useMemo(() => {
     if (!ownership) return null;
-    const ownedPhysical = ownership.ownedCards.reduce(
-      (sum, card) => sum + Math.min(card.quantity || 1, card.collectionQuantity || 0), 0
-    );
+    const ownedPhysical = ownership.ownedCards.reduce((sum, card) => sum + (card.quantity || 1), 0);
     const totalPhysical = deck.statistics?.totalCards
       || [...ownership.ownedCards, ...ownership.missingCards].reduce((sum, card) => sum + (card.quantity || 1), 0);
     return { owned: ownedPhysical, total: totalPhysical };
@@ -1568,7 +1569,7 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
           {/* Categorized Deck List */}
           <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30">
             <h3 className="text-lg font-bold text-white mb-4">
-              Deck List ({deck.mainDeck?.length || 0} cards)
+              Deck List ({physicalOwnership?.total ?? deck.mainDeck?.length ?? 0} cards)
             </h3>
             <div className="space-y-2">
               {CATEGORY_ORDER.filter(cat => categorizedDeck[cat]?.length > 0).map(cat => {
