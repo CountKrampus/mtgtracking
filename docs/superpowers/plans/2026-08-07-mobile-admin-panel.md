@@ -142,10 +142,20 @@ Replace the current "Body: sidebar + content" block (~lines 151-197) with:
           </div>
 
           <div className="hidden sm:block flex-1 min-w-0 overflow-y-auto p-3 sm:p-6">
-            {renderContent(activeTab)}
+            {/* Both wrapper divs are always present in the DOM (only
+                CSS-hidden per breakpoint), so gating this on isDesktopWidth
+                (an actual matchMedia check) rather than mobileScreen ensures
+                content mounts in exactly one place: here on desktop, in the
+                mobile Content screen above on mobile. Gating on mobileScreen
+                alone isn't enough - on mobile this pane would still mount
+                (just CSS-hidden) and fetch data for the default tab before
+                the user ever drills into the Content screen. */}
+            {isDesktopWidth && renderContent(activeTab)}
           </div>
         </div>
 ```
+
+**Note (added after code-quality review, revised after live verification):** the plan's original code called `renderContent(activeTab)` unconditionally in both the mobile Content screen and the desktop content div. Since both wrapper divs are always mounted (only CSS-hidden), this meant every mobile Content view also silently mounted a second, invisible instance of the same tab component in the desktop pane — doubling that tab's data-fetching `useEffect` calls. A first fix gated the desktop call on `mobileScreen !== 'content'`, but this was insufficient: on mobile, `mobileScreen` starts at `'groups'`, so the CSS-hidden desktop pane still mounted (and fetched) for the default tab immediately on open, *before* the user ever drilled into Content — then a second, separate instance mounted when the user reached the Content screen, giving 4 total requests (2 mounts × React StrictMode's 2x). Fixed by tracking the real `sm:` breakpoint (640px) via `window.matchMedia('(min-width: 640px)')` in an `isDesktopWidth` state, and gating both mount points on that instead of on `mobileScreen`: the desktop pane renders `isDesktopWidth && renderContent(...)`, the mobile Content screen renders `!isDesktopWidth && renderContent(...)`. Verified live via Playwright at 375×800: `admin/users` requests dropped from 4 to 2 (the StrictMode-expected count for a single mount).
 
 Notes on this rewrite:
 - The desktop branch is functionally identical to the pre-existing code, just wrapped in `hidden sm:block` instead of relying on `w-full sm:w-56`/`max-h-64 sm:max-h-none` sizing tricks — this fully separates the two layouts instead of trying to make one structure serve both, which is what caused the clipping bug in the first place.

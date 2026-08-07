@@ -128,6 +128,21 @@ export function AdminPanel({ onClose, user }) {
   const [mobileScreen, setMobileScreen] = useState('groups'); // 'groups' | 'tabs' | 'content'
   const [mobileActiveGroup, setMobileActiveGroup] = useState(null);
 
+  // Tracks the actual sm: breakpoint (640px) so content mounts in exactly one
+  // place. The mobile/desktop wrapper divs below are only CSS-hidden per
+  // breakpoint (both stay in the DOM), so gating on `mobileScreen` alone isn't
+  // enough - on mobile, the CSS-hidden desktop pane would still mount and
+  // fetch data for the default tab before the user ever drills into it.
+  const [isDesktopWidth, setIsDesktopWidth] = useState(
+    () => window.matchMedia('(min-width: 640px)').matches
+  );
+  React.useEffect(() => {
+    const mq = window.matchMedia('(min-width: 640px)');
+    const handler = (e) => setIsDesktopWidth(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
   const toggleGroup = (groupId) => {
     setExpandedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
   };
@@ -209,7 +224,7 @@ export function AdminPanel({ onClose, user }) {
                   <span className="text-sm font-semibold">Back</span>
                 </button>
                 <div className="p-3">
-                  {renderContent(activeTab)}
+                  {!isDesktopWidth && renderContent(activeTab)}
                 </div>
               </div>
             )}
@@ -256,7 +271,15 @@ export function AdminPanel({ onClose, user }) {
           </div>
 
           <div className="hidden sm:block flex-1 min-w-0 overflow-y-auto p-3 sm:p-6">
-            {renderContent(activeTab)}
+            {/* Both wrapper divs are always present in the DOM (only
+                CSS-hidden per breakpoint), so gating this on isDesktopWidth
+                (an actual matchMedia check) rather than mobileScreen ensures
+                content mounts in exactly one place: here on desktop, in the
+                mobile Content screen above on mobile. Gating on mobileScreen
+                alone isn't enough - on mobile this pane would still mount
+                (just CSS-hidden) and fetch data for the default tab before
+                the user ever drills into the Content screen. */}
+            {isDesktopWidth && renderContent(activeTab)}
           </div>
         </div>
       </div>
