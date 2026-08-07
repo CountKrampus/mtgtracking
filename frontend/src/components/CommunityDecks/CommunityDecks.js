@@ -76,7 +76,7 @@ function CommunityDecks() {
   const [commanderInput, setCommanderInput] = useState('');
   const [tags, setTags] = useState('');
   const [tagsInput, setTagsInput] = useState('');
-  const [sort, setSort] = useState('newest');
+  const [sort, setSort] = useState('imported');
 
   const fetchDecks = useCallback(() => {
     setLoading(true);
@@ -196,7 +196,7 @@ function CommunityDecks() {
             className="bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-1.5 text-sm ml-auto"
           >
             <option value="newest">Newest</option>
-            <option value="imported">Most Imported</option>
+            <option value="imported">Most Popular</option>
             <option value="name">Name A–Z</option>
           </select>
         </div>
