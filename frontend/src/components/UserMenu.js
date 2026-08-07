@@ -11,10 +11,19 @@ export default function UserMenu({ user, onProfile, onSettings, onLogout }) {
   const handleOpen = () => {
     if (!isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
+      const margin = 8;
+      const width = 224; // matches className's w-56
+      // Align under the button by default, but clamp so the panel never
+      // overflows past the left edge of the viewport on narrow screens.
+      let right = window.innerWidth - rect.right;
+      if (right + width > window.innerWidth - margin) {
+        right = window.innerWidth - width - margin;
+      }
+      right = Math.max(margin, right);
       setPanelStyle({
         position: 'fixed',
         top: rect.bottom + 8,
-        right: window.innerWidth - rect.right,
+        right,
         zIndex: 9999
       });
     }
