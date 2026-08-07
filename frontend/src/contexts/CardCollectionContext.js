@@ -45,15 +45,20 @@ export function CardCollectionProvider({ children }) {
   const fetchCards = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/cards`);
-      setCards(response.data);
+      // GET /api/cards returns a raw array by default, but a {cards, total, ...}
+      // shape if pagination query params are ever present - normalize defensively
+      // so a stray paginated response (or a stale cache written from one) can't
+      // crash every cards.forEach/reduce call downstream.
+      const cardList = Array.isArray(response.data) ? response.data : (response.data?.cards || []);
+      setCards(cardList);
       setIsShowingCachedCards(false);
       setCacheAge(null);
-      saveCardsToCache(response.data); // fire-and-forget; best-effort offline cache
+      saveCardsToCache(cardList); // fire-and-forget; best-effort offline cache
     } catch (error) {
       console.error('Error fetching cards:', error);
       const cached = await getCachedCards();
       if (cached) {
-        setCards(cached.cards);
+        setCards(Array.isArray(cached.cards) ? cached.cards : []);
         setIsShowingCachedCards(true);
         setCacheAge(cached.cachedAt);
       }
