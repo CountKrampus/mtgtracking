@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Package, Plus, Trash2, Edit2, Save, X, Search, Filter, Download, Upload, Shuffle, Play, RotateCcw, Users, Zap, Star, Trophy, Layers, Target, PackagePlus, PackageCheck } from 'lucide-react';
 
 const CubeBuilder = () => {
@@ -823,7 +823,7 @@ const CubeBuilder = () => {
       )}
 
       {editingCube && (
-        <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 sm:p-4">
+        <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
           <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl p-6 w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto border border-white/20">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-bold text-white">Edit Cube: {editingCube.name}</h3>

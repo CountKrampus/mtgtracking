@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import axios from 'axios';
 import ManaCurveChart from './ManaCurveChart';
 import DeckAnalysis from './DeckAnalysis';
@@ -810,26 +810,26 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
   return (
     <div>
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
         {isEditingName ? (
-          <div className="flex items-center gap-2 flex-1">
+          <div className="flex items-center gap-2 flex-1 min-w-[200px]">
             <input
               type="text"
               value={newDeckName}
               onChange={(e) => setNewDeckName(e.target.value)}
-              className="flex-1 px-4 py-2 bg-white/10 border border-white/30 rounded-lg text-white text-2xl font-bold"
+              className="flex-1 min-w-0 px-4 py-2 bg-white/10 border border-white/30 rounded-lg text-white text-2xl font-bold"
               autoFocus
             />
             <button onClick={handleSaveRename} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition">Save</button>
             <button onClick={handleCancelRename} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">Cancel</button>
           </div>
         ) : (
-          <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-white">{deck.name}</h2>
-            <button onClick={() => setIsEditingName(true)} className="px-3 py-1 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm transition">Rename</button>
+          <div className="flex flex-wrap items-center gap-3 min-w-0">
+            <h2 className="text-2xl font-bold text-white break-words min-w-0">{deck.name}</h2>
+            <button onClick={() => setIsEditingName(true)} className="px-3 py-1 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm transition flex-shrink-0">Rename</button>
           </div>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {onEdit && (
             <button onClick={onEdit} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition text-sm font-semibold">
               Edit Deck
@@ -1248,8 +1248,8 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
           <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30 mb-6">
             <h3 className="text-lg font-bold text-white mb-4">Recommendations</h3>
 
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <div className="flex flex-wrap gap-2">
                 {['ramp', 'draw', 'removal'].map(cat => (
                   <button
                     key={cat}
@@ -1533,7 +1533,7 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
 
           {/* Add-all-missing progress modal */}
           {addAllProgress && (
-            <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+            <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
               <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-8 border-2 border-green-500 max-h-[90vh] overflow-y-auto">
                 <h2 className="text-2xl font-bold text-white mb-6 text-center">Adding Cards to Collection</h2>
 

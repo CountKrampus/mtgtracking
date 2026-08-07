@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ArrowLeft, RotateCcw, Clock, Undo2, Redo2, ChevronDown, ChevronUp, Sparkles,
          Wrench, Settings, History, BarChart3, Share2, Users, Trophy, Maximize, Bell } from 'lucide-react';
 import GameSetup from './GameSetup';
@@ -975,7 +975,7 @@ function LifeCounter({ onBack }) {
 
       {/* Reset Confirmation Modal */}
       {showResetConfirm && (
-        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
           <div className="bg-gray-900 rounded-t-2xl sm:rounded-2xl p-6 sm:max-w-sm w-full shadow-2xl border border-white/20 max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold text-white mb-4">Reset Game?</h3>
             <p className="text-white/60 mb-6">
@@ -1002,7 +1002,7 @@ function LifeCounter({ onBack }) {
 
       {/* End Game Modal */}
       {showEndGameModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
           <div className="bg-gray-900 rounded-t-2xl sm:rounded-2xl p-6 sm:max-w-md w-full shadow-2xl border border-white/20 max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
               <Trophy size={24} className="text-yellow-400" />

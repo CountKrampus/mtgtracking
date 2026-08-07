@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Search, UserCog, Shield, Eye, Edit2, Trash2, CheckCircle, XCircle, Mail, Award } from 'lucide-react';
 import { useAuthContext } from '../../../contexts/AuthContext';
 import { API_URL } from '../../../config';
@@ -357,7 +357,7 @@ export function UsersTab() {
       </div>
 
       {badgeGrantState && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 sm:p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
           <div className="bg-gray-900 border border-gray-700 rounded-t-2xl sm:rounded-xl p-6 w-full sm:max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-white font-bold text-lg mb-4">
               🏅 Manage Badges — @{badgeGrantState.username}

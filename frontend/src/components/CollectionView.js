@@ -1778,7 +1778,7 @@ function CollectionView({
 
     {/* Import Progress Modal */}        {/* Import Progress Modal */}
         {isImporting && (
-          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
             <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-8 border-2 border-purple-500 max-h-[90vh] overflow-y-auto">
               <h2 className="text-2xl font-bold text-white mb-6 text-center">Importing Cards</h2>
 
@@ -1816,7 +1816,7 @@ function CollectionView({
 
         {/* Import Results Modal */}
         {showImportResults && importResults && (
-          <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
+          <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
             <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
               <div className="p-6 border-b border-white/10">
                 <h2 className="text-2xl font-bold text-white">Import Results</h2>
@@ -1958,8 +1958,8 @@ function CollectionView({
 
         {/* Bulk Update Modals */}
         {bulkUpdateModal === 'condition' && (
-          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
-            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-6 border-2 border-purple-500 max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
+            <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-6 border-2 border-purple-500 max-h-[calc(90vh-4rem)] sm:max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-white mb-4">Update Condition</h2>
               <p className="text-white/60 mb-4">Set condition for {selectedCards.size} selected cards:</p>
               <select
@@ -1988,7 +1988,7 @@ function CollectionView({
         )}
 
         {bulkUpdateModal === 'location' && (
-          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
             <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-6 border-2 border-purple-500 max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-white mb-4">Update Location</h2>
               <p className="text-white/60 mb-4">Set location for {selectedCards.size} selected cards:</p>
@@ -2019,7 +2019,7 @@ function CollectionView({
         )}
 
         {bulkUpdateModal === 'addTags' && (
-          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
             <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-6 border-2 border-purple-500 max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-white mb-4">Add Tags</h2>
               <p className="text-white/60 mb-4">Add tags to {selectedCards.size} selected cards:</p>
@@ -2049,7 +2049,7 @@ function CollectionView({
         )}
 
         {bulkUpdateModal === 'removeTags' && (
-          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
             <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-6 border-2 border-purple-500 max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-white mb-4">Remove Tags</h2>
               <p className="text-white/60 mb-4">Remove tags from {selectedCards.size} selected cards:</p>
@@ -2079,7 +2079,7 @@ function CollectionView({
         )}
 
         {bulkUpdateModal === 'delete' && (
-          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
             <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-6 border-2 border-red-500 max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-white mb-4">Delete Cards</h2>
               <p className="text-white/60 mb-4">
@@ -2190,7 +2190,7 @@ function CollectionView({
 
         {/* Similar Cards Modal */}
         {showSimilarCards && (
-          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
             <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border-2 border-purple-500">
               <div className="p-6 border-b border-white/10 flex justify-between items-center">
                 <div>
@@ -2282,7 +2282,7 @@ function CollectionView({
 
         {/* Card Synergies Modal */}
         {showSynergies && (
-          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+          <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
             <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col border-2 border-yellow-500">
               <div className="p-6 border-b border-white/10 flex justify-between items-center">
                 <div>

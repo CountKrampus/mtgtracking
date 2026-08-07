@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Plus, Minus, X, RotateCcw } from 'lucide-react';
 
 const COLORS = ['W', 'U', 'B', 'R', 'G', 'C']; // White, Blue, Black, Red, Green, Colorless
@@ -102,7 +102,7 @@ function ManaPoolTracker({
 
       {/* Reset Confirmation Modal */}
       {showResetConfirm && (
-        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
           <div className="bg-gray-900 rounded-t-2xl sm:rounded-2xl p-6 sm:max-w-sm w-full shadow-2xl border border-white/20 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-white mb-2">Clear Mana Pool?</h3>
             <p className="text-white/60 mb-4">

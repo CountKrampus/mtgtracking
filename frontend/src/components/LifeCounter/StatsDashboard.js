@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { BarChart3, Trophy, Clock, Users, Percent, X, TrendingUp } from 'lucide-react';
 import useBackendSync from './hooks/useBackendSync';
 
@@ -30,7 +30,7 @@ function StatsDashboard({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+    <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
       <div className="bg-gray-900 rounded-t-2xl sm:rounded-2xl p-6 sm:max-w-2xl w-full shadow-2xl border border-white/20 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

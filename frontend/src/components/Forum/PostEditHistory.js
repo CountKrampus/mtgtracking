@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { X, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import UserAvatar from '../avatars/UserAvatar';
 
@@ -175,7 +175,7 @@ export default function PostEditHistory({ postId, apiUrl, isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 sm:p-4">
+    <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
       <div className="bg-slate-800 rounded-t-2xl sm:rounded-xl w-full sm:max-w-2xl max-h-[90vh] flex flex-col border border-slate-700 shadow-xl">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700 flex-shrink-0">

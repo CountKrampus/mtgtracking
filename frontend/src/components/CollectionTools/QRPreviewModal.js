@@ -1,11 +1,11 @@
-import React from 'react';
+﻿import React from 'react';
 import { X } from 'lucide-react';
 
 export default function QRPreviewModal({ showQRPreview, qrPreviewLocation, setShowQRPreview, qrDataUrls, locationStats, formatPrice }) {
   if (!showQRPreview || !qrPreviewLocation) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+    <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
       <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-sm w-full p-6 border-2 border-purple-500 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold text-white">QR Label</h3>

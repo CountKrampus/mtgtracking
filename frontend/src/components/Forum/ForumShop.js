@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   ShoppingCart, Coins, Check, X, Search, Palette, Shield, Sparkles
 } from 'lucide-react';
@@ -228,7 +228,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
   if (!isOpen || !user) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
       <div className="bg-slate-800 rounded-t-2xl sm:rounded-xl w-full sm:max-w-2xl border border-slate-700 flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-slate-700 flex-shrink-0">

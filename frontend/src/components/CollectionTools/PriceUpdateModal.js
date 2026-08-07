@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 
 export default function PriceUpdateModal({ isOpen, onClose, updateAllPrices }) {
@@ -8,7 +8,7 @@ export default function PriceUpdateModal({ isOpen, onClose, updateAllPrices }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+    <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
       <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-md w-full p-6 border-2 border-blue-500 max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl font-bold text-white mb-4">Update All Prices</h2>
         <p className="text-white/60 mb-6">Choose update options:</p>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+﻿import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { Trash2 } from 'lucide-react';
 
@@ -24,7 +24,7 @@ export default function ConfirmModal({ title, message, onConfirm, onCancel, dang
 
   return ReactDOM.createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60 sm:p-4"
+      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60 sm:p-4 pb-16 sm:pb-0"
       onClick={onCancel}
     >
       <div

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Trophy, Coins, Zap, MessageSquare, Share2 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { API_URL } from '../../config';
@@ -759,7 +759,7 @@ export default function ForumProfilePage({ user, apiUrl }) {
 
       {/* Pin Achievements Picker Modal */}
       {showPinPicker && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
           <div className="bg-slate-800 border border-slate-700 rounded-t-2xl sm:rounded-lg p-6 sm:max-w-md w-full sm:mx-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-white font-bold mb-4">Pin Achievements (max 3)</h3>
             <div className="space-y-2 max-h-60 overflow-y-auto mb-4">

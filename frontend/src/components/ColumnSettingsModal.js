@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import ReactDOM from 'react-dom';
 import { X } from 'lucide-react';
 
@@ -26,7 +26,7 @@ export default function ColumnSettingsModal({
 
   return ReactDOM.createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60 sm:p-4"
+      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60 sm:p-4 pb-16 sm:pb-0"
       onClick={onClose}
     >
       <div

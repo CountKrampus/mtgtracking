@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { X, BarChart3, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 
@@ -75,7 +75,7 @@ export default function SetCompletionModal({ isOpen, onClose, cards }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+    <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
       <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border-2 border-teal-500">
         <div className="p-6 border-b border-white/10 flex justify-between items-center">
           <div>

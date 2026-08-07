@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Upload, Plus, X } from 'lucide-react';
 import DeckShellExtractor from './DeckShellExtractor';
 import DeckShoppingList from './DeckShoppingList';
@@ -373,7 +373,7 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck
 
       {/* Move to folder modal */}
       {movingDeck && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4 pb-16 sm:pb-0">
           <div className="bg-gray-900 border border-white/20 rounded-t-2xl sm:rounded-xl p-6 w-full sm:max-w-sm shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-white font-bold text-lg">Move to Folder</h3>
@@ -445,7 +445,7 @@ function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck
 
       {/* Create New Deck Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
           <div className="bg-slate-900 rounded-t-2xl sm:rounded-xl border border-slate-700 w-full sm:max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-white">Create New Deck</h2>

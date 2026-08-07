@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../../config';
@@ -24,7 +24,7 @@ export default function FinancePanel({ isOpen, onClose }) {
   if (!isOpen || !financeData) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
       <div className="bg-slate-900 rounded-t-2xl sm:rounded-lg border border-slate-700 sm:max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-white">Portfolio Finance</h2>

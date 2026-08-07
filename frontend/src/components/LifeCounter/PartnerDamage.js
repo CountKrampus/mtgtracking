@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { X, Plus, Minus, Users } from 'lucide-react';
 
 /**
@@ -33,7 +33,7 @@ function PartnerDamage({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4">
+    <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
       <div className="bg-gray-900 rounded-t-2xl sm:rounded-2xl p-6 sm:max-w-lg w-full shadow-2xl border border-white/20 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

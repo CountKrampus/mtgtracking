@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { ArrowLeftRight, Plus, X, Check, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTrades } from '../contexts/TradesContext';
 import { useAuthContext } from '../contexts/AuthContext';
@@ -112,8 +112,8 @@ function CreateListingModal({ onClose, onCreate }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
-      <div className="bg-gray-900 border border-white/20 rounded-t-2xl sm:rounded-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4 pb-16 sm:pb-0">
+      <div className="bg-gray-900 border border-white/20 rounded-t-2xl sm:rounded-xl w-full sm:max-w-lg max-h-[calc(90vh-4rem)] sm:max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-gray-900 border-b border-white/10 px-4 py-3 flex items-center justify-between">
           <h3 className="text-white font-semibold">Post a Listing</h3>
           <button onClick={onClose} className="text-white/50 hover:text-white"><X size={18} /></button>
@@ -216,7 +216,7 @@ function MakeOfferModal({ listing, onClose, onSubmit }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4 pb-16 sm:pb-0">
       <div className="bg-gray-900 border border-white/20 rounded-t-2xl sm:rounded-xl w-full sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
         <div className="bg-gray-900 border-b border-white/10 px-4 py-3 flex items-center justify-between flex-shrink-0">
           <div>
