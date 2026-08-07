@@ -408,6 +408,10 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
   const [recScope, setRecScope] = useState('owned'); // 'owned' | 'all'
   const [recommendations, setRecommendations] = useState([]);
   const [loadingRecs, setLoadingRecs] = useState(false);
+  const [manabaseBudget, setManabaseBudget] = useState('');
+  const [manabaseCandidates, setManabaseCandidates] = useState([]);
+  const [selectedManabaseLands, setSelectedManabaseLands] = useState(new Set()); // Set of card names
+  const [loadingManabaseBuilder, setLoadingManabaseBuilder] = useState(false);
 
   useEffect(() => {
     setShareCode(deck.shareCode || null);
@@ -500,6 +504,16 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
 
   // ── Manabase Score ────────────────────────────────────────────────────────
   const manabaseScore = useMemo(() => calculateManabaseScore(deck), [deck]);
+
+  // ── Manabase Builder: live projected score for the currently-selected package ──
+  const projectedManabaseScore = useMemo(() => {
+    if (selectedManabaseLands.size === 0) return manabaseScore;
+    const selectedCards = manabaseCandidates
+      .filter(c => selectedManabaseLands.has(c.name))
+      .map(c => ({ name: c.name, types: ['Land'], colors: c.colors }));
+    const hypotheticalDeck = { ...deck, mainDeck: [...deck.mainDeck, ...selectedCards] };
+    return calculateManabaseScore(hypotheticalDeck);
+  }, [deck, manabaseCandidates, selectedManabaseLands, manabaseScore]);
 
   // ── Deck Health Score ─────────────────────────────────────────────────────
   const healthScore = useMemo(() => calculateDeckHealthScore(deck), [deck]);
@@ -603,6 +617,54 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
       console.error('Error adding recommendation to deck:', error);
       alert('Error adding card to deck');
     }
+  };
+
+  const suggestLandPackage = async () => {
+    const budget = parseFloat(manabaseBudget);
+    if (!budget || budget <= 0) return;
+    setLoadingManabaseBuilder(true);
+    try {
+      const token = localStorage.getItem('mtg_access_token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await fetch(`${API_URL}/decks/${deck._id}/manabase-builder?budget=${budget}`, { headers });
+      const data = response.ok ? await response.json() : { suggested: [] };
+      setManabaseCandidates(data.suggested || []);
+      setSelectedManabaseLands(new Set((data.suggested || []).map(c => c.name)));
+    } catch (error) {
+      console.error('Error fetching manabase builder suggestions:', error);
+      setManabaseCandidates([]);
+    } finally {
+      setLoadingManabaseBuilder(false);
+    }
+  };
+
+  const toggleManabaseLand = (name) => {
+    setSelectedManabaseLands(prev => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name); else next.add(name);
+      return next;
+    });
+  };
+
+  const addSelectedLandsToDeck = async () => {
+    const toAdd = manabaseCandidates.filter(c => selectedManabaseLands.has(c.name));
+    for (const land of toAdd) {
+      try {
+        await axios.post(`${API_URL}/decks/${deck._id}/add-card`, {
+          scryfallId: land.scryfallId,
+          name: land.name,
+          manaCost: land.manaCost,
+          types: ['Land'],
+          colors: land.colors,
+          imageUrl: land.imageUrl,
+        });
+      } catch (error) {
+        console.error(`Error adding ${land.name} to deck:`, error);
+      }
+    }
+    setManabaseCandidates([]);
+    setSelectedManabaseLands(new Set());
+    onRefresh?.();
   };
 
   const addRecommendationToWishlist = (scryfallCard) => {
@@ -1236,6 +1298,65 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+
+          {/* Manabase Builder */}
+          <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30 mb-6">
+            <h3 className="text-lg font-bold text-white mb-4">Manabase Builder</h3>
+
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-white/60 text-sm">Budget: $</span>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={manabaseBudget}
+                onChange={(e) => setManabaseBudget(e.target.value)}
+                placeholder="50"
+                className="w-24 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm"
+              />
+              <button
+                onClick={suggestLandPackage}
+                disabled={loadingManabaseBuilder || !manabaseBudget}
+                className="px-3 py-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded text-sm font-medium transition"
+              >
+                {loadingManabaseBuilder ? 'Suggesting...' : 'Suggest Land Package'}
+              </button>
+            </div>
+
+            {manabaseCandidates.length > 0 && (
+              <>
+                <div className="bg-white/5 rounded p-3 mb-3 flex items-center justify-between">
+                  <span className="text-white/60 text-sm">Manabase Score</span>
+                  <span className="text-white text-sm font-semibold">
+                    {manabaseScore.grade} → <span className="text-green-400">{projectedManabaseScore.grade}</span>
+                  </span>
+                </div>
+
+                <div className="space-y-2 mb-3">
+                  {manabaseCandidates.map(card => (
+                    <label key={card.name} className="flex items-center gap-3 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedManabaseLands.has(card.name)}
+                        onChange={() => toggleManabaseLand(card.name)}
+                      />
+                      <span className="text-white flex-1">{card.name}</span>
+                      <span className="text-white/40 text-xs capitalize">{card.cycle}</span>
+                      <span className="text-white/60">${(card.price ?? 0).toFixed(2)}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <button
+                  onClick={addSelectedLandsToDeck}
+                  disabled={selectedManabaseLands.size === 0}
+                  className="w-full px-3 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded text-sm font-semibold transition"
+                >
+                  Add Selected to Deck
+                </button>
+              </>
             )}
           </div>
 
