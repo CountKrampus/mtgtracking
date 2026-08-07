@@ -17,6 +17,7 @@ The CommunityDecks page has no way to highlight standout decks. Trending content
 - A forum thread is auto-created in a "Community Spotlights" category with content generated from deck data (commander, power level, budget tier, value, salt score, tags)
 - Spotlight expires automatically after 7 days (no cron — time-based query)
 - Feature is accessible from both the CommunityDecks page and the Admin Panel
+- The existing "Most Imported" sort option is renamed to "Most Popular" and made the default sort so popular decks surface immediately on page load
 
 ---
 
@@ -151,6 +152,11 @@ Tags line is omitted if the deck has no tags. Color identity letters are joined 
 ---
 
 ## Frontend
+
+### Sort default change
+
+- Rename `<option value="imported">Most Imported</option>` → `Most Popular`
+- Change default sort state from `'newest'` to `'imported'` so the most popular decks show first on page load
 
 ### CommunityDecks page (`frontend/src/components/CommunityDecks/CommunityDecks.js`)
 
