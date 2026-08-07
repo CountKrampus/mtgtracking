@@ -1,0 +1,132 @@
+- generic [ref=f30e3]:
+  - generic [ref=f30e5]:
+    - button "Notifications" [ref=f30e6] [cursor=pointer]
+    - button "Messages" [ref=f30e10] [cursor=pointer]
+    - button "Send Feedback" [ref=f30e13] [cursor=pointer]
+    - button [ref=f30e16] [cursor=pointer]:
+      - img "creamkrampus" [ref=f30e17]
+  - generic [ref=f30e20]:
+    - button [ref=f30e21] [cursor=pointer]
+    - generic [ref=f30e24]:
+      - generic [ref=f30e26]:
+        - generic [ref=f30e27]:
+          - heading "MTG Tracker" [level=1] [ref=f30e28]
+          - paragraph [ref=f30e29]: Collection Manager
+        - button [ref=f30e30] [cursor=pointer]
+      - generic [ref=f30e254]:
+        - generic [ref=f30e255]: K
+        - generic [ref=f30e256]:
+          - paragraph [ref=f30e257]: Krampus
+          - text: admin
+      - generic [ref=f30e34]:
+        - button "Navigation" [ref=f30e35] [cursor=pointer]
+        - button "Dashboard" [ref=f30e39] [cursor=pointer]
+        - button "Collection" [ref=f30e44] [cursor=pointer]
+        - button "Deck Builder" [ref=f30e49] [cursor=pointer]
+        - button "Wishlist" [ref=f30e55] [cursor=pointer]
+        - button "Trading Board" [ref=f30e59] [cursor=pointer]
+        - button "Challenges" [ref=f30e64] [cursor=pointer]
+        - button "Forum" [ref=f30e72] [cursor=pointer]
+        - button "Community Decks" [ref=f30e76] [cursor=pointer]
+        - button "Life Counter" [ref=f30e81] [cursor=pointer]
+        - button "Settings" [ref=f30e88] [cursor=pointer]
+        - button "Actions" [ref=f30e93] [cursor=pointer]
+        - button "Import" [ref=f30e97] [cursor=pointer]
+        - button "Export JSON" [ref=f30e102] [cursor=pointer]
+        - button "Export CSV" [ref=f30e107] [cursor=pointer]
+        - button "Update Prices" [ref=f30e112] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f30e119] [cursor=pointer]
+        - button "Tools" [ref=f30e126] [cursor=pointer]
+        - button "Commanders" [ref=f30e130] [cursor=pointer]
+        - button "Sets" [ref=f30e134] [cursor=pointer]
+        - button "Combos" [ref=f30e138] [cursor=pointer]
+        - button "Finance" [ref=f30e142] [cursor=pointer]
+        - button "Scan Card" [ref=f30e146] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f30e151] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f30e156] [cursor=pointer]
+        - button "Spoiler Season" [ref=f30e160] [cursor=pointer]
+        - button "Learn" [ref=f30e165] [cursor=pointer]
+        - button "Card Rulings" [ref=f30e169] [cursor=pointer]
+        - button "Interaction Checker" [ref=f30e174] [cursor=pointer]
+        - button "New Player Guide" [ref=f30e178] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f30e183] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f30e188] [cursor=pointer]
+        - button "Format Guides" [ref=f30e192] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f30e200] [cursor=pointer]
+        - button "Gameplay" [ref=f30e206] [cursor=pointer]
+        - generic [ref=f30e258]: Admin
+        - button "Admin Panel" [ref=f30e259] [cursor=pointer]
+      - generic [ref=f30e263]:
+        - button "Account" [ref=f30e264] [cursor=pointer]
+        - button "Sign Out" [ref=f30e269] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f30e211] [cursor=pointer]:
+        - generic [ref=f30e214]: Command Palette
+        - generic [ref=f30e215]: Ctrl+K
+    - main [ref=f30e216]:
+      - generic [ref=f30e217]:
+        - navigation [ref=f30e218]:
+          - button "Home" [ref=f30e219] [cursor=pointer]
+          - generic [ref=f30e814]: Deck Builder
+        - generic [ref=f30e816]:
+          - generic [ref=f30e817]:
+            - generic [ref=f30e818]:
+              - heading "My Decks" [level=2] [ref=f30e819]
+              - button "📁 Uncategorised decks ▾" [ref=f30e821] [cursor=pointer]
+            - generic [ref=f30e822]:
+              - button "Calculate Sleeves" [ref=f30e823] [cursor=pointer]
+              - button "Find Staples" [ref=f30e824] [cursor=pointer]
+              - button "Compare Decks" [ref=f30e825] [cursor=pointer]
+              - button "Shopping List" [ref=f30e826] [cursor=pointer]
+              - button "New Deck" [ref=f30e827] [cursor=pointer]
+              - button "Import Deck" [ref=f30e829] [cursor=pointer]
+          - generic [ref=f30e845] [cursor=pointer]:
+            - img "Ozai, the Phoenix King" [ref=f30e847]
+            - generic [ref=f30e848]:
+              - heading "Every changed when fire nation attacked. Ozai Phoenix 10+" [level=3] [ref=f30e849]
+              - generic [ref=f30e850]: Commander
+            - generic [ref=f30e851]: "Commander: Ozai, the Phoenix King"
+            - generic [ref=f30e852]:
+              - generic [ref=f30e853]: 100 cards
+              - generic [ref=f30e854]: $0.00
+            - button "Delete" [ref=f30e855]
+          - generic [ref=f30e857]:
+            - generic [ref=f30e858]:
+              - heading "Compare Decks" [level=2] [ref=f30e859]
+              - button [ref=f30e865] [cursor=pointer]
+            - generic [ref=f30e878]:
+              - generic [ref=f30e879]:
+                - heading "Kaalia of the Vast vs Edgar Markov" [level=3] [ref=f30e880]
+                - button "Change decks" [ref=f30e881] [cursor=pointer]
+              - generic [ref=f30e882]:
+                - button "All (137)" [ref=f30e883] [cursor=pointer]
+                - button "Shared (4)" [active] [ref=f30e884] [cursor=pointer]
+                - button "Only Kaalia of the Vast (63)" [ref=f30e885] [cursor=pointer]
+                - button "Only Edgar Markov (70)" [ref=f30e886] [cursor=pointer]
+              - generic [ref=f30e887]:
+                - button "Mountain A B" [ref=f30e1200] [cursor=pointer]:
+                  - generic [ref=f30e1201]: Mountain
+                  - generic [ref=f30e1202]:
+                    - generic "Kaalia of the Vast" [ref=f30e1203]: A
+                    - generic "Edgar Markov" [ref=f30e1204]: B
+                - button "Plains A B" [ref=f30e1237] [cursor=pointer]:
+                  - generic [ref=f30e1238]: Plains
+                  - generic [ref=f30e1239]:
+                    - generic "Kaalia of the Vast" [ref=f30e1240]: A
+                    - generic "Edgar Markov" [ref=f30e1241]: B
+                - button "Prophetic Prism A B" [ref=f30e1254] [cursor=pointer]:
+                  - generic [ref=f30e1255]: Prophetic Prism
+                  - generic [ref=f30e1256]:
+                    - generic "Kaalia of the Vast" [ref=f30e1257]: A
+                    - generic "Edgar Markov" [ref=f30e1258]: B
+                - button "Swamp A B" [ref=f30e1351] [cursor=pointer]:
+                  - generic [ref=f30e1352]: Swamp
+                  - generic [ref=f30e1353]:
+                    - generic "Kaalia of the Vast" [ref=f30e1354]: A
+                    - generic "Edgar Markov" [ref=f30e1355]: B
+    - navigation [ref=f30e224]:
+      - generic [ref=f30e225]:
+        - button "Dashboard" [ref=f30e226] [cursor=pointer]
+        - button "Collection" [ref=f30e231] [cursor=pointer]
+        - button "Forum" [ref=f30e236] [cursor=pointer]
+        - button "Decks" [ref=f30e240] [cursor=pointer]
+        - button "More" [ref=f30e246] [cursor=pointer]

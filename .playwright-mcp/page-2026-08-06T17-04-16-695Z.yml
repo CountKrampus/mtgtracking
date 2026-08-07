@@ -1,0 +1,504 @@
+- generic [ref=f7e3]:
+  - generic [ref=f7e5]:
+    - button "Notifications" [ref=f7e6] [cursor=pointer]
+    - button "Messages" [ref=f7e10] [cursor=pointer]
+    - button "creamkrampus Krampus" [ref=f7e13] [cursor=pointer]:
+      - img "creamkrampus" [ref=f7e14]
+      - generic [ref=f7e15]: Krampus
+  - generic [ref=f7e18]:
+    - generic [ref=f7e20]:
+      - generic [ref=f7e23]:
+        - heading "MTG Tracker" [level=1] [ref=f7e24]
+        - paragraph [ref=f7e25]: Collection Manager
+      - generic [ref=f7e223]:
+        - generic [ref=f7e224]: K
+        - generic [ref=f7e225]:
+          - paragraph [ref=f7e226]: Krampus
+          - text: admin
+      - generic [ref=f7e26]:
+        - button "Navigation" [ref=f7e27] [cursor=pointer]
+        - button "Dashboard" [ref=f7e31] [cursor=pointer]
+        - button "Collection" [ref=f7e36] [cursor=pointer]
+        - button "Deck Builder" [ref=f7e41] [cursor=pointer]
+        - button "Wishlist" [ref=f7e47] [cursor=pointer]
+        - button "Trading Board" [ref=f7e51] [cursor=pointer]
+        - button "Challenges" [ref=f7e56] [cursor=pointer]
+        - button "Forum" [ref=f7e64] [cursor=pointer]
+        - button "Community Decks" [ref=f7e68] [cursor=pointer]
+        - button "Life Counter" [ref=f7e73] [cursor=pointer]
+        - button "Settings" [ref=f7e80] [cursor=pointer]
+        - button "Actions" [ref=f7e85] [cursor=pointer]
+        - button "Import" [ref=f7e89] [cursor=pointer]
+        - button "Export JSON" [ref=f7e94] [cursor=pointer]
+        - button "Export CSV" [ref=f7e99] [cursor=pointer]
+        - button "Update Prices" [ref=f7e104] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f7e111] [cursor=pointer]
+        - button "Tools" [ref=f7e118] [cursor=pointer]
+        - button "Commanders" [ref=f7e122] [cursor=pointer]
+        - button "Sets" [ref=f7e126] [cursor=pointer]
+        - button "Combos" [ref=f7e130] [cursor=pointer]
+        - button "Finance" [ref=f7e134] [cursor=pointer]
+        - button "Scan Card" [ref=f7e138] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f7e143] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f7e148] [cursor=pointer]
+        - button "Spoiler Season" [ref=f7e152] [cursor=pointer]
+        - button "Learn" [ref=f7e157] [cursor=pointer]
+        - button "Card Rulings" [ref=f7e161] [cursor=pointer]
+        - button "Interaction Checker" [ref=f7e166] [cursor=pointer]
+        - button "New Player Guide" [ref=f7e170] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f7e175] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f7e180] [cursor=pointer]
+        - button "Format Guides" [ref=f7e184] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f7e192] [cursor=pointer]
+        - button "Gameplay" [ref=f7e198] [cursor=pointer]
+        - generic [ref=f7e227]: Admin
+        - button "Admin Panel" [ref=f7e228] [cursor=pointer]
+      - generic [ref=f7e232]:
+        - button "Account" [ref=f7e233] [cursor=pointer]
+        - button "Sign Out" [ref=f7e238] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f7e203] [cursor=pointer]:
+        - generic [ref=f7e206]: Command Palette
+        - generic [ref=f7e207]: Ctrl+K
+      - button "Collapse" [ref=f7e209] [cursor=pointer]
+    - main [ref=f7e213]:
+      - generic [ref=f7e214]:
+        - navigation [ref=f7e215]:
+          - button "Home" [ref=f7e216] [cursor=pointer]
+        - generic [ref=f7e243]:
+          - generic [ref=f7e244]:
+            - generic [ref=f7e245]:
+              - generic [ref=f7e246]: Total Cards
+              - generic [ref=f7e247]: "701"
+            - generic [ref=f7e248]:
+              - generic [ref=f7e249]: Unique Cards
+              - generic [ref=f7e250]: "572"
+            - generic [ref=f7e251]:
+              - generic [ref=f7e252]: Collection Value
+              - generic [ref=f7e253]: $965.23
+            - generic [ref=f7e254]:
+              - generic [ref=f7e255]: Avg. Card Value
+              - generic [ref=f7e256]: $1.38
+          - generic [ref=f7e257]:
+            - heading "Quick Actions" [level=2] [ref=f7e258]
+            - generic [ref=f7e259]:
+              - button "Add Card" [ref=f7e260] [cursor=pointer]
+              - button "Import Cards" [ref=f7e262] [cursor=pointer]
+              - button "Update Prices" [ref=f7e266] [cursor=pointer]
+              - button "View Collection" [ref=f7e272] [cursor=pointer]
+          - generic [ref=f7e276]:
+            - generic [ref=f7e277]:
+              - heading "Color Distribution" [level=2] [ref=f7e278]
+              - generic [ref=f7e279]:
+                - 'generic "White: 99 (13.1%)" [ref=f7e280]': W
+                - 'generic "Black: 246 (32.5%)" [ref=f7e282]': B
+                - 'generic "Red: 109 (14.4%)" [ref=f7e284]': R
+                - 'generic "Green: 140 (18.5%)" [ref=f7e286]': G
+                - 'generic "Colorless: 164 (21.6%)" [ref=f7e288]': C
+              - generic [ref=f7e290]:
+                - generic [ref=f7e291]:
+                  - generic [ref=f7e292]: White
+                  - generic [ref=f7e295]: "99"
+                  - generic [ref=f7e296]: 13%
+                - generic [ref=f7e297]:
+                  - generic [ref=f7e298]: Blue
+                  - generic [ref=f7e300]: "0"
+                  - generic [ref=f7e301]: 0%
+                - generic [ref=f7e302]:
+                  - generic [ref=f7e303]: Black
+                  - generic [ref=f7e306]: "246"
+                  - generic [ref=f7e307]: 32%
+                - generic [ref=f7e308]:
+                  - generic [ref=f7e309]: Red
+                  - generic [ref=f7e312]: "109"
+                  - generic [ref=f7e313]: 14%
+                - generic [ref=f7e314]:
+                  - generic [ref=f7e315]: Green
+                  - generic [ref=f7e318]: "140"
+                  - generic [ref=f7e319]: 18%
+                - generic [ref=f7e320]:
+                  - generic [ref=f7e321]: Colorless
+                  - generic [ref=f7e324]: "164"
+                  - generic [ref=f7e325]: 22%
+            - generic [ref=f7e326]:
+              - heading "Top 10 Most Valuable" [level=2] [ref=f7e327]
+              - generic [ref=f7e330]:
+                - generic [ref=f7e331]:
+                  - generic [ref=f7e332]: "1."
+                  - generic [ref=f7e333]:
+                    - generic [ref=f7e334]: Cavern of Souls
+                    - generic [ref=f7e335]: The Lost Caverns of Ixalan
+                  - generic [ref=f7e336]: $47.96
+                - generic [ref=f7e338]:
+                  - generic [ref=f7e339]: "2."
+                  - generic [ref=f7e340]:
+                    - generic [ref=f7e341]: Edgar Markov
+                    - generic [ref=f7e342]: Innistrad Remastered
+                  - generic [ref=f7e343]: $43.06
+                - generic [ref=f7e345]:
+                  - generic [ref=f7e346]: "3."
+                  - generic [ref=f7e347]:
+                    - generic [ref=f7e348]: Sensei's Divining Top
+                    - generic [ref=f7e349]: Double Masters 2022
+                  - generic [ref=f7e350]: $41.46
+                - generic [ref=f7e352]:
+                  - generic [ref=f7e353]: "4."
+                  - generic [ref=f7e354]:
+                    - generic [ref=f7e355]: Tamiyo's Safekeeping
+                    - generic [ref=f7e356]: "Kamigawa: Neon Dynasty"
+                  - generic [ref=f7e357]:
+                    - generic [ref=f7e358]: $22.74
+                    - generic [ref=f7e359]: 3x $7.58
+                - generic [ref=f7e360]:
+                  - generic [ref=f7e361]: "5."
+                  - generic [ref=f7e362]:
+                    - generic [ref=f7e363]: Damnation
+                    - generic [ref=f7e364]: Double Masters 2022
+                  - generic [ref=f7e365]: $20.20
+                - generic [ref=f7e367]:
+                  - generic [ref=f7e368]: "6."
+                  - generic [ref=f7e369]:
+                    - generic [ref=f7e370]: Savai Triome
+                    - generic [ref=f7e371]: "Ikoria: Lair of Behemoths"
+                  - generic [ref=f7e372]: $19.64
+                - generic [ref=f7e374]:
+                  - generic [ref=f7e375]: "7."
+                  - generic [ref=f7e376]:
+                    - generic [ref=f7e377]: Tyrranax Rex
+                    - generic [ref=f7e378]: "Phyrexia: All Will Be One"
+                  - generic [ref=f7e379]:
+                    - generic [ref=f7e380]: $17.85
+                    - generic [ref=f7e381]: 3x $5.95
+                - generic [ref=f7e382]:
+                  - generic [ref=f7e383]: "8."
+                  - generic [ref=f7e384]:
+                    - generic [ref=f7e385]: Diabolic Intent
+                    - generic [ref=f7e386]: The Brothers' War
+                  - generic [ref=f7e387]: $17.31
+                - generic [ref=f7e389]:
+                  - generic [ref=f7e390]: "9."
+                  - generic [ref=f7e391]:
+                    - generic [ref=f7e392]: Revel in Riches
+                    - generic [ref=f7e393]: Ixalan
+                  - generic [ref=f7e394]: $16.37
+                - generic [ref=f7e396]:
+                  - generic [ref=f7e397]: "10."
+                  - generic [ref=f7e398]:
+                    - generic [ref=f7e399]: Sword of Hours
+                    - generic [ref=f7e400]: Forgotten Realms Commander
+                  - generic [ref=f7e401]:
+                    - generic [ref=f7e402]: $15.48
+                    - generic [ref=f7e403]: 3x $5.16
+          - generic [ref=f7e404]:
+            - heading "Collection Value Over Time" [level=2] [ref=f7e405]
+            - generic [ref=f7e409]: No history yet. Value snapshots are saved daily when you view stats.
+          - generic [ref=f7e410]:
+            - generic [ref=f7e411]:
+              - heading "Type Distribution" [level=2] [ref=f7e412]
+              - generic [ref=f7e417]:
+                - generic [ref=f7e418]:
+                  - generic [ref=f7e419]: Creature
+                  - generic [ref=f7e422]: "279"
+                  - generic [ref=f7e423]: 35%
+                - generic [ref=f7e424]:
+                  - generic [ref=f7e425]: Artifact
+                  - generic [ref=f7e428]: "117"
+                  - generic [ref=f7e429]: 15%
+                - generic [ref=f7e430]:
+                  - generic [ref=f7e431]: Enchantment
+                  - generic [ref=f7e434]: "104"
+                  - generic [ref=f7e435]: 13%
+                - generic [ref=f7e436]:
+                  - generic [ref=f7e437]: Sorcery
+                  - generic [ref=f7e440]: "88"
+                  - generic [ref=f7e441]: 11%
+                - generic [ref=f7e442]:
+                  - generic [ref=f7e443]: Instant
+                  - generic [ref=f7e446]: "79"
+                  - generic [ref=f7e447]: 10%
+                - generic [ref=f7e448]:
+                  - generic [ref=f7e449]: Land
+                  - generic [ref=f7e452]: "64"
+                  - generic [ref=f7e453]: 8%
+                - generic [ref=f7e454]:
+                  - generic [ref=f7e455]: Legendary
+                  - generic [ref=f7e458]: "59"
+                  - generic [ref=f7e459]: 7%
+                - generic [ref=f7e460]:
+                  - generic [ref=f7e461]: Basic
+                  - generic [ref=f7e464]: "8"
+                  - generic [ref=f7e465]: 1%
+            - generic [ref=f7e466]:
+              - heading "Rarity Breakdown" [level=2] [ref=f7e467]
+              - generic [ref=f7e468]:
+                - 'generic "Common: 294 (41.9%)" [ref=f7e469]': C
+                - 'generic "Uncommon: 164 (23.4%)" [ref=f7e471]': U
+                - 'generic "Rare: 202 (28.8%)" [ref=f7e473]': R
+                - 'generic "Mythic: 41 (5.8%)" [ref=f7e475]'
+              - generic [ref=f7e476]:
+                - generic [ref=f7e477]:
+                  - generic [ref=f7e478]: Common
+                  - generic [ref=f7e481]: "294"
+                  - generic [ref=f7e482]: 42%
+                - generic [ref=f7e483]:
+                  - generic [ref=f7e484]: Uncommon
+                  - generic [ref=f7e487]: "164"
+                  - generic [ref=f7e488]: 23%
+                - generic [ref=f7e489]:
+                  - generic [ref=f7e490]: Rare
+                  - generic [ref=f7e493]: "202"
+                  - generic [ref=f7e494]: 29%
+                - generic [ref=f7e495]:
+                  - generic [ref=f7e496]: Mythic
+                  - generic [ref=f7e499]: "41"
+                  - generic [ref=f7e500]: 6%
+          - generic [ref=f7e501]:
+            - generic [ref=f7e502]:
+              - heading "Top Sets by Card Count" [level=2] [ref=f7e503]
+              - generic [ref=f7e504]:
+                - generic [ref=f7e505]:
+                  - generic [ref=f7e506]: Unfinity
+                  - generic [ref=f7e509]: "87"
+                  - generic [ref=f7e510]: 27%
+                - generic [ref=f7e511]:
+                  - generic [ref=f7e512]: Commander Masters
+                  - generic [ref=f7e515]: "55"
+                  - generic [ref=f7e516]: 17%
+                - generic [ref=f7e517]:
+                  - generic [ref=f7e518]: Marvel Super Heroes Commander
+                  - generic [ref=f7e521]: "37"
+                  - generic [ref=f7e522]: 11%
+                - generic [ref=f7e523]:
+                  - generic [ref=f7e524]: Secrets of Strixhaven Commander
+                  - generic [ref=f7e527]: "32"
+                  - generic [ref=f7e528]: 10%
+                - generic [ref=f7e529]:
+                  - generic [ref=f7e530]: "Duskmourn: House of Horror Commander"
+                  - generic [ref=f7e533]: "23"
+                  - generic [ref=f7e534]: 7%
+                - generic [ref=f7e535]:
+                  - generic [ref=f7e536]: Foundations
+                  - generic [ref=f7e539]: "21"
+                  - generic [ref=f7e540]: 6%
+                - generic [ref=f7e541]:
+                  - generic [ref=f7e542]: "Phyrexia: All Will Be One"
+                  - generic [ref=f7e545]: "20"
+                  - generic [ref=f7e546]: 6%
+                - generic [ref=f7e547]:
+                  - generic [ref=f7e548]: Outlaws of Thunder Junction
+                  - generic [ref=f7e551]: "20"
+                  - generic [ref=f7e552]: 6%
+                - generic [ref=f7e553]:
+                  - generic [ref=f7e554]: "Innistrad: Crimson Vow"
+                  - generic [ref=f7e557]: "15"
+                  - generic [ref=f7e558]: 5%
+                - generic [ref=f7e559]:
+                  - generic [ref=f7e560]: Innistrad Remastered
+                  - generic [ref=f7e563]: "14"
+                  - generic [ref=f7e564]: 4%
+            - generic [ref=f7e565]:
+              - heading "Condition Overview" [level=2] [ref=f7e566]
+              - 'generic "Near Mint: 701 (100.0%)" [ref=f7e568]': NM
+              - generic [ref=f7e570]:
+                - generic [ref=f7e571]:
+                  - generic [ref=f7e572]: Near Mint
+                  - generic [ref=f7e575]: "701"
+                  - generic [ref=f7e576]: 100%
+                - generic [ref=f7e577]:
+                  - generic [ref=f7e578]: Light Play
+                  - generic [ref=f7e580]: "0"
+                  - generic [ref=f7e581]: 0%
+                - generic [ref=f7e582]:
+                  - generic [ref=f7e583]: Mod. Play
+                  - generic [ref=f7e585]: "0"
+                  - generic [ref=f7e586]: 0%
+                - generic [ref=f7e587]:
+                  - generic [ref=f7e588]: Heavy Play
+                  - generic [ref=f7e590]: "0"
+                  - generic [ref=f7e591]: 0%
+                - generic [ref=f7e592]:
+                  - generic [ref=f7e593]: Damaged
+                  - generic [ref=f7e595]: "0"
+                  - generic [ref=f7e596]: 0%
+          - generic [ref=f7e597]:
+            - heading "Value Distribution" [level=2] [ref=f7e598]
+            - generic [ref=f7e599]:
+              - generic [ref=f7e600]:
+                - generic [ref=f7e601]: "524"
+                - 'generic "$0–1: 524 cards"'
+                - generic [ref=f7e602]: $0–1
+              - generic [ref=f7e603]:
+                - generic [ref=f7e604]: "130"
+                - 'generic "$1–5: 130 cards"'
+                - generic [ref=f7e605]: $1–5
+              - generic [ref=f7e606]:
+                - generic [ref=f7e607]: "43"
+                - 'generic "$5–20: 43 cards"'
+                - generic [ref=f7e608]: $5–20
+              - generic [ref=f7e609]:
+                - generic [ref=f7e610]: "4"
+                - 'generic "$20–50: 4 cards"'
+                - generic [ref=f7e611]: $20–50
+              - generic [ref=f7e612]:
+                - 'generic "$50+: 0 cards"'
+                - generic [ref=f7e613]: $50+
+          - generic [ref=f7e614]:
+            - generic [ref=f7e615]:
+              - heading "Top 10 Most Owned" [level=2] [ref=f7e616]
+              - generic [ref=f7e617]:
+                - generic [ref=f7e618]:
+                  - generic [ref=f7e619]: "1."
+                  - generic [ref=f7e620]:
+                    - generic [ref=f7e621]: Feed the Swarm
+                    - generic [ref=f7e622]: "Avatar: The Last Airbender Eternal"
+                  - generic [ref=f7e623]:
+                    - generic [ref=f7e624]: 4x
+                    - generic [ref=f7e625]: $0.20
+                - generic [ref=f7e626]:
+                  - generic [ref=f7e627]: "2."
+                  - generic [ref=f7e628]:
+                    - generic [ref=f7e629]: Night's Whisper
+                    - generic [ref=f7e630]: Marvel Super Heroes Commander
+                  - generic [ref=f7e631]:
+                    - generic [ref=f7e632]: 4x
+                    - generic [ref=f7e633]: $0.22
+                - generic [ref=f7e634]:
+                  - generic [ref=f7e635]: "3."
+                  - generic [ref=f7e636]:
+                    - generic [ref=f7e637]: Ambush Viper
+                    - generic [ref=f7e638]: Innistrad Remastered
+                  - generic [ref=f7e639]:
+                    - generic [ref=f7e640]: 3x
+                    - generic [ref=f7e641]: $0.21
+                - generic [ref=f7e642]:
+                  - generic [ref=f7e643]: "4."
+                  - generic [ref=f7e644]:
+                    - generic [ref=f7e645]: Night Shift of the Living Dead
+                    - generic [ref=f7e646]: Unfinity
+                  - generic [ref=f7e647]:
+                    - generic [ref=f7e648]: 3x
+                    - generic [ref=f7e649]: $0.31
+                - generic [ref=f7e650]:
+                  - generic [ref=f7e651]: "5."
+                  - generic [ref=f7e652]:
+                    - generic [ref=f7e653]: Oblivion's Hunger
+                    - generic [ref=f7e654]: Zendikar Rising
+                  - generic [ref=f7e655]:
+                    - generic [ref=f7e656]: 3x
+                    - generic [ref=f7e657]: $0.09
+                - generic [ref=f7e658]:
+                  - generic [ref=f7e659]: "6."
+                  - generic [ref=f7e660]:
+                    - generic [ref=f7e661]: Petting Zookeeper
+                    - generic [ref=f7e662]: Unfinity
+                  - generic [ref=f7e663]:
+                    - generic [ref=f7e664]: 3x
+                    - generic [ref=f7e665]: $0.06
+                - generic [ref=f7e666]:
+                  - generic [ref=f7e667]: "7."
+                  - generic [ref=f7e668]:
+                    - generic [ref=f7e669]: Phyresis
+                    - generic [ref=f7e670]: Mirrodin Besieged
+                  - generic [ref=f7e671]:
+                    - generic [ref=f7e672]: 3x
+                    - generic [ref=f7e673]: $2.08
+                - generic [ref=f7e674]:
+                  - generic [ref=f7e675]: "8."
+                  - generic [ref=f7e676]:
+                    - generic [ref=f7e677]: Quick Fixer
+                    - generic [ref=f7e678]: Unfinity
+                  - generic [ref=f7e679]:
+                    - generic [ref=f7e680]: 3x
+                    - generic [ref=f7e681]: $0.12
+                - generic [ref=f7e682]:
+                  - generic [ref=f7e683]: "9."
+                  - generic [ref=f7e684]:
+                    - generic [ref=f7e685]: Quietus Spike
+                    - generic [ref=f7e686]: New Capenna Commander
+                  - generic [ref=f7e687]:
+                    - generic [ref=f7e688]: 3x
+                    - generic [ref=f7e689]: $1.91
+                - generic [ref=f7e690]:
+                  - generic [ref=f7e691]: "10."
+                  - generic [ref=f7e692]:
+                    - generic [ref=f7e693]: Rampant Growth
+                    - generic [ref=f7e694]: "Tarkir: Dragonstorm Commander"
+                  - generic [ref=f7e695]:
+                    - generic [ref=f7e696]: 3x
+                    - generic [ref=f7e697]: $0.56
+            - generic [ref=f7e698]:
+              - heading "Recent Additions" [level=2] [ref=f7e699]
+              - generic [ref=f7e700]:
+                - generic [ref=f7e702]:
+                  - generic [ref=f7e703]: Abrade
+                  - generic [ref=f7e704]: Secrets of Strixhaven Commander
+                  - generic [ref=f7e705]: $0.30
+                - generic [ref=f7e707]:
+                  - generic [ref=f7e708]: Zada, Hedron Grinder
+                  - generic [ref=f7e709]: Commander Masters
+                  - generic [ref=f7e710]: $0.20
+                - generic [ref=f7e712]:
+                  - generic [ref=f7e713]: Witchstalker Frenzy
+                  - generic [ref=f7e714]: Wilds of Eldraine
+                  - generic [ref=f7e715]: $0.31
+                - generic [ref=f7e717]:
+                  - generic [ref=f7e718]: Whispersilk Cloak
+                  - generic [ref=f7e719]: Marvel Super Heroes Commander
+                  - generic [ref=f7e720]: $1.51
+                - generic [ref=f7e722]:
+                  - generic [ref=f7e723]: Tormentor's Helm
+                  - generic [ref=f7e724]: Kaldheim
+                  - generic [ref=f7e725]: $0.21
+          - generic [ref=f7e726]:
+            - generic [ref=f7e727]:
+              - heading "Collector Achievements" [level=2] [ref=f7e728]
+              - generic [ref=f7e729]: 14/15
+            - generic [ref=f7e730]:
+              - paragraph [ref=f7e731]: Earned
+              - generic [ref=f7e732]:
+                - 'generic "First Card: Add your first card to the collection" [ref=f7e733]':
+                  - generic [ref=f7e734]: 🃏
+                  - generic [ref=f7e735]: First Card
+                - 'generic "Getting Started: Own 10 cards" [ref=f7e736]':
+                  - generic [ref=f7e737]: 📦
+                  - generic [ref=f7e738]: Getting Started
+                - 'generic "Collector: Own 100 cards" [ref=f7e739]':
+                  - generic [ref=f7e740]: 📚
+                  - generic [ref=f7e741]: Collector
+                - 'generic "Serious Collector: Own 500 cards" [ref=f7e742]':
+                  - generic [ref=f7e743]: 🏆
+                  - generic [ref=f7e744]: Serious Collector
+                - 'generic "Master Collector: Own 1,000 cards" [ref=f7e745]':
+                  - generic [ref=f7e746]: 👑
+                  - generic [ref=f7e747]: Master Collector
+                - 'generic "First Value: Collection worth $10+" [ref=f7e748]':
+                  - generic [ref=f7e749]: 💵
+                  - generic [ref=f7e750]: First Value
+                - 'generic "Valuable: Collection worth $100+" [ref=f7e751]':
+                  - generic [ref=f7e752]: 💰
+                  - generic [ref=f7e753]: Valuable
+                - 'generic "High Value: Collection worth $500+" [ref=f7e754]':
+                  - generic [ref=f7e755]: 💎
+                  - generic [ref=f7e756]: High Value
+                - 'generic "Premium Collection: Collection worth $1,000+" [ref=f7e757]':
+                  - generic [ref=f7e758]: 🏅
+                  - generic [ref=f7e759]: Premium Collection
+                - 'generic "Five Colors: Own cards of all 5 mana colors" [ref=f7e760]':
+                  - generic [ref=f7e761]: 🌈
+                  - generic [ref=f7e762]: Five Colors
+                - 'generic "First Foil: Own your first foil card" [ref=f7e763]':
+                  - generic [ref=f7e764]: ✨
+                  - generic [ref=f7e765]: First Foil
+                - 'generic "Set Explorer: Own cards from 5+ different sets" [ref=f7e766]':
+                  - generic [ref=f7e767]: 🗺️
+                  - generic [ref=f7e768]: Set Explorer
+                - 'generic "Set Connoisseur: Own cards from 20+ different sets" [ref=f7e769]':
+                  - generic [ref=f7e770]: 🌍
+                  - generic [ref=f7e771]: Set Connoisseur
+                - 'generic "Mythic!: Own a Mythic Rare" [ref=f7e772]':
+                  - generic [ref=f7e773]: 🔥
+                  - generic [ref=f7e774]: Mythic!
+            - generic [ref=f7e775]:
+              - paragraph [ref=f7e776]: Locked
+              - generic "Own 10 foil cards" [ref=f7e778]:
+                - generic [ref=f7e779]: ⭐
+                - generic [ref=f7e780]: Foil Fan

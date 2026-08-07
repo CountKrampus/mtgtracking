@@ -1,0 +1,168 @@
+- generic [ref=e1]:
+  - generic [ref=e455]:
+    - log
+    - log
+  - generic [ref=e11]:
+    - generic [ref=e12]:
+      - generic [ref=e14]:
+        - generic [ref=e15]: k
+        - generic [ref=e17]: krampusgaming
+      - generic [ref=e18]:
+        - button "Inbox" [ref=e21] [cursor=pointer]
+        - link [ref=e24] [cursor=pointer]:
+          - /url: https://support.discord.com
+          - button "Help" [ref=e25]
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - navigation "Servers sidebar" [ref=e31]:
+          - tree [ref=e32]:
+            - generic [ref=e33]:
+              - treeitem "Direct Messages" [level=1] [ref=e42] [cursor=pointer]
+              - group "Servers" [ref=e49]:
+                - generic [ref=e50]:
+                  - treeitem "krampusgaming" [level=1] [selected] [ref=e60] [cursor=pointer]:
+                    - generic [ref=e62]: k
+                  - generic [ref=e63]: krampusgaming
+              - treeitem "Add a Server" [level=1] [ref=e70] [cursor=pointer]
+              - treeitem "Discover" [level=1] [ref=e81] [cursor=pointer]
+              - treeitem "Download Apps" [level=1] [ref=e92] [cursor=pointer]
+        - navigation "krampusgaming (server)" [ref=e96]:
+          - generic [ref=e99]:
+            - button "krampusgaming, server actions" [ref=e100] [cursor=pointer]:
+              - heading "krampusgaming" [level=2] [ref=e102]
+            - button "Invite to Server" [ref=e107] [cursor=pointer]
+          - heading "Channels" [level=2] [ref=e112]
+          - list "Channels" [ref=e114]:
+            - listitem [ref=e116]:
+              - generic [ref=e117]:
+                - button "Events"
+                - generic [ref=e118] [cursor=pointer]: Events
+            - listitem [ref=e123]:
+              - generic [ref=e124]:
+                - button "Server Boosts"
+                - generic [ref=e148] [cursor=pointer]: Server Boosts
+            - listitem [ref=e154]:
+              - generic [ref=e155] [cursor=pointer]:
+                - button "Text Channels (category)" [expanded] [ref=e156]:
+                  - heading "Text Channels" [level=3] [ref=e157]
+                - generic [ref=e161]:
+                  - button "Create Channel" [ref=e162]
+                  - generic [ref=e165]: Create Channel
+            - listitem [ref=e166]:
+              - link "general (text channel)" [ref=e169] [cursor=pointer]:
+                - /url: /channels/391839377803968513/391839377803968516
+                - generic [ref=e170]:
+                  - img "Text icon" [ref=e171]
+                  - generic [ref=e174]: Text
+                  - generic [ref=e175]: general
+                  - generic [ref=e176]:
+                    - button "Invite to Channel" [ref=e178]
+                    - generic [ref=e182]: Invite to Channel
+                    - button "Edit Channel" [ref=e184]
+                    - generic [ref=e187]: Edit Channel
+            - listitem [ref=e188]:
+              - generic [ref=e189] [cursor=pointer]:
+                - button "Voice Channels (category)" [expanded] [ref=e190]:
+                  - heading "Voice Channels" [level=3] [ref=e191]
+                - generic [ref=e195]:
+                  - button "Create Channel" [ref=e196]
+                  - generic [ref=e199]: Create Channel
+            - listitem [ref=e200]:
+              - button "General (voice channel)" [ref=e204] [cursor=pointer]:
+                - generic [ref=e205]:
+                  - img "Voice icon" [ref=e206]
+                  - generic [ref=e210]: Voice
+                  - generic [ref=e211]: General
+                  - generic:
+                    - generic [ref=e212]: Open Chat
+                    - generic [ref=e213]: Invite to Voice
+                    - generic [ref=e214]: Edit Channel
+            - listitem [ref=e215]:
+              - button "borderlands (voice channel)" [ref=e219] [cursor=pointer]:
+                - generic [ref=e220]:
+                  - img "Voice icon" [ref=e221]
+                  - generic [ref=e225]: Voice
+                  - generic [ref=e226]: borderlands
+                  - generic:
+                    - generic [ref=e227]: Open Chat
+                    - generic [ref=e228]: Invite to Voice
+                    - generic [ref=e229]: Edit Channel
+        - separator "Resize Sidebar" [ref=e230]
+        - region "User status and settings" [ref=e231]:
+          - generic [ref=e232]:
+            - generic [ref=e233] [cursor=pointer]:
+              - button "Manage profile and status"
+              - generic [ref=e236]:
+                - generic [ref=e237]: CountKrampus
+                - generic [ref=e241]:
+                  - generic: countkrampus6297
+                  - generic: Online
+            - generic [ref=e242]:
+              - generic [ref=e243]:
+                - switch "Mute" [checked] [ref=e244] [cursor=pointer]
+                - generic [ref=e265]: Unmute
+                - button "Input Options" [ref=e266] [cursor=pointer]
+              - generic [ref=e270]:
+                - switch "Deafen" [ref=e271] [cursor=pointer]
+                - button "Output Options" [ref=e283] [cursor=pointer]
+              - button "User Settings" [ref=e287] [cursor=pointer]
+      - generic [ref=e298]:
+        - region "Channel header" [ref=e300]:
+          - generic [ref=e301]:
+            - generic [ref=e302]:
+              - generic [ref=e306]: Text Channel
+              - 'heading "krampusgaming: general" [level=1] [ref=e308]':
+                - generic [ref=e309]: "krampusgaming:"
+                - text: general
+            - generic [ref=e310]:
+              - button "Threads" [ref=e311] [cursor=pointer]
+              - button "Notification Settings" [ref=e314] [cursor=pointer]
+              - button "Pinned Messages" [ref=e317] [cursor=pointer]
+              - button "Show Member List" [ref=e320] [cursor=pointer]
+              - generic [ref=e325]:
+                - combobox "Search krampusgaming" [ref=e326]
+                - button [ref=e328]
+        - main "general (channel)" [ref=e335]:
+          - heading "general chat" [level=2] [ref=e337]
+          - group [ref=e339]:
+            - list "Messages in general" [ref=e341]:
+              - generic [ref=e345]:
+                - heading [level=3] [ref=e346]:
+                  - paragraph [ref=e347]: Welcome to
+                  - paragraph [ref=e348]: krampusgaming
+                - generic [ref=e349]: This is the beginning of this server.
+              - separator "July 30, 2026"
+              - listitem [ref=e350]:
+                - article [ref=e351]:
+                  - generic [ref=e358]:
+                    - text: Yay you made it,
+                    - link "Mtg-Tracker" [ref=e359] [cursor=pointer]
+                    - text: "!"
+                    - generic:
+                      - generic:
+                        - time:
+                          - generic: —
+                          - text: 12:28 PM
+                      - generic: Thursday, July 30, 2026 at 12:28 PM
+              - listitem [ref=e363]:
+                - 'article "CountKrampus , /link code: 4F5DFB , 5:11 PM" [ref=e364]':
+                  - generic [ref=e365]:
+                    - heading [level=3] [ref=e367]:
+                      - button "CountKrampus" [ref=e369]
+                      - generic:
+                        - generic:
+                          - time:
+                            - generic: —
+                            - text: 5:11 PM
+                        - generic: Thursday, July 30, 2026 at 5:11 PM
+                    - generic [ref=e370]: "/link code: 4F5DFB"
+          - generic [ref=e374]:
+            - generic [ref=e523]:
+              - generic [ref=e524]:
+                - generic [ref=e525]: /sets
+                - generic [ref=e526]: Show your set completion progress
+              - button "Close" [ref=e528] [cursor=pointer]
+            - generic [ref=e376]:
+              - generic [ref=e532]: Mtg-Tracker
+              - 'textbox "Message #general" [active] [ref=e384]':
+                - generic [ref=e538]: /sets

@@ -1,0 +1,901 @@
+- generic [ref=f19e3]:
+  - generic [ref=f19e5]:
+    - button "Notifications" [ref=f19e6] [cursor=pointer]
+    - button "Messages" [ref=f19e10] [cursor=pointer]
+    - button "creamkrampus Krampus" [ref=f19e13] [cursor=pointer]:
+      - img "creamkrampus" [ref=f19e14]
+      - generic [ref=f19e15]: Krampus
+  - generic [ref=f19e18]:
+    - generic [ref=f19e20]:
+      - generic [ref=f19e23]:
+        - heading "MTG Tracker" [level=1] [ref=f19e24]
+        - paragraph [ref=f19e25]: Collection Manager
+      - generic [ref=f19e226]:
+        - generic [ref=f19e227]: K
+        - generic [ref=f19e228]:
+          - paragraph [ref=f19e229]: Krampus
+          - text: admin
+      - generic [ref=f19e26]:
+        - button "Navigation" [ref=f19e27] [cursor=pointer]
+        - button "Dashboard" [ref=f19e31] [cursor=pointer]
+        - button "Collection" [ref=f19e36] [cursor=pointer]
+        - button "Deck Builder" [ref=f19e41] [cursor=pointer]
+        - button "Wishlist" [ref=f19e47] [cursor=pointer]
+        - button "Trading Board" [ref=f19e51] [cursor=pointer]
+        - button "Challenges" [ref=f19e56] [cursor=pointer]
+        - button "Forum" [ref=f19e64] [cursor=pointer]
+        - button "Community Decks" [ref=f19e68] [cursor=pointer]
+        - button "Life Counter" [ref=f19e73] [cursor=pointer]
+        - button "Settings" [ref=f19e80] [cursor=pointer]
+        - button "Actions" [ref=f19e85] [cursor=pointer]
+        - button "Import" [ref=f19e89] [cursor=pointer]
+        - button "Export JSON" [ref=f19e94] [cursor=pointer]
+        - button "Export CSV" [ref=f19e99] [cursor=pointer]
+        - button "Update Prices" [ref=f19e104] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f19e111] [cursor=pointer]
+        - button "Tools" [ref=f19e118] [cursor=pointer]
+        - button "Commanders" [ref=f19e122] [cursor=pointer]
+        - button "Sets" [ref=f19e126] [cursor=pointer]
+        - button "Combos" [ref=f19e130] [cursor=pointer]
+        - button "Finance" [ref=f19e134] [cursor=pointer]
+        - button "Scan Card" [ref=f19e138] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f19e143] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f19e148] [cursor=pointer]
+        - button "Spoiler Season" [ref=f19e152] [cursor=pointer]
+        - button "Learn" [ref=f19e157] [cursor=pointer]
+        - button "Card Rulings" [ref=f19e161] [cursor=pointer]
+        - button "Interaction Checker" [ref=f19e166] [cursor=pointer]
+        - button "New Player Guide" [ref=f19e170] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f19e175] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f19e180] [cursor=pointer]
+        - button "Format Guides" [ref=f19e184] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f19e192] [cursor=pointer]
+        - button "Gameplay" [ref=f19e198] [cursor=pointer]
+        - generic [ref=f19e230]: Admin
+        - button "Admin Panel" [ref=f19e231] [cursor=pointer]
+      - generic [ref=f19e235]:
+        - button "Account" [ref=f19e236] [cursor=pointer]
+        - button "Sign Out" [ref=f19e241] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f19e203] [cursor=pointer]:
+        - generic [ref=f19e206]: Command Palette
+        - generic [ref=f19e207]: Ctrl+K
+      - button "Collapse" [ref=f19e209] [cursor=pointer]
+    - main [ref=f19e213]:
+      - generic [ref=f19e214]:
+        - navigation [ref=f19e215]:
+          - button "Home" [ref=f19e216] [cursor=pointer]
+          - generic [ref=f19e223]: Deck Builder
+        - generic [ref=f19e375]:
+          - generic [ref=f19e376]:
+            - generic [ref=f19e377]:
+              - heading "Anikthea, Hand of Erebos" [level=2] [ref=f19e378]
+              - button "Rename" [ref=f19e379] [cursor=pointer]
+            - generic [ref=f19e380]:
+              - button "Edit Deck" [ref=f19e381] [cursor=pointer]
+              - button "Export" [ref=f19e382] [cursor=pointer]
+              - generic [ref=f19e383]:
+                - button "🔗 Copy Link" [ref=f19e384] [cursor=pointer]
+                - button "🌐 Public" [ref=f19e385] [cursor=pointer]
+              - button "← Back" [ref=f19e386] [cursor=pointer]
+          - generic [ref=f19e387]:
+            - heading "Commander" [level=3] [ref=f19e388]
+            - generic [ref=f19e389]:
+              - img "Anikthea, Hand of Erebos" [ref=f19e390]
+              - generic [ref=f19e391]:
+                - generic [ref=f19e392]: Anikthea, Hand of Erebos
+                - generic [ref=f19e393]: "{2}{W}{B}{G}"
+                - generic [ref=f19e394]: Legendary Enchantment Creature — Demigod
+                - generic [ref=f19e395]: Menace Other enchantment creatures you control have menace. Whenever Anikthea enters or attacks, exile up to one target non-Aura enchantment card from your graveyard. Create a token that's a copy of that card, except it's a 3/3 black Zombie creature in addition to its other types.
+                - generic [ref=f19e396]: 4/4
+          - generic [ref=f19e397]:
+            - generic [ref=f19e398]:
+              - heading "Mana Curve" [level=3] [ref=f19e399]
+              - generic [ref=f19e400]:
+                - button "33 0" [ref=f19e401] [cursor=pointer]:
+                  - generic [ref=f19e402]: "33"
+                  - generic [ref=f19e404]: "0"
+                - button "3 1" [ref=f19e405] [cursor=pointer]:
+                  - generic [ref=f19e406]: "3"
+                  - generic [ref=f19e408]: "1"
+                - button "15 2" [ref=f19e409] [cursor=pointer]:
+                  - generic [ref=f19e410]: "15"
+                  - generic [ref=f19e412]: "2"
+                - button "18 3" [ref=f19e413] [cursor=pointer]:
+                  - generic [ref=f19e414]: "18"
+                  - generic [ref=f19e416]: "3"
+                - button "12 4" [ref=f19e417] [cursor=pointer]:
+                  - generic [ref=f19e418]: "12"
+                  - generic [ref=f19e420]: "4"
+                - button "11 5" [ref=f19e421] [cursor=pointer]:
+                  - generic [ref=f19e422]: "11"
+                  - generic [ref=f19e424]: "5"
+                - button "4 6" [ref=f19e425] [cursor=pointer]:
+                  - generic [ref=f19e426]: "4"
+                  - generic [ref=f19e428]: "6"
+                - button "4 7+" [ref=f19e429] [cursor=pointer]:
+                  - generic [ref=f19e430]: "4"
+                  - generic [ref=f19e432]: 7+
+              - generic [ref=f19e433]: "Avg CMC: 3.70(click a bar to see cards)"
+            - generic [ref=f19e434]:
+              - heading "Collection Ownership" [level=3] [ref=f19e435]
+              - generic [ref=f19e436]:
+                - generic [ref=f19e437]:
+                  - generic [ref=f19e438]: "Unique Cards Owned:"
+                  - generic [ref=f19e439]: 87/87
+                - generic [ref=f19e440]:
+                  - generic [ref=f19e441]: "Physical Cards Owned:"
+                  - generic [ref=f19e442]: 87/100
+                - generic [ref=f19e443]:
+                  - generic [ref=f19e444]: "Missing Cards:"
+                  - generic [ref=f19e445]: "0"
+                - generic [ref=f19e446]:
+                  - generic [ref=f19e447]: "Completion:"
+                  - generic [ref=f19e448]: 100%
+                - generic [ref=f19e452]:
+                  - generic [ref=f19e453]: "Owned Value:"
+                  - generic [ref=f19e454]: $142.11
+          - generic [ref=f19e455]:
+            - generic [ref=f19e456]:
+              - heading "Color Distribution" [level=3] [ref=f19e457]
+              - generic [ref=f19e464]:
+                - generic [ref=f19e465]:
+                  - generic [ref=f19e467]: White
+                  - generic [ref=f19e468]: "24"
+                - generic [ref=f19e469]:
+                  - generic [ref=f19e471]: Black
+                  - generic [ref=f19e472]: "17"
+                - generic [ref=f19e473]:
+                  - generic [ref=f19e475]: Green
+                  - generic [ref=f19e476]: "34"
+                - generic [ref=f19e477]:
+                  - generic [ref=f19e479]: Colorless
+                  - generic [ref=f19e480]: "3"
+            - generic [ref=f19e481]:
+              - heading "Card Type Breakdown" [level=3] [ref=f19e482]
+              - generic [ref=f19e483]:
+                - generic [ref=f19e485]:
+                  - generic [ref=f19e486]: Enchantment
+                  - generic [ref=f19e487]:
+                    - text: "45"
+                    - generic [ref=f19e488]: (38%)
+                - generic [ref=f19e492]:
+                  - generic [ref=f19e493]: Land
+                  - generic [ref=f19e494]:
+                    - text: "33"
+                    - generic [ref=f19e495]: (28%)
+                - generic [ref=f19e499]:
+                  - generic [ref=f19e500]: Creature
+                  - generic [ref=f19e501]:
+                    - text: "30"
+                    - generic [ref=f19e502]: (25%)
+                - generic [ref=f19e506]:
+                  - generic [ref=f19e507]: Sorcery
+                  - generic [ref=f19e508]:
+                    - text: "5"
+                    - generic [ref=f19e509]: (4%)
+                - generic [ref=f19e513]:
+                  - generic [ref=f19e514]: Artifact
+                  - generic [ref=f19e515]:
+                    - text: "3"
+                    - generic [ref=f19e516]: (3%)
+                - generic [ref=f19e520]:
+                  - generic [ref=f19e521]: Instant
+                  - generic [ref=f19e522]:
+                    - text: "1"
+                    - generic [ref=f19e523]: (1%)
+                - generic [ref=f19e527]:
+                  - generic [ref=f19e528]: Planeswalker
+                  - generic [ref=f19e529]:
+                    - text: "1"
+                    - generic [ref=f19e530]: (1%)
+          - generic [ref=f19e533]:
+            - generic [ref=f19e534]:
+              - generic [ref=f19e535]: Smart Deck Score
+              - generic [ref=f19e536]:
+                - generic [ref=f19e537]: "48"
+                - generic [ref=f19e538]: /100
+            - generic [ref=f19e539]:
+              - button "Power 4" [ref=f19e540] [cursor=pointer]:
+                - generic [ref=f19e541]: Power
+                - generic [ref=f19e542]: "4"
+              - button "Salt 2" [ref=f19e543] [cursor=pointer]:
+                - generic [ref=f19e544]: Salt
+                - generic [ref=f19e545]: "2"
+              - button "Mana F" [ref=f19e546] [cursor=pointer]:
+                - generic [ref=f19e547]: Mana
+                - generic [ref=f19e548]: F
+              - button "Health 49" [ref=f19e549] [cursor=pointer]:
+                - generic [ref=f19e550]: Health
+                - generic [ref=f19e551]: "49"
+          - generic [ref=f19e552]:
+            - heading "Recommendations" [level=3] [ref=f19e553]
+            - generic [ref=f19e554]:
+              - generic [ref=f19e555]:
+                - button "ramp" [ref=f19e556] [cursor=pointer]
+                - button "draw" [ref=f19e557] [cursor=pointer]
+                - button "removal" [ref=f19e558] [cursor=pointer]
+              - generic [ref=f19e559]:
+                - button "My Collection" [ref=f19e560] [cursor=pointer]
+                - button "All of Magic" [ref=f19e561] [cursor=pointer]
+            - generic [ref=f19e562]:
+              - generic [ref=f19e563]:
+                - img "Evolving Wilds" [ref=f19e564]
+                - generic [ref=f19e565]:
+                  - heading "Evolving Wilds" [level=4] [ref=f19e566]
+                  - button "+ Add to Deck" [ref=f19e567] [cursor=pointer]
+              - generic [ref=f19e568]:
+                - img "Solemn Simulacrum" [ref=f19e569]
+                - generic [ref=f19e570]:
+                  - heading "Solemn Simulacrum" [level=4] [ref=f19e571]
+                  - button "+ Add to Deck" [ref=f19e572] [cursor=pointer]
+              - generic [ref=f19e573]:
+                - img "Cavern of Souls" [ref=f19e574]
+                - generic [ref=f19e575]:
+                  - heading "Cavern of Souls" [level=4] [ref=f19e576]
+                  - button "+ Add to Deck" [ref=f19e577] [cursor=pointer]
+              - generic [ref=f19e578]:
+                - img "Ornithopter of Paradise" [ref=f19e579]
+                - generic [ref=f19e580]:
+                  - heading "Ornithopter of Paradise" [level=4] [ref=f19e581]
+                  - button "+ Add to Deck" [ref=f19e582] [cursor=pointer]
+              - generic [ref=f19e583]:
+                - img "Demolition Field" [ref=f19e584]
+                - generic [ref=f19e585]:
+                  - heading "Demolition Field" [level=4] [ref=f19e586]
+                  - button "+ Add to Deck" [ref=f19e587] [cursor=pointer]
+              - generic [ref=f19e588]:
+                - img "Springleaf Drum" [ref=f19e589]
+                - generic [ref=f19e590]:
+                  - heading "Springleaf Drum" [level=4] [ref=f19e591]
+                  - button "+ Add to Deck" [ref=f19e592] [cursor=pointer]
+              - generic [ref=f19e593]:
+                - img "Archaeomancer's Map" [ref=f19e594]
+                - generic [ref=f19e595]:
+                  - heading "Archaeomancer's Map" [level=4] [ref=f19e596]
+                  - button "+ Add to Deck" [ref=f19e597] [cursor=pointer]
+              - generic [ref=f19e598]:
+                - img "Prismatic Lens" [ref=f19e599]
+                - generic [ref=f19e600]:
+                  - heading "Prismatic Lens" [level=4] [ref=f19e601]
+                  - button "+ Add to Deck" [ref=f19e602] [cursor=pointer]
+          - generic [ref=f19e603]:
+            - heading "Manabase Builder" [level=3] [ref=f19e604]
+            - generic [ref=f19e605]:
+              - generic [ref=f19e606]: "Budget: $"
+              - spinbutton "50" [ref=f19e607]
+              - button "Suggest Land Package" [disabled] [ref=f19e608]
+          - generic [ref=f19e610]:
+            - heading "Deck Evolution" [level=3] [ref=f19e611]
+            - button "Show History" [ref=f19e612] [cursor=pointer]
+          - generic [ref=f19e613]:
+            - generic [ref=f19e614]:
+              - heading "Deck Analysis" [level=3] [ref=f19e615]
+              - generic [ref=f19e616]:
+                - generic [ref=f19e617]:
+                  - generic [ref=f19e618]:
+                    - generic [ref=f19e619]: Removal
+                    - generic [ref=f19e620]: Critical
+                  - generic [ref=f19e621]: "3"
+                  - generic [ref=f19e622]: 10+ recommended
+                  - generic [ref=f19e623]:
+                    - generic [ref=f19e624]: Cast Out
+                    - generic [ref=f19e625]: Grasp of Fate
+                    - generic [ref=f19e626]: Path to Exile
+                - generic [ref=f19e627]:
+                  - generic [ref=f19e628]:
+                    - generic [ref=f19e629]: Card Draw
+                    - generic [ref=f19e630]: Critical
+                  - generic [ref=f19e631]: "0"
+                  - generic [ref=f19e632]: 8+ recommended
+                  - generic [ref=f19e633]: None detected
+                - generic [ref=f19e635]:
+                  - generic [ref=f19e636]:
+                    - generic [ref=f19e637]: Ramp
+                    - generic [ref=f19e638]: Low
+                  - generic [ref=f19e639]: "8"
+                  - generic [ref=f19e640]: 10+ recommended
+                  - generic [ref=f19e641]:
+                    - generic [ref=f19e642]: Arcane Signet
+                    - generic [ref=f19e643]: Commander's Sphere
+                    - generic [ref=f19e644]: Dryad of the Ilysian Grove
+                    - generic [ref=f19e645]: Farseek
+                    - generic [ref=f19e646]: Kodama's Reach
+                    - generic [ref=f19e647]: +3 more
+            - generic [ref=f19e648]:
+              - heading "Missing Staples" [level=3] [ref=f19e649]
+              - generic [ref=f19e650]: "Consider adding:"
+              - generic [ref=f19e651]:
+                - generic [ref=f19e652]: Demonic Tutor
+                - generic [ref=f19e653]: Vampiric Tutor
+                - generic [ref=f19e654]: Necropotence
+                - generic [ref=f19e655]: Phyrexian Arena
+                - generic [ref=f19e656]: Toxic Deluge
+                - generic [ref=f19e657]: Reanimate
+                - generic [ref=f19e658]: Cultivate
+                - generic [ref=f19e659]: Sylvan Library
+                - generic [ref=f19e660]: Nature's Claim
+                - generic [ref=f19e661]: Finale of Devastation
+                - generic [ref=f19e662]: Skyshroud Claim
+                - generic [ref=f19e663]: Swords to Plowshares
+                - generic [ref=f19e664]: Smothering Tithe
+                - generic [ref=f19e665]: Teferi's Protection
+                - generic [ref=f19e666]: Enlightened Tutor
+                - generic [ref=f19e667]: Austere Command
+            - generic [ref=f19e668]:
+              - heading "Mana Requirements" [level=3] [ref=f19e669]
+              - generic [ref=f19e670]:
+                - generic [ref=f19e672]:
+                  - generic [ref=f19e673]: Green
+                  - generic [ref=f19e674]:
+                    - text: 43 pips
+                    - generic [ref=f19e675]: (45%)
+                - generic [ref=f19e679]:
+                  - generic [ref=f19e680]: White
+                  - generic [ref=f19e681]:
+                    - text: 31 pips
+                    - generic [ref=f19e682]: (33%)
+                - generic [ref=f19e686]:
+                  - generic [ref=f19e687]: Black
+                  - generic [ref=f19e688]:
+                    - text: 21 pips
+                    - generic [ref=f19e689]: (22%)
+              - generic [ref=f19e692]:
+                - generic [ref=f19e693]: Total Lands
+                - generic [ref=f19e694]:
+                  - generic [ref=f19e695]: "20"
+                  - generic [ref=f19e696]: Too few/many
+          - generic [ref=f19e697]:
+            - generic [ref=f19e698]:
+              - heading "Simulators" [level=3] [ref=f19e699]
+              - generic [ref=f19e700]:
+                - button "Opening Hand" [ref=f19e701] [cursor=pointer]
+                - button "Goldfish" [ref=f19e702] [cursor=pointer]
+            - generic [ref=f19e703]:
+              - button "Draw Opening Hand" [ref=f19e705] [cursor=pointer]
+              - generic [ref=f19e706]: Click "Draw Opening Hand" to simulate a starting hand.
+          - generic [ref=f19e707]:
+            - heading "Deck List (86 cards)" [level=3] [ref=f19e708]
+            - generic [ref=f19e709]:
+              - generic [ref=f19e710]:
+                - button "Planeswalkers 1 ▼" [ref=f19e711] [cursor=pointer]:
+                  - generic [ref=f19e712]: Planeswalkers
+                  - generic [ref=f19e713]:
+                    - generic [ref=f19e714]: "1"
+                    - generic [ref=f19e715]: ▼
+                - generic [ref=f19e717]:
+                  - generic [ref=f19e718]:
+                    - generic [ref=f19e719]: ✓
+                    - generic [ref=f19e720]: Calix, Destiny's Hand
+                    - generic [ref=f19e721]: "{2}{G}{W}"
+                  - generic [ref=f19e722]: Own 1
+              - generic [ref=f19e724]:
+                - button "Creatures 30 ▼" [ref=f19e725] [cursor=pointer]:
+                  - generic [ref=f19e726]: Creatures
+                  - generic [ref=f19e727]:
+                    - generic [ref=f19e728]: "30"
+                    - generic [ref=f19e729]: ▼
+                - generic [ref=f19e730]:
+                  - generic [ref=f19e731]:
+                    - generic [ref=f19e732]:
+                      - generic [ref=f19e733]: ✓
+                      - generic [ref=f19e734]: Arasta of the Endless Web
+                      - generic [ref=f19e735]: "{2}{G}{G}"
+                    - generic [ref=f19e736]: Own 1
+                  - generic [ref=f19e738]:
+                    - generic [ref=f19e739]:
+                      - generic [ref=f19e740]: ✓
+                      - generic [ref=f19e741]: Archon of Sun's Grace
+                      - generic [ref=f19e742]: "{2}{W}{W}"
+                    - generic [ref=f19e743]: Own 1
+                  - generic [ref=f19e745]:
+                    - generic [ref=f19e746]:
+                      - generic [ref=f19e747]: ✓
+                      - generic [ref=f19e748]: Composer of Spring
+                      - generic [ref=f19e749]: "{1}{G}"
+                    - generic [ref=f19e750]: Own 1
+                  - generic [ref=f19e752]:
+                    - generic [ref=f19e753]:
+                      - generic [ref=f19e754]: ✓
+                      - generic [ref=f19e755]: Courser of Kruphix
+                      - generic [ref=f19e756]: "{1}{G}{G}"
+                    - generic [ref=f19e757]: Own 1
+                  - generic [ref=f19e759]:
+                    - generic [ref=f19e760]:
+                      - generic [ref=f19e761]: ✓
+                      - generic [ref=f19e762]: Demon of Fate's Design
+                      - generic [ref=f19e763]: "{4}{B}{B}"
+                    - generic [ref=f19e764]: Own 1
+                  - generic [ref=f19e766]:
+                    - generic [ref=f19e767]:
+                      - generic [ref=f19e768]: ✓
+                      - generic [ref=f19e769]: Destiny Spinner
+                      - generic [ref=f19e770]: "{1}{G}"
+                    - generic [ref=f19e771]: Own 1
+                  - generic [ref=f19e773]:
+                    - generic [ref=f19e774]:
+                      - generic [ref=f19e775]: ✓
+                      - generic [ref=f19e776]: Doomwake Giant
+                      - generic [ref=f19e777]: "{4}{B}"
+                    - generic [ref=f19e778]: Own 1
+                  - generic [ref=f19e780]:
+                    - generic [ref=f19e781]:
+                      - generic [ref=f19e782]: ✓
+                      - generic [ref=f19e783]: Dryad of the Ilysian Grove
+                      - generic [ref=f19e784]: "{2}{G}"
+                    - generic [ref=f19e785]: Own 1
+                  - generic [ref=f19e787]:
+                    - generic [ref=f19e788]:
+                      - generic [ref=f19e789]: ✓
+                      - generic [ref=f19e790]: Eidolon of Blossoms
+                      - generic [ref=f19e791]: "{2}{G}{G}"
+                    - generic [ref=f19e792]: Own 1
+                  - generic [ref=f19e794]:
+                    - generic [ref=f19e795]:
+                      - generic [ref=f19e796]: ✓
+                      - generic [ref=f19e797]: Erebos, Bleak-Hearted
+                      - generic [ref=f19e798]: "{3}{B}"
+                    - generic [ref=f19e799]: Own 1
+                  - generic [ref=f19e801]:
+                    - generic [ref=f19e802]:
+                      - generic [ref=f19e803]: ✓
+                      - generic [ref=f19e804]: Fear of the Dark
+                      - generic [ref=f19e805]: "{4}{B}"
+                    - generic [ref=f19e806]: Own 1
+                  - generic [ref=f19e808]:
+                    - generic [ref=f19e809]:
+                      - generic [ref=f19e810]: ✓
+                      - generic [ref=f19e811]: Greater Tanuki
+                      - generic [ref=f19e812]: "{4}{G}{G}"
+                    - generic [ref=f19e813]: Own 1
+                  - generic [ref=f19e815]:
+                    - generic [ref=f19e816]:
+                      - generic [ref=f19e817]: ✓
+                      - generic [ref=f19e818]: Heliod, God of the Sun
+                      - generic [ref=f19e819]: "{3}{W}"
+                    - generic [ref=f19e820]: Own 1
+                  - generic [ref=f19e822]:
+                    - generic [ref=f19e823]:
+                      - generic [ref=f19e824]: ✓
+                      - generic [ref=f19e825]: Herald of the Pantheon
+                      - generic [ref=f19e826]: "{1}{G}"
+                    - generic [ref=f19e827]: Own 1
+                  - generic [ref=f19e829]:
+                    - generic [ref=f19e830]:
+                      - generic [ref=f19e831]: ✓
+                      - generic [ref=f19e832]: Jukai Naturalist
+                      - generic [ref=f19e833]: "{G}{W}"
+                    - generic [ref=f19e834]: Own 1
+                  - generic [ref=f19e836]:
+                    - generic [ref=f19e837]:
+                      - generic [ref=f19e838]: ✓
+                      - generic [ref=f19e839]: Mesa Enchantress
+                      - generic [ref=f19e840]: "{1}{W}{W}"
+                    - generic [ref=f19e841]: Own 1
+                  - generic [ref=f19e843]:
+                    - generic [ref=f19e844]:
+                      - generic [ref=f19e845]: ✓
+                      - generic [ref=f19e846]: Mindwrack Harpy
+                      - generic [ref=f19e847]: "{3}{B}"
+                    - generic [ref=f19e848]: Own 1
+                  - generic [ref=f19e850]:
+                    - generic [ref=f19e851]:
+                      - generic [ref=f19e852]: ✓
+                      - generic [ref=f19e853]: Nessian Wanderer
+                      - generic [ref=f19e854]: "{1}{G}"
+                    - generic [ref=f19e855]: Own 1
+                  - generic [ref=f19e857]:
+                    - generic [ref=f19e858]:
+                      - generic [ref=f19e859]: ✓
+                      - generic [ref=f19e860]: Nyx Weaver
+                      - generic [ref=f19e861]: "{1}{B}{G}"
+                    - generic [ref=f19e862]: Own 1
+                  - generic [ref=f19e864]:
+                    - generic [ref=f19e865]:
+                      - generic [ref=f19e866]: ✓
+                      - generic [ref=f19e867]: Nyxborn Behemoth
+                      - generic [ref=f19e868]: "{10}{G}{G}"
+                    - generic [ref=f19e869]: Own 1
+                  - generic [ref=f19e871]:
+                    - generic [ref=f19e872]:
+                      - generic [ref=f19e873]: ✓
+                      - generic [ref=f19e874]: Ondu Spiritdancer
+                      - generic [ref=f19e875]: "{4}{W}"
+                    - generic [ref=f19e876]: Own 1
+                  - generic [ref=f19e878]:
+                    - generic [ref=f19e879]:
+                      - generic [ref=f19e880]: ✓
+                      - generic [ref=f19e881]: Overlord of the Mistmoors
+                      - generic [ref=f19e882]: "{5}{W}{W}"
+                    - generic [ref=f19e883]: Own 1
+                  - generic [ref=f19e885]:
+                    - generic [ref=f19e886]:
+                      - generic [ref=f19e887]: ✓
+                      - generic [ref=f19e888]: Sanctum Weaver
+                      - generic [ref=f19e889]: "{1}{G}"
+                    - generic [ref=f19e890]: Own 1
+                  - generic [ref=f19e892]:
+                    - generic [ref=f19e893]:
+                      - generic [ref=f19e894]: ✓
+                      - generic [ref=f19e895]: Satyr Enchanter
+                      - generic [ref=f19e896]: "{1}{G}{W}"
+                    - generic [ref=f19e897]: Own 1
+                  - generic [ref=f19e899]:
+                    - generic [ref=f19e900]:
+                      - generic [ref=f19e901]: ✓
+                      - generic [ref=f19e902]: Setessan Champion
+                      - generic [ref=f19e903]: "{2}{G}"
+                    - generic [ref=f19e904]: Own 1
+                  - generic [ref=f19e906]:
+                    - generic [ref=f19e907]:
+                      - generic [ref=f19e908]: ✓
+                      - generic [ref=f19e909]: Spirited Companion
+                      - generic [ref=f19e910]: "{1}{W}"
+                    - generic [ref=f19e911]: Own 1
+                  - generic [ref=f19e913]:
+                    - generic [ref=f19e914]:
+                      - generic [ref=f19e915]: ✓
+                      - generic [ref=f19e916]: Starfield Mystic
+                      - generic [ref=f19e917]: "{1}{W}"
+                    - generic [ref=f19e918]: Own 1
+                  - generic [ref=f19e920]:
+                    - generic [ref=f19e921]:
+                      - generic [ref=f19e922]: ✓
+                      - generic [ref=f19e923]: Sythis, Harvest's Hand
+                      - generic [ref=f19e924]: "{G}{W}"
+                    - generic [ref=f19e925]: Own 1
+                  - generic [ref=f19e927]:
+                    - generic [ref=f19e928]:
+                      - generic [ref=f19e929]: ✓
+                      - generic [ref=f19e930]: Unstoppable Slasher
+                      - generic [ref=f19e931]: "{2}{B}"
+                    - generic [ref=f19e932]: Own 1
+                  - generic [ref=f19e934]:
+                    - generic [ref=f19e935]:
+                      - generic [ref=f19e936]: ✓
+                      - generic [ref=f19e937]: Verduran Enchantress
+                      - generic [ref=f19e938]: "{1}{G}{G}"
+                    - generic [ref=f19e939]: Own 1
+              - generic [ref=f19e941]:
+                - button "Instants 1 ▼" [ref=f19e942] [cursor=pointer]:
+                  - generic [ref=f19e943]: Instants
+                  - generic [ref=f19e944]:
+                    - generic [ref=f19e945]: "1"
+                    - generic [ref=f19e946]: ▼
+                - generic [ref=f19e948]:
+                  - generic [ref=f19e949]:
+                    - generic [ref=f19e950]: ✓
+                    - generic [ref=f19e951]: Path to Exile
+                    - generic [ref=f19e952]: "{W}"
+                  - generic [ref=f19e953]: Own 1
+              - generic [ref=f19e955]:
+                - button "Sorcerys 5 ▼" [ref=f19e956] [cursor=pointer]:
+                  - generic [ref=f19e957]: Sorcerys
+                  - generic [ref=f19e958]:
+                    - generic [ref=f19e959]: "5"
+                    - generic [ref=f19e960]: ▼
+                - generic [ref=f19e961]:
+                  - generic [ref=f19e962]:
+                    - generic [ref=f19e963]:
+                      - generic [ref=f19e964]: ✓
+                      - generic [ref=f19e965]: Culling Ritual
+                      - generic [ref=f19e966]: "{2}{B}{G}"
+                    - generic [ref=f19e967]: Own 1
+                  - generic [ref=f19e969]:
+                    - generic [ref=f19e970]:
+                      - generic [ref=f19e971]: ✓
+                      - generic [ref=f19e972]: Extinguish All Hope
+                      - generic [ref=f19e973]: "{4}{B}{B}"
+                    - generic [ref=f19e974]: Own 1
+                  - generic [ref=f19e976]:
+                    - generic [ref=f19e977]:
+                      - generic [ref=f19e978]: ✓
+                      - generic [ref=f19e979]: Farseek
+                      - generic [ref=f19e980]: "{1}{G}"
+                    - generic [ref=f19e981]: Own 1
+                  - generic [ref=f19e983]:
+                    - generic [ref=f19e984]:
+                      - generic [ref=f19e985]: ✓
+                      - generic [ref=f19e986]: Kodama's Reach
+                      - generic [ref=f19e987]: "{2}{G}"
+                    - generic [ref=f19e988]: Own 1
+                  - generic [ref=f19e990]:
+                    - generic [ref=f19e991]:
+                      - generic [ref=f19e992]: ✓
+                      - generic [ref=f19e993]: Rampant Growth
+                      - generic [ref=f19e994]: "{1}{G}"
+                    - generic [ref=f19e995]: Own 3
+              - generic [ref=f19e997]:
+                - button "Enchantments 26 ▼" [ref=f19e998] [cursor=pointer]:
+                  - generic [ref=f19e999]: Enchantments
+                  - generic [ref=f19e1000]:
+                    - generic [ref=f19e1001]: "26"
+                    - generic [ref=f19e1002]: ▼
+                - generic [ref=f19e1003]:
+                  - generic [ref=f19e1004]:
+                    - generic [ref=f19e1005]:
+                      - generic [ref=f19e1006]: ✓
+                      - generic [ref=f19e1007]: Abundance
+                      - generic [ref=f19e1008]: "{2}{G}{G}"
+                    - generic [ref=f19e1009]: Own 1
+                  - generic [ref=f19e1011]:
+                    - generic [ref=f19e1012]:
+                      - generic [ref=f19e1013]: ✓
+                      - generic [ref=f19e1014]: Battle at the Helvault
+                      - generic [ref=f19e1015]: "{4}{W}{W}"
+                    - generic [ref=f19e1016]: Own 1
+                  - generic [ref=f19e1018]:
+                    - generic [ref=f19e1019]:
+                      - generic [ref=f19e1020]: ✓
+                      - generic [ref=f19e1021]: Battle for Bretagard
+                      - generic [ref=f19e1022]: "{1}{G}{W}"
+                    - generic [ref=f19e1023]: Own 1
+                  - generic [ref=f19e1025]:
+                    - generic [ref=f19e1026]:
+                      - generic [ref=f19e1027]: ✓
+                      - generic [ref=f19e1028]: Binding the Old Gods
+                      - generic [ref=f19e1029]: "{2}{B}{G}"
+                    - generic [ref=f19e1030]: Own 1
+                  - generic [ref=f19e1032]:
+                    - generic [ref=f19e1033]:
+                      - generic [ref=f19e1034]: ✓
+                      - generic [ref=f19e1035]: Boon of the Spirit Realm
+                      - generic [ref=f19e1036]: "{3}{W}{W}"
+                    - generic [ref=f19e1037]: Own 1
+                  - generic [ref=f19e1039]:
+                    - generic [ref=f19e1040]:
+                      - generic [ref=f19e1041]: ✓
+                      - generic [ref=f19e1042]: Cacophony Unleashed
+                      - generic [ref=f19e1043]: "{5}{B}{B}"
+                    - generic [ref=f19e1044]: Own 1
+                  - generic [ref=f19e1046]:
+                    - generic [ref=f19e1047]:
+                      - generic [ref=f19e1048]: ✓
+                      - generic [ref=f19e1049]: Cast Out
+                      - generic [ref=f19e1050]: "{3}{W}"
+                    - generic [ref=f19e1051]: Own 1
+                  - generic [ref=f19e1053]:
+                    - generic [ref=f19e1054]:
+                      - generic [ref=f19e1055]: ✓
+                      - generic [ref=f19e1056]: Cunning Rhetoric
+                      - generic [ref=f19e1057]: "{2}{B}"
+                    - generic [ref=f19e1058]: Own 1
+                  - generic [ref=f19e1060]:
+                    - generic [ref=f19e1061]:
+                      - generic [ref=f19e1062]: ✓
+                      - generic [ref=f19e1063]: Dreadhorde Invasion
+                      - generic [ref=f19e1064]: "{1}{B}"
+                    - generic [ref=f19e1065]: Own 1
+                  - generic [ref=f19e1067]:
+                    - generic [ref=f19e1068]:
+                      - generic [ref=f19e1069]: ✓
+                      - generic [ref=f19e1070]: Enchantress's Presence
+                      - generic [ref=f19e1071]: "{2}{G}"
+                    - generic [ref=f19e1072]: Own 1
+                  - generic [ref=f19e1074]:
+                    - generic [ref=f19e1075]:
+                      - generic [ref=f19e1076]: ✓
+                      - generic [ref=f19e1077]: Felidar Retreat
+                      - generic [ref=f19e1078]: "{3}{W}"
+                    - generic [ref=f19e1079]: Own 1
+                  - generic [ref=f19e1081]:
+                    - generic [ref=f19e1082]:
+                      - generic [ref=f19e1083]: ✓
+                      - generic [ref=f19e1084]: Font of Fertility
+                      - generic [ref=f19e1085]: "{G}"
+                    - generic [ref=f19e1086]: Own 1
+                  - generic [ref=f19e1088]:
+                    - generic [ref=f19e1089]:
+                      - generic [ref=f19e1090]: ✓
+                      - generic [ref=f19e1091]: Ghoulish Impetus
+                      - generic [ref=f19e1092]: "{2}{B}"
+                    - generic [ref=f19e1093]: Own 1
+                  - generic [ref=f19e1095]:
+                    - generic [ref=f19e1096]:
+                      - generic [ref=f19e1097]: ✓
+                      - generic [ref=f19e1098]: Grasp of Fate
+                      - generic [ref=f19e1099]: "{1}{W}{W}"
+                    - generic [ref=f19e1100]: Own 1
+                  - generic [ref=f19e1102]:
+                    - generic [ref=f19e1103]:
+                      - generic [ref=f19e1104]: ✓
+                      - generic [ref=f19e1105]: Grievous Wound
+                      - generic [ref=f19e1106]: "{3}{B}{B}"
+                    - generic [ref=f19e1107]: Own 1
+                  - generic [ref=f19e1109]:
+                    - generic [ref=f19e1110]:
+                      - generic [ref=f19e1111]: ✓
+                      - generic [ref=f19e1112]: Khalni Heart Expedition
+                      - generic [ref=f19e1113]: "{1}{G}"
+                    - generic [ref=f19e1114]: Own 1
+                  - generic [ref=f19e1116]:
+                    - generic [ref=f19e1117]:
+                      - generic [ref=f19e1118]: ✓
+                      - generic [ref=f19e1119]: Love Song of Night and Day
+                      - generic [ref=f19e1120]: "{2}{W}"
+                    - generic [ref=f19e1121]: Own 1
+                  - generic [ref=f19e1123]:
+                    - generic [ref=f19e1124]:
+                      - generic [ref=f19e1125]: ✓
+                      - generic [ref=f19e1126]: Mirari's Wake
+                      - generic [ref=f19e1127]: "{3}{G}{W}"
+                    - generic [ref=f19e1128]: Own 1
+                  - generic [ref=f19e1130]:
+                    - generic [ref=f19e1131]:
+                      - generic [ref=f19e1132]: ✓
+                      - generic [ref=f19e1133]: Omen of the Hunt
+                      - generic [ref=f19e1134]: "{2}{G}"
+                    - generic [ref=f19e1135]: Own 1
+                  - generic [ref=f19e1137]:
+                    - generic [ref=f19e1138]:
+                      - generic [ref=f19e1139]: ✓
+                      - generic [ref=f19e1140]: Omen of the Sun
+                      - generic [ref=f19e1141]: "{2}{W}"
+                    - generic [ref=f19e1142]: Own 1
+                  - generic [ref=f19e1144]:
+                    - generic [ref=f19e1145]:
+                      - generic [ref=f19e1146]: ✓
+                      - generic [ref=f19e1147]: Sandwurm Convergence
+                      - generic [ref=f19e1148]: "{6}{G}{G}"
+                    - generic [ref=f19e1149]: Own 1
+                  - generic [ref=f19e1151]:
+                    - generic [ref=f19e1152]:
+                      - generic [ref=f19e1153]: ✓
+                      - generic [ref=f19e1154]: Sigil of the Empty Throne
+                      - generic [ref=f19e1155]: "{3}{W}{W}"
+                    - generic [ref=f19e1156]: Own 1
+                  - generic [ref=f19e1158]:
+                    - generic [ref=f19e1159]:
+                      - generic [ref=f19e1160]: ✓
+                      - generic [ref=f19e1161]: Starfield of Nyx
+                      - generic [ref=f19e1162]: "{4}{W}"
+                    - generic [ref=f19e1163]: Own 1
+                  - generic [ref=f19e1165]:
+                    - generic [ref=f19e1166]:
+                      - generic [ref=f19e1167]: ✓
+                      - generic [ref=f19e1168]: The Binding of the Titans
+                      - generic [ref=f19e1169]: "{1}{G}"
+                    - generic [ref=f19e1170]: Own 1
+                  - generic [ref=f19e1172]:
+                    - generic [ref=f19e1173]:
+                      - generic [ref=f19e1174]: ✓
+                      - generic [ref=f19e1175]: The Eldest Reborn
+                      - generic [ref=f19e1176]: "{4}{B}"
+                    - generic [ref=f19e1177]: Own 1
+                  - generic [ref=f19e1179]:
+                    - generic [ref=f19e1180]:
+                      - generic [ref=f19e1181]: ✓
+                      - generic [ref=f19e1182]: The Mending of Dominaria
+                      - generic [ref=f19e1183]: "{3}{G}{G}"
+                    - generic [ref=f19e1184]: Own 1
+              - generic [ref=f19e1186]:
+                - button "Artifacts 3 ▼" [ref=f19e1187] [cursor=pointer]:
+                  - generic [ref=f19e1188]: Artifacts
+                  - generic [ref=f19e1189]:
+                    - generic [ref=f19e1190]: "3"
+                    - generic [ref=f19e1191]: ▼
+                - generic [ref=f19e1192]:
+                  - generic [ref=f19e1193]:
+                    - generic [ref=f19e1194]:
+                      - generic [ref=f19e1195]: ✓
+                      - generic [ref=f19e1196]: Arcane Signet
+                      - generic [ref=f19e1197]: "{2}"
+                    - generic [ref=f19e1198]: Own 1
+                  - generic [ref=f19e1200]:
+                    - generic [ref=f19e1201]:
+                      - generic [ref=f19e1202]: ✓
+                      - generic [ref=f19e1203]: Commander's Sphere
+                      - generic [ref=f19e1204]: "{3}"
+                    - generic [ref=f19e1205]: Own 1
+                  - generic [ref=f19e1207]:
+                    - generic [ref=f19e1208]:
+                      - generic [ref=f19e1209]: ✓
+                      - generic [ref=f19e1210]: Sol Ring
+                      - generic [ref=f19e1211]: "{1}"
+                    - generic [ref=f19e1212]: Own 1
+              - generic [ref=f19e1214]:
+                - button "Lands 20 ▼" [ref=f19e1215] [cursor=pointer]:
+                  - generic [ref=f19e1216]: Lands
+                  - generic [ref=f19e1217]:
+                    - generic [ref=f19e1218]: "20"
+                    - generic [ref=f19e1219]: ▼
+                - generic [ref=f19e1220]:
+                  - generic [ref=f19e1221]:
+                    - generic [ref=f19e1222]:
+                      - generic [ref=f19e1223]: ✓
+                      - generic [ref=f19e1224]: Ash Barrens
+                    - generic [ref=f19e1225]: Own 1
+                  - generic [ref=f19e1227]:
+                    - generic [ref=f19e1228]:
+                      - generic [ref=f19e1229]: ✓
+                      - generic [ref=f19e1230]: Canopy Vista
+                    - generic [ref=f19e1231]: Own 1
+                  - generic [ref=f19e1233]:
+                    - generic [ref=f19e1234]:
+                      - generic [ref=f19e1235]: ✓
+                      - generic [ref=f19e1236]: Command Tower
+                    - generic [ref=f19e1237]: Own 1
+                  - generic [ref=f19e1239]:
+                    - generic [ref=f19e1240]:
+                      - generic [ref=f19e1241]: ✓
+                      - generic [ref=f19e1242]: Exotic Orchard
+                    - generic [ref=f19e1243]: Own 1
+                  - generic [ref=f19e1245]:
+                    - generic [ref=f19e1246]:
+                      - generic [ref=f19e1247]: ✓
+                      - generic [ref=f19e1248]: Forest
+                    - generic [ref=f19e1249]: Own 1
+                  - generic [ref=f19e1251]:
+                    - generic [ref=f19e1252]:
+                      - generic [ref=f19e1253]: ✓
+                      - generic [ref=f19e1254]: Fortified Village
+                    - generic [ref=f19e1255]: Own 1
+                  - generic [ref=f19e1257]:
+                    - generic [ref=f19e1258]:
+                      - generic [ref=f19e1259]: ✓
+                      - generic [ref=f19e1260]: Golgari Rot Farm
+                    - generic [ref=f19e1261]: Own 1
+                  - generic [ref=f19e1263]:
+                    - generic [ref=f19e1264]:
+                      - generic [ref=f19e1265]: ✓
+                      - generic [ref=f19e1266]: Krosan Verge
+                    - generic [ref=f19e1267]: Own 1
+                  - generic [ref=f19e1269]:
+                    - generic [ref=f19e1270]:
+                      - generic [ref=f19e1271]: ✓
+                      - generic [ref=f19e1272]: Necroblossom Snarl
+                    - generic [ref=f19e1273]: Own 2
+                  - generic [ref=f19e1275]:
+                    - generic [ref=f19e1276]:
+                      - generic [ref=f19e1277]: ✓
+                      - generic [ref=f19e1278]: Orzhov Basilica
+                    - generic [ref=f19e1279]: Own 1
+                  - generic [ref=f19e1281]:
+                    - generic [ref=f19e1282]:
+                      - generic [ref=f19e1283]: ✓
+                      - generic [ref=f19e1284]: Plains
+                    - generic [ref=f19e1285]: Own 1
+                  - generic [ref=f19e1287]:
+                    - generic [ref=f19e1288]:
+                      - generic [ref=f19e1289]: ✓
+                      - generic [ref=f19e1290]: Sandsteppe Citadel
+                    - generic [ref=f19e1291]: Own 1
+                  - generic [ref=f19e1293]:
+                    - generic [ref=f19e1294]:
+                      - generic [ref=f19e1295]: ✓
+                      - generic [ref=f19e1296]: Selesnya Sanctuary
+                    - generic [ref=f19e1297]: Own 1
+                  - generic [ref=f19e1299]:
+                    - generic [ref=f19e1300]:
+                      - generic [ref=f19e1301]: ✓
+                      - generic [ref=f19e1302]: Shineshadow Snarl
+                    - generic [ref=f19e1303]: Own 1
+                  - generic [ref=f19e1305]:
+                    - generic [ref=f19e1306]:
+                      - generic [ref=f19e1307]: ✓
+                      - generic [ref=f19e1308]: Sungrass Prairie
+                    - generic [ref=f19e1309]: Own 1
+                  - generic [ref=f19e1311]:
+                    - generic [ref=f19e1312]:
+                      - generic [ref=f19e1313]: ✓
+                      - generic [ref=f19e1314]: Swamp
+                    - generic [ref=f19e1315]: Own 1
+                  - generic [ref=f19e1317]:
+                    - generic [ref=f19e1318]:
+                      - generic [ref=f19e1319]: ✓
+                      - generic [ref=f19e1320]: Tainted Field
+                    - generic [ref=f19e1321]: Own 1
+                  - generic [ref=f19e1323]:
+                    - generic [ref=f19e1324]:
+                      - generic [ref=f19e1325]: ✓
+                      - generic [ref=f19e1326]: Temple of Malady
+                    - generic [ref=f19e1327]: Own 3
+                  - generic [ref=f19e1329]:
+                    - generic [ref=f19e1330]:
+                      - generic [ref=f19e1331]: ✓
+                      - generic [ref=f19e1332]: Temple of Plenty
+                    - generic [ref=f19e1333]: Own 1
+                  - generic [ref=f19e1335]:
+                    - generic [ref=f19e1336]:
+                      - generic [ref=f19e1337]: ✓
+                      - generic [ref=f19e1338]: Temple of Silence
+                    - generic [ref=f19e1339]: Own 1

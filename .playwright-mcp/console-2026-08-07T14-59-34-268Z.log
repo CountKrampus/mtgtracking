@@ -1,0 +1,76 @@
+[     512ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/static/js/bundle.js:96568
+[     628ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/trades/offers/received:0
+[     629ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/trades/my-listings:0
+[     629ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/trades/offers/sent:0
+[     629ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/trades/matches:0
+[     630ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/wishlist:0
+[     630ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/tags:0
+[     631ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/locations:0
+[     631ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/trades/offers/received:0
+[     631ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/trades/offers/sent:0
+[     632ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/trades/my-listings:0
+[     632ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/trades/matches:0
+[     636ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/wishlist:0
+[     653ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/tags:0
+[     653ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/locations:0
+[     667ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/notifications:0
+[     668ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/notifications:0
+[     668ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/cards:0
+[     682ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/cards:0
+[     723ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/stats/price-changes:0
+[     723ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/stats/value-history:0
+[     731ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/lifecounter/stats:0
+[     731ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/auth/me:0
+[     731ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/achievements:0
+[     731ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/stats/price-changes:0
+[     735ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/stats/value-history:0
+[     735ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/lifecounter/stats:0
+[     736ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/achievements:0
+[  525357ms] [ERROR] Access to fetch at 'https://mtgtracker.store/api/notifications' from origin 'http://localhost:3000' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://localhost:3000/dashboard:0
+[  525357ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://mtgtracker.store/api/notifications:0
+[  525358ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134051:30)
+    at http://localhost:3000/static/js/bundle.js:134082:5
+    at commitHookEffectListMount (http://localhost:3000/static/js/bundle.js:90863:30)
+    at invokePassiveEffectMountInDEV (http://localhost:3000/static/js/bundle.js:92552:17)
+    at invokeEffectsInDev (http://localhost:3000/static/js/bundle.js:94449:15)
+    at commitDoubleInvokeEffectsInDEV (http://localhost:3000/static/js/bundle.js:94432:11)
+    at flushPassiveEffectsImpl (http://localhost:3000/static/js/bundle.js:94205:9)
+    at flushPassiveEffects (http://localhost:3000/static/js/bundle.js:94144:18)
+    at commitRootImpl (http://localhost:3000/static/js/bundle.js:94103:9)
+    at commitRoot (http://localhost:3000/static/js/bundle.js:93886:9) @ http://localhost:3000/static/js/bundle.js:134061
+[  525358ms] [ERROR] Access to fetch at 'https://mtgtracker.store/api/lifecounter/stats' from origin 'http://localhost:3000' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://localhost:3000/dashboard:0
+[  525358ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://mtgtracker.store/api/lifecounter/stats:0
+[  525358ms] [ERROR] Access to fetch at 'https://mtgtracker.store/api/stats/value-history' from origin 'http://localhost:3000' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://localhost:3000/dashboard:0
+[  525358ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://mtgtracker.store/api/stats/value-history:0
+[  525358ms] [ERROR] Access to fetch at 'https://mtgtracker.store/api/achievements' from origin 'http://localhost:3000' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://localhost:3000/dashboard:0
+[  525358ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://mtgtracker.store/api/achievements:0
+[  525358ms] [ERROR] Access to fetch at 'https://mtgtracker.store/api/achievements' from origin 'http://localhost:3000' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://localhost:3000/dashboard:0
+[  525358ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://mtgtracker.store/api/achievements:0
+[  525362ms] [ERROR] Access to fetch at 'https://mtgtracker.store/api/lifecounter/stats' from origin 'http://localhost:3000' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://localhost:3000/dashboard:0
+[  525362ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://mtgtracker.store/api/lifecounter/stats:0
+[  525362ms] [ERROR] Access to XMLHttpRequest at 'https://mtgtracker.store/api/cards' from origin 'http://localhost:3000' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://localhost:3000/dashboard:0
+[  525363ms] [ERROR] Error fetching cards: AxiosError @ http://localhost:3000/static/js/bundle.js:158831
+[  525363ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://mtgtracker.store/api/cards:0
+[  525363ms] [ERROR] Access to fetch at 'https://mtgtracker.store/api/stats/value-history' from origin 'http://localhost:3000' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://localhost:3000/dashboard:0
+[  525363ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://mtgtracker.store/api/stats/value-history:0
+[  525363ms] [ERROR] Access to fetch at 'https://mtgtracker.store/api/stats/price-changes' from origin 'http://localhost:3000' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://localhost:3000/dashboard:0
+[  525363ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://mtgtracker.store/api/stats/price-changes:0
+[  525363ms] [ERROR] Access to XMLHttpRequest at 'https://mtgtracker.store/api/cards' from origin 'http://localhost:3000' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://localhost:3000/dashboard:0
+[  525363ms] [ERROR] Error fetching cards: AxiosError @ http://localhost:3000/static/js/bundle.js:158831
+[  525363ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://mtgtracker.store/api/cards:0
+[  525363ms] [ERROR] Access to fetch at 'https://mtgtracker.store/api/stats/price-changes' from origin 'http://localhost:3000' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://localhost:3000/dashboard:0
+[  525363ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://mtgtracker.store/api/stats/price-changes:0
+[  525363ms] [ERROR] Access to fetch at 'https://mtgtracker.store/api/notifications' from origin 'http://localhost:3000' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://localhost:3000/dashboard:0
+[  525363ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://mtgtracker.store/api/notifications:0
+[  525363ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134051:30)
+    at http://localhost:3000/static/js/bundle.js:134082:5
+    at commitHookEffectListMount (http://localhost:3000/static/js/bundle.js:90863:30)
+    at commitPassiveMountOnFiber (http://localhost:3000/static/js/bundle.js:92356:17)
+    at commitPassiveMountEffects_complete (http://localhost:3000/static/js/bundle.js:92328:13)
+    at commitPassiveMountEffects_begin (http://localhost:3000/static/js/bundle.js:92318:11)
+    at commitPassiveMountEffects (http://localhost:3000/static/js/bundle.js:92308:7)
+    at flushPassiveEffectsImpl (http://localhost:3000/static/js/bundle.js:94191:7)
+    at flushPassiveEffects (http://localhost:3000/static/js/bundle.js:94144:18)
+    at commitRootImpl (http://localhost:3000/static/js/bundle.js:94103:9) @ http://localhost:3000/static/js/bundle.js:134061

@@ -1,0 +1,58 @@
+- generic [ref=f15e3]:
+  - generic [ref=f15e5]:
+    - button "Notifications" [ref=f15e6] [cursor=pointer]
+    - button "Messages" [ref=f15e10] [cursor=pointer]
+    - button "creamkrampus Krampus" [ref=f15e13] [cursor=pointer]:
+      - img "creamkrampus" [ref=f15e14]
+      - generic [ref=f15e15]: Krampus
+  - generic [ref=f15e18]:
+    - generic [ref=f15e20]:
+      - generic [ref=f15e23]:
+        - heading "MTG Tracker" [level=1] [ref=f15e24]
+        - paragraph [ref=f15e25]: Collection Manager
+      - generic [ref=f15e26]:
+        - button "Navigation" [ref=f15e27] [cursor=pointer]
+        - button "Dashboard" [ref=f15e31] [cursor=pointer]
+        - button "Collection" [ref=f15e36] [cursor=pointer]
+        - button "Deck Builder" [ref=f15e41] [cursor=pointer]
+        - button "Wishlist" [ref=f15e47] [cursor=pointer]
+        - button "Trading Board" [ref=f15e51] [cursor=pointer]
+        - button "Challenges" [ref=f15e56] [cursor=pointer]
+        - button "Forum" [ref=f15e64] [cursor=pointer]
+        - button "Community Decks" [ref=f15e68] [cursor=pointer]
+        - button "Life Counter" [ref=f15e73] [cursor=pointer]
+        - button "Settings" [ref=f15e80] [cursor=pointer]
+        - button "Actions" [ref=f15e85] [cursor=pointer]
+        - button "Import" [ref=f15e89] [cursor=pointer]
+        - button "Export JSON" [ref=f15e94] [cursor=pointer]
+        - button "Export CSV" [ref=f15e99] [cursor=pointer]
+        - button "Update Prices" [ref=f15e104] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f15e111] [cursor=pointer]
+        - button "Tools" [ref=f15e118] [cursor=pointer]
+        - button "Commanders" [ref=f15e122] [cursor=pointer]
+        - button "Sets" [ref=f15e126] [cursor=pointer]
+        - button "Combos" [ref=f15e130] [cursor=pointer]
+        - button "Finance" [ref=f15e134] [cursor=pointer]
+        - button "Scan Card" [ref=f15e138] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f15e143] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f15e148] [cursor=pointer]
+        - button "Spoiler Season" [ref=f15e152] [cursor=pointer]
+        - button "Learn" [ref=f15e157] [cursor=pointer]
+        - button "Card Rulings" [ref=f15e161] [cursor=pointer]
+        - button "Interaction Checker" [ref=f15e166] [cursor=pointer]
+        - button "New Player Guide" [ref=f15e170] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f15e175] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f15e180] [cursor=pointer]
+        - button "Format Guides" [ref=f15e184] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f15e192] [cursor=pointer]
+        - button "Gameplay" [ref=f15e198] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f15e203] [cursor=pointer]:
+        - generic [ref=f15e206]: Command Palette
+        - generic [ref=f15e207]: Ctrl+K
+      - button "Collapse" [ref=f15e209] [cursor=pointer]
+    - main [ref=f15e213]:
+      - generic [ref=f15e214]:
+        - navigation [ref=f15e215]:
+          - button "Home" [ref=f15e216] [cursor=pointer]
+          - generic [ref=f15e223]: Deck Builder
+        - generic [ref=f15e224]: Loading...

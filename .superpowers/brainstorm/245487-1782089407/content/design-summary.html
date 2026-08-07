@@ -1,0 +1,75 @@
+<h2>Design summary — approve to proceed</h2>
+<p class="subtitle">Full polish pass across admin panel + forum shop</p>
+
+<div class="section">
+  <div class="label">Admin Panel — Community</div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+
+    <div style="background:#1e293b;border-left:3px solid #a78bfa;border-radius:6px;padding:12px 16px">
+      <div style="color:#c4b5fd;font-size:12px;font-weight:600;margin-bottom:4px">CONTENT MODERATION TAB</div>
+      <ul style="margin:0;padding-left:16px;color:#cbd5e1;font-size:13px;line-height:1.9">
+        <li>Styled modal dialog replaces all <code style="color:#f87171">window.confirm</code> — shows content preview, red destructive button</li>
+        <li>Bulk delete added to Recent Threads (already exists on Recent Posts)</li>
+        <li>Cleaner table rows — tighter spacing, better avatar/name/date hierarchy</li>
+        <li>Proper empty states with icon + message instead of blank areas</li>
+      </ul>
+    </div>
+
+    <div style="background:#1e293b;border-left:3px solid #a78bfa;border-radius:6px;padding:12px 16px">
+      <div style="color:#c4b5fd;font-size:12px;font-weight:600;margin-bottom:4px">BADGES TAB</div>
+      <ul style="margin:0;padding-left:16px;color:#cbd5e1;font-size:13px;line-height:1.9">
+        <li>Search input above the badge list — filters by name in real time</li>
+        <li>Delete uses the shared modal (not inline expand)</li>
+        <li>Badge count shown in header ("12 badges")</li>
+      </ul>
+    </div>
+
+    <div style="background:#1e293b;border-left:3px solid #a78bfa;border-radius:6px;padding:12px 16px">
+      <div style="color:#c4b5fd;font-size:12px;font-weight:600;margin-bottom:4px">COSMETICS MANAGER (admin)</div>
+      <ul style="margin:0;padding-left:16px;color:#cbd5e1;font-size:13px;line-height:1.9">
+        <li>Search input + category filter dropdown above the cosmetics grid</li>
+        <li>Delete uses the shared modal</li>
+        <li>Item count shown in header</li>
+      </ul>
+    </div>
+
+    <div style="background:#1e293b;border-left:3px solid #a78bfa;border-radius:6px;padding:12px 16px">
+      <div style="color:#c4b5fd;font-size:12px;font-weight:600;margin-bottom:4px">SHARED — new ConfirmModal component</div>
+      <ul style="margin:0;padding-left:16px;color:#cbd5e1;font-size:13px;line-height:1.9">
+        <li>One reusable modal: <code>title</code>, <code>message</code>, <code>onConfirm</code>, <code>onCancel</code>, optional <code>danger</code> prop</li>
+        <li>Lives in <code>frontend/src/components/admin/community/ConfirmModal.js</code></li>
+        <li>Used by BadgesTab, ContentModerationTab, CosmeticsManager</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">Forum Shop — User-facing</div>
+  <div style="background:#1e293b;border-left:3px solid #10b981;border-radius:6px;padding:12px 16px;margin-top:12px">
+    <ul style="margin:0;padding-left:16px;color:#cbd5e1;font-size:13px;line-height:1.9">
+      <li>Switch to wider single-column cards: image left, name+rarity+description center, price+action right</li>
+      <li>Rarity pill inline with item name (not below)</li>
+      <li>Limited-time items: amber border + ⏱ countdown prominently in description area</li>
+      <li>State border colors kept (green = equipped, blue = owned, slate = unowned) — just cleaner</li>
+      <li>Category tabs show item counts ("Post Appearance (8)")</li>
+      <li>Coin balance in header made larger / more prominent</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">Out of scope</div>
+  <div style="color:#64748b;font-size:13px;margin-top:8px">No backend changes · No new API endpoints · No new data models · FeedbackTab left as-is</div>
+</div>
+
+<div class="options" style="margin-top:16px">
+  <div class="option" data-choice="approve" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content"><h3>Approve — write the spec</h3><p>This is what I want</p></div>
+  </div>
+  <div class="option" data-choice="revise" onclick="toggleSelect(this)">
+    <div class="letter">✗</div>
+    <div class="content"><h3>Revise</h3><p>Something needs to change</p></div>
+  </div>
+</div>

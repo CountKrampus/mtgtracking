@@ -1,0 +1,248 @@
+- generic [ref=f23e3]:
+  - generic [ref=f23e5]:
+    - button "Notifications" [ref=f23e6] [cursor=pointer]
+    - button "Messages" [ref=f23e10] [cursor=pointer]
+    - button "Send Feedback" [ref=f23e13] [cursor=pointer]
+    - button [ref=f23e16] [cursor=pointer]:
+      - img "creamkrampus" [ref=f23e17]
+  - generic [ref=f23e20]:
+    - button [ref=f23e21] [cursor=pointer]
+    - generic [ref=f23e24]:
+      - generic [ref=f23e26]:
+        - generic [ref=f23e27]:
+          - heading "MTG Tracker" [level=1] [ref=f23e28]
+          - paragraph [ref=f23e29]: Collection Manager
+        - button [ref=f23e30] [cursor=pointer]
+      - generic [ref=f23e294]:
+        - generic [ref=f23e295]: K
+        - generic [ref=f23e296]:
+          - paragraph [ref=f23e297]: Krampus
+          - text: admin
+      - generic [ref=f23e34]:
+        - button "Navigation" [ref=f23e35] [cursor=pointer]
+        - button "Dashboard" [ref=f23e39] [cursor=pointer]
+        - button "Collection" [ref=f23e44] [cursor=pointer]
+        - button "Deck Builder" [ref=f23e49] [cursor=pointer]
+        - button "Wishlist" [ref=f23e55] [cursor=pointer]
+        - button "Trading Board" [ref=f23e59] [cursor=pointer]
+        - button "Challenges" [ref=f23e64] [cursor=pointer]
+        - button "Forum" [ref=f23e72] [cursor=pointer]
+        - button "Community Decks" [ref=f23e76] [cursor=pointer]
+        - button "Life Counter" [ref=f23e81] [cursor=pointer]
+        - button "Settings" [ref=f23e88] [cursor=pointer]
+        - button "Actions" [ref=f23e93] [cursor=pointer]
+        - button "Import" [ref=f23e97] [cursor=pointer]
+        - button "Export JSON" [ref=f23e102] [cursor=pointer]
+        - button "Export CSV" [ref=f23e107] [cursor=pointer]
+        - button "Update Prices" [ref=f23e112] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f23e119] [cursor=pointer]
+        - button "Tools" [ref=f23e126] [cursor=pointer]
+        - button "Commanders" [ref=f23e130] [cursor=pointer]
+        - button "Sets" [ref=f23e134] [cursor=pointer]
+        - button "Combos" [ref=f23e138] [cursor=pointer]
+        - button "Finance" [ref=f23e142] [cursor=pointer]
+        - button "Scan Card" [ref=f23e146] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f23e151] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f23e156] [cursor=pointer]
+        - button "Spoiler Season" [ref=f23e160] [cursor=pointer]
+        - button "Learn" [ref=f23e165] [cursor=pointer]
+        - button "Card Rulings" [ref=f23e169] [cursor=pointer]
+        - button "Interaction Checker" [ref=f23e174] [cursor=pointer]
+        - button "New Player Guide" [ref=f23e178] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f23e183] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f23e188] [cursor=pointer]
+        - button "Format Guides" [ref=f23e192] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f23e200] [cursor=pointer]
+        - button "Gameplay" [ref=f23e206] [cursor=pointer]
+        - generic [ref=f23e298]: Admin
+        - button "Admin Panel" [ref=f23e299] [cursor=pointer]
+      - generic [ref=f23e303]:
+        - button "Account" [ref=f23e304] [cursor=pointer]
+        - button "Sign Out" [ref=f23e309] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f23e211] [cursor=pointer]:
+        - generic [ref=f23e214]: Command Palette
+        - generic [ref=f23e215]: Ctrl+K
+    - main [ref=f23e216]:
+      - generic [ref=f23e217]:
+        - navigation [ref=f23e218]:
+          - button "Home" [ref=f23e219] [cursor=pointer]
+          - generic [ref=f23e226]: Forum
+        - generic [ref=f23e229]:
+          - generic [ref=f23e230]:
+            - heading "Forum" [level=1] [ref=f23e231]
+            - textbox "Search threads..." [ref=f23e237]
+            - generic [ref=f23e238]:
+              - button "Forum Shop" [active] [ref=f23e239] [cursor=pointer]
+              - button "🏛️ Forum Profile" [ref=f23e243] [cursor=pointer]
+              - button "Forum Admin" [ref=f23e244] [cursor=pointer]
+          - generic [ref=f23e248]:
+            - button "Categories" [ref=f23e249] [cursor=pointer]
+            - button "Feed" [ref=f23e250] [cursor=pointer]
+          - generic [ref=f23e252]:
+            - generic [ref=f23e253]:
+              - generic [ref=f23e254]:
+                - heading "Community Forum" [level=2] [ref=f23e255]
+                - paragraph [ref=f23e256]: Discussion for MTG players
+              - generic [ref=f23e257]:
+                - button "Leaderboard" [ref=f23e258] [cursor=pointer]
+                - button "New Thread" [ref=f23e261] [cursor=pointer]
+            - generic [ref=f23e263]:
+              - generic [ref=f23e314]:
+                - generic [ref=f23e315]:
+                  - generic [ref=f23e316]: 📋
+                  - generic [ref=f23e317]:
+                    - heading "Site & Rules" [level=3] [ref=f23e318]
+                    - paragraph [ref=f23e319]: Forum rules, site updates, and important information
+                - generic [ref=f23e320]:
+                  - button "Forum Rules Community guidelines and rules 📌 1 threads" [ref=f23e321] [cursor=pointer]:
+                    - heading "Forum Rules" [level=4] [ref=f23e323]
+                    - paragraph [ref=f23e324]: Community guidelines and rules
+                    - generic [ref=f23e325]: 📌 1 threads
+                  - button "Site Updates App updates, new features, maintenance 📌 1 threads" [ref=f23e326] [cursor=pointer]:
+                    - heading "Site Updates" [level=4] [ref=f23e328]
+                    - paragraph [ref=f23e329]: App updates, new features, maintenance
+                    - generic [ref=f23e330]: 📌 1 threads
+                  - button "FAQ Frequently asked questions 📌 1 threads" [ref=f23e331] [cursor=pointer]:
+                    - heading "FAQ" [level=4] [ref=f23e333]
+                    - paragraph [ref=f23e334]: Frequently asked questions
+                    - generic [ref=f23e335]: 📌 1 threads
+                  - button "Important Info Critical announcements and information 📌 0 threads" [ref=f23e336] [cursor=pointer]:
+                    - heading "Important Info" [level=4] [ref=f23e338]
+                    - paragraph [ref=f23e339]: Critical announcements and information
+                    - generic [ref=f23e340]: 📌 0 threads
+              - generic [ref=f23e341]:
+                - generic [ref=f23e342]:
+                  - generic [ref=f23e343]: 🎯
+                  - generic [ref=f23e344]:
+                    - heading "Getting Started" [level=3] [ref=f23e345]
+                    - paragraph [ref=f23e346]: Help using the tracker and asking questions
+                - generic [ref=f23e347]:
+                  - button "Help & Support Questions about using the tracker app 📌 1 threads" [ref=f23e348] [cursor=pointer]:
+                    - heading "Help & Support" [level=4] [ref=f23e350]
+                    - paragraph [ref=f23e351]: Questions about using the tracker app
+                    - generic [ref=f23e352]: 📌 1 threads
+                  - button "Feature Requests Suggest new features 📌 0 threads" [ref=f23e353] [cursor=pointer]:
+                    - heading "Feature Requests" [level=4] [ref=f23e355]
+                    - paragraph [ref=f23e356]: Suggest new features
+                    - generic [ref=f23e357]: 📌 0 threads
+                  - button "Bug Reports Report issues and bugs 📌 0 threads" [ref=f23e358] [cursor=pointer]:
+                    - heading "Bug Reports" [level=4] [ref=f23e360]
+                    - paragraph [ref=f23e361]: Report issues and bugs
+                    - generic [ref=f23e362]: 📌 0 threads
+              - generic [ref=f23e363]:
+                - generic [ref=f23e364]:
+                  - generic [ref=f23e365]: 👥
+                  - generic [ref=f23e366]:
+                    - heading "Community" [level=3] [ref=f23e367]
+                    - paragraph [ref=f23e368]: Community discussion and announcements
+                - generic [ref=f23e369]:
+                  - button "General Discussion General MTG and Magic discussion 📌 0 threads" [ref=f23e370] [cursor=pointer]:
+                    - heading "General Discussion" [level=4] [ref=f23e372]
+                    - paragraph [ref=f23e373]: General MTG and Magic discussion
+                    - generic [ref=f23e374]: 📌 0 threads
+                  - button "Format Discussion Discuss MTG formats and rules 📌 0 threads" [ref=f23e375] [cursor=pointer]:
+                    - heading "Format Discussion" [level=4] [ref=f23e377]
+                    - paragraph [ref=f23e378]: Discuss MTG formats and rules
+                    - generic [ref=f23e379]: 📌 0 threads
+                  - button "Deck Ideas Share and discuss deck ideas 📌 0 threads" [ref=f23e380] [cursor=pointer]:
+                    - heading "Deck Ideas" [level=4] [ref=f23e382]
+                    - paragraph [ref=f23e383]: Share and discuss deck ideas
+                    - generic [ref=f23e384]: 📌 0 threads
+                  - button "Market & Trading Buy, sell, and trade cards 📌 0 threads" [ref=f23e385] [cursor=pointer]:
+                    - heading "Market & Trading" [level=4] [ref=f23e387]
+                    - paragraph [ref=f23e388]: Buy, sell, and trade cards
+                    - generic [ref=f23e389]: 📌 0 threads
+              - generic [ref=f23e390]:
+                - generic [ref=f23e391]:
+                  - generic [ref=f23e392]: 🏆
+                  - generic [ref=f23e393]:
+                    - heading "Events & Tournaments" [level=3] [ref=f23e394]
+                    - paragraph [ref=f23e395]: Community events, tournaments, and game nights
+                - generic [ref=f23e396]:
+                  - button "Tournaments Organize and discuss tournaments 📌 0 threads" [ref=f23e397] [cursor=pointer]:
+                    - heading "Tournaments" [level=4] [ref=f23e399]
+                    - paragraph [ref=f23e400]: Organize and discuss tournaments
+                    - generic [ref=f23e401]: 📌 0 threads
+                  - button "Game Nights Casual game night scheduling 📌 0 threads" [ref=f23e402] [cursor=pointer]:
+                    - heading "Game Nights" [level=4] [ref=f23e404]
+                    - paragraph [ref=f23e405]: Casual game night scheduling
+                    - generic [ref=f23e406]: 📌 0 threads
+                  - button "Community Events Special community events 📌 0 threads" [ref=f23e407] [cursor=pointer]:
+                    - heading "Community Events" [level=4] [ref=f23e409]
+                    - paragraph [ref=f23e410]: Special community events
+                    - generic [ref=f23e411]: 📌 0 threads
+          - generic [ref=f23e413]:
+            - generic [ref=f23e414]:
+              - heading "Forum Shop" [level=2] [ref=f23e415]
+              - button "✕" [ref=f23e416] [cursor=pointer]
+            - generic [ref=f23e419]:
+              - generic [ref=f23e420]:
+                - heading "Forum Shop" [level=2] [ref=f23e426]
+                - generic [ref=f23e427]:
+                  - generic [ref=f23e428]:
+                    - generic [ref=f23e434]: "125"
+                    - generic [ref=f23e435]: coins
+                  - button [ref=f23e436] [cursor=pointer]
+              - generic [ref=f23e440]:
+                - button "All (5)" [ref=f23e441] [cursor=pointer]
+                - button "Post Appearance (1)" [ref=f23e446] [cursor=pointer]
+                - button "Forum Profile (0)" [ref=f23e453] [cursor=pointer]
+                - button "Unlocks (4)" [ref=f23e456] [cursor=pointer]
+              - textbox "Search cosmetics..." [ref=f23e464]
+              - generic [ref=f23e465]:
+                - generic [ref=f23e466]:
+                  - heading "Title Colors" [level=3] [ref=f23e467]
+                  - generic [ref=f23e469]:
+                    - generic [ref=f23e474]:
+                      - generic [ref=f23e475]:
+                        - generic [ref=f23e476]: Foiled Shimmer
+                        - generic [ref=f23e477]: common
+                      - paragraph [ref=f23e478]: titleColor
+                    - generic [ref=f23e479]: Equipped
+                - generic [ref=f23e483]:
+                  - heading "Member Title" [level=3] [ref=f23e484]
+                  - generic [ref=f23e486]:
+                    - generic [ref=f23e490]:
+                      - generic [ref=f23e491]:
+                        - generic [ref=f23e492]: Member Title
+                        - generic [ref=f23e493]: common
+                      - paragraph [ref=f23e494]: memberTitle
+                    - generic [ref=f23e496]:
+                      - generic [ref=f23e497]: Owned
+                      - generic [ref=f23e500]: Set in your profile settings
+                - generic [ref=f23e501]:
+                  - heading "Achievement Showcase" [level=3] [ref=f23e502]
+                  - generic [ref=f23e504]:
+                    - generic [ref=f23e505]: 🏆
+                    - generic [ref=f23e507]:
+                      - generic [ref=f23e508]:
+                        - generic [ref=f23e509]: Achievements
+                        - generic [ref=f23e510]: common
+                      - paragraph [ref=f23e511]: achievementShowcase
+                    - generic [ref=f23e512]: Owned
+                - generic [ref=f23e517]:
+                  - heading "Deck Showcase" [level=3] [ref=f23e518]
+                  - generic [ref=f23e520]:
+                    - generic [ref=f23e526]:
+                      - generic [ref=f23e527]:
+                        - generic [ref=f23e528]: Deck Showcase
+                        - generic [ref=f23e529]: common
+                      - paragraph [ref=f23e530]: deckShowcase
+                    - generic [ref=f23e531]: Owned
+                - generic [ref=f23e536]:
+                  - heading "Wishlist Preview" [level=3] [ref=f23e537]
+                  - generic [ref=f23e539]:
+                    - generic [ref=f23e543]:
+                      - generic [ref=f23e544]:
+                        - generic [ref=f23e545]: wishlist
+                        - generic [ref=f23e546]: common
+                      - paragraph [ref=f23e547]: wishlistPreview
+                    - generic [ref=f23e548]: Owned
+              - button "Close" [ref=f23e554] [cursor=pointer]
+    - navigation [ref=f23e264]:
+      - generic [ref=f23e265]:
+        - button "Dashboard" [ref=f23e266] [cursor=pointer]
+        - button "Collection" [ref=f23e271] [cursor=pointer]
+        - button "Forum" [ref=f23e276] [cursor=pointer]
+        - button "Decks" [ref=f23e280] [cursor=pointer]
+        - button "More" [ref=f23e286] [cursor=pointer]

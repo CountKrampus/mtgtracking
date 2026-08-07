@@ -1,0 +1,293 @@
+- generic [ref=f30e3]:
+  - generic [ref=f30e5]:
+    - button "Notifications" [ref=f30e6] [cursor=pointer]
+    - button "Messages" [ref=f30e10] [cursor=pointer]
+    - button "Send Feedback" [ref=f30e13] [cursor=pointer]
+    - button "creamkrampus Krampus" [ref=f30e1479] [cursor=pointer]:
+      - img "creamkrampus" [ref=f30e17]
+      - generic [ref=f30e1480]: Krampus
+  - generic [ref=f30e20]:
+    - generic [ref=f30e1482]:
+      - generic [ref=f30e1485]:
+        - heading "MTG Tracker" [level=1] [ref=f30e1486]
+        - paragraph [ref=f30e1487]: Collection Manager
+      - generic [ref=f30e1489]:
+        - generic [ref=f30e1490]: K
+        - generic [ref=f30e1491]:
+          - paragraph [ref=f30e1492]: Krampus
+          - text: admin
+      - generic [ref=f30e1493]:
+        - button "Navigation" [ref=f30e1494] [cursor=pointer]
+        - button "Dashboard" [ref=f30e1498] [cursor=pointer]
+        - button "Collection" [ref=f30e1503] [cursor=pointer]
+        - button "Deck Builder" [ref=f30e1508] [cursor=pointer]
+        - button "Wishlist" [ref=f30e1514] [cursor=pointer]
+        - button "Trading Board" [ref=f30e1518] [cursor=pointer]
+        - button "Challenges" [ref=f30e1523] [cursor=pointer]
+        - button "Forum" [ref=f30e1531] [cursor=pointer]
+        - button "Community Decks" [ref=f30e1535] [cursor=pointer]
+        - button "Life Counter" [ref=f30e1540] [cursor=pointer]
+        - button "Settings" [ref=f30e1547] [cursor=pointer]
+        - button "Actions" [ref=f30e1552] [cursor=pointer]
+        - button "Import" [ref=f30e1556] [cursor=pointer]
+        - button "Export JSON" [ref=f30e1561] [cursor=pointer]
+        - button "Export CSV" [ref=f30e1566] [cursor=pointer]
+        - button "Update Prices" [ref=f30e1571] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f30e1578] [cursor=pointer]
+        - button "Tools" [ref=f30e1585] [cursor=pointer]
+        - button "Commanders" [ref=f30e1589] [cursor=pointer]
+        - button "Sets" [ref=f30e1593] [cursor=pointer]
+        - button "Combos" [ref=f30e1597] [cursor=pointer]
+        - button "Finance" [ref=f30e1601] [cursor=pointer]
+        - button "Scan Card" [ref=f30e1605] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f30e1610] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f30e1615] [cursor=pointer]
+        - button "Spoiler Season" [ref=f30e1619] [cursor=pointer]
+        - button "Learn" [ref=f30e1624] [cursor=pointer]
+        - button "Card Rulings" [ref=f30e1628] [cursor=pointer]
+        - button "Interaction Checker" [ref=f30e1633] [cursor=pointer]
+        - button "New Player Guide" [ref=f30e1637] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f30e1642] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f30e1647] [cursor=pointer]
+        - button "Format Guides" [ref=f30e1651] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f30e1659] [cursor=pointer]
+        - button "Gameplay" [ref=f30e1665] [cursor=pointer]
+        - generic [ref=f30e1669]: Admin
+        - button "Admin Panel" [ref=f30e1670] [cursor=pointer]
+      - generic [ref=f30e1674]:
+        - button "Account" [ref=f30e1675] [cursor=pointer]
+        - button "Sign Out" [ref=f30e1680] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f30e1686] [cursor=pointer]:
+        - generic [ref=f30e1689]: Command Palette
+        - generic [ref=f30e1690]: Ctrl+K
+      - button "Collapse" [ref=f30e1692] [cursor=pointer]
+    - main [ref=f30e216]:
+      - generic [ref=f30e217]:
+        - navigation [ref=f30e218]:
+          - button "Home" [ref=f30e219] [cursor=pointer]
+          - generic [ref=f30e814]: Deck Builder
+        - generic [ref=f30e816]:
+          - generic [ref=f30e817]:
+            - generic [ref=f30e818]:
+              - heading "My Decks" [level=2] [ref=f30e819]
+              - button "📁 Uncategorised decks ▾" [ref=f30e821] [cursor=pointer]
+            - generic [ref=f30e822]:
+              - button "Calculate Sleeves" [ref=f30e823] [cursor=pointer]
+              - button "Find Staples" [ref=f30e824] [cursor=pointer]
+              - button "Compare Decks" [ref=f30e825] [cursor=pointer]
+              - button "Shopping List" [ref=f30e826] [cursor=pointer]
+              - button "New Deck" [ref=f30e827] [cursor=pointer]
+              - button "Import Deck" [ref=f30e829] [cursor=pointer]
+          - generic [ref=f30e845] [cursor=pointer]:
+            - img "Ozai, the Phoenix King" [ref=f30e847]
+            - generic [ref=f30e848]:
+              - heading "Every changed when fire nation attacked. Ozai Phoenix 10+" [level=3] [ref=f30e849]
+              - generic [ref=f30e850]: Commander
+            - generic [ref=f30e851]: "Commander: Ozai, the Phoenix King"
+            - generic [ref=f30e852]:
+              - generic [ref=f30e853]: 100 cards
+              - generic [ref=f30e854]: $0.00
+            - button "Delete" [ref=f30e855]
+          - generic [ref=f30e857]:
+            - generic [ref=f30e858]:
+              - heading "Compare Decks" [level=2] [ref=f30e859]
+              - button [ref=f30e865] [cursor=pointer]
+            - generic [ref=f30e1449]:
+              - generic [ref=f30e1450]:
+                - heading "Kaalia of the Vast vs Edgar Markov" [level=3] [ref=f30e1451]
+                - button "Change decks" [ref=f30e1452] [cursor=pointer]
+              - generic [ref=f30e1453]:
+                - button "All (137)" [ref=f30e1454] [cursor=pointer]
+                - button "Shared (4)" [ref=f30e1455] [cursor=pointer]
+                - button "Only Kaalia of the Vast (63)" [active] [ref=f30e1456] [cursor=pointer]
+                - button "Only Edgar Markov (70)" [ref=f30e1457] [cursor=pointer]
+              - generic [ref=f30e1458]:
+                - button "Abhorrent Overlord A" [ref=f30e1696] [cursor=pointer]:
+                  - generic [ref=f30e1697]: Abhorrent Overlord
+                  - generic "Kaalia of the Vast" [ref=f30e1699]: A
+                - button "Aegis Angel A" [ref=f30e1700] [cursor=pointer]:
+                  - generic [ref=f30e1701]: Aegis Angel
+                  - generic "Kaalia of the Vast" [ref=f30e1703]: A
+                - button "Akroma, Angel of Fury A" [ref=f30e1704] [cursor=pointer]:
+                  - generic [ref=f30e1705]: Akroma, Angel of Fury
+                  - generic "Kaalia of the Vast" [ref=f30e1707]: A
+                - button "Akroma, Angel of Wrath A" [ref=f30e1708] [cursor=pointer]:
+                  - generic [ref=f30e1709]: Akroma, Angel of Wrath
+                  - generic "Kaalia of the Vast" [ref=f30e1711]: A
+                - button "Ancient Hellkite A" [ref=f30e1712] [cursor=pointer]:
+                  - generic [ref=f30e1713]: Ancient Hellkite
+                  - generic "Kaalia of the Vast" [ref=f30e1715]: A
+                - button "Angel of Finality A" [ref=f30e1716] [cursor=pointer]:
+                  - generic [ref=f30e1717]: Angel of Finality
+                  - generic "Kaalia of the Vast" [ref=f30e1719]: A
+                - button "Angel of the Ruins A" [ref=f30e1720] [cursor=pointer]:
+                  - generic [ref=f30e1721]: Angel of the Ruins
+                  - generic "Kaalia of the Vast" [ref=f30e1723]: A
+                - button "Angel of Vitality A" [ref=f30e1724] [cursor=pointer]:
+                  - generic [ref=f30e1725]: Angel of Vitality
+                  - generic "Kaalia of the Vast" [ref=f30e1727]: A
+                - button "Angelic Field Marshal A" [ref=f30e1728] [cursor=pointer]:
+                  - generic [ref=f30e1729]: Angelic Field Marshal
+                  - generic "Kaalia of the Vast" [ref=f30e1731]: A
+                - button "Angelic Intervention A" [ref=f30e1732] [cursor=pointer]:
+                  - generic [ref=f30e1733]: Angelic Intervention
+                  - generic "Kaalia of the Vast" [ref=f30e1735]: A
+                - button "Arbiter of Woe A" [ref=f30e1736] [cursor=pointer]:
+                  - generic [ref=f30e1737]: Arbiter of Woe
+                  - generic "Kaalia of the Vast" [ref=f30e1739]: A
+                - button "Archaeomancer's Map A" [ref=f30e1740] [cursor=pointer]:
+                  - generic [ref=f30e1741]: Archaeomancer's Map
+                  - generic "Kaalia of the Vast" [ref=f30e1743]: A
+                - button "Arguel's Blood Fast // Temple of Aclazotz A" [ref=f30e1744] [cursor=pointer]:
+                  - generic [ref=f30e1745]: Arguel's Blood Fast // Temple of Aclazotz
+                  - generic "Kaalia of the Vast" [ref=f30e1747]: A
+                - button "Banishing Stroke A" [ref=f30e1748] [cursor=pointer]:
+                  - generic [ref=f30e1749]: Banishing Stroke
+                  - generic "Kaalia of the Vast" [ref=f30e1751]: A
+                - button "Basilica Shepherd A" [ref=f30e1752] [cursor=pointer]:
+                  - generic [ref=f30e1753]: Basilica Shepherd
+                  - generic "Kaalia of the Vast" [ref=f30e1755]: A
+                - button "Bishop of Wings A" [ref=f30e1756] [cursor=pointer]:
+                  - generic [ref=f30e1757]: Bishop of Wings
+                  - generic "Kaalia of the Vast" [ref=f30e1759]: A
+                - button "Bloodgift Demon A" [ref=f30e1760] [cursor=pointer]:
+                  - generic [ref=f30e1761]: Bloodgift Demon
+                  - generic "Kaalia of the Vast" [ref=f30e1763]: A
+                - button "Boon of Safety A" [ref=f30e1764] [cursor=pointer]:
+                  - generic [ref=f30e1765]: Boon of Safety
+                  - generic "Kaalia of the Vast" [ref=f30e1767]: A
+                - button "Boon-Bringer Valkyrie A" [ref=f30e1768] [cursor=pointer]:
+                  - generic [ref=f30e1769]: Boon-Bringer Valkyrie
+                  - generic "Kaalia of the Vast" [ref=f30e1771]: A
+                - button "Burning-Rune Demon A" [ref=f30e1772] [cursor=pointer]:
+                  - generic [ref=f30e1773]: Burning-Rune Demon
+                  - generic "Kaalia of the Vast" [ref=f30e1775]: A
+                - button "Crumb and Get It A" [ref=f30e1776] [cursor=pointer]:
+                  - generic [ref=f30e1777]: Crumb and Get It
+                  - generic "Kaalia of the Vast" [ref=f30e1779]: A
+                - button "Dawn Charm A" [ref=f30e1780] [cursor=pointer]:
+                  - generic [ref=f30e1781]: Dawn Charm
+                  - generic "Kaalia of the Vast" [ref=f30e1783]: A
+                - button "Death-Rattle Oni A" [ref=f30e1784] [cursor=pointer]:
+                  - generic [ref=f30e1785]: Death-Rattle Oni
+                  - generic "Kaalia of the Vast" [ref=f30e1787]: A
+                - button "Demon of Loathing A" [ref=f30e1788] [cursor=pointer]:
+                  - generic [ref=f30e1789]: Demon of Loathing
+                  - generic "Kaalia of the Vast" [ref=f30e1791]: A
+                - button "Demonic Taskmaster A" [ref=f30e1792] [cursor=pointer]:
+                  - generic [ref=f30e1793]: Demonic Taskmaster
+                  - generic "Kaalia of the Vast" [ref=f30e1795]: A
+                - button "Demonlord Belzenlok A" [ref=f30e1796] [cursor=pointer]:
+                  - generic [ref=f30e1797]: Demonlord Belzenlok
+                  - generic "Kaalia of the Vast" [ref=f30e1799]: A
+                - button "Depopulate A" [ref=f30e1800] [cursor=pointer]:
+                  - generic [ref=f30e1801]: Depopulate
+                  - generic "Kaalia of the Vast" [ref=f30e1803]: A
+                - button "Destroy Evil A" [ref=f30e1804] [cursor=pointer]:
+                  - generic [ref=f30e1805]: Destroy Evil
+                  - generic "Kaalia of the Vast" [ref=f30e1807]: A
+                - button "Diabolic Intent A" [ref=f30e1808] [cursor=pointer]:
+                  - generic [ref=f30e1809]: Diabolic Intent
+                  - generic "Kaalia of the Vast" [ref=f30e1811]: A
+                - button "Dragon Hatchling A" [ref=f30e1812] [cursor=pointer]:
+                  - generic [ref=f30e1813]: Dragon Hatchling
+                  - generic "Kaalia of the Vast" [ref=f30e1815]: A
+                - button "Emerge from the Cocoon A" [ref=f30e1816] [cursor=pointer]:
+                  - generic [ref=f30e1817]: Emerge from the Cocoon
+                  - generic "Kaalia of the Vast" [ref=f30e1819]: A
+                - button "Evolving Wilds A" [ref=f30e1820] [cursor=pointer]:
+                  - generic [ref=f30e1821]: Evolving Wilds
+                  - generic "Kaalia of the Vast" [ref=f30e1823]: A
+                - button "Faithless Looting A" [ref=f30e1824] [cursor=pointer]:
+                  - generic [ref=f30e1825]: Faithless Looting
+                  - generic "Kaalia of the Vast" [ref=f30e1827]: A
+                - button "Family Reunion A" [ref=f30e1828] [cursor=pointer]:
+                  - generic [ref=f30e1829]: Family Reunion
+                  - generic "Kaalia of the Vast" [ref=f30e1831]: A
+                - button "Flicker of Fate A" [ref=f30e1832] [cursor=pointer]:
+                  - generic [ref=f30e1833]: Flicker of Fate
+                  - generic "Kaalia of the Vast" [ref=f30e1835]: A
+                - button "Frenzied Raider A" [ref=f30e1836] [cursor=pointer]:
+                  - generic [ref=f30e1837]: Frenzied Raider
+                  - generic "Kaalia of the Vast" [ref=f30e1839]: A
+                - button "Furnace Hellkite A" [ref=f30e1840] [cursor=pointer]:
+                  - generic [ref=f30e1841]: Furnace Hellkite
+                  - generic "Kaalia of the Vast" [ref=f30e1843]: A
+                - button "Guardian of the Great Door A" [ref=f30e1844] [cursor=pointer]:
+                  - generic [ref=f30e1845]: Guardian of the Great Door
+                  - generic "Kaalia of the Vast" [ref=f30e1847]: A
+                - button "Herald of Anguish A" [ref=f30e1848] [cursor=pointer]:
+                  - generic [ref=f30e1849]: Herald of Anguish
+                  - generic "Kaalia of the Vast" [ref=f30e1851]: A
+                - button "Herald of Eternal Dawn A" [ref=f30e1852] [cursor=pointer]:
+                  - generic [ref=f30e1853]: Herald of Eternal Dawn
+                  - generic "Kaalia of the Vast" [ref=f30e1855]: A
+                - button "Liesa, Forgotten Archangel A" [ref=f30e1856] [cursor=pointer]:
+                  - generic [ref=f30e1857]: Liesa, Forgotten Archangel
+                  - generic "Kaalia of the Vast" [ref=f30e1859]: A
+                - button "Lord of the Void A" [ref=f30e1860] [cursor=pointer]:
+                  - generic [ref=f30e1861]: Lord of the Void
+                  - generic "Kaalia of the Vast" [ref=f30e1863]: A
+                - button "Orcish Medicine A" [ref=f30e1864] [cursor=pointer]:
+                  - generic [ref=f30e1865]: Orcish Medicine
+                  - generic "Kaalia of the Vast" [ref=f30e1867]: A
+                - button "Order // Chaos A" [ref=f30e1868] [cursor=pointer]:
+                  - generic [ref=f30e1869]: Order // Chaos
+                  - generic "Kaalia of the Vast" [ref=f30e1871]: A
+                - button "Pennon Blade A" [ref=f30e1872] [cursor=pointer]:
+                  - generic [ref=f30e1873]: Pennon Blade
+                  - generic "Kaalia of the Vast" [ref=f30e1875]: A
+                - button "Pile On A" [ref=f30e1876] [cursor=pointer]:
+                  - generic [ref=f30e1877]: Pile On
+                  - generic "Kaalia of the Vast" [ref=f30e1879]: A
+                - button "Planar Ally A" [ref=f30e1880] [cursor=pointer]:
+                  - generic [ref=f30e1881]: Planar Ally
+                  - generic "Kaalia of the Vast" [ref=f30e1883]: A
+                - button "Raucous Carnival A" [ref=f30e1884] [cursor=pointer]:
+                  - generic [ref=f30e1885]: Raucous Carnival
+                  - generic "Kaalia of the Vast" [ref=f30e1887]: A
+                - button "Riot Control A" [ref=f30e1888] [cursor=pointer]:
+                  - generic [ref=f30e1889]: Riot Control
+                  - generic "Kaalia of the Vast" [ref=f30e1891]: A
+                - button "Rune-Scarred Demon A" [ref=f30e1892] [cursor=pointer]:
+                  - generic [ref=f30e1893]: Rune-Scarred Demon
+                  - generic "Kaalia of the Vast" [ref=f30e1895]: A
+                - button "Safe Passage A" [ref=f30e1896] [cursor=pointer]:
+                  - generic [ref=f30e1897]: Safe Passage
+                  - generic "Kaalia of the Vast" [ref=f30e1899]: A
+                - button "Serra Angel A" [ref=f30e1900] [cursor=pointer]:
+                  - generic [ref=f30e1901]: Serra Angel
+                  - generic "Kaalia of the Vast" [ref=f30e1903]: A
+                - button "Shattered Sanctum A" [ref=f30e1904] [cursor=pointer]:
+                  - generic [ref=f30e1905]: Shattered Sanctum
+                  - generic "Kaalia of the Vast" [ref=f30e1907]: A
+                - button "Shivan Branch-Burner A" [ref=f30e1908] [cursor=pointer]:
+                  - generic [ref=f30e1909]: Shivan Branch-Burner
+                  - generic "Kaalia of the Vast" [ref=f30e1911]: A
+                - button "Sol Ring A" [ref=f30e1912] [cursor=pointer]:
+                  - generic [ref=f30e1913]: Sol Ring
+                  - generic "Kaalia of the Vast" [ref=f30e1915]: A
+                - button "Solemn Simulacrum A" [ref=f30e1916] [cursor=pointer]:
+                  - generic [ref=f30e1917]: Solemn Simulacrum
+                  - generic "Kaalia of the Vast" [ref=f30e1919]: A
+                - button "Spare from Evil A" [ref=f30e1920] [cursor=pointer]:
+                  - generic [ref=f30e1921]: Spare from Evil
+                  - generic "Kaalia of the Vast" [ref=f30e1923]: A
+                - button "Sunscorch Regent A" [ref=f30e1924] [cursor=pointer]:
+                  - generic [ref=f30e1925]: Sunscorch Regent
+                  - generic "Kaalia of the Vast" [ref=f30e1927]: A
+                - button "Surge of Salvation A" [ref=f30e1928] [cursor=pointer]:
+                  - generic [ref=f30e1929]: Surge of Salvation
+                  - generic "Kaalia of the Vast" [ref=f30e1931]: A
+                - button "Thrill of Possibility A" [ref=f30e1932] [cursor=pointer]:
+                  - generic [ref=f30e1933]: Thrill of Possibility
+                  - generic "Kaalia of the Vast" [ref=f30e1935]: A
+                - button "Thriving Skyclaw A" [ref=f30e1936] [cursor=pointer]:
+                  - generic [ref=f30e1937]: Thriving Skyclaw
+                  - generic "Kaalia of the Vast" [ref=f30e1939]: A
+                - button "Ticket Booth // Tunnel of Hate A" [ref=f30e1940] [cursor=pointer]:
+                  - generic [ref=f30e1941]: Ticket Booth // Tunnel of Hate
+                  - generic "Kaalia of the Vast" [ref=f30e1943]: A
+                - button "Timeless Dragon A" [ref=f30e1944] [cursor=pointer]:
+                  - generic [ref=f30e1945]: Timeless Dragon
+                  - generic "Kaalia of the Vast" [ref=f30e1947]: A

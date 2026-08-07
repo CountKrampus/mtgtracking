@@ -1,0 +1,360 @@
+- generic [ref=f6e3]:
+  - generic [ref=f6e5]:
+    - button "Notifications" [ref=f6e6] [cursor=pointer]
+    - button "Messages" [ref=f6e10] [cursor=pointer]
+    - button "creamkrampus Krampus" [ref=f6e13] [cursor=pointer]:
+      - img "creamkrampus" [ref=f6e14]
+      - generic [ref=f6e15]: Krampus
+  - generic [ref=f6e18]:
+    - generic [ref=f6e20]:
+      - generic [ref=f6e23]:
+        - heading "MTG Tracker" [level=1] [ref=f6e24]
+        - paragraph [ref=f6e25]: Collection Manager
+      - generic [ref=f6e268]:
+        - generic [ref=f6e269]: K
+        - generic [ref=f6e270]:
+          - paragraph [ref=f6e271]: Krampus
+          - text: admin
+      - generic [ref=f6e26]:
+        - button "Navigation" [ref=f6e27] [cursor=pointer]
+        - button "Dashboard" [ref=f6e31] [cursor=pointer]
+        - button "Collection" [ref=f6e36] [cursor=pointer]
+        - button "Deck Builder" [ref=f6e41] [cursor=pointer]
+        - button "Wishlist" [ref=f6e47] [cursor=pointer]
+        - button "Trading Board" [ref=f6e51] [cursor=pointer]
+        - button "Challenges" [ref=f6e56] [cursor=pointer]
+        - button "Forum" [ref=f6e64] [cursor=pointer]
+        - button "Community Decks" [ref=f6e68] [cursor=pointer]
+        - button "Life Counter" [ref=f6e73] [cursor=pointer]
+        - button "Settings" [ref=f6e80] [cursor=pointer]
+        - button "Actions" [ref=f6e85] [cursor=pointer]
+        - button "Import" [ref=f6e89] [cursor=pointer]
+        - button "Export JSON" [ref=f6e94] [cursor=pointer]
+        - button "Export CSV" [ref=f6e99] [cursor=pointer]
+        - button "Update Prices" [ref=f6e104] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f6e111] [cursor=pointer]
+        - button "Tools" [ref=f6e118] [cursor=pointer]
+        - button "Commanders" [ref=f6e122] [cursor=pointer]
+        - button "Sets" [ref=f6e126] [cursor=pointer]
+        - button "Combos" [ref=f6e130] [cursor=pointer]
+        - button "Finance" [ref=f6e134] [cursor=pointer]
+        - button "Scan Card" [ref=f6e138] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f6e143] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f6e148] [cursor=pointer]
+        - button "Spoiler Season" [ref=f6e152] [cursor=pointer]
+        - button "Learn" [ref=f6e157] [cursor=pointer]
+        - button "Card Rulings" [ref=f6e161] [cursor=pointer]
+        - button "Interaction Checker" [ref=f6e166] [cursor=pointer]
+        - button "New Player Guide" [ref=f6e170] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f6e175] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f6e180] [cursor=pointer]
+        - button "Format Guides" [ref=f6e184] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f6e192] [cursor=pointer]
+        - button "Gameplay" [ref=f6e198] [cursor=pointer]
+        - generic [ref=f6e272]: Admin
+        - button "Admin Panel" [ref=f6e273] [cursor=pointer]
+      - generic [ref=f6e277]:
+        - button "Account" [ref=f6e278] [cursor=pointer]
+        - button "Sign Out" [ref=f6e283] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f6e203] [cursor=pointer]:
+        - generic [ref=f6e206]: Command Palette
+        - generic [ref=f6e207]: Ctrl+K
+      - button "Collapse" [ref=f6e209] [cursor=pointer]
+    - main [ref=f6e213]:
+      - generic [ref=f6e214]:
+        - navigation [ref=f6e215]:
+          - button "Home" [ref=f6e216] [cursor=pointer]
+          - generic [ref=f6e223]: Wishlist
+        - generic [ref=f6e224]:
+          - generic [ref=f6e226]:
+            - generic [ref=f6e227]:
+              - combobox [ref=f6e228]:
+                - option "All Priorities" [selected]
+                - option "High Priority"
+                - option "Medium Priority"
+                - option "Low Priority"
+              - generic [ref=f6e229]: 18 items in wishlist
+            - button "Update All Prices" [ref=f6e230] [cursor=pointer]
+          - generic [ref=f6e236]:
+            - heading "Add to Wishlist" [level=2] [ref=f6e237]
+            - generic [ref=f6e238]:
+              - textbox "Card Name (type to search)" [ref=f6e240]
+              - spinbutton "Target Price ($)" [ref=f6e241]
+              - combobox [ref=f6e242]:
+                - option "Low Priority"
+                - option "Medium Priority" [selected]
+                - option "High Priority"
+              - spinbutton "Quantity" [ref=f6e243]: "1"
+              - combobox [ref=f6e244]:
+                - option "NM" [selected]
+                - option "LP"
+                - option "MP"
+                - option "HP"
+                - option "DMG"
+              - textbox "Notes (optional)" [ref=f6e245]
+            - button "Add to Wishlist" [ref=f6e247] [cursor=pointer]
+          - table [ref=f6e252]:
+            - rowgroup [ref=f6e253]:
+              - row [ref=f6e254]:
+                - columnheader "Card Name" [ref=f6e255]
+                - columnheader "Set" [ref=f6e256]
+                - columnheader "Qty" [ref=f6e257]
+                - columnheader "Target Price" [ref=f6e258]
+                - columnheader "Current Price" [ref=f6e259]
+                - columnheader "Diff" [ref=f6e260]
+                - columnheader "Priority" [ref=f6e261]
+                - columnheader "Notes" [ref=f6e262]
+                - columnheader "Actions" [ref=f6e263]
+            - rowgroup [ref=f6e264]:
+              - row [ref=f6e288]:
+                - cell "Avacyn, Angel of Hope" [ref=f6e289]
+                - cell "-" [ref=f6e290]
+                - cell "1" [ref=f6e291]
+                - cell "$0.00" [ref=f6e292]
+                - cell "$29.48" [ref=f6e293]
+                - cell "-" [ref=f6e294]
+                - cell "Medium" [ref=f6e295]
+                - cell "-" [ref=f6e299]
+                - cell [ref=f6e300]:
+                  - generic [ref=f6e301]:
+                    - button "Acquire - Move to Collection" [ref=f6e302] [cursor=pointer]
+                    - button [ref=f6e304] [cursor=pointer]
+                    - button [ref=f6e307] [cursor=pointer]
+              - row [ref=f6e311]:
+                - cell "Beledros Witherbloom" [ref=f6e312]
+                - 'cell "Strixhaven: School of Mages" [ref=f6e313]'
+                - cell "1" [ref=f6e314]
+                - cell "$0.00" [ref=f6e315]
+                - cell "$1.44" [ref=f6e316]
+                - cell "-" [ref=f6e317]
+                - cell "Medium" [ref=f6e318]
+                - cell "potential commander" [ref=f6e322]
+                - cell [ref=f6e323]:
+                  - generic [ref=f6e324]:
+                    - button "Acquire - Move to Collection" [ref=f6e325] [cursor=pointer]
+                    - button [ref=f6e327] [cursor=pointer]
+                    - button [ref=f6e330] [cursor=pointer]
+              - row [ref=f6e334]:
+                - cell "Boros Charm" [ref=f6e335]
+                - cell "-" [ref=f6e336]
+                - cell "1" [ref=f6e337]
+                - cell "$0.00" [ref=f6e338]
+                - cell "$5.00" [ref=f6e339]
+                - cell "-" [ref=f6e340]
+                - cell "Medium" [ref=f6e341]
+                - cell "-" [ref=f6e345]
+                - cell [ref=f6e346]:
+                  - generic [ref=f6e347]:
+                    - button "Acquire - Move to Collection" [ref=f6e348] [cursor=pointer]
+                    - button [ref=f6e350] [cursor=pointer]
+                    - button [ref=f6e353] [cursor=pointer]
+              - row [ref=f6e357]:
+                - cell "Coat of Arms" [ref=f6e358]
+                - cell "-" [ref=f6e359]
+                - cell "1" [ref=f6e360]
+                - cell "$0.00" [ref=f6e361]
+                - cell "$18.55" [ref=f6e362]
+                - cell "-" [ref=f6e363]
+                - cell "Medium" [ref=f6e364]
+                - cell "-" [ref=f6e368]
+                - cell [ref=f6e369]:
+                  - generic [ref=f6e370]:
+                    - button "Acquire - Move to Collection" [ref=f6e371] [cursor=pointer]
+                    - button [ref=f6e373] [cursor=pointer]
+                    - button [ref=f6e376] [cursor=pointer]
+              - row [ref=f6e380]:
+                - cell "Dragon Tempest" [ref=f6e381]
+                - cell "-" [ref=f6e382]
+                - cell "1" [ref=f6e383]
+                - cell "$0.00" [ref=f6e384]
+                - cell "$3.48" [ref=f6e385]
+                - cell "-" [ref=f6e386]
+                - cell "Medium" [ref=f6e387]
+                - cell "-" [ref=f6e391]
+                - cell [ref=f6e392]:
+                  - generic [ref=f6e393]:
+                    - button "Acquire - Move to Collection" [ref=f6e394] [cursor=pointer]
+                    - button [ref=f6e396] [cursor=pointer]
+                    - button [ref=f6e399] [cursor=pointer]
+              - row [ref=f6e403]:
+                - cell "Goblin Lackey" [ref=f6e404]
+                - cell "-" [ref=f6e405]
+                - cell "1" [ref=f6e406]
+                - cell "$0.00" [ref=f6e407]
+                - cell "$2.35" [ref=f6e408]
+                - cell "-" [ref=f6e409]
+                - cell "Medium" [ref=f6e410]
+                - cell "-" [ref=f6e414]
+                - cell [ref=f6e415]:
+                  - generic [ref=f6e416]:
+                    - button "Acquire - Move to Collection" [ref=f6e417] [cursor=pointer]
+                    - button [ref=f6e419] [cursor=pointer]
+                    - button [ref=f6e422] [cursor=pointer]
+              - row [ref=f6e426]:
+                - cell "Goblin Matron" [ref=f6e427]
+                - cell "-" [ref=f6e428]
+                - cell "1" [ref=f6e429]
+                - cell "$0.00" [ref=f6e430]
+                - cell "$0.89" [ref=f6e431]
+                - cell "-" [ref=f6e432]
+                - cell "Medium" [ref=f6e433]
+                - cell "-" [ref=f6e437]
+                - cell [ref=f6e438]:
+                  - generic [ref=f6e439]:
+                    - button "Acquire - Move to Collection" [ref=f6e440] [cursor=pointer]
+                    - button [ref=f6e442] [cursor=pointer]
+                    - button [ref=f6e445] [cursor=pointer]
+              - row [ref=f6e449]:
+                - cell "Goblin Recruiter" [ref=f6e450]
+                - cell "-" [ref=f6e451]
+                - cell "1" [ref=f6e452]
+                - cell "$0.00" [ref=f6e453]
+                - cell "$6.46" [ref=f6e454]
+                - cell "-" [ref=f6e455]
+                - cell "Medium" [ref=f6e456]
+                - cell "-" [ref=f6e460]
+                - cell [ref=f6e461]:
+                  - generic [ref=f6e462]:
+                    - button "Acquire - Move to Collection" [ref=f6e463] [cursor=pointer]
+                    - button [ref=f6e465] [cursor=pointer]
+                    - button [ref=f6e468] [cursor=pointer]
+              - row [ref=f6e472]:
+                - cell "Goblin Ringleader" [ref=f6e473]
+                - cell "-" [ref=f6e474]
+                - cell "1" [ref=f6e475]
+                - cell "$0.00" [ref=f6e476]
+                - cell "$0.65" [ref=f6e477]
+                - cell "-" [ref=f6e478]
+                - cell "Medium" [ref=f6e479]
+                - cell "-" [ref=f6e483]
+                - cell [ref=f6e484]:
+                  - generic [ref=f6e485]:
+                    - button "Acquire - Move to Collection" [ref=f6e486] [cursor=pointer]
+                    - button [ref=f6e488] [cursor=pointer]
+                    - button [ref=f6e491] [cursor=pointer]
+              - row [ref=f6e495]:
+                - cell "Iona, Shield of Emeria" [ref=f6e496]
+                - cell "-" [ref=f6e497]
+                - cell "1" [ref=f6e498]
+                - cell "$0.00" [ref=f6e499]
+                - cell "$13.29" [ref=f6e500]
+                - cell "-" [ref=f6e501]
+                - cell "Medium" [ref=f6e502]
+                - cell "-" [ref=f6e506]
+                - cell [ref=f6e507]:
+                  - generic [ref=f6e508]:
+                    - button "Acquire - Move to Collection" [ref=f6e509] [cursor=pointer]
+                    - button [ref=f6e511] [cursor=pointer]
+                    - button [ref=f6e514] [cursor=pointer]
+              - row [ref=f6e518]:
+                - cell "Mana Echoes" [ref=f6e519]
+                - cell "-" [ref=f6e520]
+                - cell "1" [ref=f6e521]
+                - cell "$0.00" [ref=f6e522]
+                - cell "$59.97" [ref=f6e523]
+                - cell "-" [ref=f6e524]
+                - cell "Medium" [ref=f6e525]
+                - cell "-" [ref=f6e529]
+                - cell [ref=f6e530]:
+                  - generic [ref=f6e531]:
+                    - button "Acquire - Move to Collection" [ref=f6e532] [cursor=pointer]
+                    - button [ref=f6e534] [cursor=pointer]
+                    - button [ref=f6e537] [cursor=pointer]
+              - row [ref=f6e541]:
+                - cell "Master of Cruelties" [ref=f6e542]
+                - cell "-" [ref=f6e543]
+                - cell "1" [ref=f6e544]
+                - cell "$0.00" [ref=f6e545]
+                - cell "$5.57" [ref=f6e546]
+                - cell "-" [ref=f6e547]
+                - cell "Medium" [ref=f6e548]
+                - cell "-" [ref=f6e552]
+                - cell [ref=f6e553]:
+                  - generic [ref=f6e554]:
+                    - button "Acquire - Move to Collection" [ref=f6e555] [cursor=pointer]
+                    - button [ref=f6e557] [cursor=pointer]
+                    - button [ref=f6e560] [cursor=pointer]
+              - row [ref=f6e564]:
+                - cell "Pawn of Ulamog" [ref=f6e565]
+                - cell "Commander 2017" [ref=f6e566]
+                - cell "1" [ref=f6e567]
+                - cell "$0.00" [ref=f6e568]
+                - cell "$0.51" [ref=f6e569]
+                - cell "-" [ref=f6e570]
+                - cell "Medium" [ref=f6e571]
+                - cell "Added from Combo Finder" [ref=f6e575]
+                - cell [ref=f6e576]:
+                  - generic [ref=f6e577]:
+                    - button "Acquire - Move to Collection" [ref=f6e578] [cursor=pointer]
+                    - button [ref=f6e580] [cursor=pointer]
+                    - button [ref=f6e583] [cursor=pointer]
+              - row [ref=f6e587]:
+                - cell "Purphoros, God of the Forge" [ref=f6e588]
+                - cell "-" [ref=f6e589]
+                - cell "1" [ref=f6e590]
+                - cell "$0.00" [ref=f6e591]
+                - cell "$33.82" [ref=f6e592]
+                - cell "-" [ref=f6e593]
+                - cell "Medium" [ref=f6e594]
+                - cell "-" [ref=f6e598]
+                - cell [ref=f6e599]:
+                  - generic [ref=f6e600]:
+                    - button "Acquire - Move to Collection" [ref=f6e601] [cursor=pointer]
+                    - button [ref=f6e603] [cursor=pointer]
+                    - button [ref=f6e606] [cursor=pointer]
+              - row [ref=f6e610]:
+                - cell "Reassembling Skeleton" [ref=f6e611]
+                - 'cell "Tarkir: Dragonstorm Commander" [ref=f6e612]'
+                - cell "1" [ref=f6e613]
+                - cell "$0.00" [ref=f6e614]
+                - cell "$0.37" [ref=f6e615]
+                - cell "-" [ref=f6e616]
+                - cell "Medium" [ref=f6e617]
+                - cell "Added from Combo Finder" [ref=f6e621]
+                - cell [ref=f6e622]:
+                  - generic [ref=f6e623]:
+                    - button "Acquire - Move to Collection" [ref=f6e624] [cursor=pointer]
+                    - button [ref=f6e626] [cursor=pointer]
+                    - button [ref=f6e629] [cursor=pointer]
+              - row [ref=f6e633]:
+                - cell "Shared Animosity" [ref=f6e634]
+                - cell "-" [ref=f6e635]
+                - cell "1" [ref=f6e636]
+                - cell "$0.00" [ref=f6e637]
+                - cell "$2.82" [ref=f6e638]
+                - cell "-" [ref=f6e639]
+                - cell "Medium" [ref=f6e640]
+                - cell "-" [ref=f6e644]
+                - cell [ref=f6e645]:
+                  - generic [ref=f6e646]:
+                    - button "Acquire - Move to Collection" [ref=f6e647] [cursor=pointer]
+                    - button [ref=f6e649] [cursor=pointer]
+                    - button [ref=f6e652] [cursor=pointer]
+              - row [ref=f6e656]:
+                - cell "Sneak Attack" [ref=f6e657]
+                - cell "-" [ref=f6e658]
+                - cell "1" [ref=f6e659]
+                - cell "$0.00" [ref=f6e660]
+                - cell "$11.18" [ref=f6e661]
+                - cell "-" [ref=f6e662]
+                - cell "Medium" [ref=f6e663]
+                - cell "-" [ref=f6e667]
+                - cell [ref=f6e668]:
+                  - generic [ref=f6e669]:
+                    - button "Acquire - Move to Collection" [ref=f6e670] [cursor=pointer]
+                    - button [ref=f6e672] [cursor=pointer]
+                    - button [ref=f6e675] [cursor=pointer]
+              - row [ref=f6e679]:
+                - cell "Utvara Hellkite" [ref=f6e680]
+                - cell "-" [ref=f6e681]
+                - cell "1" [ref=f6e682]
+                - cell "$0.00" [ref=f6e683]
+                - cell "$17.86" [ref=f6e684]
+                - cell "-" [ref=f6e685]
+                - cell "Medium" [ref=f6e686]
+                - cell "-" [ref=f6e690]
+                - cell [ref=f6e691]:
+                  - generic [ref=f6e692]:
+                    - button "Acquire - Move to Collection" [ref=f6e693] [cursor=pointer]
+                    - button [ref=f6e695] [cursor=pointer]
+                    - button [ref=f6e698] [cursor=pointer]

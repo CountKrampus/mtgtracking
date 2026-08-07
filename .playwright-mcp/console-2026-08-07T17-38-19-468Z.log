@@ -1,0 +1,13 @@
+[     381ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/static/js/bundle.js:96588
+[   20891ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5000/api/admin/spam-config:0
+[   20892ms] [ERROR] Error fetching spam config: Error: HTTP 401
+    at fetchConfig (http://localhost:3000/static/js/bundle.js:129250:33) @ http://localhost:3000/static/js/bundle.js:129258
+[   20892ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5000/api/forum/admin/flagged-posts:0
+[   20892ms] [ERROR] Error fetching flagged posts: Error: HTTP 401
+    at fetchFlaggedPosts (http://localhost:3000/static/js/bundle.js:129268:33) @ http://localhost:3000/static/js/bundle.js:129271
+[   20892ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5000/api/admin/spam-config:0
+[   20892ms] [ERROR] Error fetching spam config: Error: HTTP 401
+    at fetchConfig (http://localhost:3000/static/js/bundle.js:129250:33) @ http://localhost:3000/static/js/bundle.js:129258
+[   20892ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5000/api/forum/admin/flagged-posts:0
+[   20892ms] [ERROR] Error fetching flagged posts: Error: HTTP 401
+    at fetchFlaggedPosts (http://localhost:3000/static/js/bundle.js:129268:33) @ http://localhost:3000/static/js/bundle.js:129271

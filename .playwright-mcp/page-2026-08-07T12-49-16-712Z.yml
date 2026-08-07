@@ -1,0 +1,127 @@
+- generic [ref=f18e3]:
+  - generic [ref=f18e5]:
+    - button "Notifications" [ref=f18e6] [cursor=pointer]
+    - button "Messages" [ref=f18e10] [cursor=pointer]
+    - button "creamkrampus Krampus" [ref=f18e13] [cursor=pointer]:
+      - img "creamkrampus" [ref=f18e14]
+      - generic [ref=f18e15]: Krampus
+  - generic [ref=f18e18]:
+    - generic [ref=f18e20]:
+      - generic [ref=f18e23]:
+        - heading "MTG Tracker" [level=1] [ref=f18e24]
+        - paragraph [ref=f18e25]: Collection Manager
+      - generic [ref=f18e226]:
+        - generic [ref=f18e227]: K
+        - generic [ref=f18e228]:
+          - paragraph [ref=f18e229]: Krampus
+          - text: admin
+      - generic [ref=f18e26]:
+        - button "Navigation" [ref=f18e27] [cursor=pointer]
+        - button "Dashboard" [ref=f18e31] [cursor=pointer]
+        - button "Collection" [ref=f18e36] [cursor=pointer]
+        - button "Deck Builder" [ref=f18e41] [cursor=pointer]
+        - button "Wishlist" [ref=f18e47] [cursor=pointer]
+        - button "Trading Board" [ref=f18e51] [cursor=pointer]
+        - button "Challenges" [ref=f18e56] [cursor=pointer]
+        - button "Forum" [ref=f18e64] [cursor=pointer]
+        - button "Community Decks" [ref=f18e68] [cursor=pointer]
+        - button "Life Counter" [ref=f18e73] [cursor=pointer]
+        - button "Settings" [ref=f18e80] [cursor=pointer]
+        - button "Actions" [ref=f18e85] [cursor=pointer]
+        - button "Import" [ref=f18e89] [cursor=pointer]
+        - button "Export JSON" [ref=f18e94] [cursor=pointer]
+        - button "Export CSV" [ref=f18e99] [cursor=pointer]
+        - button "Update Prices" [ref=f18e104] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f18e111] [cursor=pointer]
+        - button "Tools" [ref=f18e118] [cursor=pointer]
+        - button "Commanders" [ref=f18e122] [cursor=pointer]
+        - button "Sets" [ref=f18e126] [cursor=pointer]
+        - button "Combos" [ref=f18e130] [cursor=pointer]
+        - button "Finance" [ref=f18e134] [cursor=pointer]
+        - button "Scan Card" [ref=f18e138] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f18e143] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f18e148] [cursor=pointer]
+        - button "Spoiler Season" [ref=f18e152] [cursor=pointer]
+        - button "Learn" [ref=f18e157] [cursor=pointer]
+        - button "Card Rulings" [ref=f18e161] [cursor=pointer]
+        - button "Interaction Checker" [ref=f18e166] [cursor=pointer]
+        - button "New Player Guide" [ref=f18e170] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f18e175] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f18e180] [cursor=pointer]
+        - button "Format Guides" [ref=f18e184] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f18e192] [cursor=pointer]
+        - button "Gameplay" [ref=f18e198] [cursor=pointer]
+        - generic [ref=f18e230]: Admin
+        - button "Admin Panel" [ref=f18e231] [cursor=pointer]
+      - generic [ref=f18e235]:
+        - button "Account" [ref=f18e236] [cursor=pointer]
+        - button "Sign Out" [ref=f18e241] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f18e203] [cursor=pointer]:
+        - generic [ref=f18e206]: Command Palette
+        - generic [ref=f18e207]: Ctrl+K
+      - button "Collapse" [ref=f18e209] [cursor=pointer]
+    - main [ref=f18e213]:
+      - generic [ref=f18e214]:
+        - navigation [ref=f18e215]:
+          - button "Home" [ref=f18e216] [cursor=pointer]
+          - generic [ref=f18e223]: Deck Builder
+        - generic [ref=f18e247]:
+          - generic [ref=f18e248]:
+            - generic [ref=f18e249]:
+              - heading "My Decks" [level=2] [ref=f18e250]
+              - generic [ref=f18e251]:
+                - button "📁 Mono-Colored ▾" [active] [ref=f18e315] [cursor=pointer]
+                - generic [ref=f18e342]:
+                  - generic [ref=f18e343] [cursor=pointer]:
+                    - generic [ref=f18e344]: 🗂
+                    - generic [ref=f18e345]: Uncategorised decks
+                    - generic [ref=f18e346]: "1"
+                  - generic [ref=f18e349] [cursor=pointer]:
+                    - generic [ref=f18e350]: 📁
+                    - generic [ref=f18e351]: Dual-Color
+                    - generic [ref=f18e352]: "1"
+                  - generic [ref=f18e354] [cursor=pointer]:
+                    - generic [ref=f18e355]: 📁
+                    - generic [ref=f18e356]: Mono-Colored
+                    - generic [ref=f18e357]: "2"
+                  - generic [ref=f18e359] [cursor=pointer]:
+                    - generic [ref=f18e360]: 📁
+                    - generic [ref=f18e361]: Tri-Color
+                    - generic [ref=f18e362]: "5"
+                  - generic [ref=f18e364] [cursor=pointer]:
+                    - generic [ref=f18e365]: 📁
+                    - generic [ref=f18e366]: Want to Build
+                    - generic [ref=f18e367]: "2"
+                  - generic [ref=f18e369]:
+                    - generic [ref=f18e370]: 📁
+                    - textbox "New folder…" [ref=f18e371]
+            - generic [ref=f18e253]:
+              - button "Calculate Sleeves" [ref=f18e254] [cursor=pointer]
+              - button "Find Staples" [ref=f18e255] [cursor=pointer]
+              - button "New Deck" [ref=f18e256] [cursor=pointer]
+              - button "Import Deck" [ref=f18e258] [cursor=pointer]
+          - generic [ref=f18e316]:
+            - button "Uncategorised decks" [ref=f18e317] [cursor=pointer]
+            - generic [ref=f18e318]: ›
+            - button "Mono-Colored" [ref=f18e319] [cursor=pointer]
+          - generic [ref=f18e262]:
+            - generic [ref=f18e372] [cursor=pointer]:
+              - img "Gollum, Patient Plotter" [ref=f18e374]
+              - generic [ref=f18e375]:
+                - heading "Black Gollum" [level=3] [ref=f18e376]
+                - generic [ref=f18e377]: Commander
+              - generic [ref=f18e378]: "Commander: Gollum, Patient Plotter"
+              - generic [ref=f18e379]:
+                - generic [ref=f18e380]: 100 cards
+                - generic [ref=f18e381]: $0.00
+              - button "Delete" [ref=f18e382]
+            - generic [ref=f18e383] [cursor=pointer]:
+              - img "Krenko, Mob Boss" [ref=f18e385]
+              - generic [ref=f18e386]:
+                - heading "Krenko, Mob Boss" [level=3] [ref=f18e387]
+                - generic [ref=f18e388]: Commander
+              - generic [ref=f18e389]: "Commander: Krenko, Mob Boss"
+              - generic [ref=f18e390]:
+                - generic [ref=f18e391]: 100 cards
+                - generic [ref=f18e392]: $0.00
+              - button "Delete" [ref=f18e393]

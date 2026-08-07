@@ -1,0 +1,276 @@
+[      22ms] [LOG] [FAST CONNECT] wss://gateway.discord.gg/?encoding=json&v=9&compress=zlib-stream, encoding: json, version: 9 @ https://discord.com/settings/account:28
+[     236ms] [LOG] [FAST CONNECT] sending identify @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[     657ms] [INFO] %c[libdiscore] 
+font-weight: bold;
+color: purple;
+ [experiment_manager] Loaded experiments from cache @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[     692ms] [LOG] %c[ProcessUtilsElectron] 
+font-weight: bold;
+color: purple;
+ setMemoryInformation not available. @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[     765ms] [LOG] %c[default] 
+font-weight: bold;
+color: purple;
+ [BUILD INFO] Release Channel: stable, Build Number: 586111, Version Hash: 44799e375aefe9a37ba68e954de479ee847281ec @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[     766ms] [LOG] AppCrashedFatalReport: getLastCrash not supported. @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[     801ms] [INFO] %c[libdiscore] 
+font-weight: bold;
+color: purple;
+ The answer for life the universe and everything is: 42 @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[     878ms] [INFO] %c[GatewaySocket] 
+font-weight: bold;
+color: purple;
+ [CONNECT] wss://gateway.discord.gg, encoding: json, version: 9, compression: zlib-stream @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[     879ms] [LOG] %c[GatewaySocket] 
+font-weight: bold;
+color: purple;
+ [FAST CONNECT] successfully took over websocket, state: {open: true, identify: true, gateway: wss://gateway.discord.gg/?encoding=json&v=9&compress=zlib-stream, messages: 4} @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[     879ms] [INFO] %c[GatewaySocket] 
+font-weight: bold;
+color: purple;
+ [CONNECTED] wss://gateway.discord.gg/?encoding=json&v=9&compress=zlib-stream in 0 ms @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[     886ms] [INFO] %c[GatewaySocket] 
+font-weight: bold;
+color: purple;
+ [READY] took 8ms, as 02f43a324f4d71d80ac140c29e01795b @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[     887ms] [INFO] %c[GatewaySocket] 
+font-weight: bold;
+color: purple;
+ [READY_SUPPLEMENTAL] took 9ms @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[     899ms] [LOG] %c[Flux] 
+font-weight: bold;
+color: purple;
+ Dispatching CONNECTION_OPEN @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[     902ms] [LOG] %c[DatabaseManager] 
+font-weight: bold;
+color: purple;
+ removing database (user: 389971222806396939, database: undefined) @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    2919ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:6463/?v=1' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ https://discord.com/assets/web.505415119e321976.js:65
+[    2931ms] [INFO] %c[OverlayKeybindExperimentManager] 
+font-weight: bold;
+color: purple;
+ Experiments initializing... @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    2937ms] [INFO] %c[OverlayKeybindExperimentManager] 
+font-weight: bold;
+color: purple;
+ Experiments initialized @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    3217ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://discord.com/api/v9/users/@me/affinities/v2/users:0
+[    3219ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://discord.com/api/v9/users/@me/referrals/eligibility:0
+[    3293ms] [INFO] %c[SignalHelpers.web] 
+font-weight: bold;
+color: purple;
+ signalAllAcceptedCredentials {rpId: discord.com, encodedUserId: MPMD-4wmT1MFaXTC0AAACw, allAcceptedCredentialIds: Array(0)} @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    3337ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Updating userContent with delay 0 @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    3339ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Scheduling save from markDirty @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    3364ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Updating userContent with delay 0 @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    3391ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Persisting proto @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    3393ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Updating localization with delay 0 @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    3869ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://discord.com/api/v9/users/@me/affinities/v2/users:0
+[    3895ms] [INFO] %c[LibDaveManager] 
+font-weight: bold;
+color: purple;
+ DAVE loaded @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    3895ms] [INFO] %c[LibDaveManager] 
+font-weight: bold;
+color: purple;
+ Successfully initialized DAVE @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    3895ms] [INFO] %c[MediaEngineWebRTC] 
+font-weight: bold;
+color: purple;
+ Successfully initialized DAVE, version: 1 @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    4156ms] [ERROR] Could not find a View Model linked to Artboard BaseGlowRemapped. @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    4158ms] [ERROR] Could not find a View Model linked to Artboard BaseGlowRemapped. @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    4970ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:6464/?v=1' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ https://discord.com/assets/web.505415119e321976.js:65
+[    5404ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Updating userContent with delay 0 @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    5405ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Scheduling save from markDirty @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    5406ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Persisting proto @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    5927ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Updating userContent with delay 0 @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    5928ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Scheduling save from markDirty @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    5948ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Persisting proto @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    7017ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:6465/?v=1' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ https://discord.com/assets/web.505415119e321976.js:65
+[    8268ms] [LOG] %c[MessageActionCreators] 
+font-weight: bold;
+color: purple;
+ Fetching messages for 391839377803968516 between undefined and undefined. jump={"jumpType":"ANIMATED"} @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    8345ms] [LOG] %c[Routing/Utils] 
+font-weight: bold;
+color: purple;
+ transitionTo - Transitioning to /channels/391839377803968513/391839377803968516 @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    8443ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Updating userContent with delay 0 @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    8444ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Scheduling save from markDirty @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    8464ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Persisting proto @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    8581ms] [INFO] %c[SignalHelpers.web] 
+font-weight: bold;
+color: purple;
+ signalCurrentUserDetails {rpId: discord.com, userId: MPMD-4wmT1MFaXTC0AAACw, name: jumper1@asia.com, displayName: countkrampus6297} @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    8944ms] [LOG] %c[MessageActionCreators] 
+font-weight: bold;
+color: purple;
+ Fetched 2 messages for 391839377803968516 isBefore:false isAfter:false @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    8946ms] [INFO] %c[ChannelMessages] 
+font-weight: bold;
+color: purple;
+ loadComplete: resetting state for channelId=391839377803968516, sending.length=0 @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[    9072ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:6466/?v=1' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ https://discord.com/assets/web.505415119e321976.js:65
+[   11123ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:6467/?v=1' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ https://discord.com/assets/web.505415119e321976.js:65
+[   12301ms] [LOG] %c[discord_protos.discord_users.v1.FrecencyUserSettings] 
+font-weight: bold;
+color: purple;
+ Loading proto @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[   12838ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://discord.com/api/v9/users/368146931303710730/application-identities?with_profiles=true:0
+[   12842ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://discord.com/api/v9/users/368146931303710730/profile?type=popout&with_mutual_guilds=true&with_mutual_friends=true&with_mutual_friends_count=false&guild_id=391839377803968513:0
+[   12842ms] [WARNING] %c[UserProfileModalActionCreators] 
+font-weight: bold;
+color: purple;
+ fetchProfile error: 10013 - Unknown User @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[   12868ms] HTTPResponseError: GET /users/xxx/profile [404]
+    at https://discord.com/assets/web.505415119e321976.js:168:23899
+[   13148ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://discord.com/api/v9/users/@me/notes/368146931303710730:0
+[   13172ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:6468/?v=1' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ https://discord.com/assets/web.505415119e321976.js:65
+[   13264ms] [INFO] %c[libdiscore] 
+font-weight: bold;
+color: purple;
+ [BlockedDomainsStore] Successfully fetched blocked domains @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[   15229ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:6469/?v=1' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ https://discord.com/assets/web.505415119e321976.js:65
+[   16533ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Updating userContent with delay 0 @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[   16535ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Scheduling save from markDirty @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[   16552ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Persisting proto @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[   17275ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:6470/?v=1' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ https://discord.com/assets/web.505415119e321976.js:65
+[   19328ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:6471/?v=1' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ https://discord.com/assets/web.505415119e321976.js:65
+[   19540ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://discord.com/api/v9/users/368146931303710730/profile?type=popout&with_mutual_guilds=true&with_mutual_friends=true&with_mutual_friends_count=false&guild_id=391839377803968513:0
+[   19540ms] [WARNING] %c[UserProfileModalActionCreators] 
+font-weight: bold;
+color: purple;
+ fetchProfile error: 10013 - Unknown User @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[   19563ms] HTTPResponseError: GET /users/xxx/profile [404]
+    at https://discord.com/assets/web.505415119e321976.js:168:23899
+[   19630ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://discord.com/api/v9/users/368146931303710730/application-identities?with_profiles=true:0
+[   21380ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:6472/?v=1' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ https://discord.com/assets/web.505415119e321976.js:65
+[   24327ms] [WARNING] The resource https://discord.com/assets/189422196a4f8b53.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   24328ms] [WARNING] The resource https://discord.com/assets/ce3b8055f5114434.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   24328ms] [WARNING] The resource https://discord.com/assets/cb2006dbced0e246.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   24328ms] [WARNING] The resource https://discord.com/assets/7a6a566c2e88a35d.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   24328ms] [WARNING] The resource https://discord.com/assets/e52f0cba712e2fb4.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   24328ms] [WARNING] The resource https://discord.com/assets/dd24010f3cf7def7.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   36003ms] [WARNING] The resource https://discord.com/assets/189422196a4f8b53.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   36003ms] [WARNING] The resource https://discord.com/assets/ce3b8055f5114434.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   36003ms] [WARNING] The resource https://discord.com/assets/cb2006dbced0e246.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   36003ms] [WARNING] The resource https://discord.com/assets/7a6a566c2e88a35d.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   36003ms] [WARNING] The resource https://discord.com/assets/e52f0cba712e2fb4.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   36003ms] [WARNING] The resource https://discord.com/assets/dd24010f3cf7def7.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   39509ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://discord.com/api/v9/users/@me/mfa/webauthn/credentials:0
+[   42572ms] [WARNING] The resource https://discord.com/assets/189422196a4f8b53.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   42572ms] [WARNING] The resource https://discord.com/assets/ce3b8055f5114434.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   42572ms] [WARNING] The resource https://discord.com/assets/cb2006dbced0e246.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   42572ms] [WARNING] The resource https://discord.com/assets/7a6a566c2e88a35d.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   42572ms] [WARNING] The resource https://discord.com/assets/e52f0cba712e2fb4.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   42572ms] [WARNING] The resource https://discord.com/assets/dd24010f3cf7def7.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   50428ms] [WARNING] The resource https://discord.com/assets/189422196a4f8b53.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   50428ms] [WARNING] The resource https://discord.com/assets/ce3b8055f5114434.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   50428ms] [WARNING] The resource https://discord.com/assets/cb2006dbced0e246.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   50428ms] [WARNING] The resource https://discord.com/assets/7a6a566c2e88a35d.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   50428ms] [WARNING] The resource https://discord.com/assets/e52f0cba712e2fb4.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   50428ms] [WARNING] The resource https://discord.com/assets/dd24010f3cf7def7.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   67058ms] [INFO] %c[SignalHelpers.web] 
+font-weight: bold;
+color: purple;
+ signalCurrentUserDetails {rpId: discord.com, userId: MPMD-4wmT1MFaXTC0AAACw, name: jumper1@asia.com, displayName: countkrampus6297} @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[   70061ms] [WARNING] The resource https://discord.com/assets/189422196a4f8b53.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   70061ms] [WARNING] The resource https://discord.com/assets/ce3b8055f5114434.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   70061ms] [WARNING] The resource https://discord.com/assets/cb2006dbced0e246.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   70061ms] [WARNING] The resource https://discord.com/assets/7a6a566c2e88a35d.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   70061ms] [WARNING] The resource https://discord.com/assets/e52f0cba712e2fb4.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   70062ms] [WARNING] The resource https://discord.com/assets/dd24010f3cf7def7.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   78562ms] [WARNING] The resource https://discord.com/assets/189422196a4f8b53.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   78562ms] [WARNING] The resource https://discord.com/assets/ce3b8055f5114434.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   78562ms] [WARNING] The resource https://discord.com/assets/cb2006dbced0e246.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   78562ms] [WARNING] The resource https://discord.com/assets/7a6a566c2e88a35d.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   78562ms] [WARNING] The resource https://discord.com/assets/e52f0cba712e2fb4.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   78562ms] [WARNING] The resource https://discord.com/assets/dd24010f3cf7def7.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   80394ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Updating textAndImages with delay 0 @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[   80396ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Scheduling save from markDirty @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[   80402ms] [LOG] %c[discord_protos.discord_users.v1.PreloadedUserSettings] 
+font-weight: bold;
+color: purple;
+ Persisting proto @ https://discord.com/assets/24159.16f64d32f019fb82.js:464
+[   83555ms] [WARNING] The resource https://discord.com/assets/189422196a4f8b53.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   83555ms] [WARNING] The resource https://discord.com/assets/ce3b8055f5114434.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   83555ms] [WARNING] The resource https://discord.com/assets/cb2006dbced0e246.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   83555ms] [WARNING] The resource https://discord.com/assets/7a6a566c2e88a35d.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   83555ms] [WARNING] The resource https://discord.com/assets/e52f0cba712e2fb4.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   83555ms] [WARNING] The resource https://discord.com/assets/dd24010f3cf7def7.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   90521ms] [WARNING] The resource https://discord.com/assets/189422196a4f8b53.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   90521ms] [WARNING] The resource https://discord.com/assets/ce3b8055f5114434.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   90521ms] [WARNING] The resource https://discord.com/assets/cb2006dbced0e246.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   90521ms] [WARNING] The resource https://discord.com/assets/7a6a566c2e88a35d.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   90521ms] [WARNING] The resource https://discord.com/assets/e52f0cba712e2fb4.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   90521ms] [WARNING] The resource https://discord.com/assets/dd24010f3cf7def7.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   94318ms] [WARNING] The resource https://discord.com/assets/189422196a4f8b53.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   94318ms] [WARNING] The resource https://discord.com/assets/ce3b8055f5114434.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   94318ms] [WARNING] The resource https://discord.com/assets/cb2006dbced0e246.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   94318ms] [WARNING] The resource https://discord.com/assets/7a6a566c2e88a35d.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   94318ms] [WARNING] The resource https://discord.com/assets/e52f0cba712e2fb4.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[   94318ms] [WARNING] The resource https://discord.com/assets/dd24010f3cf7def7.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[  100072ms] [WARNING] The resource https://discord.com/assets/189422196a4f8b53.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[  100072ms] [WARNING] The resource https://discord.com/assets/ce3b8055f5114434.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[  100072ms] [WARNING] The resource https://discord.com/assets/cb2006dbced0e246.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[  100072ms] [WARNING] The resource https://discord.com/assets/7a6a566c2e88a35d.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[  100072ms] [WARNING] The resource https://discord.com/assets/e52f0cba712e2fb4.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0
+[  100072ms] [WARNING] The resource https://discord.com/assets/dd24010f3cf7def7.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://discord.com/channels/391839377803968513/391839377803968516:0

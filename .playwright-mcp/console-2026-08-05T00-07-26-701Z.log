@@ -1,0 +1,24 @@
+[      93ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/static/js/bundle.js:96554
+[     155ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/locations:0
+[     155ms] [ERROR] Error fetching locations: AxiosError @ http://localhost:3000/static/js/bundle.js:160079
+[     155ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/wishlist:0
+[     156ms] [ERROR] Error fetching wishlist: AxiosError @ http://localhost:3000/static/js/bundle.js:160795
+[     156ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/tags:0
+[     156ms] [ERROR] Error fetching tags: AxiosError @ http://localhost:3000/static/js/bundle.js:160162
+[     156ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/locations:0
+[     156ms] [ERROR] Error fetching locations: AxiosError @ http://localhost:3000/static/js/bundle.js:160079
+[     157ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/wishlist:0
+[     157ms] [ERROR] Error fetching wishlist: AxiosError @ http://localhost:3000/static/js/bundle.js:160795
+[     181ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/tags:0
+[     181ms] [ERROR] Error fetching tags: AxiosError @ http://localhost:3000/static/js/bundle.js:160162
+[     182ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/cards:0
+[     182ms] [ERROR] Error fetching cards: AxiosError @ http://localhost:3000/static/js/bundle.js:159463
+[     182ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/cards:0
+[     182ms] [ERROR] Error fetching cards: AxiosError @ http://localhost:3000/static/js/bundle.js:159463
+[     295ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/dashboard:0
+[ 1822201ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/stats/price-changes:0
+[ 1822205ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/lifecounter/stats:0
+[ 1822208ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/stats/value-history:0
+[ 1822223ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/stats/price-changes:0
+[ 1822243ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/lifecounter/stats:0
+[ 1822243ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/stats/value-history:0

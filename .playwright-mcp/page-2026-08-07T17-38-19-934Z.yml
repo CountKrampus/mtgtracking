@@ -1,0 +1,96 @@
+- generic [ref=f24e3]:
+  - generic [ref=f24e5]:
+    - button "Notifications" [ref=f24e6] [cursor=pointer]
+    - button "Messages" [ref=f24e10] [cursor=pointer]
+    - button "Send Feedback" [ref=f24e13] [cursor=pointer]
+    - button [ref=f24e16] [cursor=pointer]:
+      - img "creamkrampus" [ref=f24e17]
+  - generic [ref=f24e20]:
+    - button [ref=f24e21] [cursor=pointer]
+    - generic [ref=f24e24]:
+      - generic [ref=f24e26]:
+        - generic [ref=f24e27]:
+          - heading "MTG Tracker" [level=1] [ref=f24e28]
+          - paragraph [ref=f24e29]: Collection Manager
+        - button [ref=f24e30] [cursor=pointer]
+      - generic [ref=f24e35]:
+        - generic [ref=f24e36]: K
+        - generic [ref=f24e37]:
+          - paragraph [ref=f24e38]: Krampus
+          - text: admin
+      - generic [ref=f24e39]:
+        - button "Navigation" [ref=f24e40] [cursor=pointer]
+        - button "Dashboard" [ref=f24e44] [cursor=pointer]
+        - button "Collection" [ref=f24e49] [cursor=pointer]
+        - button "Deck Builder" [ref=f24e54] [cursor=pointer]
+        - button "Wishlist" [ref=f24e60] [cursor=pointer]
+        - button "Trading Board" [ref=f24e64] [cursor=pointer]
+        - button "Challenges" [ref=f24e69] [cursor=pointer]
+        - button "Forum" [ref=f24e77] [cursor=pointer]
+        - button "Community Decks" [ref=f24e81] [cursor=pointer]
+        - button "Life Counter" [ref=f24e86] [cursor=pointer]
+        - button "Settings" [ref=f24e93] [cursor=pointer]
+        - button "Actions" [ref=f24e98] [cursor=pointer]
+        - button "Import" [ref=f24e102] [cursor=pointer]
+        - button "Export JSON" [ref=f24e107] [cursor=pointer]
+        - button "Export CSV" [ref=f24e112] [cursor=pointer]
+        - button "Update Prices" [ref=f24e117] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f24e124] [cursor=pointer]
+        - button "Tools" [ref=f24e131] [cursor=pointer]
+        - button "Commanders" [ref=f24e135] [cursor=pointer]
+        - button "Sets" [ref=f24e139] [cursor=pointer]
+        - button "Combos" [ref=f24e143] [cursor=pointer]
+        - button "Finance" [ref=f24e147] [cursor=pointer]
+        - button "Scan Card" [ref=f24e151] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f24e156] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f24e161] [cursor=pointer]
+        - button "Spoiler Season" [ref=f24e165] [cursor=pointer]
+        - button "Learn" [ref=f24e170] [cursor=pointer]
+        - button "Card Rulings" [ref=f24e174] [cursor=pointer]
+        - button "Interaction Checker" [ref=f24e179] [cursor=pointer]
+        - button "New Player Guide" [ref=f24e183] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f24e188] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f24e193] [cursor=pointer]
+        - button "Format Guides" [ref=f24e197] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f24e205] [cursor=pointer]
+        - button "Gameplay" [ref=f24e211] [cursor=pointer]
+        - generic [ref=f24e215]: Admin
+        - button "Admin Panel" [ref=f24e216] [cursor=pointer]
+      - generic [ref=f24e220]:
+        - button "Account" [ref=f24e221] [cursor=pointer]
+        - button "Sign Out" [ref=f24e226] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f24e232] [cursor=pointer]:
+        - generic [ref=f24e235]: Command Palette
+        - generic [ref=f24e236]: Ctrl+K
+    - main [ref=f24e237]:
+      - generic [ref=f24e238]:
+        - navigation [ref=f24e239]:
+          - button "Home" [ref=f24e240] [cursor=pointer]
+          - generic [ref=f24e247]: Forum
+        - generic [ref=f24e250]:
+          - generic [ref=f24e251]:
+            - heading "Forum" [level=1] [ref=f24e252]
+            - textbox "Search threads..." [ref=f24e258]
+            - generic [ref=f24e259]:
+              - button "Forum Shop" [ref=f24e260] [cursor=pointer]
+              - button "🏛️ Forum Profile" [ref=f24e264] [cursor=pointer]
+              - button "Forum Admin" [ref=f24e265] [cursor=pointer]
+          - generic [ref=f24e269]:
+            - button "Categories" [ref=f24e270] [cursor=pointer]
+            - button "Feed" [ref=f24e271] [cursor=pointer]
+          - generic [ref=f24e273]:
+            - generic [ref=f24e274]:
+              - generic [ref=f24e275]:
+                - heading "Community Forum" [level=2] [ref=f24e276]
+                - paragraph [ref=f24e277]: Discussion for MTG players
+              - generic [ref=f24e278]:
+                - button "Leaderboard" [ref=f24e279] [cursor=pointer]
+                - button "New Thread" [ref=f24e282] [cursor=pointer]
+            - generic [ref=f24e284]: Loading categories...
+    - navigation [ref=f24e285]:
+      - generic [ref=f24e286]:
+        - button "Dashboard" [ref=f24e287] [cursor=pointer]
+        - button "Collection" [ref=f24e292] [cursor=pointer]
+        - button "Forum" [ref=f24e297] [cursor=pointer]
+        - button "Decks" [ref=f24e301] [cursor=pointer]
+        - button "More" [ref=f24e307] [cursor=pointer]

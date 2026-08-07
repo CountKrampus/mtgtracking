@@ -1,0 +1,1036 @@
+- generic [ref=f12e3]:
+  - generic [ref=f12e5]:
+    - button "Notifications" [ref=f12e6] [cursor=pointer]
+    - button "Messages" [ref=f12e10] [cursor=pointer]
+    - button "creamkrampus Krampus" [ref=f12e13] [cursor=pointer]:
+      - img "creamkrampus" [ref=f12e14]
+      - generic [ref=f12e15]: Krampus
+  - generic [ref=f12e18]:
+    - generic [ref=f12e20]:
+      - generic [ref=f12e23]:
+        - heading "MTG Tracker" [level=1] [ref=f12e24]
+        - paragraph [ref=f12e25]: Collection Manager
+      - generic [ref=f12e226]:
+        - generic [ref=f12e227]: K
+        - generic [ref=f12e228]:
+          - paragraph [ref=f12e229]: Krampus
+          - text: admin
+      - generic [ref=f12e26]:
+        - button "Navigation" [ref=f12e27] [cursor=pointer]
+        - button "Dashboard" [ref=f12e31] [cursor=pointer]
+        - button "Collection" [ref=f12e36] [cursor=pointer]
+        - button "Deck Builder" [ref=f12e41] [cursor=pointer]
+        - button "Wishlist" [ref=f12e47] [cursor=pointer]
+        - button "Trading Board" [ref=f12e51] [cursor=pointer]
+        - button "Challenges" [ref=f12e56] [cursor=pointer]
+        - button "Forum" [ref=f12e64] [cursor=pointer]
+        - button "Community Decks" [ref=f12e68] [cursor=pointer]
+        - button "Life Counter" [ref=f12e73] [cursor=pointer]
+        - button "Settings" [ref=f12e80] [cursor=pointer]
+        - button "Actions" [ref=f12e85] [cursor=pointer]
+        - button "Import" [ref=f12e89] [cursor=pointer]
+        - button "Export JSON" [ref=f12e94] [cursor=pointer]
+        - button "Export CSV" [ref=f12e99] [cursor=pointer]
+        - button "Update Prices" [ref=f12e104] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f12e111] [cursor=pointer]
+        - button "Tools" [ref=f12e118] [cursor=pointer]
+        - button "Commanders" [ref=f12e122] [cursor=pointer]
+        - button "Sets" [ref=f12e126] [cursor=pointer]
+        - button "Combos" [ref=f12e130] [cursor=pointer]
+        - button "Finance" [ref=f12e134] [cursor=pointer]
+        - button "Scan Card" [ref=f12e138] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f12e143] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f12e148] [cursor=pointer]
+        - button "Spoiler Season" [ref=f12e152] [cursor=pointer]
+        - button "Learn" [ref=f12e157] [cursor=pointer]
+        - button "Card Rulings" [ref=f12e161] [cursor=pointer]
+        - button "Interaction Checker" [ref=f12e166] [cursor=pointer]
+        - button "New Player Guide" [ref=f12e170] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f12e175] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f12e180] [cursor=pointer]
+        - button "Format Guides" [ref=f12e184] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f12e192] [cursor=pointer]
+        - button "Gameplay" [ref=f12e198] [cursor=pointer]
+        - generic [ref=f12e230]: Admin
+        - button "Admin Panel" [ref=f12e231] [cursor=pointer]
+      - generic [ref=f12e235]:
+        - button "Account" [ref=f12e236] [cursor=pointer]
+        - button "Sign Out" [ref=f12e241] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f12e203] [cursor=pointer]:
+        - generic [ref=f12e206]: Command Palette
+        - generic [ref=f12e207]: Ctrl+K
+      - button "Collapse" [ref=f12e209] [cursor=pointer]
+    - main [ref=f12e213]:
+      - generic [ref=f12e214]:
+        - navigation [ref=f12e215]:
+          - button "Home" [ref=f12e216] [cursor=pointer]
+          - generic [ref=f12e223]: Deck Builder
+        - generic [ref=f12e3113]:
+          - generic [ref=f12e3114]:
+            - generic [ref=f12e3115]:
+              - heading "Every changed when fire nation attacked. Ozai Phoenix 10+" [level=2] [ref=f12e3116]
+              - button "Rename" [ref=f12e3117] [cursor=pointer]
+            - generic [ref=f12e3118]:
+              - button "Edit Deck" [ref=f12e3119] [cursor=pointer]
+              - button "Export" [ref=f12e3120] [cursor=pointer]
+              - button "🔗 Share" [ref=f12e3121] [cursor=pointer]
+              - button "← Back" [ref=f12e3122] [cursor=pointer]
+          - generic [ref=f12e3123]:
+            - heading "Commander" [level=3] [ref=f12e3124]
+            - generic [ref=f12e3125]:
+              - img "Ozai, the Phoenix King" [ref=f12e3126]
+              - generic [ref=f12e3127]:
+                - generic [ref=f12e3128]: Ozai, the Phoenix King
+                - generic [ref=f12e3129]: "{2}{B}{B}{R}{R}"
+                - generic [ref=f12e3130]: Legendary Creature — Human Noble
+                - generic [ref=f12e3131]: Trample, firebending 4, haste If you would lose unspent mana, that mana becomes red instead. Ozai has flying and indestructible as long as you have six or more unspent mana.
+                - generic [ref=f12e3132]: 7/7
+                - generic [ref=f12e3133]: "\"Out of the ashes, a new world will be born.\""
+          - generic [ref=f12e3134]:
+            - generic [ref=f12e3135]:
+              - heading "Mana Curve" [level=3] [ref=f12e3136]
+              - generic [ref=f12e3137]:
+                - button "38 0" [ref=f12e3138] [cursor=pointer]:
+                  - generic [ref=f12e3139]: "38"
+                  - generic [ref=f12e3141]: "0"
+                - button "9 1" [ref=f12e3142] [cursor=pointer]:
+                  - generic [ref=f12e3143]: "9"
+                  - generic [ref=f12e3145]: "1"
+                - button "24 2" [ref=f12e3146] [cursor=pointer]:
+                  - generic [ref=f12e3147]: "24"
+                  - generic [ref=f12e3149]: "2"
+                - button "16 3" [ref=f12e3150] [cursor=pointer]:
+                  - generic [ref=f12e3151]: "16"
+                  - generic [ref=f12e3153]: "3"
+                - button "7 4" [ref=f12e3154] [cursor=pointer]:
+                  - generic [ref=f12e3155]: "7"
+                  - generic [ref=f12e3157]: "4"
+                - button "3 5" [ref=f12e3158] [cursor=pointer]:
+                  - generic [ref=f12e3159]: "3"
+                  - generic [ref=f12e3161]: "5"
+                - button "2 6" [ref=f12e3162] [cursor=pointer]:
+                  - generic [ref=f12e3163]: "2"
+                  - generic [ref=f12e3165]: "6"
+                - button "1 7+" [ref=f12e3166] [cursor=pointer]:
+                  - generic [ref=f12e3167]: "1"
+                  - generic [ref=f12e3169]: 7+
+              - generic [ref=f12e3170]: "Avg CMC: 2.52(click a bar to see cards)"
+            - generic [ref=f12e3171]:
+              - heading "Collection Ownership" [level=3] [ref=f12e3172]
+              - generic [ref=f12e3173]:
+                - generic [ref=f12e3174]:
+                  - generic [ref=f12e3175]: "Owned Cards:"
+                  - generic [ref=f12e3176]: 11/100
+                - generic [ref=f12e3177]:
+                  - generic [ref=f12e3178]: "Missing Cards:"
+                  - generic [ref=f12e3179]: "79"
+                - generic [ref=f12e3180]:
+                  - generic [ref=f12e3181]: "Completion:"
+                  - generic [ref=f12e3182]: 12%
+                - generic [ref=f12e3186]:
+                  - generic [ref=f12e3187]: "Owned Value:"
+                  - generic [ref=f12e3188]: $103.94
+          - generic [ref=f12e3189]:
+            - generic [ref=f12e3190]:
+              - heading "Color Distribution" [level=3] [ref=f12e3191]
+              - generic [ref=f12e3197]:
+                - generic [ref=f12e3198]:
+                  - generic [ref=f12e3200]: Black
+                  - generic [ref=f12e3201]: "23"
+                - generic [ref=f12e3202]:
+                  - generic [ref=f12e3204]: Red
+                  - generic [ref=f12e3205]: "30"
+                - generic [ref=f12e3206]:
+                  - generic [ref=f12e3208]: Colorless
+                  - generic [ref=f12e3209]: "14"
+            - generic [ref=f12e3210]:
+              - heading "Card Type Breakdown" [level=3] [ref=f12e3211]
+              - generic [ref=f12e3212]:
+                - generic [ref=f12e3214]:
+                  - generic [ref=f12e3215]: Land
+                  - generic [ref=f12e3216]:
+                    - text: "34"
+                    - generic [ref=f12e3217]: (33%)
+                - generic [ref=f12e3221]:
+                  - generic [ref=f12e3222]: Sorcery
+                  - generic [ref=f12e3223]:
+                    - text: "20"
+                    - generic [ref=f12e3224]: (19%)
+                - generic [ref=f12e3228]:
+                  - generic [ref=f12e3229]: Instant
+                  - generic [ref=f12e3230]:
+                    - text: "17"
+                    - generic [ref=f12e3231]: (16%)
+                - generic [ref=f12e3235]:
+                  - generic [ref=f12e3236]: Artifact
+                  - generic [ref=f12e3237]:
+                    - text: "17"
+                    - generic [ref=f12e3238]: (16%)
+                - generic [ref=f12e3242]:
+                  - generic [ref=f12e3243]: Creature
+                  - generic [ref=f12e3244]:
+                    - text: "11"
+                    - generic [ref=f12e3245]: (11%)
+                - generic [ref=f12e3249]:
+                  - generic [ref=f12e3250]: Enchantment
+                  - generic [ref=f12e3251]:
+                    - text: "5"
+                    - generic [ref=f12e3252]: (5%)
+          - generic [ref=f12e3255]:
+            - generic [ref=f12e3256]:
+              - generic [ref=f12e3257]: Smart Deck Score
+              - generic [ref=f12e3258]:
+                - generic [ref=f12e3259]: "57"
+                - generic [ref=f12e3260]: /100
+            - generic [ref=f12e3261]:
+              - button "Power 8" [ref=f12e3262] [cursor=pointer]:
+                - generic [ref=f12e3263]: Power
+                - generic [ref=f12e3264]: "8"
+              - button "Salt 18" [ref=f12e3265] [cursor=pointer]:
+                - generic [ref=f12e3266]: Salt
+                - generic [ref=f12e3267]: "18"
+              - button "Mana D" [ref=f12e3268] [cursor=pointer]:
+                - generic [ref=f12e3269]: Mana
+                - generic [ref=f12e3270]: D
+              - button "Health 52" [ref=f12e3271] [cursor=pointer]:
+                - generic [ref=f12e3272]: Health
+                - generic [ref=f12e3273]: "52"
+          - generic [ref=f12e3274]:
+            - heading "Recommendations" [level=3] [ref=f12e3275]
+            - generic [ref=f12e3276]:
+              - generic [ref=f12e3277]:
+                - button "ramp" [ref=f12e3278] [cursor=pointer]
+                - button "draw" [ref=f12e3279] [cursor=pointer]
+                - button "removal" [ref=f12e3280] [cursor=pointer]
+              - generic [ref=f12e3281]:
+                - button "My Collection" [ref=f12e3282] [cursor=pointer]
+                - button "All of Magic" [ref=f12e3283] [cursor=pointer]
+            - generic [ref=f12e3284]:
+              - generic [ref=f12e3285]:
+                - img "Evolving Wilds" [ref=f12e3286]
+                - generic [ref=f12e3287]:
+                  - heading "Evolving Wilds" [level=4] [ref=f12e3288]
+                  - button "+ Add to Deck" [ref=f12e3289] [cursor=pointer]
+              - generic [ref=f12e3290]:
+                - img "Solemn Simulacrum" [ref=f12e3291]
+                - generic [ref=f12e3292]:
+                  - heading "Solemn Simulacrum" [level=4] [ref=f12e3293]
+                  - button "+ Add to Deck" [ref=f12e3294] [cursor=pointer]
+              - generic [ref=f12e3295]:
+                - img "Commander's Sphere" [ref=f12e3296]
+                - generic [ref=f12e3297]:
+                  - heading "Commander's Sphere" [level=4] [ref=f12e3298]
+                  - button "+ Add to Deck" [ref=f12e3299] [cursor=pointer]
+              - generic [ref=f12e3300]:
+                - img "Ornithopter of Paradise" [ref=f12e3301]
+                - generic [ref=f12e3302]:
+                  - heading "Ornithopter of Paradise" [level=4] [ref=f12e3303]
+                  - button "+ Add to Deck" [ref=f12e3304] [cursor=pointer]
+              - generic [ref=f12e3305]:
+                - img "Demolition Field" [ref=f12e3306]
+                - generic [ref=f12e3307]:
+                  - heading "Demolition Field" [level=4] [ref=f12e3308]
+                  - button "+ Add to Deck" [ref=f12e3309] [cursor=pointer]
+              - generic [ref=f12e3310]:
+                - img "Springleaf Drum" [ref=f12e3311]
+                - generic [ref=f12e3312]:
+                  - heading "Springleaf Drum" [level=4] [ref=f12e3313]
+                  - button "+ Add to Deck" [ref=f12e3314] [cursor=pointer]
+              - generic [ref=f12e3315]:
+                - img "Krosan Verge" [ref=f12e3316]
+                - generic [ref=f12e3317]:
+                  - heading "Krosan Verge" [level=4] [ref=f12e3318]
+                  - button "+ Add to Deck" [ref=f12e3319] [cursor=pointer]
+              - generic [ref=f12e3320]:
+                - img "Prismatic Lens" [ref=f12e3321]
+                - generic [ref=f12e3322]:
+                  - heading "Prismatic Lens" [level=4] [ref=f12e3323]
+                  - button "+ Add to Deck" [ref=f12e3324] [cursor=pointer]
+              - generic [ref=f12e3325]:
+                - img "Bubbling Muck" [ref=f12e3326]
+                - generic [ref=f12e3327]:
+                  - heading "Bubbling Muck" [level=4] [ref=f12e3328]
+                  - button "+ Add to Deck" [ref=f12e3329] [cursor=pointer]
+          - generic [ref=f12e3331]:
+            - heading "Deck Evolution" [level=3] [ref=f12e3332]
+            - button "Show History" [ref=f12e3333] [cursor=pointer]
+          - generic [ref=f12e3334]:
+            - generic [ref=f12e3335]:
+              - heading "Deck Analysis" [level=3] [ref=f12e3336]
+              - generic [ref=f12e3337]:
+                - generic [ref=f12e3338]:
+                  - generic [ref=f12e3339]:
+                    - generic [ref=f12e3340]: Removal
+                    - generic [ref=f12e3341]: Critical
+                  - generic [ref=f12e3342]: "5"
+                  - generic [ref=f12e3343]: 10+ recommended
+                  - generic [ref=f12e3344]:
+                    - generic [ref=f12e3345]: Damnation
+                    - generic [ref=f12e3346]: Deflecting Swat
+                    - generic [ref=f12e3347]: Chaos Warp
+                    - generic [ref=f12e3348]: Deadly Rollick
+                    - generic [ref=f12e3349]: Blasphemous Act
+                - generic [ref=f12e3350]:
+                  - generic [ref=f12e3351]:
+                    - generic [ref=f12e3352]: Card Draw
+                    - generic [ref=f12e3353]: Critical
+                  - generic [ref=f12e3354]: "2"
+                  - generic [ref=f12e3355]: 8+ recommended
+                  - generic [ref=f12e3356]:
+                    - generic [ref=f12e3357]: Necropotence
+                    - generic [ref=f12e3358]: Wheel of Fortune
+                - generic [ref=f12e3359]:
+                  - generic [ref=f12e3360]:
+                    - generic [ref=f12e3361]: Ramp
+                    - generic [ref=f12e3362]: Low
+                  - generic [ref=f12e3363]: "8"
+                  - generic [ref=f12e3364]: 10+ recommended
+                  - generic [ref=f12e3365]:
+                    - generic [ref=f12e3366]: Arcane Signet
+                    - generic [ref=f12e3367]: Sol Ring
+                    - generic [ref=f12e3368]: Cabal Ritual
+                    - generic [ref=f12e3369]: Doubling Cube
+                    - generic [ref=f12e3370]: Mana Vault
+                    - generic [ref=f12e3371]: +3 more
+            - generic [ref=f12e3372]:
+              - heading "Missing Staples" [level=3] [ref=f12e3373]
+              - generic [ref=f12e3374]: "Consider adding:"
+              - generic [ref=f12e3375]:
+                - generic [ref=f12e3376]: Phyrexian Arena
+                - generic [ref=f12e3377]: Toxic Deluge
+                - generic [ref=f12e3378]: Reanimate
+                - generic [ref=f12e3379]: Dockside Extortionist
+                - generic [ref=f12e3380]: Vandalblast
+                - generic [ref=f12e3381]: Exotic Orchard
+            - generic [ref=f12e3382]:
+              - heading "Mana Requirements" [level=3] [ref=f12e3383]
+              - generic [ref=f12e3384]:
+                - generic [ref=f12e3386]:
+                  - generic [ref=f12e3387]: Red
+                  - generic [ref=f12e3388]:
+                    - text: 37 pips
+                    - generic [ref=f12e3389]: (54%)
+                - generic [ref=f12e3393]:
+                  - generic [ref=f12e3394]: Black
+                  - generic [ref=f12e3395]:
+                    - text: 32 pips
+                    - generic [ref=f12e3396]: (46%)
+              - generic [ref=f12e3399]:
+                - generic [ref=f12e3400]: Total Lands
+                - generic [ref=f12e3401]:
+                  - generic [ref=f12e3402]: "22"
+                  - generic [ref=f12e3403]: Too few/many
+          - generic [ref=f12e3404]:
+            - generic [ref=f12e3405]:
+              - heading "Simulators" [level=3] [ref=f12e3406]
+              - generic [ref=f12e3407]:
+                - button "Opening Hand" [ref=f12e3408] [cursor=pointer]
+                - button "Goldfish" [ref=f12e3409] [cursor=pointer]
+            - generic [ref=f12e3410]:
+              - button "Draw Opening Hand" [ref=f12e3412] [cursor=pointer]
+              - generic [ref=f12e3413]: Click "Draw Opening Hand" to simulate a starting hand.
+          - button "+ Add all 79 missing cards to collection" [ref=f12e3414] [cursor=pointer]
+          - generic [ref=f12e3415]:
+            - heading "Deck List (88 cards)" [level=3] [ref=f12e3416]
+            - generic [ref=f12e3417]:
+              - generic [ref=f12e3418]:
+                - button "Creatures 11 ▼" [ref=f12e3419] [cursor=pointer]:
+                  - generic [ref=f12e3420]: Creatures
+                  - generic [ref=f12e3421]:
+                    - generic [ref=f12e3422]: "11"
+                    - generic [ref=f12e3423]: ▼
+                - generic [ref=f12e3424]:
+                  - generic [ref=f12e3425]:
+                    - generic [ref=f12e3426]:
+                      - generic [ref=f12e3427]: ✗
+                      - generic [ref=f12e3428]: Electro, Assaulting Battery
+                      - generic [ref=f12e3429]: "{1}{R}{R}"
+                    - generic [ref=f12e3430]:
+                      - generic [ref=f12e3431]: Need
+                      - button "+ Add" [ref=f12e3432] [cursor=pointer]
+                  - generic [ref=f12e3433]:
+                    - generic [ref=f12e3434]:
+                      - generic [ref=f12e3435]: ✗
+                      - generic [ref=f12e3436]: Avatar Roku, Firebender
+                      - generic [ref=f12e3437]: "{3}{R}{R}{R}"
+                    - generic [ref=f12e3438]:
+                      - generic [ref=f12e3439]: Need
+                      - button "+ Add" [ref=f12e3440] [cursor=pointer]
+                  - generic [ref=f12e3441]:
+                    - generic [ref=f12e3442]:
+                      - generic [ref=f12e3443]: ✗
+                      - generic [ref=f12e3444]: Neheb, the Eternal
+                      - generic [ref=f12e3445]: "{3}{R}{R}"
+                    - generic [ref=f12e3446]:
+                      - generic [ref=f12e3447]: Need
+                      - button "+ Add" [ref=f12e3448] [cursor=pointer]
+                  - generic [ref=f12e3449]:
+                    - generic [ref=f12e3450]:
+                      - generic [ref=f12e3451]: ✗
+                      - generic [ref=f12e3452]: Birgi, God of Storytelling // Harnfel, Horn of Bounty
+                    - generic [ref=f12e3453]:
+                      - generic [ref=f12e3454]: Need
+                      - button "+ Add" [ref=f12e3455] [cursor=pointer]
+                  - generic [ref=f12e3456]:
+                    - generic [ref=f12e3457]:
+                      - generic [ref=f12e3458]: ✗
+                      - generic [ref=f12e3459]: Ragavan, Nimble Pilferer
+                      - generic [ref=f12e3460]: "{R}"
+                    - generic [ref=f12e3461]:
+                      - generic [ref=f12e3462]: Need
+                      - button "+ Add" [ref=f12e3463] [cursor=pointer]
+                  - generic [ref=f12e3464]:
+                    - generic [ref=f12e3465]:
+                      - generic [ref=f12e3466]: ✗
+                      - generic [ref=f12e3467]: Orcish Bowmasters
+                      - generic [ref=f12e3468]: "{1}{B}"
+                    - generic [ref=f12e3469]:
+                      - generic [ref=f12e3470]: Need
+                      - button "+ Add" [ref=f12e3471] [cursor=pointer]
+                  - generic [ref=f12e3472]:
+                    - generic [ref=f12e3473]:
+                      - generic [ref=f12e3474]: ✗
+                      - generic [ref=f12e3475]: Roaming Throne
+                      - generic [ref=f12e3476]: "{4}"
+                    - generic [ref=f12e3477]:
+                      - generic [ref=f12e3478]: Need
+                      - button "+ Add" [ref=f12e3479] [cursor=pointer]
+                  - generic [ref=f12e3480]:
+                    - generic [ref=f12e3481]:
+                      - generic [ref=f12e3482]: ✗
+                      - generic [ref=f12e3483]: Professional Face-Breaker
+                      - generic [ref=f12e3484]: "{2}{R}"
+                    - generic [ref=f12e3485]:
+                      - generic [ref=f12e3486]: Need
+                      - button "+ Add" [ref=f12e3487] [cursor=pointer]
+                  - generic [ref=f12e3488]:
+                    - generic [ref=f12e3489]:
+                      - generic [ref=f12e3490]: ✗
+                      - generic [ref=f12e3491]: Grim Hireling
+                      - generic [ref=f12e3492]: "{3}{B}"
+                    - generic [ref=f12e3493]:
+                      - generic [ref=f12e3494]: Need
+                      - button "+ Add" [ref=f12e3495] [cursor=pointer]
+                  - generic [ref=f12e3496]:
+                    - generic [ref=f12e3497]:
+                      - generic [ref=f12e3498]: ✗
+                      - generic [ref=f12e3499]: Opposition Agent
+                      - generic [ref=f12e3500]: "{2}{B}"
+                    - generic [ref=f12e3501]:
+                      - generic [ref=f12e3502]: Need
+                      - button "+ Add" [ref=f12e3503] [cursor=pointer]
+                  - generic [ref=f12e3504]:
+                    - generic [ref=f12e3505]:
+                      - generic [ref=f12e3506]: ✗
+                      - generic [ref=f12e3507]: Karlach, Fury of Avernus
+                      - generic [ref=f12e3508]: "{4}{R}"
+                    - generic [ref=f12e3509]:
+                      - generic [ref=f12e3510]: Need
+                      - button "+ Add" [ref=f12e3511] [cursor=pointer]
+              - generic [ref=f12e3512]:
+                - button "Instants 17 ▼" [ref=f12e3513] [cursor=pointer]:
+                  - generic [ref=f12e3514]: Instants
+                  - generic [ref=f12e3515]:
+                    - generic [ref=f12e3516]: "17"
+                    - generic [ref=f12e3517]: ▼
+                - generic [ref=f12e3518]:
+                  - generic [ref=f12e3519]:
+                    - generic [ref=f12e3520]:
+                      - generic [ref=f12e3521]: ✗
+                      - generic [ref=f12e3522]: Deflecting Swat
+                      - generic [ref=f12e3523]: "{2}{R}"
+                    - generic [ref=f12e3524]:
+                      - generic [ref=f12e3525]: Need
+                      - button "+ Add" [ref=f12e3526] [cursor=pointer]
+                  - generic [ref=f12e3527]:
+                    - generic [ref=f12e3528]:
+                      - generic [ref=f12e3529]: ✗
+                      - generic [ref=f12e3530]: Chaos Warp
+                      - generic [ref=f12e3531]: "{2}{R}"
+                    - generic [ref=f12e3532]:
+                      - generic [ref=f12e3533]: Need
+                      - button "+ Add" [ref=f12e3534] [cursor=pointer]
+                  - generic [ref=f12e3535]:
+                    - generic [ref=f12e3536]:
+                      - generic [ref=f12e3537]: ✗
+                      - generic [ref=f12e3538]: Untimely Malfunction
+                      - generic [ref=f12e3539]: "{1}{R}"
+                    - generic [ref=f12e3540]:
+                      - generic [ref=f12e3541]: Need
+                      - button "+ Add" [ref=f12e3542] [cursor=pointer]
+                  - generic [ref=f12e3543]:
+                    - generic [ref=f12e3544]:
+                      - generic [ref=f12e3545]: ✗
+                      - generic [ref=f12e3546]: The Last Agni Kai
+                      - generic [ref=f12e3547]: "{1}{R}"
+                    - generic [ref=f12e3548]:
+                      - generic [ref=f12e3549]: Need
+                      - button "+ Add" [ref=f12e3550] [cursor=pointer]
+                  - generic [ref=f12e3551]:
+                    - generic [ref=f12e3552]:
+                      - generic [ref=f12e3553]: ✗
+                      - generic [ref=f12e3554]: Bolt Bend
+                      - generic [ref=f12e3555]: "{3}{R}"
+                    - generic [ref=f12e3556]:
+                      - generic [ref=f12e3557]: Need
+                      - button "+ Add" [ref=f12e3558] [cursor=pointer]
+                  - generic [ref=f12e3559]:
+                    - generic [ref=f12e3560]:
+                      - generic [ref=f12e3561]: ✗
+                      - generic [ref=f12e3562]: Cabal Ritual
+                      - generic [ref=f12e3563]: "{1}{B}"
+                    - generic [ref=f12e3564]:
+                      - generic [ref=f12e3565]: Need
+                      - button "+ Add" [ref=f12e3566] [cursor=pointer]
+                  - generic [ref=f12e3567]:
+                    - generic [ref=f12e3568]:
+                      - generic [ref=f12e3569]: ✗
+                      - generic [ref=f12e3570]: Desperate Ritual
+                      - generic [ref=f12e3571]: "{1}{R}"
+                    - generic [ref=f12e3572]:
+                      - generic [ref=f12e3573]: Need
+                      - button "+ Add" [ref=f12e3574] [cursor=pointer]
+                  - generic [ref=f12e3575]:
+                    - generic [ref=f12e3576]:
+                      - generic [ref=f12e3577]: ✗
+                      - generic [ref=f12e3578]: Pyretic Ritual
+                      - generic [ref=f12e3579]: "{1}{R}"
+                    - generic [ref=f12e3580]:
+                      - generic [ref=f12e3581]: Need
+                      - button "+ Add" [ref=f12e3582] [cursor=pointer]
+                  - generic [ref=f12e3583]:
+                    - generic [ref=f12e3584]:
+                      - generic [ref=f12e3585]: ✓
+                      - generic [ref=f12e3586]: Dark Ritual
+                      - generic [ref=f12e3587]: "{B}"
+                    - generic [ref=f12e3588]: Own 1
+                  - generic [ref=f12e3590]:
+                    - generic [ref=f12e3591]:
+                      - generic [ref=f12e3592]: ✗
+                      - generic [ref=f12e3593]: Seething Song
+                      - generic [ref=f12e3594]: "{2}{R}"
+                    - generic [ref=f12e3595]:
+                      - generic [ref=f12e3596]: Need
+                      - button "+ Add" [ref=f12e3597] [cursor=pointer]
+                  - generic [ref=f12e3598]:
+                    - generic [ref=f12e3599]:
+                      - generic [ref=f12e3600]: ✗
+                      - generic [ref=f12e3601]: Valakut Awakening // Valakut Stoneforge
+                    - generic [ref=f12e3602]:
+                      - generic [ref=f12e3603]: Need
+                      - button "+ Add" [ref=f12e3604] [cursor=pointer]
+                  - generic [ref=f12e3605]:
+                    - generic [ref=f12e3606]:
+                      - generic [ref=f12e3607]: ✗
+                      - generic [ref=f12e3608]: Malakir Rebirth // Malakir Mire
+                    - generic [ref=f12e3609]:
+                      - generic [ref=f12e3610]: Need
+                      - button "+ Add" [ref=f12e3611] [cursor=pointer]
+                  - generic [ref=f12e3612]:
+                    - generic [ref=f12e3613]:
+                      - generic [ref=f12e3614]: ✗
+                      - generic [ref=f12e3615]: Vampiric Tutor
+                      - generic [ref=f12e3616]: "{B}"
+                    - generic [ref=f12e3617]:
+                      - generic [ref=f12e3618]: Need
+                      - button "+ Add" [ref=f12e3619] [cursor=pointer]
+                  - generic [ref=f12e3620]:
+                    - generic [ref=f12e3621]:
+                      - generic [ref=f12e3622]: ✗
+                      - generic [ref=f12e3623]: Tibalt's Trickery
+                      - generic [ref=f12e3624]: "{1}{R}"
+                    - generic [ref=f12e3625]:
+                      - generic [ref=f12e3626]: Need
+                      - button "+ Add" [ref=f12e3627] [cursor=pointer]
+                  - generic [ref=f12e3628]:
+                    - generic [ref=f12e3629]:
+                      - generic [ref=f12e3630]: ✓
+                      - generic [ref=f12e3631]: Imp's Mischief
+                      - generic [ref=f12e3632]: "{1}{B}"
+                    - generic [ref=f12e3633]: Own 1
+                  - generic [ref=f12e3635]:
+                    - generic [ref=f12e3636]:
+                      - generic [ref=f12e3637]: ✗
+                      - generic [ref=f12e3638]: Deadly Rollick
+                      - generic [ref=f12e3639]: "{3}{B}"
+                    - generic [ref=f12e3640]:
+                      - generic [ref=f12e3641]: Need
+                      - button "+ Add" [ref=f12e3642] [cursor=pointer]
+                  - generic [ref=f12e3643]:
+                    - generic [ref=f12e3644]:
+                      - generic [ref=f12e3645]: ✗
+                      - generic [ref=f12e3646]: Redirect Lightning
+                      - generic [ref=f12e3647]: "{R}"
+                    - generic [ref=f12e3648]:
+                      - generic [ref=f12e3649]: Need
+                      - button "+ Add" [ref=f12e3650] [cursor=pointer]
+              - generic [ref=f12e3651]:
+                - button "Sorcerys 20 ▼" [ref=f12e3652] [cursor=pointer]:
+                  - generic [ref=f12e3653]: Sorcerys
+                  - generic [ref=f12e3654]:
+                    - generic [ref=f12e3655]: "20"
+                    - generic [ref=f12e3656]: ▼
+                - generic [ref=f12e3657]:
+                  - generic [ref=f12e3658]:
+                    - generic [ref=f12e3659]:
+                      - generic [ref=f12e3660]: ✓
+                      - generic [ref=f12e3661]: Damnation
+                      - generic [ref=f12e3662]: "{2}{B}{B}"
+                    - generic [ref=f12e3663]: Own 1
+                  - generic [ref=f12e3665]:
+                    - generic [ref=f12e3666]:
+                      - generic [ref=f12e3667]: ✗
+                      - generic [ref=f12e3668]: Wheel of Misfortune
+                      - generic [ref=f12e3669]: "{2}{R}"
+                    - generic [ref=f12e3670]:
+                      - generic [ref=f12e3671]: Need
+                      - button "+ Add" [ref=f12e3672] [cursor=pointer]
+                  - generic [ref=f12e3673]:
+                    - generic [ref=f12e3674]:
+                      - generic [ref=f12e3675]: ✗
+                      - generic [ref=f12e3676]: Torment of Hailfire
+                      - generic [ref=f12e3677]: "{X}{B}{B}"
+                    - generic [ref=f12e3678]:
+                      - generic [ref=f12e3679]: Need
+                      - button "+ Add" [ref=f12e3680] [cursor=pointer]
+                  - generic [ref=f12e3681]:
+                    - generic [ref=f12e3682]:
+                      - generic [ref=f12e3683]: ✗
+                      - generic [ref=f12e3684]: Grim Tutor
+                      - generic [ref=f12e3685]: "{1}{B}{B}"
+                    - generic [ref=f12e3686]:
+                      - generic [ref=f12e3687]: Need
+                      - button "+ Add" [ref=f12e3688] [cursor=pointer]
+                  - generic [ref=f12e3689]:
+                    - generic [ref=f12e3690]:
+                      - generic [ref=f12e3691]: ✗
+                      - generic [ref=f12e3692]: Yawgmoth's Will
+                      - generic [ref=f12e3693]: "{2}{B}"
+                    - generic [ref=f12e3694]:
+                      - generic [ref=f12e3695]: Need
+                      - button "+ Add" [ref=f12e3696] [cursor=pointer]
+                  - generic [ref=f12e3697]:
+                    - generic [ref=f12e3698]:
+                      - generic [ref=f12e3699]: ✗
+                      - generic [ref=f12e3700]: Demonic Tutor
+                      - generic [ref=f12e3701]: "{1}{B}"
+                    - generic [ref=f12e3702]:
+                      - generic [ref=f12e3703]: Need
+                      - button "+ Add" [ref=f12e3704] [cursor=pointer]
+                  - generic [ref=f12e3705]:
+                    - generic [ref=f12e3706]:
+                      - generic [ref=f12e3707]: ✗
+                      - generic [ref=f12e3708]: Wheel of Fortune
+                      - generic [ref=f12e3709]: "{2}{R}"
+                    - generic [ref=f12e3710]:
+                      - generic [ref=f12e3711]: Need
+                      - button "+ Add" [ref=f12e3712] [cursor=pointer]
+                  - generic [ref=f12e3713]:
+                    - generic [ref=f12e3714]:
+                      - generic [ref=f12e3715]: ✗
+                      - generic [ref=f12e3716]: Jeska's Will
+                      - generic [ref=f12e3717]: "{2}{R}"
+                    - generic [ref=f12e3718]:
+                      - generic [ref=f12e3719]: Need
+                      - button "+ Add" [ref=f12e3720] [cursor=pointer]
+                  - generic [ref=f12e3721]:
+                    - generic [ref=f12e3722]:
+                      - generic [ref=f12e3723]: ✗
+                      - generic [ref=f12e3724]: Crackle with Power
+                      - generic [ref=f12e3725]: "{X}{X}{X}{R}{R}"
+                    - generic [ref=f12e3726]:
+                      - generic [ref=f12e3727]: Need
+                      - button "+ Add" [ref=f12e3728] [cursor=pointer]
+                  - generic [ref=f12e3729]:
+                    - generic [ref=f12e3730]:
+                      - generic [ref=f12e3731]: ✗
+                      - generic [ref=f12e3732]: Imperial Seal
+                      - generic [ref=f12e3733]: "{B}"
+                    - generic [ref=f12e3734]:
+                      - generic [ref=f12e3735]: Need
+                      - button "+ Add" [ref=f12e3736] [cursor=pointer]
+                  - generic [ref=f12e3737]:
+                    - generic [ref=f12e3738]:
+                      - generic [ref=f12e3739]: ✗
+                      - generic [ref=f12e3740]: Gamble
+                      - generic [ref=f12e3741]: "{R}"
+                    - generic [ref=f12e3742]:
+                      - generic [ref=f12e3743]: Need
+                      - button "+ Add" [ref=f12e3744] [cursor=pointer]
+                  - generic [ref=f12e3745]:
+                    - generic [ref=f12e3746]:
+                      - generic [ref=f12e3747]: ✗
+                      - generic [ref=f12e3748]: Grapeshot
+                      - generic [ref=f12e3749]: "{1}{R}"
+                    - generic [ref=f12e3750]:
+                      - generic [ref=f12e3751]: Need
+                      - button "+ Add" [ref=f12e3752] [cursor=pointer]
+                  - generic [ref=f12e3753]:
+                    - generic [ref=f12e3754]:
+                      - generic [ref=f12e3755]: ✗
+                      - generic [ref=f12e3756]: Exsanguinate
+                      - generic [ref=f12e3757]: "{X}{B}{B}"
+                    - generic [ref=f12e3758]:
+                      - generic [ref=f12e3759]: Need
+                      - button "+ Add" [ref=f12e3760] [cursor=pointer]
+                  - generic [ref=f12e3761]:
+                    - generic [ref=f12e3762]:
+                      - generic [ref=f12e3763]: ✗
+                      - generic [ref=f12e3764]: Beseech the Mirror
+                      - generic [ref=f12e3765]: "{1}{B}{B}{B}"
+                    - generic [ref=f12e3766]:
+                      - generic [ref=f12e3767]: Need
+                      - button "+ Add" [ref=f12e3768] [cursor=pointer]
+                  - generic [ref=f12e3769]:
+                    - generic [ref=f12e3770]:
+                      - generic [ref=f12e3771]: ✓
+                      - generic [ref=f12e3772]: Diabolic Intent
+                      - generic [ref=f12e3773]: "{1}{B}"
+                    - generic [ref=f12e3774]: Own 1
+                  - generic [ref=f12e3776]:
+                    - generic [ref=f12e3777]:
+                      - generic [ref=f12e3778]: ✗
+                      - generic [ref=f12e3779]: Cruel Tutor
+                      - generic [ref=f12e3780]: "{2}{B}"
+                    - generic [ref=f12e3781]:
+                      - generic [ref=f12e3782]: Need
+                      - button "+ Add" [ref=f12e3783] [cursor=pointer]
+                  - generic [ref=f12e3784]:
+                    - generic [ref=f12e3785]:
+                      - generic [ref=f12e3786]: ✓
+                      - generic [ref=f12e3787]: Faithless Looting
+                      - generic [ref=f12e3788]: "{R}"
+                    - generic [ref=f12e3789]: Own 1
+                  - generic [ref=f12e3791]:
+                    - generic [ref=f12e3792]:
+                      - generic [ref=f12e3793]: ✓
+                      - generic [ref=f12e3794]: Feed the Swarm
+                      - generic [ref=f12e3795]: "{1}{B}"
+                    - generic [ref=f12e3796]: Own 4
+                  - generic [ref=f12e3798]:
+                    - generic [ref=f12e3799]:
+                      - generic [ref=f12e3800]: ✗
+                      - generic [ref=f12e3801]: Mana Geyser
+                      - generic [ref=f12e3802]: "{3}{R}{R}"
+                    - generic [ref=f12e3803]:
+                      - generic [ref=f12e3804]: Need
+                      - button "+ Add" [ref=f12e3805] [cursor=pointer]
+                  - generic [ref=f12e3806]:
+                    - generic [ref=f12e3807]:
+                      - generic [ref=f12e3808]: ✗
+                      - generic [ref=f12e3809]: Blasphemous Act
+                      - generic [ref=f12e3810]: "{8}{R}"
+                    - generic [ref=f12e3811]:
+                      - generic [ref=f12e3812]: Need
+                      - button "+ Add" [ref=f12e3813] [cursor=pointer]
+              - generic [ref=f12e3814]:
+                - button "Enchantments 5 ▼" [ref=f12e3815] [cursor=pointer]:
+                  - generic [ref=f12e3816]: Enchantments
+                  - generic [ref=f12e3817]:
+                    - generic [ref=f12e3818]: "5"
+                    - generic [ref=f12e3819]: ▼
+                - generic [ref=f12e3820]:
+                  - generic [ref=f12e3821]:
+                    - generic [ref=f12e3822]:
+                      - generic [ref=f12e3823]: ✗
+                      - generic [ref=f12e3824]: Underworld Breach
+                      - generic [ref=f12e3825]: "{1}{R}"
+                    - generic [ref=f12e3826]:
+                      - generic [ref=f12e3827]: Need
+                      - button "+ Add" [ref=f12e3828] [cursor=pointer]
+                  - generic [ref=f12e3829]:
+                    - generic [ref=f12e3830]:
+                      - generic [ref=f12e3831]: ✗
+                      - generic [ref=f12e3832]: Aggravated Assault
+                      - generic [ref=f12e3833]: "{2}{R}"
+                    - generic [ref=f12e3834]:
+                      - generic [ref=f12e3835]: Need
+                      - button "+ Add" [ref=f12e3836] [cursor=pointer]
+                  - generic [ref=f12e3837]:
+                    - generic [ref=f12e3838]:
+                      - generic [ref=f12e3839]: ✗
+                      - generic [ref=f12e3840]: Blood Moon
+                      - generic [ref=f12e3841]: "{2}{R}"
+                    - generic [ref=f12e3842]:
+                      - generic [ref=f12e3843]: Need
+                      - button "+ Add" [ref=f12e3844] [cursor=pointer]
+                  - generic [ref=f12e3845]:
+                    - generic [ref=f12e3846]:
+                      - generic [ref=f12e3847]: ✗
+                      - generic [ref=f12e3848]: Necropotence
+                      - generic [ref=f12e3849]: "{B}{B}{B}"
+                    - generic [ref=f12e3850]:
+                      - generic [ref=f12e3851]: Need
+                      - button "+ Add" [ref=f12e3852] [cursor=pointer]
+                  - generic [ref=f12e3853]:
+                    - generic [ref=f12e3854]:
+                      - generic [ref=f12e3855]: ✗
+                      - generic [ref=f12e3856]: Urza's Saga
+                    - generic [ref=f12e3857]:
+                      - generic [ref=f12e3858]: Need
+                      - button "+ Add" [ref=f12e3859] [cursor=pointer]
+              - generic [ref=f12e3860]:
+                - button "Artifacts 16 ▼" [ref=f12e3861] [cursor=pointer]:
+                  - generic [ref=f12e3862]: Artifacts
+                  - generic [ref=f12e3863]:
+                    - generic [ref=f12e3864]: "16"
+                    - generic [ref=f12e3865]: ▼
+                - generic [ref=f12e3866]:
+                  - generic [ref=f12e3867]:
+                    - generic [ref=f12e3868]:
+                      - generic [ref=f12e3869]: ✗
+                      - generic [ref=f12e3870]: Talisman of Indulgence
+                      - generic [ref=f12e3871]: "{2}"
+                    - generic [ref=f12e3872]:
+                      - generic [ref=f12e3873]: Need
+                      - button "+ Add" [ref=f12e3874] [cursor=pointer]
+                  - generic [ref=f12e3875]:
+                    - generic [ref=f12e3876]:
+                      - generic [ref=f12e3877]: ✓
+                      - generic [ref=f12e3878]: Arcane Signet
+                      - generic [ref=f12e3879]: "{2}"
+                    - generic [ref=f12e3880]: Own 2
+                  - generic [ref=f12e3882]:
+                    - generic [ref=f12e3883]:
+                      - generic [ref=f12e3884]: ✓
+                      - generic [ref=f12e3885]: Sol Ring
+                      - generic [ref=f12e3886]: "{1}"
+                    - generic [ref=f12e3887]: Own 3
+                  - generic [ref=f12e3889]:
+                    - generic [ref=f12e3890]:
+                      - generic [ref=f12e3891]: ✗
+                      - generic [ref=f12e3892]: Fellwar Stone
+                      - generic [ref=f12e3893]: "{2}"
+                    - generic [ref=f12e3894]:
+                      - generic [ref=f12e3895]: Need
+                      - button "+ Add" [ref=f12e3896] [cursor=pointer]
+                  - generic [ref=f12e3897]:
+                    - generic [ref=f12e3898]:
+                      - generic [ref=f12e3899]: ✗
+                      - generic [ref=f12e3900]: Grinding Station
+                      - generic [ref=f12e3901]: "{2}"
+                    - generic [ref=f12e3902]:
+                      - generic [ref=f12e3903]: Need
+                      - button "+ Add" [ref=f12e3904] [cursor=pointer]
+                  - generic [ref=f12e3905]:
+                    - generic [ref=f12e3906]:
+                      - generic [ref=f12e3907]: ✗
+                      - generic [ref=f12e3908]: Doubling Cube
+                      - generic [ref=f12e3909]: "{2}"
+                    - generic [ref=f12e3910]:
+                      - generic [ref=f12e3911]: Need
+                      - button "+ Add" [ref=f12e3912] [cursor=pointer]
+                  - generic [ref=f12e3913]:
+                    - generic [ref=f12e3914]:
+                      - generic [ref=f12e3915]: ✗
+                      - generic [ref=f12e3916]: Rakdos Signet
+                      - generic [ref=f12e3917]: "{2}"
+                    - generic [ref=f12e3918]:
+                      - generic [ref=f12e3919]: Need
+                      - button "+ Add" [ref=f12e3920] [cursor=pointer]
+                  - generic [ref=f12e3921]:
+                    - generic [ref=f12e3922]:
+                      - generic [ref=f12e3923]: ✗
+                      - generic [ref=f12e3924]: Mana Vault
+                      - generic [ref=f12e3925]: "{1}"
+                    - generic [ref=f12e3926]:
+                      - generic [ref=f12e3927]: Need
+                      - button "+ Add" [ref=f12e3928] [cursor=pointer]
+                  - generic [ref=f12e3929]:
+                    - generic [ref=f12e3930]:
+                      - generic [ref=f12e3931]: ✗
+                      - generic [ref=f12e3932]: Lion's Eye Diamond
+                      - generic [ref=f12e3933]: "{0}"
+                    - generic [ref=f12e3934]:
+                      - generic [ref=f12e3935]: Need
+                      - button "+ Add" [ref=f12e3936] [cursor=pointer]
+                  - generic [ref=f12e3937]:
+                    - generic [ref=f12e3938]:
+                      - generic [ref=f12e3939]: ✗
+                      - generic [ref=f12e3940]: Mox Amber
+                      - generic [ref=f12e3941]: "{0}"
+                    - generic [ref=f12e3942]:
+                      - generic [ref=f12e3943]: Need
+                      - button "+ Add" [ref=f12e3944] [cursor=pointer]
+                  - generic [ref=f12e3945]:
+                    - generic [ref=f12e3946]:
+                      - generic [ref=f12e3947]: ✗
+                      - generic [ref=f12e3948]: Chrome Mox
+                      - generic [ref=f12e3949]: "{0}"
+                    - generic [ref=f12e3950]:
+                      - generic [ref=f12e3951]: Need
+                      - button "+ Add" [ref=f12e3952] [cursor=pointer]
+                  - generic [ref=f12e3953]:
+                    - generic [ref=f12e3954]:
+                      - generic [ref=f12e3955]: ✗
+                      - generic [ref=f12e3956]: The One Ring
+                      - generic [ref=f12e3957]: "{4}"
+                    - generic [ref=f12e3958]:
+                      - generic [ref=f12e3959]: Need
+                      - button "+ Add" [ref=f12e3960] [cursor=pointer]
+                  - generic [ref=f12e3961]:
+                    - generic [ref=f12e3962]:
+                      - generic [ref=f12e3963]: ✗
+                      - generic [ref=f12e3964]: Wishclaw Talisman
+                      - generic [ref=f12e3965]: "{1}{B}"
+                    - generic [ref=f12e3966]:
+                      - generic [ref=f12e3967]: Need
+                      - button "+ Add" [ref=f12e3968] [cursor=pointer]
+                  - generic [ref=f12e3969]:
+                    - generic [ref=f12e3970]:
+                      - generic [ref=f12e3971]: ✗
+                      - generic [ref=f12e3972]: The Soul Stone
+                      - generic [ref=f12e3973]: "{1}{B}"
+                    - generic [ref=f12e3974]:
+                      - generic [ref=f12e3975]: Need
+                      - button "+ Add" [ref=f12e3976] [cursor=pointer]
+                  - generic [ref=f12e3977]:
+                    - generic [ref=f12e3978]:
+                      - generic [ref=f12e3979]: ✗
+                      - generic [ref=f12e3980]: Fire Nation Turret
+                      - generic [ref=f12e3981]: "{2}{R}"
+                    - generic [ref=f12e3982]:
+                      - generic [ref=f12e3983]: Need
+                      - button "+ Add" [ref=f12e3984] [cursor=pointer]
+                  - generic [ref=f12e3985]:
+                    - generic [ref=f12e3986]:
+                      - generic [ref=f12e3987]: ✗
+                      - generic [ref=f12e3988]: Lotus Petal
+                      - generic [ref=f12e3989]: "{0}"
+                    - generic [ref=f12e3990]:
+                      - generic [ref=f12e3991]: Need
+                      - button "+ Add" [ref=f12e3992] [cursor=pointer]
+              - generic [ref=f12e3993]:
+                - button "Lands 19 ▼" [ref=f12e3994] [cursor=pointer]:
+                  - generic [ref=f12e3995]: Lands
+                  - generic [ref=f12e3996]:
+                    - generic [ref=f12e3997]: "19"
+                    - generic [ref=f12e3998]: ▼
+                - generic [ref=f12e3999]:
+                  - generic [ref=f12e4000]:
+                    - generic [ref=f12e4001]:
+                      - generic [ref=f12e4002]: ✗
+                      - generic [ref=f12e4003]: Mana Confluence
+                    - generic [ref=f12e4004]:
+                      - generic [ref=f12e4005]: Need
+                      - button "+ Add" [ref=f12e4006] [cursor=pointer]
+                  - generic [ref=f12e4007]:
+                    - generic [ref=f12e4008]:
+                      - generic [ref=f12e4009]: ✗
+                      - generic [ref=f12e4010]: Arena of Glory
+                    - generic [ref=f12e4011]:
+                      - generic [ref=f12e4012]: Need
+                      - button "+ Add" [ref=f12e4013] [cursor=pointer]
+                  - generic [ref=f12e4014]:
+                    - generic [ref=f12e4015]:
+                      - generic [ref=f12e4016]: ✗
+                      - generic [ref=f12e4017]: Fire Nation Palace
+                    - generic [ref=f12e4018]:
+                      - generic [ref=f12e4019]: Need
+                      - button "+ Add" [ref=f12e4020] [cursor=pointer]
+                  - generic [ref=f12e4021]:
+                    - generic [ref=f12e4022]:
+                      - generic [ref=f12e4023]: ✗
+                      - generic [ref=f12e4024]: Ancient Tomb
+                    - generic [ref=f12e4025]:
+                      - generic [ref=f12e4026]: Need
+                      - button "+ Add" [ref=f12e4027] [cursor=pointer]
+                  - generic [ref=f12e4028]:
+                    - generic [ref=f12e4029]:
+                      - generic [ref=f12e4030]: ✓
+                      - generic [ref=f12e4031]: Cavern of Souls
+                    - generic [ref=f12e4032]: Own 1
+                  - generic [ref=f12e4034]:
+                    - generic [ref=f12e4035]:
+                      - generic [ref=f12e4036]: ✗
+                      - generic [ref=f12e4037]: Blightstep Pathway // Searstep Pathway
+                    - generic [ref=f12e4038]:
+                      - generic [ref=f12e4039]: Need
+                      - button "+ Add" [ref=f12e4040] [cursor=pointer]
+                  - generic [ref=f12e4041]:
+                    - generic [ref=f12e4042]:
+                      - generic [ref=f12e4043]: ✗
+                      - generic [ref=f12e4044]: Haunted Ridge
+                    - generic [ref=f12e4045]:
+                      - generic [ref=f12e4046]: Need
+                      - button "+ Add" [ref=f12e4047] [cursor=pointer]
+                  - generic [ref=f12e4048]:
+                    - generic [ref=f12e4049]:
+                      - generic [ref=f12e4050]: ✗
+                      - generic [ref=f12e4051]: Takenuma, Abandoned Mire
+                    - generic [ref=f12e4052]:
+                      - generic [ref=f12e4053]: Need
+                      - button "+ Add" [ref=f12e4054] [cursor=pointer]
+                  - generic [ref=f12e4055]:
+                    - generic [ref=f12e4056]:
+                      - generic [ref=f12e4057]: ✗
+                      - generic [ref=f12e4058]: Bloodstained Mire
+                    - generic [ref=f12e4059]:
+                      - generic [ref=f12e4060]: Need
+                      - button "+ Add" [ref=f12e4061] [cursor=pointer]
+                  - generic [ref=f12e4062]:
+                    - generic [ref=f12e4063]:
+                      - generic [ref=f12e4064]: ✗
+                      - generic [ref=f12e4065]: Phyrexian Tower
+                    - generic [ref=f12e4066]:
+                      - generic [ref=f12e4067]: Need
+                      - button "+ Add" [ref=f12e4068] [cursor=pointer]
+                  - generic [ref=f12e4069]:
+                    - generic [ref=f12e4070]:
+                      - generic [ref=f12e4071]: ✗
+                      - generic [ref=f12e4072]: Talon Gates of Madara
+                    - generic [ref=f12e4073]:
+                      - generic [ref=f12e4074]: Need
+                      - button "+ Add" [ref=f12e4075] [cursor=pointer]
+                  - generic [ref=f12e4076]:
+                    - generic [ref=f12e4077]:
+                      - generic [ref=f12e4078]: ✗
+                      - generic [ref=f12e4079]: Command Beacon
+                    - generic [ref=f12e4080]:
+                      - generic [ref=f12e4081]: Need
+                      - button "+ Add" [ref=f12e4082] [cursor=pointer]
+                  - generic [ref=f12e4083]:
+                    - generic [ref=f12e4084]:
+                      - generic [ref=f12e4085]: ✗
+                      - generic [ref=f12e4086]: Gemstone Caverns
+                    - generic [ref=f12e4087]:
+                      - generic [ref=f12e4088]: Need
+                      - button "+ Add" [ref=f12e4089] [cursor=pointer]
+                  - generic [ref=f12e4090]:
+                    - generic [ref=f12e4091]:
+                      - generic [ref=f12e4092]: ✗
+                      - generic [ref=f12e4093]: Blood Crypt
+                    - generic [ref=f12e4094]:
+                      - generic [ref=f12e4095]: Need
+                      - button "+ Add" [ref=f12e4096] [cursor=pointer]
+                  - generic [ref=f12e4097]:
+                    - generic [ref=f12e4098]:
+                      - generic [ref=f12e4099]: ✓
+                      - generic [ref=f12e4100]: Command Tower
+                    - generic [ref=f12e4101]: Own 2
+                  - generic [ref=f12e4103]:
+                    - generic [ref=f12e4104]:
+                      - generic [ref=f12e4105]: ✗
+                      - generic [ref=f12e4106]: Luxury Suite
+                    - generic [ref=f12e4107]:
+                      - generic [ref=f12e4108]: Need
+                      - button "+ Add" [ref=f12e4109] [cursor=pointer]
+                  - generic [ref=f12e4110]:
+                    - generic [ref=f12e4111]:
+                      - generic [ref=f12e4112]: ✗
+                      - generic [ref=f12e4113]: Dragonskull Summit
+                    - generic [ref=f12e4114]:
+                      - generic [ref=f12e4115]: Need
+                      - button "+ Add" [ref=f12e4116] [cursor=pointer]
+                  - generic [ref=f12e4117]:
+                    - generic [ref=f12e4118]:
+                      - generic [ref=f12e4119]: ✗
+                      - generic [ref=f12e4120]: Mountain
+                    - generic [ref=f12e4121]:
+                      - generic [ref=f12e4122]: Need
+                      - button "+ Add" [ref=f12e4123] [cursor=pointer]
+                  - generic [ref=f12e4124]:
+                    - generic [ref=f12e4125]:
+                      - generic [ref=f12e4126]: ✓
+                      - generic [ref=f12e4127]: Swamp
+                    - generic [ref=f12e4128]: Own 3

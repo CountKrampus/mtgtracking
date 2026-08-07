@@ -1,0 +1,69 @@
+What I found
+Backend:
+
+backend/server.js is the main Express app, with auth, rate limiting, jobs, and a lot of models/routes mounted.
+backend/routes/cards.js is a very rich endpoint file: card CRUD, bulk import, offline import, price updates, full-data updates, price history, bulk update/delete, price alerts, image migration, tags, finance fields, etc.
+Pricing is handled in backend/utils/pricing.js via Scryfall first and MTGGoldfish fallback.
+Card lookups use backend/utils/scryfallLookup.js with exact lookup by set+collector, fuzzy by set, and fuzzy by name.
+There is multi-user role-based auth in backend/middleware/auth.js, including editors/admins, maintenance mode, and bot auth path.
+There are scheduled jobs like backend/jobs/dailyPriceSnapshot.js for snapshots and price alerts.
+A lot of backend test coverage exists in backend/__tests__, so the project already has significant automated validation.
+Frontend:
+
+React app with App.js routing to many views: dashboard, collection, wishlist, trades, challenges, decks, life counter, messages, forum, community decks, learn pages, gameplay tools, and more.
+frontend/src/contexts/CardCollectionContext.js manages cards, including offline sync fallback via IndexedDB (frontend/src/utils/offlineDb.js).
+Service worker in frontend/public/service-worker.js caches static app shell assets for offline loading.
+There are contexts for auth, cards, wishlist, tags/locations, toast notifications, etc.
+frontend/src/components/CollectionView.js contains a large collection UI with filters, import, price updates, QR preview, commander recommendations, set completion, combo finder, mobile row swipe actions, etc.
+Strengths
+Very broad feature set: card import, offline support, pricing fallback, price alerts, snapshots, wishlist, deck and community tools.
+Good use of React contexts and service worker for offline UX.
+The backend already has a job system and role-based permissions.
+There is strong test coverage in the backend.
+Specific issue I found
+In frontend/src/contexts/CardCollectionContext.js, the price history hover request contains a broken Authorization header placeholder:
+headers: { Authorization: \******'mtg_access_token')}``
+That looks like a real bug that would likely break the card price history hover/sparkline feature.
+Improvement ideas
+Backend / API
+Move Card schema out of backend/server.js into its own backend/models/Card.js file to match the rest of the model files and reduce server.js size.
+Split backend/routes/cards.js into smaller controllers/services to improve maintainability.
+Add stronger API validation on input payloads, e.g. express-validator or schema validation middleware.
+Consider adding server-side pagination/search/filtering for /api/cards rather than returning all cards in one request, especially for large collections.
+Add a unique compound index for userId + name + set + condition + isFoil (or setCode + collectorNumber) to enforce duplicate prevention at the database level.
+Add a dedicated cache for Scryfall/fallback pricing responses so repeated lookups are cheaper and less rate-limit-prone.
+Document the API with OpenAPI/Swagger to make external integrations easier.
+The README/docs still mention Exor Games pricing, but the code now uses Scryfall + MTGGoldfish. Update docs to match current behavior and remove stale pricing source references.
+Frontend / UX
+The app already has many views, but App.js is still very large and could be broken into smaller route/layout components.
+The current offline support is good, but could be extended:
+cache API responses for /api/cards and /api/images/* in the service worker
+allow offline edits to queue and sync when online
+show explicit “offline mode” UI and sync status
+Improve import handling:
+support more deck formats such as .dec, MTGA, Archidekt, Decked Builder, or popular website export forms
+parse foil and token markers more robustly
+offer a manual “resolve ambiguous matches” UI when Scryfall fuzzy import returns multiple possibilities
+Add currency and localization support:
+current pricing support is USD only; adding CAD or user-preferred currency conversion would be valuable
+persist currency preference in settings
+Add richer collection insights:
+trend charts for total collection value
+“most valuable cards”, “least used cards”, “duplicate cleanup”
+deck coverage analysis for each deck vs collection
+Add better mobile accessibility and keyboard navigation; the mobile row swipe UI is nice, but comprehensive keyboard/ARIA support would strengthen it.
+Feature ideas
+Add a “collection sharing” feature where users can publish a public view of their collection or export deck lists more easily.
+Add push notifications or email alerts for price targets, not just daily snapshot notifications.
+Add a “market comparison” feature that compares Scryfall/Goldfish with another price source, or lets users choose preferred price sources.
+Add command line or import automation for bulk card lists from common formats.
+Add “smart duplicate merge suggestions” that detect possible duplicates from offline imports and let users merge or split cards.
+Suggested immediate fixes
+Fix the broken header in frontend/src/contexts/CardCollectionContext.js for the price history hover request.
+Update docs/readme pricing source text to reflect current code.
+Consider moving the card schema into a dedicated model file.
+If you want, I can also do a deeper pass focused on one area, such as:
+
+refactoring the backend card routes/models,
+improving offline frontend sync,
+or hardening the Scryfall/price lookup pipeline.

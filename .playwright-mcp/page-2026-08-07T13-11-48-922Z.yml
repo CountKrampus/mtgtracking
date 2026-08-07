@@ -1,0 +1,132 @@
+- generic [ref=f20e3]:
+  - generic [ref=f20e5]:
+    - button "Notifications" [ref=f20e6] [cursor=pointer]
+    - button "Messages" [ref=f20e10] [cursor=pointer]
+    - button "creamkrampus Krampus" [ref=f20e13] [cursor=pointer]:
+      - img "creamkrampus" [ref=f20e14]
+      - generic [ref=f20e15]: Krampus
+  - generic [ref=f20e18]:
+    - generic [ref=f20e20]:
+      - generic [ref=f20e23]:
+        - heading "MTG Tracker" [level=1] [ref=f20e24]
+        - paragraph [ref=f20e25]: Collection Manager
+      - generic [ref=f20e226]:
+        - generic [ref=f20e227]: K
+        - generic [ref=f20e228]:
+          - paragraph [ref=f20e229]: Krampus
+          - text: admin
+      - generic [ref=f20e26]:
+        - button "Navigation" [ref=f20e27] [cursor=pointer]
+        - button "Dashboard" [ref=f20e31] [cursor=pointer]
+        - button "Collection" [ref=f20e36] [cursor=pointer]
+        - button "Deck Builder" [ref=f20e41] [cursor=pointer]
+        - button "Wishlist" [ref=f20e47] [cursor=pointer]
+        - button "Trading Board" [ref=f20e51] [cursor=pointer]
+        - button "Challenges" [ref=f20e56] [cursor=pointer]
+        - button "Forum" [ref=f20e64] [cursor=pointer]
+        - button "Community Decks" [ref=f20e68] [cursor=pointer]
+        - button "Life Counter" [ref=f20e73] [cursor=pointer]
+        - button "Settings" [ref=f20e80] [cursor=pointer]
+        - button "Actions" [ref=f20e85] [cursor=pointer]
+        - button "Import" [ref=f20e89] [cursor=pointer]
+        - button "Export JSON" [ref=f20e94] [cursor=pointer]
+        - button "Export CSV" [ref=f20e99] [cursor=pointer]
+        - button "Update Prices" [ref=f20e104] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f20e111] [cursor=pointer]
+        - button "Tools" [ref=f20e118] [cursor=pointer]
+        - button "Commanders" [ref=f20e122] [cursor=pointer]
+        - button "Sets" [ref=f20e126] [cursor=pointer]
+        - button "Combos" [ref=f20e130] [cursor=pointer]
+        - button "Finance" [ref=f20e134] [cursor=pointer]
+        - button "Scan Card" [ref=f20e138] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f20e143] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f20e148] [cursor=pointer]
+        - button "Spoiler Season" [ref=f20e152] [cursor=pointer]
+        - button "Learn" [ref=f20e157] [cursor=pointer]
+        - button "Card Rulings" [ref=f20e161] [cursor=pointer]
+        - button "Interaction Checker" [ref=f20e166] [cursor=pointer]
+        - button "New Player Guide" [ref=f20e170] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f20e175] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f20e180] [cursor=pointer]
+        - button "Format Guides" [ref=f20e184] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f20e192] [cursor=pointer]
+        - button "Gameplay" [ref=f20e198] [cursor=pointer]
+        - generic [ref=f20e230]: Admin
+        - button "Admin Panel" [ref=f20e231] [cursor=pointer]
+      - generic [ref=f20e235]:
+        - button "Account" [ref=f20e236] [cursor=pointer]
+        - button "Sign Out" [ref=f20e241] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f20e203] [cursor=pointer]:
+        - generic [ref=f20e206]: Command Palette
+        - generic [ref=f20e207]: Ctrl+K
+      - button "Collapse" [ref=f20e209] [cursor=pointer]
+    - main [ref=f20e213]:
+      - generic [ref=f20e214]:
+        - navigation [ref=f20e215]:
+          - button "Home" [ref=f20e216] [cursor=pointer]
+          - generic [ref=f20e223]: Deck Builder
+        - generic [ref=f20e247]:
+          - generic [ref=f20e248]:
+            - generic [ref=f20e249]:
+              - heading "My Decks" [level=2] [ref=f20e250]
+              - button "📁 Tri-Color ▾" [ref=f20e315] [cursor=pointer]
+            - generic [ref=f20e253]:
+              - button "Calculate Sleeves" [ref=f20e254] [cursor=pointer]
+              - button "Find Staples" [ref=f20e255] [cursor=pointer]
+              - button "New Deck" [ref=f20e256] [cursor=pointer]
+              - button "Import Deck" [ref=f20e258] [cursor=pointer]
+          - generic [ref=f20e316]:
+            - button "Uncategorised decks" [ref=f20e317] [cursor=pointer]
+            - generic [ref=f20e318]: ›
+            - button "Tri-Color" [ref=f20e319] [cursor=pointer]
+          - generic [ref=f20e262]:
+            - generic [ref=f20e320] [cursor=pointer]:
+              - img "Anikthea, Hand of Erebos" [ref=f20e322]
+              - generic [ref=f20e323]:
+                - heading "Anikthea, Hand of Erebos" [level=3] [ref=f20e324]
+                - generic [ref=f20e325]: Commander
+              - generic [ref=f20e326]: "Commander: Anikthea, Hand of Erebos"
+              - generic [ref=f20e327]:
+                - generic [ref=f20e328]: 100 cards
+                - generic [ref=f20e329]: $0.00
+              - button "Delete" [ref=f20e330]
+            - generic [ref=f20e331] [cursor=pointer]:
+              - img "Edgar Markov" [ref=f20e333]
+              - generic [ref=f20e334]:
+                - heading "Edgar Markov" [level=3] [ref=f20e335]
+                - generic [ref=f20e336]: Commander
+              - generic [ref=f20e337]: "Commander: Edgar Markov"
+              - generic [ref=f20e338]:
+                - generic [ref=f20e339]: 100 cards
+                - generic [ref=f20e340]: $0.00
+              - button "Delete" [ref=f20e341]
+            - generic [ref=f20e342] [cursor=pointer]:
+              - img "Kaalia of the Vast" [ref=f20e344]
+              - generic [ref=f20e345]:
+                - heading "Kaalia of the Vast" [level=3] [ref=f20e346]
+                - generic [ref=f20e347]: Commander
+              - generic [ref=f20e348]: "Commander: Kaalia of the Vast"
+              - generic [ref=f20e349]:
+                - generic [ref=f20e350]: 100 cards
+                - generic [ref=f20e351]: $0.00
+              - button "Delete" [ref=f20e352]
+            - generic [ref=f20e353] [cursor=pointer]:
+              - img "Olivia, Opulent Outlaw" [ref=f20e355]
+              - generic [ref=f20e356]:
+                - heading "Olivia, Opulent Outlaw" [level=3] [ref=f20e357]
+                - generic [ref=f20e358]: Commander
+              - generic [ref=f20e359]: "Commander: Olivia, Opulent Outlaw"
+              - generic [ref=f20e360]:
+                - generic [ref=f20e361]: 100 cards
+                - generic [ref=f20e362]: $0.00
+              - button "Delete" [ref=f20e363]
+            - generic [ref=f20e364] [cursor=pointer]:
+              - img "Rocco, Street Chef" [ref=f20e366]
+              - generic [ref=f20e367]:
+                - heading "Rocco, Street Chef" [level=3] [ref=f20e368]
+                - generic [ref=f20e369]: Commander
+              - generic [ref=f20e370]: "Commander: Rocco, Street Chef"
+              - generic [ref=f20e371]:
+                - generic [ref=f20e372]: 100 cards
+                - generic [ref=f20e373]: $0.00
+              - button "Delete" [ref=f20e374]

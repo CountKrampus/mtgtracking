@@ -1,0 +1,112 @@
+<h2>Forum Shop — item card design</h2>
+<p class="subtitle">Current cards are compact 2-col. Which direction for the polish pass?</p>
+
+<div class="split">
+
+  <div class="mockup">
+    <div class="mockup-header">A — Compact enhanced (keep 2-col, improve density)</div>
+    <div class="mockup-body" style="background:#0f172a;padding:16px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+
+        <div style="background:#1e293b;border:2px solid #7c3aed;border-radius:10px;padding:12px;position:relative">
+          <div style="position:absolute;top:8px;right:8px;background:#7c3aed;color:white;font-size:9px;padding:2px 6px;border-radius:4px">RARE</div>
+          <div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#db2777);margin-bottom:8px"></div>
+          <div style="color:#f1f5f9;font-size:13px;font-weight:600">Void Shimmer</div>
+          <div style="color:#94a3b8;font-size:11px;margin-bottom:8px">Title Color</div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="color:#fbbf24;font-size:12px;font-weight:600">🪙 500</span>
+            <button style="padding:4px 10px;background:#7c3aed;border:none;border-radius:5px;color:white;font-size:11px">Buy</button>
+          </div>
+        </div>
+
+        <div style="background:#1e293b;border:2px solid #22c55e;border-radius:10px;padding:12px;position:relative">
+          <div style="position:absolute;top:8px;right:8px;background:#16a34a;color:white;font-size:9px;padding:2px 6px;border-radius:4px">EQUIPPED</div>
+          <div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,#f59e0b,#ef4444,#8b5cf6,#3b82f6,#22c55e);margin-bottom:8px"></div>
+          <div style="color:#f1f5f9;font-size:13px;font-weight:600">Rainbow</div>
+          <div style="color:#94a3b8;font-size:11px;margin-bottom:8px">Title Color</div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="color:#22c55e;font-size:11px">✓ Active</span>
+            <button style="padding:4px 10px;background:#166534;border:none;border-radius:5px;color:#86efac;font-size:11px">Equipped</button>
+          </div>
+        </div>
+
+        <div style="background:#1e293b;border:2px solid #334155;border-radius:10px;padding:12px;position:relative">
+          <div style="position:absolute;top:8px;right:8px;background:#1e3a5f;color:#93c5fd;font-size:9px;padding:2px 6px;border-radius:4px">COMMON</div>
+          <div style="width:48px;height:48px;border-radius:8px;background:#1e40af;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:20px">🌊</div>
+          <div style="color:#f1f5f9;font-size:13px;font-weight:600">Ocean Border</div>
+          <div style="color:#94a3b8;font-size:11px;margin-bottom:8px">Avatar Border</div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="color:#fbbf24;font-size:12px;font-weight:600">🪙 150</span>
+            <button style="padding:4px 10px;background:#7c3aed;border:none;border-radius:5px;color:white;font-size:11px">Buy</button>
+          </div>
+        </div>
+
+        <div style="background:#1e293b;border:2px solid #3b82f6;border-radius:10px;padding:12px;position:relative">
+          <div style="position:absolute;top:8px;right:8px;background:#1d4ed8;color:#bfdbfe;font-size:9px;padding:2px 6px;border-radius:4px">OWNED</div>
+          <div style="width:48px;height:48px;border-radius:8px;background:#7f1d1d;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:20px">🔥</div>
+          <div style="color:#f1f5f9;font-size:13px;font-weight:600">Flame Post</div>
+          <div style="color:#94a3b8;font-size:11px;margin-bottom:8px">Post Background</div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="color:#3b82f6;font-size:11px">In collection</span>
+            <button style="padding:4px 10px;background:#1d4ed8;border:none;border-radius:5px;color:white;font-size:11px">Equip</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">B — Wider cards (1-col on mobile, fuller info)</div>
+    <div class="mockup-body" style="background:#0f172a;padding:16px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+
+        <div style="background:#1e293b;border:2px solid #7c3aed;border-radius:10px;padding:14px;display:flex;align-items:center;gap:14px">
+          <div style="width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#db2777);flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+              <span style="color:#f1f5f9;font-size:14px;font-weight:600">Void Shimmer</span>
+              <span style="background:#7c3aed;color:white;font-size:9px;padding:2px 6px;border-radius:4px">RARE</span>
+            </div>
+            <div style="color:#94a3b8;font-size:12px">Title Color · animates on hover</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="color:#fbbf24;font-size:13px;font-weight:600;margin-bottom:6px">🪙 500</div>
+            <button style="padding:5px 14px;background:#7c3aed;border:none;border-radius:6px;color:white;font-size:12px">Buy</button>
+          </div>
+        </div>
+
+        <div style="background:#1e293b;border:2px solid #22c55e;border-radius:10px;padding:14px;display:flex;align-items:center;gap:14px">
+          <div style="width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,#f59e0b,#ef4444,#8b5cf6,#3b82f6,#22c55e);flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+              <span style="color:#f1f5f9;font-size:14px;font-weight:600">Rainbow</span>
+              <span style="background:#166534;color:#86efac;font-size:9px;padding:2px 6px;border-radius:4px">✓ EQUIPPED</span>
+            </div>
+            <div style="color:#94a3b8;font-size:12px">Title Color · cycling rainbow animation</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="color:#22c55e;font-size:12px;margin-bottom:6px">Active</div>
+            <button style="padding:5px 14px;background:#166534;border:none;border-radius:6px;color:#86efac;font-size:12px">Equipped</button>
+          </div>
+        </div>
+
+        <div style="background:#1e293b;border:2px solid #f59e0b;border-radius:10px;padding:14px;display:flex;align-items:center;gap:14px">
+          <div style="width:56px;height:56px;border-radius:10px;background:#7f1d1d;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px">⚡</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+              <span style="color:#f1f5f9;font-size:14px;font-weight:600">Storm Border</span>
+              <span style="background:#92400e;color:#fcd34d;font-size:9px;padding:2px 6px;border-radius:4px">LIMITED</span>
+            </div>
+            <div style="color:#f59e0b;font-size:12px">⏱ Expires in 3 days · Avatar Border</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="color:#fbbf24;font-size:13px;font-weight:600;margin-bottom:6px">🪙 800</div>
+            <button style="padding:5px 14px;background:#7c3aed;border:none;border-radius:6px;color:white;font-size:12px">Buy</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>

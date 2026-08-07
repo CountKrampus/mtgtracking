@@ -1,0 +1,13 @@
+[     203ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/static/js/bundle.js:96568
+[     453ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/stats/value-history:0
+[     454ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/lifecounter/stats:0
+[     454ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/stats/price-changes:0
+[     473ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/stats/value-history:0
+[     473ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/lifecounter/stats:0
+[     473ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/stats/price-changes:0
+[   90497ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/notifications:0
+[  120502ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/notifications:0
+[  135510ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/admin/badges:0
+[  135520ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/admin/users?limit=100:0
+[  135521ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/admin/badges:0
+[  135527ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/admin/users?limit=100:0
