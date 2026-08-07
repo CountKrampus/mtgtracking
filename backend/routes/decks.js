@@ -17,7 +17,7 @@ const { requireAuth, requireEditor } = require('../middleware/auth');
 const { buildUserQuery, getUserId } = require('../middleware/multiUser');
 const { activityLoggers } = require('../middleware/activityLogger');
 const { checkAndAwardBadges } = require('../utils/badgeManager');
-const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore, COLOR_SOURCES } = require('../utils/deckAnalysis');
+const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore, COLOR_SOURCES, NONBASIC_LAND_NAMES } = require('../utils/deckAnalysis');
 const { cachedApiCall } = require('../utils/apiCache');
 const User = require('../models/User');
 
@@ -734,7 +734,13 @@ router.get('/:id/manabase-builder', requireAuth, async (req, res) => {
     for (const [name, entry] of candidateEntries) {
       const relevantColorCount = entry.colors.filter(c => deckColors.includes(c)).length;
       const { fromNetwork, ...cardData } = await fetchCandidateCardData(name);
-      priced.push({ name, colors: entry.colors, cycle: entry.cycle, relevantColorCount, ...cardData });
+      // COLOR_SOURCES mixes actual lands with mana rocks that happen to fix
+      // color (Signets, Arcane Signet, etc.) - NONBASIC_LAND_NAMES is the
+      // same distinguishing list calculateManabaseScore's isLandCard uses.
+      // Getting this right matters here specifically because the frontend
+      // persists this `types` value verbatim when adding a card to the deck.
+      const types = NONBASIC_LAND_NAMES.has(name) ? ['Land'] : ['Artifact'];
+      priced.push({ name, colors: entry.colors, cycle: entry.cycle, relevantColorCount, types, ...cardData });
       if (fromNetwork) await new Promise(resolve => setTimeout(resolve, 500));
     }
 

@@ -121,6 +121,14 @@ describe('GET /api/decks/:id/manabase-builder', () => {
     const ids = res.body.candidates.map(c => c.scryfallId);
     expect(ids.every(id => !!id)).toBe(true);
     expect(new Set(ids).size).toBe(ids.length);
+
+    // COLOR_SOURCES mixes real lands with mana rocks that happen to fix
+    // color (Signets) - the frontend persists this `types` value verbatim
+    // when adding a card to the deck, so mislabeling a rock as a Land would
+    // corrupt the deck's own type-based stats/filtering afterward.
+    const byName = Object.fromEntries(res.body.candidates.map(c => [c.name, c]));
+    expect(byName['Hallowed Fountain'].types).toEqual(['Land']);
+    expect(byName['Azorius Signet'].types).toEqual(['Artifact']);
   });
 
   test('excludes lands already in the deck from both candidates and suggested', async () => {

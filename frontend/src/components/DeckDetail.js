@@ -510,7 +510,7 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
     if (selectedManabaseLands.size === 0) return manabaseScore;
     const selectedCards = manabaseCandidates
       .filter(c => selectedManabaseLands.has(c.name))
-      .map(c => ({ name: c.name, types: ['Land'], colors: c.colors }));
+      .map(c => ({ name: c.name, types: c.types || ['Land'], colors: c.colors }));
     const hypotheticalDeck = { ...deck, mainDeck: [...deck.mainDeck, ...selectedCards] };
     return calculateManabaseScore(hypotheticalDeck);
   }, [deck, manabaseCandidates, selectedManabaseLands, manabaseScore]);
@@ -648,19 +648,24 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
 
   const addSelectedLandsToDeck = async () => {
     const toAdd = manabaseCandidates.filter(c => selectedManabaseLands.has(c.name));
+    const failed = [];
     for (const land of toAdd) {
       try {
         await axios.post(`${API_URL}/decks/${deck._id}/add-card`, {
           scryfallId: land.scryfallId,
           name: land.name,
           manaCost: land.manaCost,
-          types: ['Land'],
+          types: land.types || ['Land'],
           colors: land.colors,
           imageUrl: land.imageUrl,
         });
       } catch (error) {
         console.error(`Error adding ${land.name} to deck:`, error);
+        failed.push(land.name);
       }
+    }
+    if (failed.length > 0) {
+      alert(`Failed to add: ${failed.join(', ')}. The rest were added successfully.`);
     }
     setManabaseCandidates([]);
     setSelectedManabaseLands(new Set());

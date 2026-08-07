@@ -330,5 +330,5 @@ function calculateGlobalScore(powerLevel, saltScore, manabaseScore, healthScore)
 
 module.exports = {
   calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore,
-  SALTY_CARDS, POWER_INDICATORS, COLOR_SOURCES
+  SALTY_CARDS, POWER_INDICATORS, COLOR_SOURCES, NONBASIC_LAND_NAMES
 };
