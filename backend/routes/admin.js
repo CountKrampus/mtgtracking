@@ -22,6 +22,7 @@ const { verifyToken, requireAuth, requireAdmin, requireModerator, requirePermiss
 const Challenge = require('../models/Challenge');
 const ChallengeParticipation = require('../models/ChallengeParticipation');
 const PriceFlag = require('../models/PriceFlag');
+const Feedback = require('../models/Feedback');
 const { VALID_METRICS, validateMetricParams } = require('../utils/challengeProgress');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
 const { isStaffRole, ROLE_PERMISSIONS, syncStaffBadge } = require('../utils/permissions');
@@ -629,6 +630,30 @@ router.post('/badges/sync-icons', requirePermission('badges:manage'), async (req
       if (changed) { await user.save(); updated++; }
     }
     res.json({ message: `Synced badge icons for ${updated} users` });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// GET /api/admin/feedback — list all feedback submissions, newest first
+router.get('/feedback', requirePermission('feedback:read'), async (req, res) => {
+  try {
+    const feedback = await Feedback.find()
+      .populate('submitter', 'username displayName')
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json({ feedback });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// PATCH /api/admin/feedback/:id — update a feedback item's status
+router.patch('/feedback/:id', requirePermission('feedback:manage'), async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!['pending', 'reviewed', 'closed'].includes(status)) {
+      return res.status(400).json({ message: 'status must be one of: pending, reviewed, closed' });
+    }
+    const feedback = await Feedback.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    if (!feedback) return res.status(404).json({ message: 'Feedback not found' });
+    res.json({ feedback });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
