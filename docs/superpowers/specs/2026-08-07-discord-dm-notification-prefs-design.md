@@ -40,6 +40,7 @@ The Discord bot currently DMs users only for `price_alert` notifications, hardco
 | `upvote` | off | ⬆️ Upvote: |
 | `dm` | off | 📨 New Message: |
 | `collection_health_report` | off | 📊 Collection Report: |
+| `price_flag_resolved` | off | 🏷️ Price Flag: |
 
 The `content` field already stored on each `Notification` document is used as the DM body. No new content generation is needed.
 
@@ -61,6 +62,7 @@ notificationPrefs: {
   upvote:                   { type: Boolean, default: false },
   dm:                       { type: Boolean, default: false },
   collection_health_report: { type: Boolean, default: false },
+  price_flag_resolved:      { type: Boolean, default: false },
 }
 ```
 
@@ -141,6 +143,7 @@ const PREFIXES = {
   upvote:                   '⬆️ Upvote',
   dm:                       '📨 New Message',
   collection_health_report: '📊 Collection Report',
+  price_flag_resolved:      '🏷️ Price Flag',
 };
 
 function formatDM(type, content) {
@@ -177,7 +180,7 @@ Grouped toggle rows:
 - **Trading** — Trade Offer, Trade Accepted, Trade Declined, Trade Countered
 - **Forum** — Mention, Reply, Upvote
 - **Messages** — Direct Message
-- **Collection** — Collection Health Report
+- **Collection** — Collection Health Report, Price Flag Resolution
 
 On load: `GET /api/discord/link/prefs` to populate toggle states.  
 On toggle: `PATCH /api/discord/link/prefs` with `{ [type]: newBool }` — optimistic UI, revert on error.
