@@ -502,6 +502,21 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
     return { level: Math.min(10, Math.max(1, Math.round(3 + score))), breakdown };
   }, [deck, ownership]);
 
+  // ── Physical Card Count ──────────────────────────────────────────────────
+  // ownership.summary.ownedCount/missingCount count distinct card ENTRIES
+  // (e.g. "6x Forest" counts as 1), not physical cards. This counts actual
+  // copies, capped at what the deck needs per entry (owning 3x a card the
+  // deck only wants 1 of shouldn't inflate the total).
+  const physicalOwnership = useMemo(() => {
+    if (!ownership) return null;
+    const ownedPhysical = ownership.ownedCards.reduce(
+      (sum, card) => sum + Math.min(card.quantity || 1, card.collectionQuantity || 0), 0
+    );
+    const totalPhysical = deck.statistics?.totalCards
+      || [...ownership.ownedCards, ...ownership.missingCards].reduce((sum, card) => sum + (card.quantity || 1), 0);
+    return { owned: ownedPhysical, total: totalPhysical };
+  }, [ownership, deck.statistics]);
+
   // ── Manabase Score ────────────────────────────────────────────────────────
   const manabaseScore = useMemo(() => calculateManabaseScore(deck), [deck]);
 
@@ -999,9 +1014,15 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
               {ownership && (
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-white/80">Owned Cards:</span>
+                    <span className="text-white/80">Unique Cards Owned:</span>
                     <span className="text-green-400 font-bold">
-                      {ownership.summary.ownedCount}/{deck.statistics?.totalCards || 100}
+                      {ownership.summary.ownedCount}/{ownership.ownedCards.length + ownership.missingCards.length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/80">Physical Cards Owned:</span>
+                    <span className="text-green-400 font-bold">
+                      {physicalOwnership.owned}/{physicalOwnership.total}
                     </span>
                   </div>
                   <div className="flex justify-between">

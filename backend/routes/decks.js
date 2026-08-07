@@ -402,9 +402,15 @@ router.get('/:id/ownership', requireAuth, async (req, res) => {
     let ownedValue = 0;
     let missingValue = 0;
 
+    // deck.partnerCommander is a Mongoose single-nested subdocument path -
+    // even when stored as null, Mongoose wraps it in an object that is
+    // truthy on `deck.partnerCommander ? ... : ...` despite serializing to
+    // null. Checking a real field (name) instead of object identity avoids
+    // injecting a phantom empty "card" (no scryfallId) into every deck
+    // that has no actual partner commander.
     const allDeckCards = [
       deck.commander,
-      ...(deck.partnerCommander ? [deck.partnerCommander] : []),
+      ...(deck.partnerCommander?.name ? [deck.partnerCommander] : []),
       ...deck.mainDeck
     ];
 
@@ -517,9 +523,11 @@ router.get('/:id/stats', requireAuth, async (req, res) => {
         }
       });
 
+      // Same Mongoose single-nested-subdocument truthiness gotcha as
+      // /:id/ownership above - check a real field, not object identity.
       const allDeckCards = [
         deck.commander,
-        ...(deck.partnerCommander ? [deck.partnerCommander] : []),
+        ...(deck.partnerCommander?.name ? [deck.partnerCommander] : []),
         ...deck.mainDeck
       ];
 
