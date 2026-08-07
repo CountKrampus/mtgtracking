@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { RefreshCw, AlertTriangle, CheckCircle } from 'lucide-react';
+import { RefreshCw, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { useAuthContext } from '../../../contexts/AuthContext';
 import { API_URL } from '../../../config';
 
@@ -160,13 +160,21 @@ export default function FeedbackTab() {
 
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
-  const handleMarkReviewed = useCallback((id) => {
-    setFeedback((prev) =>
-      prev.map((f) =>
-        f._id === id ? { ...f, status: 'reviewed' } : f
-      )
-    );
-  }, []);
+  const updateStatus = useCallback(async (id, status) => {
+    try {
+      const res = await authFetch(`${API_URL}/admin/feedback/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error('Failed to update status');
+      const data = await res.json();
+      setFeedback((prev) => prev.map((f) => (f._id === id ? data.feedback : f)));
+    } catch (error) {
+      console.error('Error updating feedback status:', error);
+      alert('Failed to update feedback status');
+    }
+  }, [authFetch]);
 
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorState message={error} onRetry={fetchFeedback} />;
@@ -221,15 +229,26 @@ export default function FeedbackTab() {
                   <StatusBadge status={item.status} />
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {item.status !== 'reviewed' && (
-                    <button
-                      onClick={() => handleMarkReviewed(item._id)}
-                      className="p-1 text-green-400 hover:text-green-300 transition-colors"
-                      title="Mark as reviewed"
-                    >
-                      <CheckCircle size={16} />
-                    </button>
-                  )}
+                  <div className="flex items-center justify-end gap-2">
+                    {item.status !== 'reviewed' && item.status !== 'closed' && (
+                      <button
+                        onClick={() => updateStatus(item._id, 'reviewed')}
+                        className="p-1 text-green-400 hover:text-green-300 transition-colors"
+                        title="Mark as reviewed"
+                      >
+                        <CheckCircle size={16} />
+                      </button>
+                    )}
+                    {item.status !== 'closed' && (
+                      <button
+                        onClick={() => updateStatus(item._id, 'closed')}
+                        className="p-1 text-gray-400 hover:text-gray-300 transition-colors"
+                        title="Close"
+                      >
+                        <XCircle size={16} />
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
