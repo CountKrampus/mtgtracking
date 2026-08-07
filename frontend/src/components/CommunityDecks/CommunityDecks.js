@@ -3,12 +3,13 @@ import { Search, Globe } from 'lucide-react';
 import { API_URL } from '../../config';
 import SharedDeckView from './SharedDeckView';
 import { COLOR_PIPS, FORMAT_COLORS } from './deckConstants';
+import { useAuthContext } from '../../contexts/AuthContext';
 
 const FORMATS = ['commander', 'standard', 'modern', 'pioneer', 'legacy', 'vintage', 'pauper', 'draft', 'oathbreaker', 'other'];
 const COLORS = ['W', 'U', 'B', 'R', 'G'];
 const COLOR_LABELS = { W: '☀️ White', U: '💧 Blue', B: '💀 Black', R: '🔥 Red', G: '🌲 Green' };
 
-function DeckCard({ deck, onView }) {
+function DeckCard({ deck, onView, onFeature, isAdmin }) {
   return (
     <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden hover:border-purple-500/40 transition group">
       {deck.commander?.imageUrl ? (
@@ -49,18 +50,31 @@ function DeckCard({ deck, onView }) {
           {deck.totalValue > 0 && <span>${deck.totalValue.toFixed(2)}</span>}
           {deck.importCount > 0 && <span>↓ {deck.importCount}</span>}
         </div>
-        <button
-          onClick={() => onView(deck.shareCode)}
-          className="w-full py-1.5 bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/30 text-purple-300 hover:text-white rounded-lg text-xs font-medium transition"
-        >
-          View Deck →
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onView(deck.shareCode)}
+            className="flex-1 py-1.5 bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/30 text-purple-300 hover:text-white rounded-lg text-xs font-medium transition"
+          >
+            View Deck →
+          </button>
+          {isAdmin && (
+            <button
+              onClick={() => onFeature(deck._id)}
+              title="Feature as Deck of the Week"
+              className="rounded p-1 text-yellow-400/60 hover:text-yellow-300"
+            >
+              ⭐
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
 function CommunityDecks() {
+  const { user, authFetch } = useAuthContext();
+
   const [decks, setDecks] = useState([]);
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(1);
@@ -77,6 +91,18 @@ function CommunityDecks() {
   const [tags, setTags] = useState('');
   const [tagsInput, setTagsInput] = useState('');
   const [sort, setSort] = useState('imported');
+
+  // Spotlight
+  const [spotlight, setSpotlight] = useState(null);
+  const [spotlightLoading, setSpotlightLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/deck-spotlight/active')
+      .then(r => r.json())
+      .then(data => setSpotlight(data.spotlight))
+      .catch(() => {})
+      .finally(() => setSpotlightLoading(false));
+  }, []);
 
   const fetchDecks = useCallback(() => {
     setLoading(true);
@@ -114,6 +140,36 @@ function CommunityDecks() {
   const toggleColor = (c) => {
     setSelectedColors(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
     setPage(1);
+  };
+
+  const handleFeatureDeck = async (deckId) => {
+    try {
+      const res = await authFetch('/api/deck-spotlight', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deckId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.message || 'Failed to feature deck');
+        return;
+      }
+      const activeRes = await fetch('/api/deck-spotlight/active');
+      const activeData = await activeRes.json();
+      setSpotlight(activeData.spotlight);
+    } catch {
+      alert('Failed to feature deck');
+    }
+  };
+
+  const handleRemoveSpotlight = async () => {
+    if (!spotlight) return;
+    try {
+      await authFetch(`/api/deck-spotlight/${spotlight._id}`, { method: 'DELETE' });
+      setSpotlight(null);
+    } catch {
+      alert('Failed to remove spotlight');
+    }
   };
 
   if (viewingShareCode) {
@@ -202,6 +258,53 @@ function CommunityDecks() {
         </div>
       </div>
 
+      {/* Spotlight banner */}
+      {!spotlightLoading && spotlight && (
+        <div className="mb-6 rounded-xl border border-yellow-400/40 bg-yellow-400/10 p-4 backdrop-blur">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="mb-1 flex items-center gap-2">
+                <span className="text-lg">⭐</span>
+                <span className="text-sm font-semibold uppercase tracking-wide text-yellow-300">Deck of the Week</span>
+              </div>
+              <h3 className="text-lg font-bold text-white">{spotlight.deckId?.name}</h3>
+              <p className="mt-0.5 text-sm text-white/70">
+                {spotlight.budgetTier} {spotlight.buildLabel}
+                {spotlight.deckId?.commander?.name && ` · ${spotlight.deckId.commander.name}`}
+                {spotlight.deckId?.userId?.username && ` · by @${spotlight.deckId.userId.username}`}
+              </p>
+              <div className="mt-2 flex gap-2">
+                {spotlight.deckId?.shareCode && (
+                  <button
+                    onClick={() => setViewingShareCode(spotlight.deckId.shareCode)}
+                    className="rounded-lg bg-yellow-400/20 px-3 py-1 text-sm text-yellow-200 hover:bg-yellow-400/30"
+                  >
+                    View Deck
+                  </button>
+                )}
+                {spotlight.threadId && (
+                  <a
+                    href={`/forum/thread/${spotlight.threadId}`}
+                    className="rounded-lg bg-white/10 px-3 py-1 text-sm text-white/70 hover:bg-white/20"
+                  >
+                    Discussion →
+                  </a>
+                )}
+              </div>
+            </div>
+            {user?.role === 'admin' && (
+              <button
+                onClick={handleRemoveSpotlight}
+                className="rounded-lg bg-red-500/20 px-2 py-1 text-xs text-red-300 hover:bg-red-500/30"
+                title="Remove spotlight"
+              >
+                ✕ Remove
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Results */}
       {loading ? (
         <div className="text-center text-gray-400 py-16">Loading decks...</div>
@@ -216,7 +319,7 @@ function CommunityDecks() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
             {decks.map(deck => (
-              <DeckCard key={deck._id} deck={deck} onView={setViewingShareCode} />
+              <DeckCard key={deck._id} deck={deck} onView={setViewingShareCode} onFeature={handleFeatureDeck} isAdmin={user?.role === 'admin'} />
             ))}
           </div>
           {pages > 1 && (
