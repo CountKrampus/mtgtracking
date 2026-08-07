@@ -1904,7 +1904,7 @@ function CollectionView({
 
         {/* Bulk Actions Floating Bar */}
         {selectedCards.size > 0 && (
-          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-900/95 backdrop-blur-md rounded-xl shadow-2xl border-2 border-purple-500 px-6 py-4 flex items-center gap-4 z-40">
+          <div className="fixed bottom-20 sm:bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-900/95 backdrop-blur-md rounded-xl shadow-2xl border-2 border-purple-500 px-6 py-4 flex flex-wrap items-center gap-4 z-40 max-w-[calc(100vw-2rem)]">
             <span className="text-white font-semibold">
               {selectedCards.size} card{selectedCards.size > 1 ? 's' : ''} selected
             </span>

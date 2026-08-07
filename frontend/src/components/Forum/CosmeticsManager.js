@@ -84,12 +84,13 @@ function IconPicker({ value, onChange }) {
   const openPicker = () => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      const popoverWidth = 380;
+      const popoverWidth = Math.min(380, window.innerWidth - 16);
       let left = rect.left;
       if (left + popoverWidth > window.innerWidth - 8) {
         left = window.innerWidth - popoverWidth - 8;
       }
-      setPopoverPos({ top: rect.bottom + 4, left });
+      left = Math.max(8, left);
+      setPopoverPos({ top: rect.bottom + 4, left, width: popoverWidth });
     }
     setOpen(true);
   };
@@ -129,7 +130,7 @@ function IconPicker({ value, onChange }) {
             position: 'fixed',
             top: popoverPos.top,
             left: popoverPos.left,
-            width: 380,
+            width: popoverPos.width || 380,
             maxHeight: 320,
             overflowY: 'auto',
             zIndex: 9999,

@@ -16,6 +16,21 @@ function PlayerAdvancedControls({
 }) {
   const [activeTab, setActiveTab] = useState('quick');
 
+  // The panel is w-72 h-96 (288x384) and centered on `position` via
+  // translate(-50%,-50%) - position is the tapped player card's own center
+  // (see PlayerCard.js), which in a multi-column grid can sit well within
+  // half the panel's width/height of a screen edge on narrow/short
+  // viewports. Clamp so the panel always stays fully on-screen.
+  const halfW = 144;
+  const halfH = 192;
+  const margin = 8;
+  const clampedX = position
+    ? Math.min(Math.max(position.x, halfW + margin), window.innerWidth - halfW - margin)
+    : null;
+  const clampedY = position
+    ? Math.min(Math.max(position.y, halfH + margin), window.innerHeight - halfH - margin)
+    : null;
+
   const quickChanges = [
     { label: '-1', value: -1, color: 'bg-red-600/80 hover:bg-red-600' },
     { label: '-5', value: -5, color: 'bg-red-500/80 hover:bg-red-500' },
@@ -43,9 +58,9 @@ function PlayerAdvancedControls({
       <div
         className="bg-gray-900 rounded-2xl p-4 shadow-2xl border border-white/20 w-72 h-96 overflow-hidden absolute"
         style={{
-          left: position ? `${position.x}px` : '50%',
-          top: position ? `${position.y}px` : '50%',
-          transform: position ? 'translate(-50%, -50%)' : 'translate(-50%, -50%)',
+          left: position ? `${clampedX}px` : '50%',
+          top: position ? `${clampedY}px` : '50%',
+          transform: 'translate(-50%, -50%)',
         }}
       >
         {/* Header */}

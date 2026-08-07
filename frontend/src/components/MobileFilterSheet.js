@@ -24,8 +24,7 @@ export default function MobileFilterSheet({
     <>
       <div className="fixed inset-0 z-40 bg-black/60" onClick={onClose} />
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900 rounded-t-2xl max-h-[88vh] flex flex-col"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        className="fixed bottom-16 left-0 right-0 z-50 bg-gray-900 rounded-t-2xl max-h-[calc(88vh-4rem)] flex flex-col"
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
           <span className="text-white font-semibold text-lg">Filters</span>
