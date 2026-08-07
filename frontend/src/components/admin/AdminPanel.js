@@ -125,6 +125,8 @@ export function AdminPanel({ onClose, user }) {
     community: false,
     system: false
   });
+  const [mobileScreen, setMobileScreen] = useState('groups'); // 'groups' | 'tabs' | 'content'
+  const [mobileActiveGroup, setMobileActiveGroup] = useState(null);
 
   const toggleGroup = (groupId) => {
     setExpandedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
@@ -150,8 +152,71 @@ export function AdminPanel({ onClose, user }) {
 
         {/* Body: sidebar + content */}
         <div className="flex flex-col sm:flex-row flex-1 overflow-hidden">
-          {/* Sidebar */}
-          <div className="w-full sm:w-56 bg-gray-900 border-b sm:border-b-0 sm:border-r border-gray-700 overflow-y-auto flex-shrink-0 max-h-64 sm:max-h-none">
+
+          {/* ── Mobile: 3-screen drill-down (hidden at sm: and up) ── */}
+          <div className="sm:hidden flex-1 overflow-y-auto">
+            {mobileScreen === 'groups' && (
+              <div>
+                {groups.filter(group => group.tabs.some(tab => canSeeTab(tab, user))).map(group => {
+                  const GroupIcon = group.icon;
+                  return (
+                    <button
+                      key={group.id}
+                      onClick={() => { setMobileActiveGroup(group); setMobileScreen('tabs'); }}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-gray-800 transition border-b border-gray-700"
+                    >
+                      <GroupIcon size={16} className={group.color} />
+                      <span className="text-sm font-semibold text-gray-300 flex-1">{group.label}</span>
+                      <ChevronRight size={14} className="text-gray-500" />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {mobileScreen === 'tabs' && mobileActiveGroup && (
+              <div>
+                <button
+                  onClick={() => setMobileScreen('groups')}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-left text-gray-300 hover:bg-gray-800 transition border-b border-gray-700"
+                >
+                  <ChevronRight size={14} className="rotate-180" />
+                  <span className="text-sm font-semibold">{mobileActiveGroup.label}</span>
+                </button>
+                {mobileActiveGroup.tabs.filter(tab => canSeeTab(tab, user)).map(tab => {
+                  const TabIcon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => { setActiveTab(tab.id); setMobileScreen('content'); }}
+                      className="w-full flex items-center gap-2 pl-8 pr-4 py-3 text-left text-sm text-gray-400 hover:text-white hover:bg-gray-800/50 transition"
+                    >
+                      <TabIcon size={14} />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {mobileScreen === 'content' && (
+              <div>
+                <button
+                  onClick={() => setMobileScreen('tabs')}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-left text-gray-300 hover:bg-gray-800 transition border-b border-gray-700"
+                >
+                  <ChevronRight size={14} className="rotate-180" />
+                  <span className="text-sm font-semibold">Back</span>
+                </button>
+                <div className="p-3">
+                  {renderContent(activeTab)}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── Desktop: existing sidebar + content (hidden below sm:) ── */}
+          <div className="hidden sm:block sm:w-56 bg-gray-900 sm:border-r border-gray-700 overflow-y-auto flex-shrink-0">
             {groups.filter(group => group.tabs.some(tab => canSeeTab(tab, user))).map(group => {
               const GroupIcon = group.icon;
               const isExpanded = expandedGroups[group.id];
@@ -190,8 +255,7 @@ export function AdminPanel({ onClose, user }) {
             })}
           </div>
 
-          {/* Main content */}
-          <div className="flex-1 min-w-0 overflow-y-auto p-6">
+          <div className="hidden sm:block flex-1 min-w-0 overflow-y-auto p-3 sm:p-6">
             {renderContent(activeTab)}
           </div>
         </div>
