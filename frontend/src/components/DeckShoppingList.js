@@ -64,6 +64,11 @@ function DeckShoppingList({ decks = [], onClose }) {
   }, [decks, cards]);
 
   useEffect(() => {
+    // Guards against a stale response overwriting newer data if decks/cards
+    // change (re-triggering this effect) before an earlier fetch resolves -
+    // same pattern used elsewhere in this codebase (e.g. DeckDetail.js's
+    // recommendations fetch) for the same class of race condition.
+    let cancelled = false;
     const ids = candidates.filter(c => c.scryfallId).map(c => c.scryfallId);
     if (ids.length === 0) {
       setPricesLoaded(true);
@@ -84,6 +89,7 @@ function DeckShoppingList({ decks = [], onClose }) {
       )
     )
       .then(results => {
+        if (cancelled) return;
         const flat = results.flat();
         const priceMap = {};
         flat.forEach(card => {
@@ -92,14 +98,19 @@ function DeckShoppingList({ decks = [], onClose }) {
         setPrices(priceMap);
       })
       .catch(error => {
+        if (cancelled) return;
         console.error('Error fetching shopping list prices:', error);
         // Leave prices empty - the list still renders with name/deckCount.
       })
-      .finally(() => setPricesLoaded(true));
+      .finally(() => { if (!cancelled) setPricesLoaded(true); });
+
+    return () => { cancelled = true; };
     // Only re-fetch when the actual set of candidate ids changes, not on
     // every render (candidates is a new array each render since it's a
     // useMemo result recomputed from decks/cards, but its *content* is
-    // usually stable between opens of the same modal instance).
+    // usually stable between opens of the same modal instance). Scryfall
+    // ids are UUIDs and never contain commas, so this join is a safe,
+    // unambiguous dependency key.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [candidates.map(c => c.scryfallId).join(',')]);
 

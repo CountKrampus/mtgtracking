@@ -172,6 +172,7 @@ Add this `useEffect` in the component body, after the `candidates` `useMemo`:
       )
     )
       .then(results => {
+        if (cancelled) return;
         const flat = results.flat();
         const priceMap = {};
         flat.forEach(card => {
@@ -180,10 +181,13 @@ Add this `useEffect` in the component body, after the `candidates` `useMemo`:
         setPrices(priceMap);
       })
       .catch(error => {
+        if (cancelled) return;
         console.error('Error fetching shopping list prices:', error);
         // Leave prices empty - the list still renders with name/deckCount.
       })
-      .finally(() => setPricesLoaded(true));
+      .finally(() => { if (!cancelled) setPricesLoaded(true); });
+
+    return () => { cancelled = true; };
     // Only re-fetch when the actual set of candidate ids changes, not on
     // every render (candidates is a new array each render since it's a
     // useMemo result recomputed from decks/cards, but its *content* is
@@ -191,6 +195,8 @@ Add this `useEffect` in the component body, after the `candidates` `useMemo`:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [candidates.map(c => c.scryfallId).join(',')]);
 ```
+
+Note: this block also needs a `let cancelled = false;` declared at the top of the `useEffect` (before the `ids` computation) to guard against a stale response overwriting newer data if `decks`/`cards` change and re-trigger this effect before an earlier fetch resolves — the same race-condition pattern already fixed elsewhere in this codebase (e.g. `DeckDetail.js`'s recommendations fetch).
 
 - [ ] **Step 4: Re-sort by price once loaded, and wire the Wishlist action**
 
