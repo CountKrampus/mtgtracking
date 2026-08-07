@@ -21,6 +21,7 @@ import { AdminPanel } from './components/admin/AdminPanel';
 
 import { API_URL } from './config';
 import AppHeader from './components/AppHeader';
+import FeedbackModal from './components/FeedbackModal';
 import CardDetailPanel from './components/CardDetailPanel';
 import SparklinePopup from './components/SparklinePopup';
 import BottomNav from './components/BottomNav';
@@ -134,6 +135,7 @@ function App() {
   const { shortcuts, keyToCommand, setShortcut, removeShortcut } = useKeyboardShortcuts();
   // Auth/Admin state
   const [showAccountSettings, setShowAccountSettings] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
 
   // Location management state is now in LocationTagContext
@@ -328,6 +330,7 @@ function App() {
         onOpenMessages={() => navigate('/messages')}
         onOpenProfile={() => navigate('/profile')}
         onOpenAccountSettings={() => setShowAccountSettings(true)}
+        onOpenFeedback={() => setShowFeedbackModal(true)}
         onLogout={authLogout}
       />
 
@@ -430,6 +433,11 @@ function App() {
       {/* Account Settings Modal */}
       {showAccountSettings && (
         <AccountSettings onClose={() => setShowAccountSettings(false)} />
+      )}
+
+      {/* Feedback Modal */}
+      {showFeedbackModal && (
+        <FeedbackModal onClose={() => setShowFeedbackModal(false)} />
       )}
 
       {/* Admin Panel Modal */}

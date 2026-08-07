@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, MessageCircle } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import OfflineStatusBadge from './OfflineStatusBadge';
 import UserMenu from './UserMenu';
@@ -15,6 +15,7 @@ export default function AppHeader({
   onOpenMessages,
   onOpenProfile,
   onOpenAccountSettings,
+  onOpenFeedback,
   onLogout,
 }) {
   if (!authUser) return null;
@@ -36,6 +37,13 @@ export default function AppHeader({
           title="Messages"
         >
           <MessageSquare size={20} />
+        </button>
+        <button
+          onClick={onOpenFeedback}
+          className="relative p-2 hover:bg-white/10 rounded-lg transition text-white/70 hover:text-white"
+          title="Send Feedback"
+        >
+          <MessageCircle size={20} />
         </button>
         <UserMenu
           user={authUser}
