@@ -314,7 +314,7 @@ Expected: FAIL — route doesn't exist.
 
 Add this import near the top of the file, alongside the existing `deckAnalysis` import (note: `axios` is already imported in this file for other routes, and `getPriceWithFallback` is deliberately NOT used here — see the note below):
 ```js
-const { COLOR_SOURCES } = require('../utils/deckAnalysis');
+const { COLOR_SOURCES, NONBASIC_LAND_NAMES } = require('../utils/deckAnalysis');
 ```
 
 Add the route after the `/:id/recommendations` route added by Phase 2's Task 1:
@@ -327,8 +327,14 @@ Add the route after the `/:id/recommendations` route added by Phase 2's Task 1:
 // afterward - that route's duplicate-check compares scryfallId, and
 // getPriceWithFallback doesn't return one (price-only). Fetching the full
 // card once gives price + scryfallId + image + mana cost together.
+// Cached (24h, via cachedApiCall) since the same candidate pool is refetched
+// every time a user re-runs the builder at a different budget for the same
+// deck colors; `fromNetwork` tells the caller whether this call actually hit
+// Scryfall, so the 500ms courtesy delay can be skipped on cache hits.
 async function fetchCandidateCardData(name) {
-  try {
+  let fromNetwork = false;
+  const data = await cachedApiCall(`manabase-candidate:${name}`, async () => {
+    fromNetwork = true;
     const response = await axios.get(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(name)}`);
     return {
       scryfallId: response.data.id,
@@ -336,9 +342,11 @@ async function fetchCandidateCardData(name) {
       imageUrl: response.data.image_uris?.normal || response.data.card_faces?.[0]?.image_uris?.normal || null,
       price: response.data.prices?.usd ? parseFloat(response.data.prices.usd) : 0,
     };
-  } catch (error) {
+  }).catch(error => {
+    console.error(`Manabase builder: failed to fetch Scryfall data for "${name}":`, error.message);
     return { scryfallId: null, manaCost: '', imageUrl: null, price: 0 };
-  }
+  });
+  return { ...data, fromNetwork };
 }
 
 router.get('/:id/manabase-builder', requireAuth, async (req, res) => {
@@ -369,9 +377,15 @@ router.get('/:id/manabase-builder', requireAuth, async (req, res) => {
     const priced = [];
     for (const [name, entry] of candidateEntries) {
       const relevantColorCount = entry.colors.filter(c => deckColors.includes(c)).length;
-      const cardData = await fetchCandidateCardData(name);
-      priced.push({ name, colors: entry.colors, cycle: entry.cycle, relevantColorCount, ...cardData });
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const { fromNetwork, ...cardData } = await fetchCandidateCardData(name);
+      // COLOR_SOURCES mixes actual lands with mana rocks that happen to fix
+      // color (Signets, Arcane Signet, etc.) - NONBASIC_LAND_NAMES is the
+      // same distinguishing list calculateManabaseScore's isLandCard uses.
+      // Getting this right matters here specifically because the frontend
+      // persists this `types` value verbatim when adding a card to the deck.
+      const types = NONBASIC_LAND_NAMES.has(name) ? ['Land'] : ['Artifact'];
+      priced.push({ name, colors: entry.colors, cycle: entry.cycle, relevantColorCount, types, ...cardData });
+      if (fromNetwork) await new Promise(resolve => setTimeout(resolve, 500));
     }
 
     const byValue = [...priced].sort((a, b) => {
@@ -416,6 +430,8 @@ function getDeckColorIdentity(deck) {
 ```
 This also required fixing the test fixtures above (and in the already-merged `backend/__tests__/deckRecommendations.test.js`) to create decks with `commander: { colorIdentity: [...] }` instead of `commander: { colors: [...] }`, and adding a regression test to `deckRecommendations.test.js` proving commander-only color identity (empty `mainDeck`) is respected.
 
+**Second real bug found (during Task 3's code review):** the frontend hardcoded `types: ['Land']` for every selected candidate, but `COLOR_SOURCES` mixes real lands with mana rocks that happen to fix color (Signets, Arcane Signet, Fellwar Stone, Chromatic Lantern) — persisting a rock as a `Land`-typed card corrupts the deck's own type-based stats/filtering afterward, and also skews the live client-side projected Manabase Score (which counts land count via `isLandCard`). Fixed by exporting the existing `NONBASIC_LAND_NAMES` set from `deckAnalysis.js` (add `NONBASIC_LAND_NAMES` to its `module.exports`, alongside `COLOR_SOURCES`) and having this route compute the correct `types` per candidate (see the `priced.push(...)` line above), rather than duplicating the land-vs-rock list on the frontend. Task 3's frontend code below uses `card.types` from the API response instead of hardcoding `['Land']`.
+
 - [ ] **Step 4: Run tests, verify they pass**
 
 Run: `cd backend && npx jest deckManabaseBuilder --silent` (sandbox disabled)
@@ -442,6 +458,8 @@ git commit -m "feat: add GET /api/decks/:id/manabase-builder (budget-constrained
 
 This is a frontend-only task (no test infra) — verify via `npm run build` plus manual click-through.
 
+**Two more bugs found while implementing this task (same pattern already seen in Phase 2):** Step 2's `suggestLandPackage` used `localStorage.getItem('authToken')` for its `fetch()` call, but this app's actual token key is `mtg_access_token` (confirmed via `frontend/src/utils/auth.js`) — using the wrong key silently 401s every authenticated request. Fixed below. Step 4's `addSelectedLandsToDeck` also built a manual `Authorization` header for its `axios.post` call, which is redundant since `App.js` already has a global `axios.interceptors.request.use()` that attaches the token to every axios request automatically (Phase 2's `addRecommendationToDeck`, same file, already follows this no-manual-header convention) — removed below.
+
 - [ ] **Step 1: Add new state**
 
 Add alongside the other `useState` declarations (near Phase 2's `recCategory`/`recScope` state):
@@ -462,7 +480,7 @@ Add this function in the component body, near Phase 2's recommendation handlers:
     if (!budget || budget <= 0) return;
     setLoadingManabaseBuilder(true);
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('mtg_access_token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const response = await fetch(`${API_URL}/decks/${deck._id}/manabase-builder?budget=${budget}`, { headers });
       const data = response.ok ? await response.json() : { suggested: [] };
@@ -495,7 +513,7 @@ Add this `useMemo`, directly after the existing `manabaseScore` `useMemo` added 
     if (selectedManabaseLands.size === 0) return manabaseScore;
     const selectedCards = manabaseCandidates
       .filter(c => selectedManabaseLands.has(c.name))
-      .map(c => ({ name: c.name, types: ['Land'], colors: c.colors }));
+      .map(c => ({ name: c.name, types: c.types || ['Land'], colors: c.colors }));
     const hypotheticalDeck = { ...deck, mainDeck: [...deck.mainDeck, ...selectedCards] };
     return calculateManabaseScore(hypotheticalDeck);
   }, [deck, manabaseCandidates, selectedManabaseLands, manabaseScore]);
@@ -507,22 +525,27 @@ Reuses the exact same add-card call Phase 2's Task 2 Step 3 already introduced (
 
 ```js
   const addSelectedLandsToDeck = async () => {
-    const token = localStorage.getItem('authToken');
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    // No manual auth header - App.js's global axios interceptor attaches it
+    // to every axios request, matching addRecommendationToDeck's convention.
     const toAdd = manabaseCandidates.filter(c => selectedManabaseLands.has(c.name));
+    const failed = [];
     for (const land of toAdd) {
       try {
         await axios.post(`${API_URL}/decks/${deck._id}/add-card`, {
           scryfallId: land.scryfallId,
           name: land.name,
           manaCost: land.manaCost,
-          types: ['Land'],
+          types: land.types || ['Land'],
           colors: land.colors,
           imageUrl: land.imageUrl,
-        }, { headers });
+        });
       } catch (error) {
         console.error(`Error adding ${land.name} to deck:`, error);
+        failed.push(land.name);
       }
+    }
+    if (failed.length > 0) {
+      alert(`Failed to add: ${failed.join(', ')}. The rest were added successfully.`);
     }
     setManabaseCandidates([]);
     setSelectedManabaseLands(new Set());
