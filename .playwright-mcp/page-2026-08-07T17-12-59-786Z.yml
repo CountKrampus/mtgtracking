@@ -1,0 +1,276 @@
+- generic [ref=f14e3]:
+  - generic [ref=f14e5]:
+    - button "Notifications" [ref=f14e6] [cursor=pointer]
+    - button "Messages" [ref=f14e10] [cursor=pointer]
+    - button "Send Feedback" [ref=f14e13] [cursor=pointer]
+    - button [ref=f14e16] [cursor=pointer]:
+      - img "creamkrampus" [ref=f14e17]
+  - generic [ref=f14e20]:
+    - button [ref=f14e21] [cursor=pointer]
+    - generic [ref=f14e24]:
+      - generic [ref=f14e26]:
+        - generic [ref=f14e27]:
+          - heading "MTG Tracker" [level=1] [ref=f14e28]
+          - paragraph [ref=f14e29]: Collection Manager
+        - button [ref=f14e30] [cursor=pointer]
+      - generic [ref=f14e35]:
+        - generic [ref=f14e36]: K
+        - generic [ref=f14e37]:
+          - paragraph [ref=f14e38]: Krampus
+          - text: admin
+      - generic [ref=f14e39]:
+        - button "Navigation" [ref=f14e40] [cursor=pointer]
+        - button "Dashboard" [ref=f14e44] [cursor=pointer]
+        - button "Collection" [ref=f14e49] [cursor=pointer]
+        - button "Deck Builder" [ref=f14e54] [cursor=pointer]
+        - button "Wishlist" [ref=f14e60] [cursor=pointer]
+        - button "Trading Board" [ref=f14e64] [cursor=pointer]
+        - button "Challenges" [ref=f14e69] [cursor=pointer]
+        - button "Forum" [ref=f14e77] [cursor=pointer]
+        - button "Community Decks" [ref=f14e81] [cursor=pointer]
+        - button "Life Counter" [ref=f14e86] [cursor=pointer]
+        - button "Settings" [ref=f14e93] [cursor=pointer]
+        - button "Actions" [ref=f14e98] [cursor=pointer]
+        - button "Import" [ref=f14e102] [cursor=pointer]
+        - button "Export JSON" [ref=f14e107] [cursor=pointer]
+        - button "Export CSV" [ref=f14e112] [cursor=pointer]
+        - button "Update Prices" [ref=f14e117] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f14e124] [cursor=pointer]
+        - button "Tools" [ref=f14e131] [cursor=pointer]
+        - button "Commanders" [ref=f14e135] [cursor=pointer]
+        - button "Sets" [ref=f14e139] [cursor=pointer]
+        - button "Combos" [ref=f14e143] [cursor=pointer]
+        - button "Finance" [ref=f14e147] [cursor=pointer]
+        - button "Scan Card" [ref=f14e151] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f14e156] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f14e161] [cursor=pointer]
+        - button "Spoiler Season" [ref=f14e165] [cursor=pointer]
+        - button "Learn" [ref=f14e170] [cursor=pointer]
+        - button "Card Rulings" [ref=f14e174] [cursor=pointer]
+        - button "Interaction Checker" [ref=f14e179] [cursor=pointer]
+        - button "New Player Guide" [ref=f14e183] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f14e188] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f14e193] [cursor=pointer]
+        - button "Format Guides" [ref=f14e197] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f14e205] [cursor=pointer]
+        - button "Gameplay" [ref=f14e211] [cursor=pointer]
+        - generic [ref=f14e215]: Admin
+        - button "Admin Panel" [ref=f14e216] [cursor=pointer]
+      - generic [ref=f14e220]:
+        - button "Account" [ref=f14e221] [cursor=pointer]
+        - button "Sign Out" [ref=f14e226] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f14e232] [cursor=pointer]:
+        - generic [ref=f14e235]: Command Palette
+        - generic [ref=f14e236]: Ctrl+K
+    - main [ref=f14e237]:
+      - generic [ref=f14e238]:
+        - navigation [ref=f14e239]:
+          - button "Home" [ref=f14e240] [cursor=pointer]
+          - generic [ref=f14e247]: Life Counter
+        - generic [ref=f14e278]:
+          - generic [ref=f14e279]:
+            - button "Back" [ref=f14e280] [cursor=pointer]
+            - generic [ref=f14e283]:
+              - button "Undo (Ctrl+Z)" [disabled] [ref=f14e284]
+              - button "Redo (Ctrl+Shift+Z)" [disabled] [ref=f14e288]
+            - generic [ref=f14e292]:
+              - button "Tools (Dice, Timer, Log)" [ref=f14e293] [cursor=pointer]
+              - button "Trigger Reminders" [ref=f14e296] [cursor=pointer]
+              - button "Settings" [ref=f14e300] [cursor=pointer]
+              - button "Fullscreen" [ref=f14e304] [cursor=pointer]
+            - generic [ref=f14e310]:
+              - button "Game History" [ref=f14e311] [cursor=pointer]
+              - button "Statistics" [ref=f14e316] [cursor=pointer]
+              - button "Share Game" [ref=f14e319] [cursor=pointer]
+              - button "End Game" [ref=f14e326] [cursor=pointer]
+              - button "Reset Game" [ref=f14e333] [cursor=pointer]
+          - button "Turn Tracker" [ref=f14e337] [cursor=pointer]
+          - generic [ref=f14e340]:
+            - generic [ref=f14e341]:
+              - heading "Turn Tracker" [level=3] [ref=f14e342]
+              - generic [ref=f14e343]: Turn 1
+            - generic [ref=f14e344]:
+              - button "Previous turn" [ref=f14e345] [cursor=pointer]
+              - generic [ref=f14e348]:
+                - generic [ref=f14e349]: Current Player
+                - generic [ref=f14e350]: Player 1
+              - button "Next turn" [ref=f14e351] [cursor=pointer]
+            - generic [ref=f14e354]:
+              - button "Player 1" [ref=f14e355] [cursor=pointer]
+              - button "Player 2" [ref=f14e356] [cursor=pointer]
+              - button "Player 3" [ref=f14e357] [cursor=pointer]
+              - button "Player 4" [ref=f14e358] [cursor=pointer]
+            - generic [ref=f14e359]:
+              - generic [ref=f14e360]: Current Phase
+              - generic [ref=f14e361]:
+                - button "Upkeep" [ref=f14e362] [cursor=pointer]
+                - button "Draw" [ref=f14e363] [cursor=pointer]
+                - button "Main 1" [ref=f14e364] [cursor=pointer]
+                - button "Combat" [ref=f14e365] [cursor=pointer]
+                - button "Main 2" [ref=f14e366] [cursor=pointer]
+                - button "End" [ref=f14e367] [cursor=pointer]
+            - generic [ref=f14e368]:
+              - generic [ref=f14e369]: Storm Count
+              - generic [ref=f14e373]:
+                - button "-" [disabled] [ref=f14e374]
+                - generic [ref=f14e375]: "0"
+                - button "+" [ref=f14e376] [cursor=pointer]
+            - generic [ref=f14e377]:
+              - generic "Player 1" [ref=f14e378]
+              - generic "Player 2" [ref=f14e379]
+              - generic "Player 3" [ref=f14e380]
+              - generic "Player 4" [ref=f14e381]
+          - button "Game Mechanics" [ref=f14e382] [cursor=pointer]
+          - generic [ref=f14e387]:
+            - generic [ref=f14e388]:
+              - generic [ref=f14e389]:
+                - generic [ref=f14e390]: ▶ CURRENT TURN
+                - heading "Player 1" [level=3] [ref=f14e391]
+              - generic [ref=f14e392]: "40"
+              - generic [ref=f14e395]:
+                - button "-5" [ref=f14e396] [cursor=pointer]
+                - button [ref=f14e397] [cursor=pointer]
+                - button [ref=f14e399] [cursor=pointer]
+                - button "+5" [ref=f14e401] [cursor=pointer]
+              - generic [ref=f14e402]:
+                - generic [ref=f14e403]: Counters
+                - generic [ref=f14e404]:
+                  - generic [ref=f14e405]: Energy
+                  - generic [ref=f14e409]:
+                    - button [disabled] [ref=f14e410]
+                    - generic [ref=f14e412]: "0"
+                    - button [ref=f14e413] [cursor=pointer]
+                - generic [ref=f14e415]:
+                  - generic [ref=f14e416]: Experience
+                  - generic [ref=f14e420]:
+                    - button [disabled] [ref=f14e421]
+                    - generic [ref=f14e423]: "0"
+                    - button [ref=f14e424] [cursor=pointer]
+                - generic [ref=f14e426]:
+                  - generic [ref=f14e427]: Radiation
+                  - generic [ref=f14e431]:
+                    - button [ref=f14e432] [cursor=pointer]
+                    - button [ref=f14e434] [cursor=pointer]
+                - button "Add Custom Counter" [ref=f14e436] [cursor=pointer]
+              - button "Add Planeswalker" [ref=f14e438] [cursor=pointer]
+              - button "Advanced Controls" [active] [ref=f14e441] [cursor=pointer]
+              - generic [ref=f14e614]:
+                - generic [ref=f14e615]:
+                  - heading "Player 1" [level=3] [ref=f14e616]
+                  - button [ref=f14e617] [cursor=pointer]
+                - generic [ref=f14e621]:
+                  - button "Quick" [ref=f14e622] [cursor=pointer]
+                  - button "Counters" [ref=f14e626] [cursor=pointer]
+                  - button "Mana" [ref=f14e630] [cursor=pointer]
+                  - button "Damage" [ref=f14e634] [cursor=pointer]
+                - generic [ref=f14e640]:
+                  - generic [ref=f14e641]:
+                    - heading "Life Changes" [level=4] [ref=f14e642]
+                    - generic [ref=f14e643]:
+                      - button "-1" [ref=f14e644] [cursor=pointer]
+                      - button "-5" [ref=f14e645] [cursor=pointer]
+                      - button "+1" [ref=f14e646] [cursor=pointer]
+                      - button "+5" [ref=f14e647] [cursor=pointer]
+                  - generic [ref=f14e648]:
+                    - heading "Life Actions" [level=4] [ref=f14e649]
+                    - generic [ref=f14e650]:
+                      - button "Half" [ref=f14e651] [cursor=pointer]
+                      - button "Reset" [ref=f14e652] [cursor=pointer]
+                      - button "Set..." [ref=f14e653] [cursor=pointer]
+            - generic [ref=f14e445]:
+              - heading "Player 2" [level=3] [ref=f14e447]
+              - generic [ref=f14e448]: "40"
+              - generic [ref=f14e451]:
+                - button "-5" [ref=f14e452] [cursor=pointer]
+                - button [ref=f14e453] [cursor=pointer]
+                - button [ref=f14e455] [cursor=pointer]
+                - button "+5" [ref=f14e457] [cursor=pointer]
+              - generic [ref=f14e458]:
+                - generic [ref=f14e459]: Counters
+                - generic [ref=f14e460]:
+                  - generic [ref=f14e461]: Energy
+                  - generic [ref=f14e465]:
+                    - button [disabled] [ref=f14e466]
+                    - generic [ref=f14e468]: "0"
+                    - button [ref=f14e469] [cursor=pointer]
+                - generic [ref=f14e471]:
+                  - generic [ref=f14e472]: Experience
+                  - generic [ref=f14e476]:
+                    - button [disabled] [ref=f14e477]
+                    - generic [ref=f14e479]: "0"
+                    - button [ref=f14e480] [cursor=pointer]
+                - generic [ref=f14e482]:
+                  - generic [ref=f14e483]: Radiation
+                  - generic [ref=f14e487]:
+                    - button [ref=f14e488] [cursor=pointer]
+                    - button [ref=f14e490] [cursor=pointer]
+                - button "Add Custom Counter" [ref=f14e492] [cursor=pointer]
+              - button "Add Planeswalker" [ref=f14e494] [cursor=pointer]
+              - button "Advanced Controls" [ref=f14e497] [cursor=pointer]
+            - generic [ref=f14e501]:
+              - heading "Player 3" [level=3] [ref=f14e503]
+              - generic [ref=f14e504]: "40"
+              - generic [ref=f14e507]:
+                - button "-5" [ref=f14e508] [cursor=pointer]
+                - button [ref=f14e509] [cursor=pointer]
+                - button [ref=f14e511] [cursor=pointer]
+                - button "+5" [ref=f14e513] [cursor=pointer]
+              - generic [ref=f14e514]:
+                - generic [ref=f14e515]: Counters
+                - generic [ref=f14e516]:
+                  - generic [ref=f14e517]: Energy
+                  - generic [ref=f14e521]:
+                    - button [disabled] [ref=f14e522]
+                    - generic [ref=f14e524]: "0"
+                    - button [ref=f14e525] [cursor=pointer]
+                - generic [ref=f14e527]:
+                  - generic [ref=f14e528]: Experience
+                  - generic [ref=f14e532]:
+                    - button [disabled] [ref=f14e533]
+                    - generic [ref=f14e535]: "0"
+                    - button [ref=f14e536] [cursor=pointer]
+                - generic [ref=f14e538]:
+                  - generic [ref=f14e539]: Radiation
+                  - generic [ref=f14e543]:
+                    - button [ref=f14e544] [cursor=pointer]
+                    - button [ref=f14e546] [cursor=pointer]
+                - button "Add Custom Counter" [ref=f14e548] [cursor=pointer]
+              - button "Add Planeswalker" [ref=f14e550] [cursor=pointer]
+              - button "Advanced Controls" [ref=f14e553] [cursor=pointer]
+            - generic [ref=f14e557]:
+              - heading "Player 4" [level=3] [ref=f14e559]
+              - generic [ref=f14e560]: "40"
+              - generic [ref=f14e563]:
+                - button "-5" [ref=f14e564] [cursor=pointer]
+                - button [ref=f14e565] [cursor=pointer]
+                - button [ref=f14e567] [cursor=pointer]
+                - button "+5" [ref=f14e569] [cursor=pointer]
+              - generic [ref=f14e570]:
+                - generic [ref=f14e571]: Counters
+                - generic [ref=f14e572]:
+                  - generic [ref=f14e573]: Energy
+                  - generic [ref=f14e577]:
+                    - button [disabled] [ref=f14e578]
+                    - generic [ref=f14e580]: "0"
+                    - button [ref=f14e581] [cursor=pointer]
+                - generic [ref=f14e583]:
+                  - generic [ref=f14e584]: Experience
+                  - generic [ref=f14e588]:
+                    - button [disabled] [ref=f14e589]
+                    - generic [ref=f14e591]: "0"
+                    - button [ref=f14e592] [cursor=pointer]
+                - generic [ref=f14e594]:
+                  - generic [ref=f14e595]: Radiation
+                  - generic [ref=f14e599]:
+                    - button [ref=f14e600] [cursor=pointer]
+                    - button [ref=f14e602] [cursor=pointer]
+                - button "Add Custom Counter" [ref=f14e604] [cursor=pointer]
+              - button "Add Planeswalker" [ref=f14e606] [cursor=pointer]
+              - button "Advanced Controls" [ref=f14e609] [cursor=pointer]
+    - navigation [ref=f14e249]:
+      - generic [ref=f14e250]:
+        - button "Dashboard" [ref=f14e251] [cursor=pointer]
+        - button "Collection" [ref=f14e256] [cursor=pointer]
+        - button "Forum" [ref=f14e261] [cursor=pointer]
+        - button "Decks" [ref=f14e265] [cursor=pointer]
+        - button "More" [ref=f14e271] [cursor=pointer]

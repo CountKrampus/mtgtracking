@@ -1,0 +1,71 @@
+- generic [ref=f27e3]:
+  - generic [ref=f27e5]:
+    - button "Notifications" [ref=f27e6] [cursor=pointer]
+    - button "Messages" [ref=f27e10] [cursor=pointer]
+    - button "Send Feedback" [ref=f27e13] [cursor=pointer]
+    - button [ref=f27e16] [cursor=pointer]:
+      - img "creamkrampus" [ref=f27e17]
+  - generic [ref=f27e20]:
+    - button [ref=f27e21] [cursor=pointer]
+    - generic [ref=f27e24]:
+      - generic [ref=f27e26]:
+        - generic [ref=f27e27]:
+          - heading "MTG Tracker" [level=1] [ref=f27e28]
+          - paragraph [ref=f27e29]: Collection Manager
+        - button [ref=f27e30] [cursor=pointer]
+      - generic [ref=f27e34]:
+        - button "Navigation" [ref=f27e35] [cursor=pointer]
+        - button "Dashboard" [ref=f27e39] [cursor=pointer]
+        - button "Collection" [ref=f27e44] [cursor=pointer]
+        - button "Deck Builder" [ref=f27e49] [cursor=pointer]
+        - button "Wishlist" [ref=f27e55] [cursor=pointer]
+        - button "Trading Board" [ref=f27e59] [cursor=pointer]
+        - button "Challenges" [ref=f27e64] [cursor=pointer]
+        - button "Forum" [ref=f27e72] [cursor=pointer]
+        - button "Community Decks" [ref=f27e76] [cursor=pointer]
+        - button "Life Counter" [ref=f27e81] [cursor=pointer]
+        - button "Settings" [ref=f27e88] [cursor=pointer]
+        - button "Actions" [ref=f27e93] [cursor=pointer]
+        - button "Import" [ref=f27e97] [cursor=pointer]
+        - button "Export JSON" [ref=f27e102] [cursor=pointer]
+        - button "Export CSV" [ref=f27e107] [cursor=pointer]
+        - button "Update Prices" [ref=f27e112] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f27e119] [cursor=pointer]
+        - button "Tools" [ref=f27e126] [cursor=pointer]
+        - button "Commanders" [ref=f27e130] [cursor=pointer]
+        - button "Sets" [ref=f27e134] [cursor=pointer]
+        - button "Combos" [ref=f27e138] [cursor=pointer]
+        - button "Finance" [ref=f27e142] [cursor=pointer]
+        - button "Scan Card" [ref=f27e146] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f27e151] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f27e156] [cursor=pointer]
+        - button "Spoiler Season" [ref=f27e160] [cursor=pointer]
+        - button "Learn" [ref=f27e165] [cursor=pointer]
+        - button "Card Rulings" [ref=f27e169] [cursor=pointer]
+        - button "Interaction Checker" [ref=f27e174] [cursor=pointer]
+        - button "New Player Guide" [ref=f27e178] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f27e183] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f27e188] [cursor=pointer]
+        - button "Format Guides" [ref=f27e192] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f27e200] [cursor=pointer]
+        - button "Gameplay" [ref=f27e206] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f27e211] [cursor=pointer]:
+        - generic [ref=f27e214]: Command Palette
+        - generic [ref=f27e215]: Ctrl+K
+    - main [ref=f27e216]:
+      - generic [ref=f27e217]:
+        - navigation [ref=f27e218]:
+          - button "Home" [ref=f27e219] [cursor=pointer]
+          - generic [ref=f27e226]: challenges
+        - generic [ref=f27e227]:
+          - generic [ref=f27e228]:
+            - heading "Monthly Challenges" [level=1] [ref=f27e229]
+            - button "Propose a Challenge" [ref=f27e236] [cursor=pointer]
+          - paragraph [ref=f27e238]: Loading…
+    - navigation [ref=f27e239]:
+      - generic [ref=f27e240]:
+        - button "Dashboard" [ref=f27e241] [cursor=pointer]
+        - button "Collection" [ref=f27e246] [cursor=pointer]
+        - button "Forum" [ref=f27e251] [cursor=pointer]
+        - button "Decks" [ref=f27e255] [cursor=pointer]
+        - button "More" [ref=f27e261] [cursor=pointer]

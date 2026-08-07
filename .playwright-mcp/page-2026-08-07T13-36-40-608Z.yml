@@ -1,0 +1,100 @@
+- generic [ref=f22e3]:
+  - generic [ref=f22e5]:
+    - button "Notifications" [ref=f22e6] [cursor=pointer]
+    - button "Messages" [ref=f22e10] [cursor=pointer]
+    - button "creamkrampus Krampus" [ref=f22e13] [cursor=pointer]:
+      - img "creamkrampus" [ref=f22e14]
+      - generic [ref=f22e15]: Krampus
+  - generic [ref=f22e18]:
+    - generic [ref=f22e20]:
+      - generic [ref=f22e23]:
+        - heading "MTG Tracker" [level=1] [ref=f22e24]
+        - paragraph [ref=f22e25]: Collection Manager
+      - generic [ref=f22e26]:
+        - button "Navigation" [ref=f22e27] [cursor=pointer]
+        - button "Dashboard" [ref=f22e31] [cursor=pointer]
+        - button "Collection" [ref=f22e36] [cursor=pointer]
+        - button "Deck Builder" [ref=f22e41] [cursor=pointer]
+        - button "Wishlist" [ref=f22e47] [cursor=pointer]
+        - button "Trading Board" [ref=f22e51] [cursor=pointer]
+        - button "Challenges" [ref=f22e56] [cursor=pointer]
+        - button "Forum" [ref=f22e64] [cursor=pointer]
+        - button "Community Decks" [ref=f22e68] [cursor=pointer]
+        - button "Life Counter" [ref=f22e73] [cursor=pointer]
+        - button "Settings" [ref=f22e80] [cursor=pointer]
+        - button "Actions" [ref=f22e85] [cursor=pointer]
+        - button "Import" [ref=f22e89] [cursor=pointer]
+        - button "Export JSON" [ref=f22e94] [cursor=pointer]
+        - button "Export CSV" [ref=f22e99] [cursor=pointer]
+        - button "Update Prices" [ref=f22e104] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f22e111] [cursor=pointer]
+        - button "Tools" [ref=f22e118] [cursor=pointer]
+        - button "Commanders" [ref=f22e122] [cursor=pointer]
+        - button "Sets" [ref=f22e126] [cursor=pointer]
+        - button "Combos" [ref=f22e130] [cursor=pointer]
+        - button "Finance" [ref=f22e134] [cursor=pointer]
+        - button "Scan Card" [ref=f22e138] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f22e143] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f22e148] [cursor=pointer]
+        - button "Spoiler Season" [ref=f22e152] [cursor=pointer]
+        - button "Learn" [ref=f22e157] [cursor=pointer]
+        - button "Card Rulings" [ref=f22e161] [cursor=pointer]
+        - button "Interaction Checker" [ref=f22e166] [cursor=pointer]
+        - button "New Player Guide" [ref=f22e170] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f22e175] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f22e180] [cursor=pointer]
+        - button "Format Guides" [ref=f22e184] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f22e192] [cursor=pointer]
+        - button "Gameplay" [ref=f22e198] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f22e203] [cursor=pointer]:
+        - generic [ref=f22e206]: Command Palette
+        - generic [ref=f22e207]: Ctrl+K
+      - button "Collapse" [ref=f22e209] [cursor=pointer]
+    - main [ref=f22e213]:
+      - generic [ref=f22e214]:
+        - navigation [ref=f22e215]:
+          - button "Home" [ref=f22e216] [cursor=pointer]
+          - generic [ref=f22e223]: Wishlist
+        - generic [ref=f22e224]:
+          - generic [ref=f22e226]:
+            - generic [ref=f22e227]:
+              - combobox [ref=f22e228]:
+                - option "All Priorities" [selected]
+                - option "High Priority"
+                - option "Medium Priority"
+                - option "Low Priority"
+              - generic [ref=f22e229]: 0 items in wishlist
+            - button "Update All Prices" [ref=f22e230] [cursor=pointer]
+          - generic [ref=f22e236]:
+            - heading "Add to Wishlist" [level=2] [ref=f22e237]
+            - generic [ref=f22e238]:
+              - textbox "Card Name (type to search)" [ref=f22e240]
+              - spinbutton "Target Price ($)" [ref=f22e241]
+              - combobox [ref=f22e242]:
+                - option "Low Priority"
+                - option "Medium Priority" [selected]
+                - option "High Priority"
+              - spinbutton "Quantity" [ref=f22e243]: "1"
+              - combobox [ref=f22e244]:
+                - option "NM" [selected]
+                - option "LP"
+                - option "MP"
+                - option "HP"
+                - option "DMG"
+              - textbox "Notes (optional)" [ref=f22e245]
+            - button "Add to Wishlist" [ref=f22e247] [cursor=pointer]
+          - table [ref=f22e252]:
+            - rowgroup [ref=f22e253]:
+              - row [ref=f22e254]:
+                - columnheader "Card Name" [ref=f22e255]
+                - columnheader "Set" [ref=f22e256]
+                - columnheader "Qty" [ref=f22e257]
+                - columnheader "Target Price" [ref=f22e258]
+                - columnheader "Current Price" [ref=f22e259]
+                - columnheader "Diff" [ref=f22e260]
+                - columnheader "Priority" [ref=f22e261]
+                - columnheader "Notes" [ref=f22e262]
+                - columnheader "Actions" [ref=f22e263]
+            - rowgroup [ref=f22e264]:
+              - row [ref=f22e265]:
+                - cell "Your wishlist is empty. Add cards you want to acquire!" [ref=f22e266]

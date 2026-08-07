@@ -1,0 +1,285 @@
+[     551ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/static/js/bundle.js:96605
+[     671ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/trades/my-listings:0
+[     671ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/trades/offers/sent:0
+[     672ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/trades/matches:0
+[     672ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/trades/offers/received:0
+[     672ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/trades/my-listings:0
+[     673ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/trades/offers/received:0
+[     673ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/trades/offers/sent:0
+[     673ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/trades/matches:0
+[     673ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/cards:0
+[     674ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/notifications:0
+[     685ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/tags:0
+[     685ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/locations:0
+[     686ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/wishlist:0
+[     686ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/notifications:0
+[     686ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/cards:0
+[     694ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/locations:0
+[     695ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/tags:0
+[     695ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/wishlist:0
+[     712ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/auth/me:0
+[     713ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/lifecounter/stats:0
+[     732ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/decks:0
+[     733ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/deck-folders:0
+[     735ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/lifecounter/stats:0
+[     752ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/decks:0
+[     752ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/deck-folders:0
+[  685819ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[  685819ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[  711813ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[  711813ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[  741821ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[  741821ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[  771801ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[  771801ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[  801852ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[  801852ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[  831803ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[  831803ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[  861801ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[  861801ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[  891793ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[  891793ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[  921796ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[  921796ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[  951814ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[  951814ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[  981818ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[  981818ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1011806ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1011806ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1041818ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1041818ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1071799ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1071799ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1101822ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1101822ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1131820ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1131820ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1161827ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1161827ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1191812ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1191812ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1221812ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1221812ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1251812ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1251812ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1281812ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1281812ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1311835ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1311835ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1341801ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1341801ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1371798ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1371798ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1401807ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1401807ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1431800ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1431800ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1461785ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1461785ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1491805ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1491806ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1521800ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1521800ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1551814ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1551814ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1581813ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1581813ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1611810ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1611810ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1641820ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1641820ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1671824ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1671824ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1701802ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1701802ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1731815ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1731815ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1761813ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1761813ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1791817ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1791817ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1821814ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1821814ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1851791ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1851792ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1881823ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1881823ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1911811ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1911811ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1941792ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1941792ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 1971799ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 1971799ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2001794ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2001794ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2031794ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2031794ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2061812ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2061812ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2091815ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2091815ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2121822ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2121822ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2151808ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2151808ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2181810ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2181811ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2211808ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2211808ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2241804ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2241804ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2271797ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2271797ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2301809ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2301809ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2331801ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2331801ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2361807ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2361807ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2391807ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2391807ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2421808ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2421808ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2451801ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2451801ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2481823ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2481823ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2511798ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2511798ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2541801ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2541801ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2571803ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2571803ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2601842ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2601842ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2631797ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2631797ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2661803ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2661803ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2691822ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2691822ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2721799ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2721799ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2751814ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2751814ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2781819ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2781819ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2811801ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2811801ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2841774ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2841774ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2871811ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2871811ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2901800ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2901800ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2931800ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2931800ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2961824ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2961824ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 2991816ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 2991816ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 3021803ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 3021803ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 3051799ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[ 3051799ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 3054791ms] [ERROR] WebSocket connection to 'ws://localhost:3000/ws' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/static/js/bundle.js:111891
+[ 3059183ms] [ERROR] WebSocket connection to 'ws://localhost:3000/ws' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/static/js/bundle.js:111891
+[ 3060774ms] [ERROR] Access to fetch at 'https://mtgtracker.store/api/notifications' from origin 'http://localhost:3000' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://localhost:3000/decks:0
+[ 3060774ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://mtgtracker.store/api/notifications:0
+[ 3060774ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134090:30) @ http://localhost:3000/static/js/bundle.js:134100
+[ 3065588ms] [ERROR] WebSocket connection to 'ws://localhost:3000/ws' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/static/js/bundle.js:111891
+[ 3075958ms] [ERROR] WebSocket connection to 'ws://localhost:3000/ws' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/static/js/bundle.js:111891
+[ 3090786ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/notifications:0
+[ 3120782ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/notifications:0
+[ 3150781ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/notifications:0
+[ 3174840ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/achievements:0
+[ 3174842ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/stats/value-history:0
+[ 3174842ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/lifecounter/stats:0
+[ 3174842ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/stats/price-changes:0
+[ 3174848ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/achievements:0
+[ 3174850ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/stats/value-history:0
+[ 3174850ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/lifecounter/stats:0
+[ 3174851ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/stats/price-changes:0

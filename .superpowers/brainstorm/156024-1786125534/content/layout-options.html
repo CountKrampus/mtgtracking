@@ -1,0 +1,80 @@
+<h2>Which layout works best for comparing two decks?</h2>
+<p class="subtitle">Each deck's commander shown separately up top. Below it: shared cards, and each deck's unique cards. Think about how this holds up on a phone-width screen too, since this app leans mobile-heavy.</p>
+
+<div class="options" data-multiselect="false">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)" style="flex-direction:column;align-items:stretch;">
+    <div class="content" style="width:100%;">
+      <h3><span class="letter" style="display:inline-flex;width:28px;height:28px;font-size:14px;">A</span>&nbsp; Two Columns + Shared Bar</h3>
+      <p>Mirrors the existing Collection Comparison: a "shared cards" strip across the top, then two side-by-side columns for each deck's unique cards. On mobile the two columns stack vertically.</p>
+      <div class="mockup" style="margin-top:12px;">
+        <div class="mockup-header">Preview</div>
+        <div class="mockup-body">
+          <div class="mock-nav" style="margin-bottom:8px;">Kaalia of the Vast  vs  Edgar Markov</div>
+          <div class="placeholder" style="padding:10px;margin-bottom:10px;">Shared (14 cards) — Sol Ring, Command Tower, Swords to Plowshares...</div>
+          <div style="display:flex;gap:12px;">
+            <div class="mock-sidebar" style="flex:1;">
+              <strong>Only in Kaalia</strong>
+              <div class="placeholder" style="margin-top:6px;">Angel of Despair</div>
+              <div class="placeholder" style="margin-top:4px;">Blasphemous Act</div>
+            </div>
+            <div class="mock-sidebar" style="flex:1;">
+              <strong>Only in Edgar</strong>
+              <div class="placeholder" style="margin-top:6px;">Bloodforged Battle-Axe</div>
+              <div class="placeholder" style="margin-top:4px;">Vampiric Bloodline</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)" style="flex-direction:column;align-items:stretch;">
+    <div class="content" style="width:100%;">
+      <h3><span class="letter" style="display:inline-flex;width:28px;height:28px;font-size:14px;">B</span>&nbsp; Three Columns Side-by-Side</h3>
+      <p>A literal Venn diagram in table form: Only-A | Shared | Only-B all visible at once on desktop. On mobile this becomes a horizontally swipeable 3-panel strip since 3 columns can't fit a phone width.</p>
+      <div class="mockup" style="margin-top:12px;">
+        <div class="mockup-header">Preview</div>
+        <div class="mockup-body">
+          <div class="mock-nav" style="margin-bottom:8px;">Kaalia of the Vast  vs  Edgar Markov</div>
+          <div style="display:flex;gap:10px;">
+            <div class="mock-sidebar" style="flex:1;">
+              <strong>Only Kaalia (9)</strong>
+              <div class="placeholder" style="margin-top:6px;">Angel of Despair</div>
+            </div>
+            <div class="mock-sidebar" style="flex:1;background:rgba(120,255,120,0.08);">
+              <strong>Shared (14)</strong>
+              <div class="placeholder" style="margin-top:6px;">Sol Ring</div>
+            </div>
+            <div class="mock-sidebar" style="flex:1;">
+              <strong>Only Edgar (11)</strong>
+              <div class="placeholder" style="margin-top:6px;">Bloodforged Battle-Axe</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)" style="flex-direction:column;align-items:stretch;">
+    <div class="content" style="width:100%;">
+      <h3><span class="letter" style="display:inline-flex;width:28px;height:28px;font-size:14px;">C</span>&nbsp; Stats First, Filterable Card List Below</h3>
+      <p>Top: mana curve + color pip comparison as overlaid bar charts (the "at a glance" view). Below: a single card list with a filter toggle (All / Shared / Only A / Only B) instead of fixed columns — naturally mobile-friendly since it's just one column that never needs to split.</p>
+      <div class="mockup" style="margin-top:12px;">
+        <div class="mockup-header">Preview</div>
+        <div class="mockup-body">
+          <div class="mock-nav" style="margin-bottom:8px;">Kaalia of the Vast  vs  Edgar Markov</div>
+          <div class="placeholder" style="padding:10px;margin-bottom:10px;">Mana Curve overlay chart · Color pips: WBR vs WBR</div>
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <button class="mock-button" style="flex:1;">All</button>
+            <button class="mock-button" style="flex:1;opacity:.6;">Shared (14)</button>
+            <button class="mock-button" style="flex:1;opacity:.6;">Only Kaalia (9)</button>
+            <button class="mock-button" style="flex:1;opacity:.6;">Only Edgar (11)</button>
+          </div>
+          <div class="placeholder" style="padding:8px;">Sol Ring — in both</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

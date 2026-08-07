@@ -1,0 +1,63 @@
+<h2>Full polish pass — planned improvements</h2>
+<p class="subtitle">Confirm what's in scope before we design the details</p>
+
+<div class="section">
+  <div class="label">Admin Panel — Community Section</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
+    <div style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);border-radius:8px;padding:16px">
+      <h3 style="margin:0 0 10px;color:#a78bfa">Content Moderation</h3>
+      <ul style="margin:0;padding-left:18px;color:#d1d5db;font-size:14px;line-height:1.8">
+        <li>Replace <code style="color:#f87171">window.confirm</code> with inline confirmation rows</li>
+        <li>Bulk delete in Recent Threads (currently missing)</li>
+        <li>Better empty states ("No posts found" instead of blank)</li>
+        <li>Cleaner table typography and row spacing</li>
+      </ul>
+    </div>
+    <div style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);border-radius:8px;padding:16px">
+      <h3 style="margin:0 0 10px;color:#a78bfa">Badges & Cosmetics</h3>
+      <ul style="margin:0;padding-left:18px;color:#d1d5db;font-size:14px;line-height:1.8">
+        <li>Search / filter on badge list</li>
+        <li>Search / filter on cosmetics admin list</li>
+        <li>Category filter on cosmetics list</li>
+        <li>Cleaner card grid with better visual hierarchy</li>
+        <li>Inline delete confirmation (no browser dialog)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">Forum Shop — User-facing</div>
+  <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:16px;margin-top:12px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <ul style="margin:0;padding-left:18px;color:#d1d5db;font-size:14px;line-height:1.8">
+        <li>Larger item cards with better visual preview</li>
+        <li>Cleaner state indicators (owned / equipped / purchasable)</li>
+        <li>Better rarity visual treatment (colored border or badge)</li>
+      </ul>
+      <ul style="margin:0;padding-left:18px;color:#d1d5db;font-size:14px;line-height:1.8">
+        <li>Coin balance more prominent in header</li>
+        <li>Category tabs with item counts</li>
+        <li>Limited-time items highlighted (countdown more visible)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:20px">
+  <div class="label">Anything to add or cut?</div>
+  <div class="options" style="margin-top:10px" data-multiselect>
+    <div class="option" data-choice="scope-ok" onclick="toggleSelect(this)">
+      <div class="letter">✓</div>
+      <div class="content"><h3>Scope looks right</h3><p>Let's proceed with all of the above</p></div>
+    </div>
+    <div class="option" data-choice="admin-only" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content"><h3>Admin panel only for now</h3><p>Skip shop polish this round</p></div>
+    </div>
+    <div class="option" data-choice="shop-only" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content"><h3>Shop only for now</h3><p>Skip admin panel this round</p></div>
+    </div>
+  </div>
+</div>

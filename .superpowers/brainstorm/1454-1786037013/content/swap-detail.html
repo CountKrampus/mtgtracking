@@ -1,0 +1,54 @@
+<h2>Confirming: clicking a sub-score swaps the strip for its detail view</h2>
+<p class="subtitle">Left: default state. Right: after clicking "Mana B+" — the 4-score strip is replaced by the Manabase breakdown, with a way back.</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Default state</div>
+    <div class="mockup-body" style="padding:12px;">
+      <div class="placeholder" style="padding:14px; margin-bottom:8px; text-align:center;">
+        <div style="font-size:11px; opacity:.7">SMART DECK SCORE</div>
+        <b style="font-size:28px">78</b><span style="font-size:11px"> / 100</span>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <div class="placeholder" style="flex:1; padding:8px; font-size:10px;">Power<br><b>7</b></div>
+        <div class="placeholder" style="flex:1; padding:8px; font-size:10px;">Salt<br><b>12</b></div>
+        <div class="placeholder" style="flex:1; padding:8px; font-size:10px; cursor:pointer; outline:2px solid #a78bfa;">Mana<br><b>B+</b></div>
+        <div class="placeholder" style="flex:1; padding:8px; font-size:10px;">Health<br><b>82</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">After clicking "Mana B+"</div>
+    <div class="mockup-body" style="padding:12px;">
+      <div class="placeholder" style="padding:14px; margin-bottom:8px; text-align:center;">
+        <div style="font-size:11px; opacity:.7">SMART DECK SCORE</div>
+        <b style="font-size:28px">78</b><span style="font-size:11px"> / 100</span>
+      </div>
+      <div class="placeholder" style="padding:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:12px;">&larr; Back</span>
+          <b style="font-size:16px">Manabase Score: B+</b>
+          <span></span>
+        </div>
+        <div style="font-size:11px; text-align:left;">
+          <div>Lands: 37 (recommended 36-38)</div>
+          <div>Color sources — W: 12, U: 9, B: 8</div>
+          <div>Fixing lands: 6 (duals/fetches)</div>
+          <div>Untapped-on-turn-1 rate: 71%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="options" style="margin-top:20px;">
+  <div class="option" data-choice="matches" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content"><h3>Yes, this is what I meant</h3></div>
+  </div>
+  <div class="option" data-choice="different" onclick="toggleSelect(this)">
+    <div class="letter">✗</div>
+    <div class="content"><h3>Not quite — let me explain</h3></div>
+  </div>
+</div>

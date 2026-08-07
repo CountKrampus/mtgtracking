@@ -1,0 +1,112 @@
+- generic [ref=f13e3]:
+  - generic [ref=f13e5]:
+    - button "Notifications" [ref=f13e6] [cursor=pointer]
+    - button "Messages" [ref=f13e10] [cursor=pointer]
+    - button "creamkrampus Krampus" [ref=f13e13] [cursor=pointer]:
+      - img "creamkrampus" [ref=f13e14]
+      - generic [ref=f13e15]: Krampus
+  - generic [ref=f13e18]:
+    - generic [ref=f13e20]:
+      - generic [ref=f13e23]:
+        - heading "MTG Tracker" [level=1] [ref=f13e24]
+        - paragraph [ref=f13e25]: Collection Manager
+      - generic [ref=f13e242]:
+        - generic [ref=f13e243]: K
+        - generic [ref=f13e244]:
+          - paragraph [ref=f13e245]: Krampus
+          - text: admin
+      - generic [ref=f13e26]:
+        - button "Navigation" [ref=f13e27] [cursor=pointer]
+        - button "Dashboard" [ref=f13e31] [cursor=pointer]
+        - button "Collection" [ref=f13e36] [cursor=pointer]
+        - button "Deck Builder" [ref=f13e41] [cursor=pointer]
+        - button "Wishlist" [ref=f13e47] [cursor=pointer]
+        - button "Trading Board" [ref=f13e51] [cursor=pointer]
+        - button "Challenges" [ref=f13e56] [cursor=pointer]
+        - button "Forum" [ref=f13e64] [cursor=pointer]
+        - button "Community Decks" [ref=f13e68] [cursor=pointer]
+        - button "Life Counter" [ref=f13e73] [cursor=pointer]
+        - button "Settings" [ref=f13e80] [cursor=pointer]
+        - button "Actions" [ref=f13e85] [cursor=pointer]
+        - button "Import" [ref=f13e89] [cursor=pointer]
+        - button "Export JSON" [ref=f13e94] [cursor=pointer]
+        - button "Export CSV" [ref=f13e99] [cursor=pointer]
+        - button "Update Prices" [ref=f13e104] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f13e111] [cursor=pointer]
+        - button "Tools" [ref=f13e118] [cursor=pointer]
+        - button "Commanders" [ref=f13e122] [cursor=pointer]
+        - button "Sets" [ref=f13e126] [cursor=pointer]
+        - button "Combos" [ref=f13e130] [cursor=pointer]
+        - button "Finance" [ref=f13e134] [cursor=pointer]
+        - button "Scan Card" [ref=f13e138] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f13e143] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f13e148] [cursor=pointer]
+        - button "Spoiler Season" [ref=f13e152] [cursor=pointer]
+        - button "Learn" [ref=f13e157] [cursor=pointer]
+        - button "Card Rulings" [ref=f13e161] [cursor=pointer]
+        - button "Interaction Checker" [ref=f13e166] [cursor=pointer]
+        - button "New Player Guide" [ref=f13e170] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f13e175] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f13e180] [cursor=pointer]
+        - button "Format Guides" [ref=f13e184] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f13e192] [cursor=pointer]
+        - button "Gameplay" [ref=f13e198] [cursor=pointer]
+        - generic [ref=f13e246]: Admin
+        - button "Admin Panel" [ref=f13e247] [cursor=pointer]
+      - generic [ref=f13e251]:
+        - button "Account" [ref=f13e252] [cursor=pointer]
+        - button "Sign Out" [ref=f13e257] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f13e203] [cursor=pointer]:
+        - generic [ref=f13e206]: Command Palette
+        - generic [ref=f13e207]: Ctrl+K
+      - button "Collapse" [ref=f13e209] [cursor=pointer]
+    - main [ref=f13e213]:
+      - generic [ref=f13e214]:
+        - navigation [ref=f13e215]:
+          - button "Home" [ref=f13e216] [cursor=pointer]
+          - generic [ref=f13e223]: Deck Builder
+        - generic [ref=f13e225]:
+          - generic [ref=f13e226]:
+            - generic [ref=f13e227]:
+              - heading "My Decks" [level=2] [ref=f13e228]
+              - generic [ref=f13e229]:
+                - button "📁 Uncategorised decks ▾" [active] [ref=f13e230] [cursor=pointer]
+                - generic [ref=f13e262]:
+                  - generic [ref=f13e263] [cursor=pointer]:
+                    - generic [ref=f13e264]: 🗂
+                    - generic [ref=f13e265]: Uncategorised decks
+                    - generic [ref=f13e266]: "1"
+                  - generic [ref=f13e269] [cursor=pointer]:
+                    - generic [ref=f13e270]: 📁
+                    - generic [ref=f13e271]: Dual-Color
+                    - generic [ref=f13e272]: "1"
+                  - generic [ref=f13e274] [cursor=pointer]:
+                    - generic [ref=f13e275]: 📁
+                    - generic [ref=f13e276]: Mono-Colored
+                    - generic [ref=f13e277]: "2"
+                  - generic [ref=f13e279] [cursor=pointer]:
+                    - generic [ref=f13e280]: 📁
+                    - generic [ref=f13e281]: Tri-Color
+                    - generic [ref=f13e282]: "5"
+                  - generic [ref=f13e284] [cursor=pointer]:
+                    - generic [ref=f13e285]: 📁
+                    - generic [ref=f13e286]: Want to Build
+                    - generic [ref=f13e287]: "2"
+                  - generic [ref=f13e289]:
+                    - generic [ref=f13e290]: 📁
+                    - textbox "New folder…" [ref=f13e291]
+            - generic [ref=f13e231]:
+              - button "Calculate Sleeves" [ref=f13e232] [cursor=pointer]
+              - button "Find Staples" [ref=f13e233] [cursor=pointer]
+              - button "New Deck" [ref=f13e234] [cursor=pointer]
+              - button "Import Deck" [ref=f13e236] [cursor=pointer]
+          - generic [ref=f13e293] [cursor=pointer]:
+            - img "Ozai, the Phoenix King" [ref=f13e295]
+            - generic [ref=f13e296]:
+              - heading "Every changed when fire nation attacked. Ozai Phoenix 10+" [level=3] [ref=f13e297]
+              - generic [ref=f13e298]: Commander
+            - generic [ref=f13e299]: "Commander: Ozai, the Phoenix King"
+            - generic [ref=f13e300]:
+              - generic [ref=f13e301]: 100 cards
+              - generic [ref=f13e302]: $0.00
+            - button "Delete" [ref=f13e303]

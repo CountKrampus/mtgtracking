@@ -1,0 +1,166 @@
+- generic [ref=f3e3]:
+  - generic [ref=f3e5]:
+    - button "Notifications" [ref=f3e6] [cursor=pointer]
+    - button "Messages" [ref=f3e10] [cursor=pointer]
+    - button "Send Feedback" [ref=f3e13] [cursor=pointer]
+    - button [ref=f3e16] [cursor=pointer]:
+      - img "creamkrampus" [ref=f3e17]
+  - generic [ref=f3e20]:
+    - button [ref=f3e21] [cursor=pointer]
+    - generic [ref=f3e24]:
+      - generic [ref=f3e26]:
+        - generic [ref=f3e27]:
+          - heading "MTG Tracker" [level=1] [ref=f3e28]
+          - paragraph [ref=f3e29]: Collection Manager
+        - button [ref=f3e30] [cursor=pointer]
+      - generic [ref=f3e35]:
+        - generic [ref=f3e36]: K
+        - generic [ref=f3e37]:
+          - paragraph [ref=f3e38]: Krampus
+          - text: admin
+      - generic [ref=f3e39]:
+        - button "Navigation" [ref=f3e40] [cursor=pointer]
+        - button "Dashboard" [ref=f3e44] [cursor=pointer]
+        - button "Collection" [ref=f3e49] [cursor=pointer]
+        - button "Deck Builder" [ref=f3e54] [cursor=pointer]
+        - button "Wishlist" [ref=f3e60] [cursor=pointer]
+        - button "Trading Board" [ref=f3e64] [cursor=pointer]
+        - button "Challenges" [ref=f3e69] [cursor=pointer]
+        - button "Forum" [ref=f3e77] [cursor=pointer]
+        - button "Community Decks" [ref=f3e81] [cursor=pointer]
+        - button "Life Counter" [ref=f3e86] [cursor=pointer]
+        - button "Settings" [ref=f3e93] [cursor=pointer]
+        - button "Actions" [ref=f3e98] [cursor=pointer]
+        - button "Import" [ref=f3e102] [cursor=pointer]
+        - button "Export JSON" [ref=f3e107] [cursor=pointer]
+        - button "Export CSV" [ref=f3e112] [cursor=pointer]
+        - button "Update Prices" [ref=f3e117] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f3e124] [cursor=pointer]
+        - button "Tools" [ref=f3e131] [cursor=pointer]
+        - button "Commanders" [ref=f3e135] [cursor=pointer]
+        - button "Sets" [ref=f3e139] [cursor=pointer]
+        - button "Combos" [ref=f3e143] [cursor=pointer]
+        - button "Finance" [ref=f3e147] [cursor=pointer]
+        - button "Scan Card" [ref=f3e151] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f3e156] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f3e161] [cursor=pointer]
+        - button "Spoiler Season" [ref=f3e165] [cursor=pointer]
+        - button "Learn" [ref=f3e170] [cursor=pointer]
+        - button "Card Rulings" [ref=f3e174] [cursor=pointer]
+        - button "Interaction Checker" [ref=f3e179] [cursor=pointer]
+        - button "New Player Guide" [ref=f3e183] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f3e188] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f3e193] [cursor=pointer]
+        - button "Format Guides" [ref=f3e197] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f3e205] [cursor=pointer]
+        - button "Gameplay" [ref=f3e211] [cursor=pointer]
+        - generic [ref=f3e215]: Admin
+        - button "Admin Panel" [ref=f3e216] [cursor=pointer]
+      - generic [ref=f3e220]:
+        - button "Account" [ref=f3e221] [cursor=pointer]
+        - button "Sign Out" [ref=f3e226] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f3e232] [cursor=pointer]:
+        - generic [ref=f3e235]: Command Palette
+        - generic [ref=f3e236]: Ctrl+K
+    - main [ref=f3e237]:
+      - generic [ref=f3e238]:
+        - navigation [ref=f3e239]:
+          - button "Home" [ref=f3e240] [cursor=pointer]
+        - generic [ref=f3e245]:
+          - generic [ref=f3e246]:
+            - generic [ref=f3e247]:
+              - generic [ref=f3e248]: Total Cards
+              - generic [ref=f3e249]: "0"
+            - generic [ref=f3e250]:
+              - generic [ref=f3e251]: Unique Cards
+              - generic [ref=f3e252]: "0"
+            - generic [ref=f3e253]:
+              - generic [ref=f3e254]: Collection Value
+              - generic [ref=f3e255]: $0.00
+            - generic [ref=f3e256]:
+              - generic [ref=f3e257]: Avg. Card Value
+              - generic [ref=f3e258]: $0.00
+          - generic [ref=f3e259]:
+            - heading "Quick Actions" [level=2] [ref=f3e260]
+            - generic [ref=f3e261]:
+              - button "Add Card" [ref=f3e262] [cursor=pointer]
+              - button "Import Cards" [ref=f3e264] [cursor=pointer]
+              - button "Update Prices" [ref=f3e268] [cursor=pointer]
+              - button "View Collection" [ref=f3e274] [cursor=pointer]
+          - generic [ref=f3e278]:
+            - generic [ref=f3e279]:
+              - heading "Color Distribution" [level=2] [ref=f3e280]
+              - paragraph [ref=f3e281]: No cards in collection yet.
+            - generic [ref=f3e282]:
+              - heading "Top 10 Most Valuable" [level=2] [ref=f3e283]
+              - paragraph [ref=f3e286]: No cards in collection yet.
+          - generic [ref=f3e287]:
+            - heading "Collection Value Over Time" [level=2] [ref=f3e288]
+            - generic [ref=f3e292]: No history yet. Value snapshots are saved daily when you view stats.
+          - generic [ref=f3e293]:
+            - generic [ref=f3e294]:
+              - heading "Type Distribution" [level=2] [ref=f3e295]
+              - paragraph [ref=f3e300]: No type data yet. Update card data to populate.
+            - generic [ref=f3e301]:
+              - heading "Rarity Breakdown" [level=2] [ref=f3e302]
+              - generic [ref=f3e304]:
+                - generic [ref=f3e305]:
+                  - generic [ref=f3e306]: Common
+                  - generic [ref=f3e308]: "0"
+                  - generic [ref=f3e309]: 0%
+                - generic [ref=f3e310]:
+                  - generic [ref=f3e311]: Uncommon
+                  - generic [ref=f3e313]: "0"
+                  - generic [ref=f3e314]: 0%
+                - generic [ref=f3e315]:
+                  - generic [ref=f3e316]: Rare
+                  - generic [ref=f3e318]: "0"
+                  - generic [ref=f3e319]: 0%
+                - generic [ref=f3e320]:
+                  - generic [ref=f3e321]: Mythic
+                  - generic [ref=f3e323]: "0"
+                  - generic [ref=f3e324]: 0%
+          - generic [ref=f3e325]:
+            - generic [ref=f3e326]:
+              - heading "Top Sets by Card Count" [level=2] [ref=f3e327]
+              - paragraph [ref=f3e328]: No cards in collection yet.
+            - generic [ref=f3e329]:
+              - heading "Condition Overview" [level=2] [ref=f3e330]
+              - generic [ref=f3e332]:
+                - generic [ref=f3e333]:
+                  - generic [ref=f3e334]: Near Mint
+                  - generic [ref=f3e336]: "0"
+                  - generic [ref=f3e337]: 0%
+                - generic [ref=f3e338]:
+                  - generic [ref=f3e339]: Light Play
+                  - generic [ref=f3e341]: "0"
+                  - generic [ref=f3e342]: 0%
+                - generic [ref=f3e343]:
+                  - generic [ref=f3e344]: Mod. Play
+                  - generic [ref=f3e346]: "0"
+                  - generic [ref=f3e347]: 0%
+                - generic [ref=f3e348]:
+                  - generic [ref=f3e349]: Heavy Play
+                  - generic [ref=f3e351]: "0"
+                  - generic [ref=f3e352]: 0%
+                - generic [ref=f3e353]:
+                  - generic [ref=f3e354]: Damaged
+                  - generic [ref=f3e356]: "0"
+                  - generic [ref=f3e357]: 0%
+          - generic [ref=f3e358]:
+            - heading "Value Distribution" [level=2] [ref=f3e359]
+            - paragraph [ref=f3e360]: No cards in collection yet.
+          - generic [ref=f3e361]:
+            - generic [ref=f3e362]:
+              - heading "Top 10 Most Owned" [level=2] [ref=f3e363]
+              - paragraph [ref=f3e364]: No cards in collection yet.
+            - generic [ref=f3e365]:
+              - heading "Recent Additions" [level=2] [ref=f3e366]
+              - paragraph [ref=f3e367]: No cards added yet. Use the Add Card or Import button to get started!
+    - navigation [ref=f3e368]:
+      - generic [ref=f3e369]:
+        - button "Dashboard" [ref=f3e370] [cursor=pointer]
+        - button "Collection" [ref=f3e375] [cursor=pointer]
+        - button "Forum" [ref=f3e380] [cursor=pointer]
+        - button "Decks" [ref=f3e384] [cursor=pointer]
+        - button "More" [ref=f3e390] [cursor=pointer]

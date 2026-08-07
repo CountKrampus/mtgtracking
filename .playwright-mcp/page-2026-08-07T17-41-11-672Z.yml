@@ -1,0 +1,95 @@
+- generic [ref=f25e3]:
+  - generic [ref=f25e5]:
+    - button "Notifications" [ref=f25e6] [cursor=pointer]
+    - button "Messages" [ref=f25e10] [cursor=pointer]
+    - button "Send Feedback" [ref=f25e13] [cursor=pointer]
+    - button [ref=f25e16] [cursor=pointer]:
+      - img "creamkrampus" [ref=f25e17]
+  - generic [ref=f25e20]:
+    - button [ref=f25e21] [cursor=pointer]
+    - generic [ref=f25e24]:
+      - generic [ref=f25e26]:
+        - generic [ref=f25e27]:
+          - heading "MTG Tracker" [level=1] [ref=f25e28]
+          - paragraph [ref=f25e29]: Collection Manager
+        - button [ref=f25e30] [cursor=pointer]
+      - generic [ref=f25e34]:
+        - button "Navigation" [ref=f25e35] [cursor=pointer]
+        - button "Dashboard" [ref=f25e39] [cursor=pointer]
+        - button "Collection" [ref=f25e44] [cursor=pointer]
+        - button "Deck Builder" [ref=f25e49] [cursor=pointer]
+        - button "Wishlist" [ref=f25e55] [cursor=pointer]
+        - button "Trading Board" [ref=f25e59] [cursor=pointer]
+        - button "Challenges" [ref=f25e64] [cursor=pointer]
+        - button "Forum" [ref=f25e72] [cursor=pointer]
+        - button "Community Decks" [ref=f25e76] [cursor=pointer]
+        - button "Life Counter" [ref=f25e81] [cursor=pointer]
+        - button "Settings" [ref=f25e88] [cursor=pointer]
+        - button "Actions" [ref=f25e93] [cursor=pointer]
+        - button "Import" [ref=f25e97] [cursor=pointer]
+        - button "Export JSON" [ref=f25e102] [cursor=pointer]
+        - button "Export CSV" [ref=f25e107] [cursor=pointer]
+        - button "Update Prices" [ref=f25e112] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f25e119] [cursor=pointer]
+        - button "Tools" [ref=f25e126] [cursor=pointer]
+        - button "Commanders" [ref=f25e130] [cursor=pointer]
+        - button "Sets" [ref=f25e134] [cursor=pointer]
+        - button "Combos" [ref=f25e138] [cursor=pointer]
+        - button "Finance" [ref=f25e142] [cursor=pointer]
+        - button "Scan Card" [ref=f25e146] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f25e151] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f25e156] [cursor=pointer]
+        - button "Spoiler Season" [ref=f25e160] [cursor=pointer]
+        - button "Learn" [ref=f25e165] [cursor=pointer]
+        - button "Card Rulings" [ref=f25e169] [cursor=pointer]
+        - button "Interaction Checker" [ref=f25e174] [cursor=pointer]
+        - button "New Player Guide" [ref=f25e178] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f25e183] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f25e188] [cursor=pointer]
+        - button "Format Guides" [ref=f25e192] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f25e200] [cursor=pointer]
+        - button "Gameplay" [ref=f25e206] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f25e211] [cursor=pointer]:
+        - generic [ref=f25e214]: Command Palette
+        - generic [ref=f25e215]: Ctrl+K
+    - main [ref=f25e216]:
+      - generic [ref=f25e217]:
+        - navigation [ref=f25e218]:
+          - button "Home" [ref=f25e219] [cursor=pointer]
+          - generic [ref=f25e226]: Wishlist
+        - generic [ref=f25e227]:
+          - generic [ref=f25e229]:
+            - generic [ref=f25e230]:
+              - combobox [ref=f25e231]:
+                - option "All Priorities" [selected]
+                - option "High Priority"
+                - option "Medium Priority"
+                - option "Low Priority"
+              - generic [ref=f25e232]: 0 items in wishlist
+            - button "Update All Prices" [ref=f25e233] [cursor=pointer]
+          - generic [ref=f25e239]:
+            - heading "Add to Wishlist" [level=2] [ref=f25e240]
+            - generic [ref=f25e241]:
+              - textbox "Card Name (type to search)" [ref=f25e243]
+              - spinbutton "Target Price ($)" [ref=f25e244]
+              - combobox [ref=f25e245]:
+                - option "Low Priority"
+                - option "Medium Priority" [selected]
+                - option "High Priority"
+              - spinbutton "Quantity" [ref=f25e246]: "1"
+              - combobox [ref=f25e247]:
+                - option "NM" [selected]
+                - option "LP"
+                - option "MP"
+                - option "HP"
+                - option "DMG"
+              - textbox "Notes (optional)" [ref=f25e248]
+            - button "Add to Wishlist" [ref=f25e250] [cursor=pointer]
+          - generic [ref=f25e253]: Your wishlist is empty. Add cards you want to acquire!
+    - navigation [ref=f25e255]:
+      - generic [ref=f25e256]:
+        - button "Dashboard" [ref=f25e257] [cursor=pointer]
+        - button "Collection" [ref=f25e262] [cursor=pointer]
+        - button "Forum" [ref=f25e267] [cursor=pointer]
+        - button "Decks" [ref=f25e271] [cursor=pointer]
+        - button "More" [ref=f25e277] [cursor=pointer]

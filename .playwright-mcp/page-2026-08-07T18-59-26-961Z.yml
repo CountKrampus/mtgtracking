@@ -1,0 +1,126 @@
+- generic [ref=f30e3]:
+  - generic [ref=f30e5]:
+    - button "Notifications" [ref=f30e6] [cursor=pointer]
+    - button "Messages" [ref=f30e10] [cursor=pointer]
+    - button "Send Feedback" [ref=f30e13] [cursor=pointer]
+    - button "creamkrampus Krampus" [ref=f30e1479] [cursor=pointer]:
+      - img "creamkrampus" [ref=f30e17]
+      - generic [ref=f30e1480]: Krampus
+  - generic [ref=f30e20]:
+    - generic [ref=f30e1482]:
+      - generic [ref=f30e1485]:
+        - heading "MTG Tracker" [level=1] [ref=f30e1486]
+        - paragraph [ref=f30e1487]: Collection Manager
+      - generic [ref=f30e1489]:
+        - generic [ref=f30e1490]: K
+        - generic [ref=f30e1491]:
+          - paragraph [ref=f30e1492]: Krampus
+          - text: admin
+      - generic [ref=f30e1493]:
+        - button "Navigation" [ref=f30e1494] [cursor=pointer]
+        - button "Dashboard" [ref=f30e1498] [cursor=pointer]
+        - button "Collection" [ref=f30e1503] [cursor=pointer]
+        - button "Deck Builder" [ref=f30e1508] [cursor=pointer]
+        - button "Wishlist" [ref=f30e1514] [cursor=pointer]
+        - button "Trading Board" [ref=f30e1518] [cursor=pointer]
+        - button "Challenges" [ref=f30e1523] [cursor=pointer]
+        - button "Forum" [ref=f30e1531] [cursor=pointer]
+        - button "Community Decks" [ref=f30e1535] [cursor=pointer]
+        - button "Life Counter" [ref=f30e1540] [cursor=pointer]
+        - button "Settings" [ref=f30e1547] [cursor=pointer]
+        - button "Actions" [ref=f30e1552] [cursor=pointer]
+        - button "Import" [ref=f30e1556] [cursor=pointer]
+        - button "Export JSON" [ref=f30e1561] [cursor=pointer]
+        - button "Export CSV" [ref=f30e1566] [cursor=pointer]
+        - button "Update Prices" [ref=f30e1571] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f30e1578] [cursor=pointer]
+        - button "Tools" [ref=f30e1585] [cursor=pointer]
+        - button "Commanders" [ref=f30e1589] [cursor=pointer]
+        - button "Sets" [ref=f30e1593] [cursor=pointer]
+        - button "Combos" [ref=f30e1597] [cursor=pointer]
+        - button "Finance" [ref=f30e1601] [cursor=pointer]
+        - button "Scan Card" [ref=f30e1605] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f30e1610] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f30e1615] [cursor=pointer]
+        - button "Spoiler Season" [ref=f30e1619] [cursor=pointer]
+        - button "Learn" [ref=f30e1624] [cursor=pointer]
+        - button "Card Rulings" [ref=f30e1628] [cursor=pointer]
+        - button "Interaction Checker" [ref=f30e1633] [cursor=pointer]
+        - button "New Player Guide" [ref=f30e1637] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f30e1642] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f30e1647] [cursor=pointer]
+        - button "Format Guides" [ref=f30e1651] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f30e1659] [cursor=pointer]
+        - button "Gameplay" [ref=f30e1665] [cursor=pointer]
+        - generic [ref=f30e1669]: Admin
+        - button "Admin Panel" [ref=f30e1670] [cursor=pointer]
+      - generic [ref=f30e1674]:
+        - button "Account" [ref=f30e1675] [cursor=pointer]
+        - button "Sign Out" [ref=f30e1680] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f30e1686] [cursor=pointer]:
+        - generic [ref=f30e1689]: Command Palette
+        - generic [ref=f30e1690]: Ctrl+K
+      - button "Collapse" [ref=f30e1692] [cursor=pointer]
+    - main [ref=f30e216]:
+      - generic [ref=f30e217]:
+        - navigation [ref=f30e218]:
+          - button "Home" [ref=f30e219] [cursor=pointer]
+          - generic [ref=f30e814]: Deck Builder
+        - generic [ref=f30e816]:
+          - generic [ref=f30e817]:
+            - generic [ref=f30e818]:
+              - heading "My Decks" [level=2] [ref=f30e819]
+              - button "📁 Uncategorised decks ▾" [ref=f30e821] [cursor=pointer]
+            - generic [ref=f30e822]:
+              - button "Calculate Sleeves" [ref=f30e823] [cursor=pointer]
+              - button "Find Staples" [ref=f30e824] [cursor=pointer]
+              - button "Compare Decks" [ref=f30e825] [cursor=pointer]
+              - button "Shopping List" [ref=f30e826] [cursor=pointer]
+              - button "New Deck" [ref=f30e827] [cursor=pointer]
+              - button "Import Deck" [ref=f30e829] [cursor=pointer]
+          - generic [ref=f30e1959] [cursor=pointer]:
+            - img "Ozai, the Phoenix King" [ref=f30e1961]
+            - generic [ref=f30e1962]:
+              - heading "Every changed when fire nation attacked. Ozai Phoenix 10+" [level=3] [ref=f30e1963]
+              - generic [ref=f30e1964]: Commander
+            - generic [ref=f30e1965]: "Commander: Ozai, the Phoenix King"
+            - generic [ref=f30e1966]:
+              - generic [ref=f30e1967]: 100 cards
+              - generic [ref=f30e1968]: $0.00
+            - button "Delete" [ref=f30e1969]
+          - generic [ref=f30e1971]:
+            - generic [ref=f30e1972]:
+              - heading "Compare Decks" [level=2] [ref=f30e1973]
+              - button [ref=f30e1979] [cursor=pointer]
+            - generic [ref=f30e2659]:
+              - paragraph [ref=f30e2660]: Pick two of your decks to compare their mana curve, colors, and card overlap.
+              - generic [ref=f30e2661]:
+                - generic [ref=f30e2662]: Deck A
+                - combobox [ref=f30e2663]:
+                  - option "Select a deck…"
+                  - option "Anikthea, Hand of Erebos"
+                  - option "Black Gollum"
+                  - option "Edgar Markov" [selected]
+                  - option "Evelyn"
+                  - option "Every changed when fire nation attacked. Ozai Phoenix 10+"
+                  - option "Imported Deck"
+                  - option "Kaalia of the Vast"
+                  - option "Krenko, Mob Boss"
+                  - option "Most Dangerous Gamer"
+                  - option "Olivia, Opulent Outlaw"
+                  - option "Rocco, Street Chef"
+              - generic [ref=f30e2664]:
+                - generic [ref=f30e2665]: Deck B
+                - combobox [ref=f30e2666]:
+                  - option "Select a deck…"
+                  - option "Anikthea, Hand of Erebos"
+                  - option "Black Gollum"
+                  - option "Evelyn"
+                  - option "Every changed when fire nation attacked. Ozai Phoenix 10+"
+                  - option "Imported Deck"
+                  - option "Kaalia of the Vast" [selected]
+                  - option "Krenko, Mob Boss"
+                  - option "Most Dangerous Gamer"
+                  - option "Olivia, Opulent Outlaw"
+                  - option "Rocco, Street Chef"
+              - button "Compare" [ref=f30e2667] [cursor=pointer]

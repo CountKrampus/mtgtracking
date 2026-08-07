@@ -1,0 +1,4 @@
+- generic [ref=f2e208]:
+  - heading "Can't reach the server" [level=1] [ref=f2e216]
+  - paragraph [ref=f2e217]: The MTG Tracker server isn't responding. Check that the backend is running, then retry.
+  - button "Retry" [ref=f2e218] [cursor=pointer]

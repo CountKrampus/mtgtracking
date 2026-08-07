@@ -1,0 +1,485 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e5]:
+    - button "Notifications" [ref=f1e6] [cursor=pointer]
+    - button "Messages" [ref=f1e10] [cursor=pointer]
+    - button "creamkrampus Krampus" [ref=f1e13] [cursor=pointer]:
+      - img "creamkrampus" [ref=f1e14]
+      - generic [ref=f1e15]: Krampus
+  - generic [ref=f1e18]:
+    - generic [ref=f1e20]:
+      - generic [ref=f1e23]:
+        - heading "MTG Tracker" [level=1] [ref=f1e24]
+        - paragraph [ref=f1e25]: Collection Manager
+      - generic [ref=f1e27]:
+        - generic [ref=f1e28]: K
+        - generic [ref=f1e29]:
+          - paragraph [ref=f1e30]: Krampus
+          - text: admin
+      - generic [ref=f1e31]:
+        - button "Navigation" [ref=f1e32] [cursor=pointer]
+        - button "Dashboard" [ref=f1e36] [cursor=pointer]
+        - button "Collection" [ref=f1e41] [cursor=pointer]
+        - button "Deck Builder" [ref=f1e46] [cursor=pointer]
+        - button "Wishlist" [ref=f1e52] [cursor=pointer]
+        - button "Trading Board" [ref=f1e56] [cursor=pointer]
+        - button "Challenges" [ref=f1e61] [cursor=pointer]
+        - button "Forum" [ref=f1e69] [cursor=pointer]
+        - button "Community Decks" [ref=f1e73] [cursor=pointer]
+        - button "Life Counter" [ref=f1e78] [cursor=pointer]
+        - button "Settings" [ref=f1e85] [cursor=pointer]
+        - button "Actions" [ref=f1e90] [cursor=pointer]
+        - button "Import" [ref=f1e94] [cursor=pointer]
+        - button "Export JSON" [ref=f1e99] [cursor=pointer]
+        - button "Export CSV" [ref=f1e104] [cursor=pointer]
+        - button "Update Prices" [ref=f1e109] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f1e116] [cursor=pointer]
+        - button "Tools" [ref=f1e123] [cursor=pointer]
+        - button "Commanders" [ref=f1e127] [cursor=pointer]
+        - button "Sets" [ref=f1e131] [cursor=pointer]
+        - button "Combos" [ref=f1e135] [cursor=pointer]
+        - button "Finance" [ref=f1e139] [cursor=pointer]
+        - button "Scan Card" [ref=f1e143] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f1e148] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f1e153] [cursor=pointer]
+        - button "Spoiler Season" [ref=f1e157] [cursor=pointer]
+        - button "Learn" [ref=f1e162] [cursor=pointer]
+        - button "Card Rulings" [ref=f1e166] [cursor=pointer]
+        - button "Interaction Checker" [ref=f1e171] [cursor=pointer]
+        - button "New Player Guide" [ref=f1e175] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f1e180] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f1e185] [cursor=pointer]
+        - button "Format Guides" [ref=f1e189] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f1e197] [cursor=pointer]
+        - button "Gameplay" [ref=f1e203] [cursor=pointer]
+        - generic [ref=f1e207]: Admin
+        - button "Admin Panel" [ref=f1e208] [cursor=pointer]
+      - generic [ref=f1e212]:
+        - button "Account" [ref=f1e213] [cursor=pointer]
+        - button "Sign Out" [ref=f1e218] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f1e224] [cursor=pointer]:
+        - generic [ref=f1e227]: Command Palette
+        - generic [ref=f1e228]: Ctrl+K
+      - button "Collapse" [ref=f1e230] [cursor=pointer]
+    - main [ref=f1e234]:
+      - generic [ref=f1e235]:
+        - navigation [ref=f1e236]:
+          - button "Home" [ref=f1e237] [cursor=pointer]
+          - generic [ref=f1e244]: Collection
+        - generic [ref=f1e246]:
+          - button "â–¶ Search & Filter" [ref=f1e248] [cursor=pointer]
+          - generic [ref=f1e250]:
+            - button "â–¼ Add New Card" [ref=f1e251] [cursor=pointer]
+            - generic [ref=f1e253]:
+              - generic [ref=f1e255] [cursor=pointer]:
+                - checkbox "Manual Entry (Offline)" [ref=f1e256]
+                - text: Manual Entry (Offline)
+              - generic [ref=f1e257]:
+                - textbox "Card Name (type to see autocomplete)" [ref=f1e259]
+                - button "Search Scryfall" [ref=f1e260] [cursor=pointer]
+                - button "Scan Card" [ref=f1e264] [cursor=pointer]
+                - textbox "Set (optional)" [ref=f1e268]
+                - textbox "Set Code (optional, e.g., LCI)" [ref=f1e269]
+                - 'textbox "Collector # (optional, e.g., 0226)" [ref=f1e270]'
+                - combobox [ref=f1e271]:
+                  - option "Rarity (optional)" [selected]
+                  - option "Common"
+                  - option "Uncommon"
+                  - option "Rare"
+                  - option "Mythic"
+                - spinbutton "Quantity" [ref=f1e272]: "1"
+                - combobox [ref=f1e273]:
+                  - option "NM" [selected]
+                  - option "LP"
+                  - option "MP"
+                  - option "HP"
+                  - option "DMG"
+                - spinbutton "Price ($)" [ref=f1e274]: "0"
+                - 'textbox "Mana Cost (e.g., {2}{U}{U})" [ref=f1e275]'
+                - textbox "Types (comma separated)" [ref=f1e276]
+                - textbox "Tags (comma separated, e.g., commander, wishlist)" [ref=f1e277]
+                - combobox [ref=f1e278]:
+                  - option "No Location" [selected]
+              - generic [ref=f1e279]:
+                - generic [ref=f1e280]: "Colors:"
+                - generic [ref=f1e281]:
+                  - button "White" [ref=f1e282] [cursor=pointer]
+                  - button "Blue" [ref=f1e283] [cursor=pointer]
+                  - button "Black" [ref=f1e284] [cursor=pointer]
+                  - button "Red" [ref=f1e285] [cursor=pointer]
+                  - button "Green" [ref=f1e286] [cursor=pointer]
+                  - button "Colorless" [ref=f1e287] [cursor=pointer]
+              - generic [ref=f1e289] [cursor=pointer]:
+                - checkbox "This is a Foil card" [ref=f1e290]
+                - generic [ref=f1e291]: This is a Foil card
+              - generic [ref=f1e293] [cursor=pointer]:
+                - checkbox "This is a Token card" [ref=f1e294]
+                - generic [ref=f1e295]: This is a Token card
+              - generic [ref=f1e296]:
+                - button "Save" [ref=f1e297] [cursor=pointer]
+                - button "Clear Form" [ref=f1e302] [cursor=pointer]
+        - generic [ref=f1e306]:
+          - table [ref=f1e308]:
+            - rowgroup [ref=f1e309]:
+              - row [ref=f1e310]:
+                - columnheader [ref=f1e311]:
+                  - button "Select all on page" [ref=f1e312] [cursor=pointer]
+                - columnheader "Card Name" [ref=f1e315]
+                - columnheader "Qty" [ref=f1e316]
+                - columnheader "Condition" [ref=f1e317]
+                - columnheader "Price" [ref=f1e318]
+                - columnheader "Actions" [ref=f1e319]
+            - rowgroup [ref=f1e320]:
+              - row [ref=f1e321] [cursor=pointer]:
+                - cell [ref=f1e322]:
+                  - button [ref=f1e323]
+                - cell "Abhorrent Overlord" [ref=f1e326]
+                - cell "1" [ref=f1e327]
+                - cell "NM" [ref=f1e328]
+                - cell "$0.59" [ref=f1e329]
+                - cell [ref=f1e330]:
+                  - generic [ref=f1e331]:
+                    - button "Update price from Scryfall" [ref=f1e332]
+                    - button "Edit card" [ref=f1e335]
+                    - button "Find similar cards" [ref=f1e338]
+                    - button "Find card synergies" [ref=f1e343]
+                    - button "Set price alert" [ref=f1e346]
+                    - button "Delete card" [ref=f1e350]
+              - row [ref=f1e354] [cursor=pointer]:
+                - cell [ref=f1e355]:
+                  - button [ref=f1e356]
+                - cell "Abrade" [ref=f1e359]
+                - cell "1" [ref=f1e360]
+                - cell "NM" [ref=f1e361]
+                - cell "$0.30" [ref=f1e362]
+                - cell [ref=f1e363]:
+                  - generic [ref=f1e364]:
+                    - button "Update price from Scryfall" [ref=f1e365]
+                    - button "Edit card" [ref=f1e368]
+                    - button "Find similar cards" [ref=f1e371]
+                    - button "Find card synergies" [ref=f1e376]
+                    - button "Set price alert" [ref=f1e379]
+                    - button "Delete card" [ref=f1e383]
+              - row [ref=f1e387] [cursor=pointer]:
+                - cell [ref=f1e388]:
+                  - button [ref=f1e389]
+                - cell "Abundance" [ref=f1e392]
+                - cell "1" [ref=f1e393]
+                - cell "NM" [ref=f1e394]
+                - cell "$1.63" [ref=f1e395]
+                - cell [ref=f1e396]:
+                  - generic [ref=f1e397]:
+                    - button "Update price from Scryfall" [ref=f1e398]
+                    - button "Edit card" [ref=f1e401]
+                    - button "Find similar cards" [ref=f1e404]
+                    - button "Find card synergies" [ref=f1e409]
+                    - button "Set price alert" [ref=f1e412]
+                    - button "Delete card" [ref=f1e416]
+              - row [ref=f1e420] [cursor=pointer]:
+                - cell [ref=f1e421]:
+                  - button [ref=f1e422]
+                - cell "Abyssal Gatekeeper" [ref=f1e425]
+                - cell "1" [ref=f1e426]
+                - cell "NM" [ref=f1e427]
+                - cell "$1.37" [ref=f1e428]
+                - cell [ref=f1e429]:
+                  - generic [ref=f1e430]:
+                    - button "Update price from Scryfall" [ref=f1e431]
+                    - button "Edit card" [ref=f1e434]
+                    - button "Find similar cards" [ref=f1e437]
+                    - button "Find card synergies" [ref=f1e442]
+                    - button "Set price alert" [ref=f1e445]
+                    - button "Delete card" [ref=f1e449]
+              - row [ref=f1e453] [cursor=pointer]:
+                - cell [ref=f1e454]:
+                  - button [ref=f1e455]
+                - cell "Acolyte of Aclazotz" [ref=f1e458]
+                - cell "1" [ref=f1e459]
+                - cell "NM" [ref=f1e460]
+                - cell "$0.23" [ref=f1e461]
+                - cell [ref=f1e462]:
+                  - generic [ref=f1e463]:
+                    - button "Update price from Scryfall" [ref=f1e464]
+                    - button "Edit card" [ref=f1e467]
+                    - button "Find similar cards" [ref=f1e470]
+                    - button "Find card synergies" [ref=f1e475]
+                    - button "Set price alert" [ref=f1e478]
+                    - button "Delete card" [ref=f1e482]
+              - row [ref=f1e486] [cursor=pointer]:
+                - cell [ref=f1e487]:
+                  - button [ref=f1e488]
+                - cell "Aegis Angel" [ref=f1e491]
+                - cell "1" [ref=f1e492]
+                - cell "NM" [ref=f1e493]
+                - cell "$0.46" [ref=f1e494]
+                - cell [ref=f1e495]:
+                  - generic [ref=f1e496]:
+                    - button "Update price from Scryfall" [ref=f1e497]
+                    - button "Edit card" [ref=f1e500]
+                    - button "Find similar cards" [ref=f1e503]
+                    - button "Find card synergies" [ref=f1e508]
+                    - button "Set price alert" [ref=f1e511]
+                    - button "Delete card" [ref=f1e515]
+              - row [ref=f1e519] [cursor=pointer]:
+                - cell [ref=f1e520]:
+                  - button [ref=f1e521]
+                - cell "Aether Poisoner" [ref=f1e524]
+                - cell "1" [ref=f1e525]
+                - cell "NM" [ref=f1e526]
+                - cell "$0.13" [ref=f1e527]
+                - cell [ref=f1e528]:
+                  - generic [ref=f1e529]:
+                    - button "Update price from Scryfall" [ref=f1e530]
+                    - button "Edit card" [ref=f1e533]
+                    - button "Find similar cards" [ref=f1e536]
+                    - button "Find card synergies" [ref=f1e541]
+                    - button "Set price alert" [ref=f1e544]
+                    - button "Delete card" [ref=f1e548]
+              - row [ref=f1e552] [cursor=pointer]:
+                - cell [ref=f1e553]:
+                  - button [ref=f1e554]
+                - cell "Agonizing Remorse" [ref=f1e557]
+                - cell "1" [ref=f1e558]
+                - cell "NM" [ref=f1e559]
+                - cell "$0.20" [ref=f1e560]
+                - cell [ref=f1e561]:
+                  - generic [ref=f1e562]:
+                    - button "Update price from Scryfall" [ref=f1e563]
+                    - button "Edit card" [ref=f1e566]
+                    - button "Find similar cards" [ref=f1e569]
+                    - button "Find card synergies" [ref=f1e574]
+                    - button "Set price alert" [ref=f1e577]
+                    - button "Delete card" [ref=f1e581]
+              - row [ref=f1e585] [cursor=pointer]:
+                - cell [ref=f1e586]:
+                  - button [ref=f1e587]
+                - cell "Akki Battle Squad" [ref=f1e590]
+                - cell "1" [ref=f1e591]
+                - cell "NM" [ref=f1e592]
+                - cell "$4.62" [ref=f1e593]
+                - cell [ref=f1e594]:
+                  - generic [ref=f1e595]:
+                    - button "Update price from Scryfall" [ref=f1e596]
+                    - button "Edit card" [ref=f1e599]
+                    - button "Find similar cards" [ref=f1e602]
+                    - button "Find card synergies" [ref=f1e607]
+                    - button "Set price alert" [ref=f1e610]
+                    - button "Delete card" [ref=f1e614]
+              - row [ref=f1e618] [cursor=pointer]:
+                - cell [ref=f1e619]:
+                  - button [ref=f1e620]
+                - cell "Akroma, Angel of Fury" [ref=f1e623]
+                - cell "1" [ref=f1e624]
+                - cell "NM" [ref=f1e625]
+                - cell "$0.34" [ref=f1e626]
+                - cell [ref=f1e627]:
+                  - generic [ref=f1e628]:
+                    - button "Update price from Scryfall" [ref=f1e629]
+                    - button "Edit card" [ref=f1e632]
+                    - button "Find similar cards" [ref=f1e635]
+                    - button "Find card synergies" [ref=f1e640]
+                    - button "Set price alert" [ref=f1e643]
+                    - button "Delete card" [ref=f1e647]
+              - row [ref=f1e651] [cursor=pointer]:
+                - cell [ref=f1e652]:
+                  - button [ref=f1e653]
+                - cell "Akroma, Angel of Wrath" [ref=f1e656]
+                - cell "1" [ref=f1e657]
+                - cell "NM" [ref=f1e658]
+                - cell "$6.00" [ref=f1e659]
+                - cell [ref=f1e660]:
+                  - generic [ref=f1e661]:
+                    - button "Update price from Scryfall" [ref=f1e662]
+                    - button "Edit card" [ref=f1e665]
+                    - button "Find similar cards" [ref=f1e668]
+                    - button "Find card synergies" [ref=f1e673]
+                    - button "Set price alert" [ref=f1e676]
+                    - button "Delete card" [ref=f1e680]
+              - row [ref=f1e684] [cursor=pointer]:
+                - cell [ref=f1e685]:
+                  - button [ref=f1e686]
+                - cell "Altar's Reap" [ref=f1e689]
+                - cell "1" [ref=f1e690]
+                - cell "NM" [ref=f1e691]
+                - cell "$0.40" [ref=f1e692]
+                - cell [ref=f1e693]:
+                  - generic [ref=f1e694]:
+                    - button "Update price from Scryfall" [ref=f1e695]
+                    - button "Edit card" [ref=f1e698]
+                    - button "Find similar cards" [ref=f1e701]
+                    - button "Find card synergies" [ref=f1e706]
+                    - button "Set price alert" [ref=f1e709]
+                    - button "Delete card" [ref=f1e713]
+              - row [ref=f1e717] [cursor=pointer]:
+                - cell [ref=f1e718]:
+                  - button [ref=f1e719]
+                - cell "Ambush Viper" [ref=f1e722]
+                - cell "3" [ref=f1e723]
+                - cell "NM" [ref=f1e724]
+                - cell "$0.21" [ref=f1e725]
+                - cell [ref=f1e726]:
+                  - generic [ref=f1e727]:
+                    - button "Update price from Scryfall" [ref=f1e728]
+                    - button "Edit card" [ref=f1e731]
+                    - button "Find similar cards" [ref=f1e734]
+                    - button "Find card synergies" [ref=f1e739]
+                    - button "Set price alert" [ref=f1e742]
+                    - button "Delete card" [ref=f1e746]
+              - row [ref=f1e750] [cursor=pointer]:
+                - cell [ref=f1e751]:
+                  - button [ref=f1e752]
+                - cell "Ancient Hellkite" [ref=f1e755]
+                - cell "1" [ref=f1e756]
+                - cell "NM" [ref=f1e757]
+                - cell "$0.24" [ref=f1e758]
+                - cell [ref=f1e759]:
+                  - generic [ref=f1e760]:
+                    - button "Update price from Scryfall" [ref=f1e761]
+                    - button "Edit card" [ref=f1e764]
+                    - button "Find similar cards" [ref=f1e767]
+                    - button "Find card synergies" [ref=f1e772]
+                    - button "Set price alert" [ref=f1e775]
+                    - button "Delete card" [ref=f1e779]
+              - row [ref=f1e783] [cursor=pointer]:
+                - cell [ref=f1e784]:
+                  - button [ref=f1e785]
+                - cell "Angel of Finality" [ref=f1e788]
+                - cell "1" [ref=f1e789]
+                - cell "NM" [ref=f1e790]
+                - cell "$0.26" [ref=f1e791]
+                - cell [ref=f1e792]:
+                  - generic [ref=f1e793]:
+                    - button "Update price from Scryfall" [ref=f1e794]
+                    - button "Edit card" [ref=f1e797]
+                    - button "Find similar cards" [ref=f1e800]
+                    - button "Find card synergies" [ref=f1e805]
+                    - button "Set price alert" [ref=f1e808]
+                    - button "Delete card" [ref=f1e812]
+              - row [ref=f1e816] [cursor=pointer]:
+                - cell [ref=f1e817]:
+                  - button [ref=f1e818]
+                - cell "Angel of the Ruins" [ref=f1e821]
+                - cell "1" [ref=f1e822]
+                - cell "NM" [ref=f1e823]
+                - cell "$0.23" [ref=f1e824]
+                - cell [ref=f1e825]:
+                  - generic [ref=f1e826]:
+                    - button "Update price from Scryfall" [ref=f1e827]
+                    - button "Edit card" [ref=f1e830]
+                    - button "Find similar cards" [ref=f1e833]
+                    - button "Find card synergies" [ref=f1e838]
+                    - button "Set price alert" [ref=f1e841]
+                    - button "Delete card" [ref=f1e845]
+              - row [ref=f1e849] [cursor=pointer]:
+                - cell [ref=f1e850]:
+                  - button [ref=f1e851]
+                - cell "Angel of Vitality" [ref=f1e854]
+                - cell "1" [ref=f1e855]
+                - cell "NM" [ref=f1e856]
+                - cell "$0.49" [ref=f1e857]
+                - cell [ref=f1e858]:
+                  - generic [ref=f1e859]:
+                    - button "Update price from Scryfall" [ref=f1e860]
+                    - button "Edit card" [ref=f1e863]
+                    - button "Find similar cards" [ref=f1e866]
+                    - button "Find card synergies" [ref=f1e871]
+                    - button "Set price alert" [ref=f1e874]
+                    - button "Delete card" [ref=f1e878]
+              - row [ref=f1e882] [cursor=pointer]:
+                - cell [ref=f1e883]:
+                  - button [ref=f1e884]
+                - cell "Angelic Field Marshal" [ref=f1e887]
+                - cell "1" [ref=f1e888]
+                - cell "NM" [ref=f1e889]
+                - cell "$2.78" [ref=f1e890]
+                - cell [ref=f1e891]:
+                  - generic [ref=f1e892]:
+                    - button "Update price from Scryfall" [ref=f1e893]
+                    - button "Edit card" [ref=f1e896]
+                    - button "Find similar cards" [ref=f1e899]
+                    - button "Find card synergies" [ref=f1e904]
+                    - button "Set price alert" [ref=f1e907]
+                    - button "Delete card" [ref=f1e911]
+              - row [ref=f1e915] [cursor=pointer]:
+                - cell [ref=f1e916]:
+                  - button [ref=f1e917]
+                - cell "Angelic Intervention" [ref=f1e920]
+                - cell "1" [ref=f1e921]
+                - cell "NM" [ref=f1e922]
+                - cell "$0.26" [ref=f1e923]
+                - cell [ref=f1e924]:
+                  - generic [ref=f1e925]:
+                    - button "Update price from Scryfall" [ref=f1e926]
+                    - button "Edit card" [ref=f1e929]
+                    - button "Find similar cards" [ref=f1e932]
+                    - button "Find card synergies" [ref=f1e937]
+                    - button "Set price alert" [ref=f1e940]
+                    - button "Delete card" [ref=f1e944]
+              - row [ref=f1e948] [cursor=pointer]:
+                - cell [ref=f1e949]:
+                  - button [ref=f1e950]
+                - cell "Anikthea, Hand of Erebos" [ref=f1e953]
+                - cell "1" [ref=f1e954]
+                - cell "NM" [ref=f1e955]
+                - cell "$6.32" [ref=f1e956]
+                - cell [ref=f1e957]:
+                  - generic [ref=f1e958]:
+                    - button "Update price from Scryfall" [ref=f1e959]
+                    - button "Edit card" [ref=f1e962]
+                    - button "Find similar cards" [ref=f1e965]
+                    - button "Find card synergies" [ref=f1e970]
+                    - button "Set price alert" [ref=f1e973]
+                    - button "Delete card" [ref=f1e977]
+          - generic [ref=f1e981]:
+            - generic [ref=f1e982]: Showing 1 to 20 of 572 cards
+            - generic [ref=f1e983]:
+              - button "Previous" [disabled] [ref=f1e984]
+              - generic [ref=f1e985]: Page 1 of 29
+              - button "Next" [ref=f1e986] [cursor=pointer]
+        - generic [ref=f1e988]:
+          - heading "Collection Value History" [level=3] [ref=f1e989]
+          - generic [ref=f1e990]:
+            - generic [ref=f1e991]: From
+            - textbox "From" [ref=f1e992]: 2026-07-07
+            - generic [ref=f1e993]: To
+            - textbox "To" [ref=f1e994]: 2026-08-06
+          - img [ref=f1e995]:
+            - generic [ref=f1e996]: $987
+            - generic [ref=f1e997]: $0
+            - generic "$970.29 on 7/15/2026" [ref=f1e999]
+            - generic "$970.35 on 7/16/2026" [ref=f1e1000]
+            - generic "$957.94 on 7/17/2026" [ref=f1e1001]
+            - generic "$957.78 on 7/18/2026" [ref=f1e1002]
+            - generic "$961.25 on 7/19/2026" [ref=f1e1003]
+            - generic "$958.64 on 7/20/2026" [ref=f1e1004]
+            - generic "$962.75 on 7/21/2026" [ref=f1e1005]
+            - generic "$962.71 on 7/23/2026" [ref=f1e1006]
+            - generic "$963.03 on 7/24/2026" [ref=f1e1007]
+            - generic "$966.91 on 7/25/2026" [ref=f1e1008]
+            - generic "$976.18 on 7/26/2026" [ref=f1e1009]
+            - generic "$961.25 on 7/28/2026" [ref=f1e1010]
+            - generic "$964.33 on 7/30/2026" [ref=f1e1011]
+            - generic "$971.71 on 7/31/2026" [ref=f1e1012]
+            - generic "$966.35 on 8/2/2026" [ref=f1e1013]
+            - generic "$980.81 on 8/3/2026" [ref=f1e1014]
+            - generic "$975.79 on 8/4/2026" [ref=f1e1015]
+            - generic "$987.24 on 8/5/2026" [ref=f1e1016]
+          - generic [ref=f1e1017]:
+            - generic [ref=f1e1018]:
+              - generic [ref=f1e1019]: $970.29
+              - generic [ref=f1e1020]: Start
+            - generic [ref=f1e1021]:
+              - generic [ref=f1e1022]: $987.24
+              - generic [ref=f1e1023]: End
+            - generic [ref=f1e1024]:
+              - generic [ref=f1e1025]:
+                - text: "+16.95"
+                - generic [ref=f1e1026]: (+1.7%)
+              - generic [ref=f1e1027]: Change
+        - generic [ref=f1e1029]:
+          - generic [ref=f1e1030]:
+            - generic [ref=f1e1031]:
+              - heading "Set Completion Tracker" [level=2] [ref=f1e1032]
+              - paragraph [ref=f1e1035]: Your progress toward completing each set
+            - button [ref=f1e1036] [cursor=pointer]
+          - paragraph [ref=f1e1042]: No set data available. Make sure your cards have set codes.
+          - paragraph [ref=f1e1044]: Showing up to 20 sets from your collection • Sorted by completion percentage

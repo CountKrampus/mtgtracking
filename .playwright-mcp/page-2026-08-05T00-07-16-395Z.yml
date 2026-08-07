@@ -1,0 +1,16 @@
+- generic [ref=f2e220]:
+  - generic [ref=f2e221]:
+    - heading "MTG Tracker" [level=1] [ref=f2e222]
+    - paragraph [ref=f2e223]: Sign in to your collection
+  - generic [ref=f2e224]:
+    - generic [ref=f2e225]:
+      - generic [ref=f2e226]: Email or Username
+      - textbox "Enter your email or username" [ref=f2e231]: creamkrampus
+    - generic [ref=f2e232]:
+      - generic [ref=f2e233]: Password
+      - textbox "Enter your password" [ref=f2e238]: Sophia111!!!
+    - button "Forgot password?" [ref=f2e240] [cursor=pointer]
+    - button "Sign In" [ref=f2e241] [cursor=pointer]
+  - paragraph [ref=f2e246]:
+    - text: Don't have an account?
+    - button "Create one" [ref=f2e247] [cursor=pointer]

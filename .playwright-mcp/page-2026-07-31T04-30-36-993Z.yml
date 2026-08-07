@@ -1,0 +1,466 @@
+- generic [ref=e1]:
+  - generic [ref=e455]:
+    - log
+    - log
+  - generic [ref=e11]:
+    - generic [ref=e12]:
+      - generic [ref=e14]:
+        - generic [ref=e15]: k
+        - generic [ref=e17]: krampusgaming
+      - generic [ref=e18]:
+        - button "Inbox" [ref=e21] [cursor=pointer]
+        - link [ref=e24] [cursor=pointer]:
+          - /url: https://support.discord.com
+          - button "Help" [ref=e25]
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - navigation "Servers sidebar" [ref=e31]:
+          - tree [ref=e32]:
+            - generic [ref=e33]:
+              - treeitem "Direct Messages" [level=1] [ref=e42] [cursor=pointer]
+              - group "Servers" [ref=e49]:
+                - generic [ref=e50]:
+                  - treeitem "krampusgaming" [level=1] [selected] [ref=e60] [cursor=pointer]:
+                    - generic [ref=e62]: k
+                  - generic [ref=e63]: krampusgaming
+              - treeitem "Add a Server" [level=1] [ref=e70] [cursor=pointer]
+              - treeitem "Discover" [level=1] [ref=e81] [cursor=pointer]
+              - treeitem "Download Apps" [level=1] [ref=e92] [cursor=pointer]
+        - navigation "krampusgaming (server)" [ref=e96]:
+          - generic [ref=e99]:
+            - button "krampusgaming, server actions" [ref=e100] [cursor=pointer]:
+              - heading "krampusgaming" [level=2] [ref=e102]
+            - button "Invite to Server" [ref=e107] [cursor=pointer]
+          - heading "Channels" [level=2] [ref=e112]
+          - list "Channels" [ref=e114]:
+            - listitem [ref=e116]:
+              - generic [ref=e117]:
+                - button "Events"
+                - generic [ref=e118] [cursor=pointer]: Events
+            - listitem [ref=e123]:
+              - generic [ref=e124]:
+                - button "Server Boosts"
+                - generic [ref=e148] [cursor=pointer]: Server Boosts
+            - listitem [ref=e154]:
+              - generic [ref=e155] [cursor=pointer]:
+                - button "Text Channels (category)" [expanded] [ref=e156]:
+                  - heading "Text Channels" [level=3] [ref=e157]
+                - generic [ref=e161]:
+                  - button "Create Channel" [ref=e162]
+                  - generic [ref=e165]: Create Channel
+            - listitem [ref=e166]:
+              - link "general (text channel)" [ref=e169] [cursor=pointer]:
+                - /url: /channels/391839377803968513/391839377803968516
+                - generic [ref=e170]:
+                  - img "Text icon" [ref=e171]
+                  - generic [ref=e174]: Text
+                  - generic [ref=e175]: general
+                  - generic [ref=e176]:
+                    - button "Invite to Channel" [ref=e178]
+                    - generic [ref=e182]: Invite to Channel
+                    - button "Edit Channel" [ref=e184]
+                    - generic [ref=e187]: Edit Channel
+            - listitem [ref=e188]:
+              - generic [ref=e189] [cursor=pointer]:
+                - button "Voice Channels (category)" [expanded] [ref=e190]:
+                  - heading "Voice Channels" [level=3] [ref=e191]
+                - generic [ref=e195]:
+                  - button "Create Channel" [ref=e196]
+                  - generic [ref=e199]: Create Channel
+            - listitem [ref=e200]:
+              - button "General (voice channel)" [ref=e204] [cursor=pointer]:
+                - generic [ref=e205]:
+                  - img "Voice icon" [ref=e206]
+                  - generic [ref=e210]: Voice
+                  - generic [ref=e211]: General
+                  - generic:
+                    - generic [ref=e212]: Open Chat
+                    - generic [ref=e213]: Invite to Voice
+                    - generic [ref=e214]: Edit Channel
+            - listitem [ref=e215]:
+              - button "borderlands (voice channel)" [ref=e219] [cursor=pointer]:
+                - generic [ref=e220]:
+                  - img "Voice icon" [ref=e221]
+                  - generic [ref=e225]: Voice
+                  - generic [ref=e226]: borderlands
+                  - generic:
+                    - generic [ref=e227]: Open Chat
+                    - generic [ref=e228]: Invite to Voice
+                    - generic [ref=e229]: Edit Channel
+        - separator "Resize Sidebar" [ref=e230]
+        - region "User status and settings" [ref=e231]:
+          - generic [ref=e232]:
+            - generic [ref=e233] [cursor=pointer]:
+              - button "Manage profile and status"
+              - generic [ref=e236]:
+                - generic [ref=e237]: CountKrampus
+                - generic [ref=e241]:
+                  - generic: countkrampus6297
+                  - generic: Online
+            - generic [ref=e242]:
+              - generic [ref=e243]:
+                - switch "Mute" [checked] [ref=e244] [cursor=pointer]
+                - generic [ref=e265]: Unmute
+                - button "Input Options" [ref=e266] [cursor=pointer]
+              - generic [ref=e270]:
+                - switch "Deafen" [ref=e271] [cursor=pointer]
+                - button "Output Options" [ref=e283] [cursor=pointer]
+              - button "User Settings" [ref=e287] [cursor=pointer]
+      - generic [ref=e298]:
+        - region "Channel header" [ref=e300]:
+          - generic [ref=e301]:
+            - generic [ref=e302]:
+              - generic [ref=e306]: Text Channel
+              - 'heading "krampusgaming: general" [level=1] [ref=e308]':
+                - generic [ref=e309]: "krampusgaming:"
+                - text: general
+            - generic [ref=e310]:
+              - button "Threads" [ref=e311] [cursor=pointer]
+              - button "Notification Settings" [ref=e314] [cursor=pointer]
+              - button "Pinned Messages" [ref=e317] [cursor=pointer]
+              - button "Show Member List" [ref=e320] [cursor=pointer]
+              - generic [ref=e325]:
+                - combobox "Search krampusgaming" [ref=e326]
+                - button [ref=e328]
+        - main "general (channel)" [ref=e335]:
+          - heading "general chat" [level=2] [ref=e337]
+          - group [ref=e339]:
+            - list "Messages in general" [ref=e341]:
+              - generic [ref=e345]:
+                - heading [level=3] [ref=e346]:
+                  - paragraph [ref=e347]: Welcome to
+                  - paragraph [ref=e348]: krampusgaming
+                - generic [ref=e349]: This is the beginning of this server.
+              - separator "July 30, 2026"
+              - listitem [ref=e350]:
+                - article [ref=e351]:
+                  - generic [ref=e358]:
+                    - text: Yay you made it,
+                    - link "Mtg-Tracker" [ref=e359] [cursor=pointer]
+                    - text: "!"
+                    - generic:
+                      - generic:
+                        - time:
+                          - generic: —
+                          - text: 12:28 PM
+                      - generic: Thursday, July 30, 2026 at 12:28 PM
+              - listitem [ref=e363]:
+                - 'article "CountKrampus , /link code: 4F5DFB , 5:11 PM" [ref=e364]':
+                  - generic [ref=e365]:
+                    - heading [level=3] [ref=e367]:
+                      - button "CountKrampus" [ref=e369]
+                      - generic:
+                        - generic:
+                          - time:
+                            - generic: —
+                            - text: 5:11 PM
+                        - generic: Thursday, July 30, 2026 at 5:11 PM
+                    - generic [ref=e370]: "/link code: 4F5DFB"
+              - listitem [ref=e630]:
+                - 'article "Mtg-Tracker App , Set Completion UNF — Unfinity 47/639 (7%) ECC — Lorwyn Eclipsed Commander 7/176 (4%) MSC — Marvel Super Heroes Commander 22/866 (3%) ONE — Phyrexia: All Will Be One 12/479 (3%) INR — Innistrad Remastered 12/495 (2%) AFR — Adventures in the Forgotten Realms 10/424 (2%) OTC — Outlaws of Thunder Junction Commander 8/342 (2%) FDN — Foundations 18/771 (2%) 2XM — Double Masters 5/384 (1%) SNC — Streets of New Capenna 6/513 (1%) Only you can see this • Dismiss message , 11:18 PM" [ref=e654]':
+                  - generic [ref=e632]:
+                    - button [ref=e633]: CountKrampus
+                    - text: used
+                    - button [ref=e634]:
+                      - generic [ref=e635]: sets
+                  - heading [level=3] [ref=e640]:
+                    - generic [ref=e641]:
+                      - button "Mtg-Tracker" [ref=e642]
+                      - img "App" [ref=e643]:
+                        - generic [ref=e644]: APP
+                    - generic:
+                      - generic:
+                        - time:
+                          - generic: —
+                          - text: 11:18 PM
+                      - generic: Thursday, July 30, 2026 at 11:18 PM
+                  - generic [ref=e648]:
+                    - article [ref=e660]:
+                      - generic [ref=e662]:
+                        - generic [ref=e663]: Set Completion
+                        - generic [ref=e664]:
+                          - generic [ref=e665]:
+                            - generic [ref=e666]: UNF — Unfinity
+                            - generic [ref=e667]: 47/639 (7%)
+                          - generic [ref=e668]:
+                            - generic [ref=e669]: ECC — Lorwyn Eclipsed Commander
+                            - generic [ref=e670]: 7/176 (4%)
+                          - generic [ref=e671]:
+                            - generic [ref=e672]: MSC — Marvel Super Heroes Commander
+                            - generic [ref=e673]: 22/866 (3%)
+                          - generic [ref=e674]:
+                            - generic [ref=e675]: "ONE — Phyrexia: All Will Be One"
+                            - generic [ref=e676]: 12/479 (3%)
+                          - generic [ref=e677]:
+                            - generic [ref=e678]: INR — Innistrad Remastered
+                            - generic [ref=e679]: 12/495 (2%)
+                          - generic [ref=e680]:
+                            - generic [ref=e681]: AFR — Adventures in the Forgotten Realms
+                            - generic [ref=e682]: 10/424 (2%)
+                          - generic [ref=e683]:
+                            - generic [ref=e684]: OTC — Outlaws of Thunder Junction Commander
+                            - generic [ref=e685]: 8/342 (2%)
+                          - generic [ref=e686]:
+                            - generic [ref=e687]: FDN — Foundations
+                            - generic [ref=e688]: 18/771 (2%)
+                          - generic [ref=e689]:
+                            - generic [ref=e690]: 2XM — Double Masters
+                            - generic [ref=e691]: 5/384 (1%)
+                          - generic [ref=e692]:
+                            - generic [ref=e693]: SNC — Streets of New Capenna
+                            - generic [ref=e694]: 6/513 (1%)
+                    - generic [ref=e649]:
+                      - text: Only you can see this •
+                      - link "Dismiss message" [ref=e653] [cursor=pointer]
+              - listitem [ref=e729]:
+                - article "Mtg-Tracker App , Commander Recommendations Ragavan, Nimble Pilferer $42.91 Lotho, Corrupt Shirriff $13.40 Mondrak, Glory Dominus $42.24 Adeline, Resplendent Cathar $2.41 Talrand, Sky Summoner $1.19 Peregrin Took $1.21 Urza, Lord High Artificer $16.23 Sai, Master Thopterist $0.57 Ojer Taq, Deepest Foundation // Temple of Civilization $29.96 Krenko, Tin Street Kingpin $3.18 Only you can see this • Dismiss message , 11:20 PM" [ref=e824]:
+                  - generic [ref=e731]:
+                    - button [ref=e732]: CountKrampus
+                    - text: used
+                    - button [ref=e733]:
+                      - generic [ref=e734]: commander
+                  - heading [level=3] [ref=e739]:
+                    - generic [ref=e740]:
+                      - button "Mtg-Tracker" [ref=e741]
+                      - img "App" [ref=e742]:
+                        - generic [ref=e743]: APP
+                    - generic:
+                      - generic:
+                        - time:
+                          - generic: —
+                          - text: 11:20 PM
+                      - generic: Thursday, July 30, 2026 at 11:20 PM
+                  - generic [ref=e747]:
+                    - article [ref=e825]:
+                      - generic [ref=e827]:
+                        - generic [ref=e828]: Commander Recommendations
+                        - generic [ref=e829]:
+                          - generic [ref=e830]:
+                            - generic [ref=e831]: Ragavan, Nimble Pilferer
+                            - generic [ref=e832]: $42.91
+                          - generic [ref=e833]:
+                            - generic [ref=e834]: Lotho, Corrupt Shirriff
+                            - generic [ref=e835]: $13.40
+                          - generic [ref=e836]:
+                            - generic [ref=e837]: Mondrak, Glory Dominus
+                            - generic [ref=e838]: $42.24
+                          - generic [ref=e839]:
+                            - generic [ref=e840]: Adeline, Resplendent Cathar
+                            - generic [ref=e841]: $2.41
+                          - generic [ref=e842]:
+                            - generic [ref=e843]: Talrand, Sky Summoner
+                            - generic [ref=e844]: $1.19
+                          - generic [ref=e845]:
+                            - generic [ref=e846]: Peregrin Took
+                            - generic [ref=e847]: $1.21
+                          - generic [ref=e848]:
+                            - generic [ref=e849]: Urza, Lord High Artificer
+                            - generic [ref=e850]: $16.23
+                          - generic [ref=e851]:
+                            - generic [ref=e852]: Sai, Master Thopterist
+                            - generic [ref=e853]: $0.57
+                          - generic [ref=e854]:
+                            - generic [ref=e855]: Ojer Taq, Deepest Foundation // Temple of Civilization
+                            - generic [ref=e856]: $29.96
+                          - generic [ref=e857]:
+                            - generic [ref=e858]: Krenko, Tin Street Kingpin
+                            - generic [ref=e859]: $3.18
+                    - generic [ref=e748]:
+                      - text: Only you can see this •
+                      - link "Dismiss message" [ref=e752] [cursor=pointer]
+              - listitem [ref=e954]:
+                - article "CountKrampus , binder , 11:21 PM" [ref=e955]:
+                  - generic [ref=e956]:
+                    - heading [level=3] [ref=e958]:
+                      - button "CountKrampus" [ref=e960]
+                      - generic:
+                        - generic:
+                          - time:
+                            - generic: —
+                            - text: 11:21 PM
+                        - generic: Thursday, July 30, 2026 at 11:21 PM
+                    - generic [ref=e961]: binder
+                  - generic:
+                    - group "Message Actions":
+                      - generic:
+                        - generic:
+                          - button "Click to react with 100"
+                        - generic:
+                          - generic: ":100:"
+                          - generic: Click to react
+                        - generic:
+                          - button "Click to react with thumbsup"
+                        - generic:
+                          - generic: ":thumbsup:"
+                          - generic: Click to react
+                        - generic:
+                          - button "Click to react with thumbsdown"
+                        - generic:
+                          - generic: ":thumbsdown:"
+                          - generic: Click to react
+                        - generic:
+                          - button "Add Reaction"
+                        - generic: Add Reaction
+                        - generic:
+                          - button "Edit"
+                        - generic: Edit
+                        - generic:
+                          - button "Forward"
+                        - generic: Forward
+                        - generic:
+                          - button "More"
+                        - generic: More
+              - separator "new"
+              - listitem [ref=e1128]:
+                - article [ref=e1129]:
+                  - generic [ref=e1130]:
+                    - button [ref=e1131]: CountKrampus
+                    - text: used
+                    - button [ref=e1132]:
+                      - generic [ref=e1133]: location
+                  - generic [ref=e1136]:
+                    - heading [level=3] [ref=e1138]:
+                      - generic [ref=e1139]:
+                        - button "Mtg-Tracker" [ref=e1140]
+                        - img "App" [ref=e1141]:
+                          - generic [ref=e1142]: APP
+                      - generic:
+                        - generic:
+                          - time:
+                            - generic: —
+                            - text: 11:22 PM
+                        - generic: Thursday, July 30, 2026 at 11:22 PM
+                    - generic [ref=e1143]:
+                      - button [ref=e1144] [cursor=pointer]:
+                        - img "❌" [ref=e1145]
+                      - text: "No location matches \"binder\". Available locations: none yet"
+                  - generic [ref=e1147]:
+                    - text: Only you can see this •
+                    - link "Dismiss message" [ref=e1151] [cursor=pointer]
+              - listitem [ref=e1266]:
+                - article "Mtg-Tracker App , Commander Recommendations Peregrin Took $1.21 Old Gnawbone $52.60 Chatterfang, Squirrel General $12.09 Arasta of the Endless Web $0.35 Titania, Protector of Argoth $0.32 Jadar, Ghoulcaller of Nephalia $1.09 Beledros Witherbloom $1.55 Westvale Abbey // Ormendahl, Profane Prince $3.83 Lathril, Blade of the Elves $1.44 Lord Skitter, Sewer King $5.25 Only you can see this • Dismiss message , 11:28 PM" [ref=e1267]:
+                  - generic [ref=e1268]:
+                    - button [ref=e1269]: CountKrampus
+                    - text: used
+                    - button [ref=e1270]:
+                      - generic [ref=e1271]: commander
+                  - heading [level=3] [ref=e1276]:
+                    - generic [ref=e1277]:
+                      - button "Mtg-Tracker" [ref=e1278]
+                      - img "App" [ref=e1279]:
+                        - generic [ref=e1280]: APP
+                    - generic:
+                      - generic:
+                        - time:
+                          - generic: —
+                          - text: 11:28 PM
+                      - generic: Thursday, July 30, 2026 at 11:28 PM
+                  - generic [ref=e1286]:
+                    - article [ref=e1287]:
+                      - generic [ref=e1289]:
+                        - generic [ref=e1290]: Commander Recommendations
+                        - generic [ref=e1291]:
+                          - generic [ref=e1292]:
+                            - generic [ref=e1293]: Peregrin Took
+                            - generic [ref=e1294]: $1.21
+                          - generic [ref=e1295]:
+                            - generic [ref=e1296]: Old Gnawbone
+                            - generic [ref=e1297]: $52.60
+                          - generic [ref=e1298]:
+                            - generic [ref=e1299]: Chatterfang, Squirrel General
+                            - generic [ref=e1300]: $12.09
+                          - generic [ref=e1301]:
+                            - generic [ref=e1302]: Arasta of the Endless Web
+                            - generic [ref=e1303]: $0.35
+                          - generic [ref=e1304]:
+                            - generic [ref=e1305]: Titania, Protector of Argoth
+                            - generic [ref=e1306]: $0.32
+                          - generic [ref=e1307]:
+                            - generic [ref=e1308]: Jadar, Ghoulcaller of Nephalia
+                            - generic [ref=e1309]: $1.09
+                          - generic [ref=e1310]:
+                            - generic [ref=e1311]: Beledros Witherbloom
+                            - generic [ref=e1312]: $1.55
+                          - generic [ref=e1313]:
+                            - generic [ref=e1314]: Westvale Abbey // Ormendahl, Profane Prince
+                            - generic [ref=e1315]: $3.83
+                          - generic [ref=e1316]:
+                            - generic [ref=e1317]: Lathril, Blade of the Elves
+                            - generic [ref=e1318]: $1.44
+                          - generic [ref=e1319]:
+                            - generic [ref=e1320]: Lord Skitter, Sewer King
+                            - generic [ref=e1321]: $5.25
+                    - generic [ref=e1322]:
+                      - text: Only you can see this •
+                      - link "Dismiss message" [ref=e1326] [cursor=pointer]
+              - listitem [ref=e1443]:
+                - article "Mtg-Tracker App , Similar to Ambush Viper Birds of Paradise $8.64 Llanowar Elves $0.28 Elvish Mystic $0.45 Sakura-Tribe Elder $0.33 Eternal Witness $2.02 Delighted Halfling N/A Tireless Provisioner $4.21 Beast Whisperer $8.16 Fyndhorn Elves $2.37 Scute Swarm $8.93 Only you can see this • Dismiss message , 11:29 PM" [ref=e1531]:
+                  - generic [ref=e1445]:
+                    - button [ref=e1446]: CountKrampus
+                    - text: used
+                    - button [ref=e1447]:
+                      - generic [ref=e1448]: similar
+                  - heading [level=3] [ref=e1453]:
+                    - generic [ref=e1454]:
+                      - button "Mtg-Tracker" [ref=e1455]
+                      - img "App" [ref=e1456]:
+                        - generic [ref=e1457]: APP
+                    - generic:
+                      - generic:
+                        - time:
+                          - generic: —
+                          - text: 11:29 PM
+                      - generic: Thursday, July 30, 2026 at 11:29 PM
+                  - generic [ref=e1461]:
+                    - article [ref=e1532]:
+                      - generic [ref=e1534]:
+                        - generic [ref=e1535]: Similar to Ambush Viper
+                        - generic [ref=e1536]:
+                          - generic [ref=e1537]:
+                            - generic [ref=e1538]: Birds of Paradise
+                            - generic [ref=e1539]: $8.64
+                          - generic [ref=e1540]:
+                            - generic [ref=e1541]: Llanowar Elves
+                            - generic [ref=e1542]: $0.28
+                          - generic [ref=e1543]:
+                            - generic [ref=e1544]: Elvish Mystic
+                            - generic [ref=e1545]: $0.45
+                          - generic [ref=e1546]:
+                            - generic [ref=e1547]: Sakura-Tribe Elder
+                            - generic [ref=e1548]: $0.33
+                          - generic [ref=e1549]:
+                            - generic [ref=e1550]: Eternal Witness
+                            - generic [ref=e1551]: $2.02
+                          - generic [ref=e1552]:
+                            - generic [ref=e1553]: Delighted Halfling
+                            - generic [ref=e1554]: N/A
+                          - generic [ref=e1555]:
+                            - generic [ref=e1556]: Tireless Provisioner
+                            - generic [ref=e1557]: $4.21
+                          - generic [ref=e1558]:
+                            - generic [ref=e1559]: Beast Whisperer
+                            - generic [ref=e1560]: $8.16
+                          - generic [ref=e1561]:
+                            - generic [ref=e1562]: Fyndhorn Elves
+                            - generic [ref=e1563]: $2.37
+                          - generic [ref=e1564]:
+                            - generic [ref=e1565]: Scute Swarm
+                            - generic [ref=e1566]: $8.93
+                    - generic [ref=e1462]:
+                      - text: Only you can see this •
+                      - link "Dismiss message" [ref=e1466] [cursor=pointer]
+          - generic [ref=e374]:
+            - generic [ref=e1589]:
+              - generic [ref=e1590]:
+                - generic [ref=e1591]: card
+                - generic [ref=e1592]: Card name
+              - button "Close" [ref=e1594] [cursor=pointer]
+            - generic [ref=e376]:
+              - generic [ref=e1598]: Mtg-Tracker
+              - 'textbox "Message #general" [active] [ref=e384]':
+                - generic [ref=e1604]:
+                  - generic [ref=e1605]: /synergy
+                  - generic [ref=e1607]:
+                    - generic [ref=e1608]: card
+                    - generic [ref=e1609]: Ambush Viper
+              - button "Add Emoji" [ref=e1375] [cursor=pointer]

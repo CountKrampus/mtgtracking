@@ -1,0 +1,70 @@
+<h2>Where should the new scores live on the Deck Detail page?</h2>
+<p class="subtitle">Today, Power Level and Salt Score sit side-by-side as two cards in one row. Manabase Score and Deck Health Score are the two new ones. Which layout feels right?</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup" style="width:100%">
+        <div class="mockup-header">A — Four cards, one row</div>
+        <div class="mockup-body" style="display:flex; gap:8px; padding:12px;">
+          <div class="placeholder" style="flex:1; padding:10px; font-size:11px;">Power Level<br><b style="font-size:20px">7</b></div>
+          <div class="placeholder" style="flex:1; padding:10px; font-size:11px;">Salt Score<br><b style="font-size:20px">12</b></div>
+          <div class="placeholder" style="flex:1; padding:10px; font-size:11px; border:1px dashed #888;">Manabase<br><b style="font-size:20px">B+</b></div>
+          <div class="placeholder" style="flex:1; padding:10px; font-size:11px; border:1px dashed #888;">Health<br><b style="font-size:20px">82</b></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Four cards, one row</h3>
+      <p>All four scores treated as equal peers in a single row. Compact, scannable, but tight on mobile (4 cards get narrow) and doesn't signal that these two are "new"/different in kind.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup" style="width:100%">
+        <div class="mockup-header">B — Two rows of two</div>
+        <div class="mockup-body" style="padding:12px;">
+          <div style="display:flex; gap:8px; margin-bottom:8px;">
+            <div class="placeholder" style="flex:1; padding:12px; font-size:12px;">Power Level<br><b style="font-size:22px">7</b></div>
+            <div class="placeholder" style="flex:1; padding:12px; font-size:12px;">Salt Score<br><b style="font-size:22px">12</b></div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <div class="placeholder" style="flex:1; padding:12px; font-size:12px; border:1px dashed #888;">Manabase Score<br><b style="font-size:22px">B+</b></div>
+            <div class="placeholder" style="flex:1; padding:12px; font-size:12px; border:1px dashed #888;">Deck Health<br><b style="font-size:22px">82</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. Two rows of two</h3>
+      <p>Existing row stays exactly as-is; a new second row is added below it, same card style. Simple, low-risk, each card gets full room to breathe on mobile too (stacks to 1-per-row naturally).</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup" style="width:100%">
+        <div class="mockup-header">C — Unified "Smart Deck Score" panel</div>
+        <div class="mockup-body" style="padding:12px;">
+          <div class="placeholder" style="padding:14px; margin-bottom:8px; text-align:center; border:1px dashed #888;">
+            <div style="font-size:11px; opacity:.7">SMART DECK SCORE</div>
+            <b style="font-size:28px">78</b><span style="font-size:11px"> / 100</span>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <div class="placeholder" style="flex:1; padding:8px; font-size:10px;">Power<br><b>7</b></div>
+            <div class="placeholder" style="flex:1; padding:8px; font-size:10px;">Salt<br><b>12</b></div>
+            <div class="placeholder" style="flex:1; padding:8px; font-size:10px; border:1px dashed #888;">Mana<br><b>B+</b></div>
+            <div class="placeholder" style="flex:1; padding:8px; font-size:10px; border:1px dashed #888;">Health<br><b>82</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. Unified "Smart Deck Score" panel</h3>
+      <p>One overall score up top (a new "global score" concept, like Mythic Tools has), with all four sub-scores as a smaller strip underneath. Most closely mirrors the actual competitor feature, but is the biggest change — replaces the existing Power Level/Salt Score row entirely rather than adding alongside it.</p>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px;">Dashed borders mark the two NEW scores (Manabase, Health) — solid borders are the two that already exist today.</p>

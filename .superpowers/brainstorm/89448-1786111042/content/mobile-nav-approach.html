@@ -1,0 +1,73 @@
+<h2>Mobile Admin Panel — Navigation Approach</h2>
+<p class="subtitle">Right now on mobile, the sidebar accordion (4 groups × 4-6 tabs each) squeezes into a small 256px-tall scrollable box above the content, and can bleed past the modal edge. Which navigation pattern should replace it?</p>
+
+<div class="options">
+  <div class="option" data-choice="drilldown" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Drill-down (Recommended)</h3>
+      <p>Tap a group → full-screen list of its tabs → tap a tab → full-screen tab content with a "← Back" button. Only one screen visible at a time, no nested scrolling, no sidebar+content fighting for width.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="drawer" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Slide-out drawer</h3>
+      <p>A "Menu" button opens a full-height drawer (like the app's own main sidebar) listing all groups/tabs. Tapping a tab closes the drawer and shows that tab full-width. Familiar pattern, but adds an extra open/close step every time you switch tabs.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="horizontal" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Horizontal scrolling tab bar</h3>
+      <p>Sidebar becomes a horizontally-scrollable pill bar pinned under the header (group selector dropdown, then tab chips for that group). Content is always visible below it — no full-screen navigation step, but ~16-24 tabs as scrollable chips can be fiddly to browse on a phone.</p>
+    </div>
+  </div>
+</div>
+
+<div class="mockup">
+  <div class="mockup-header">Preview: Option A — Drill-down, 3 screens</div>
+  <div class="mockup-body">
+    <div style="display:flex; gap:12px; overflow-x:auto; padding-bottom:8px;">
+      <div style="min-width:200px; border:1px solid var(--border,#444); border-radius:8px; padding:10px;">
+        <div class="mock-nav">← &nbsp; Admin Panel</div>
+        <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+          <div class="mock-button" style="text-align:left;">👥 User Management ›</div>
+          <div class="mock-button" style="text-align:left;">🗄 Data &amp; Pricing ›</div>
+          <div class="mock-button" style="text-align:left;">💬 Community ›</div>
+          <div class="mock-button" style="text-align:left;">⚙ System ›</div>
+        </div>
+      </div>
+      <div style="min-width:200px; border:1px solid var(--border,#444); border-radius:8px; padding:10px;">
+        <div class="mock-nav">← &nbsp; Community</div>
+        <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+          <div class="mock-button" style="text-align:left;">🛡 Content Moderation</div>
+          <div class="mock-button" style="text-align:left; background:rgba(139,92,246,0.3);">💬 Feedback</div>
+          <div class="mock-button" style="text-align:left;">🏆 Badges</div>
+          <div class="mock-button" style="text-align:left;">🏅 Challenges</div>
+        </div>
+      </div>
+      <div style="min-width:200px; border:1px solid var(--border,#444); border-radius:8px; padding:10px;">
+        <div class="mock-nav">← &nbsp; Feedback</div>
+        <div class="mock-content" style="margin-top:8px; min-height:120px;">Feedback table, full width</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mockup">
+  <div class="mockup-header">Preview: Option C — Horizontal tab bar, 1 screen</div>
+  <div class="mockup-body">
+    <div style="border:1px solid var(--border,#444); border-radius:8px; padding:10px; max-width:300px;">
+      <div class="mock-nav">Admin Panel</div>
+      <select class="mock-input" style="margin-top:8px; width:100%;"><option>💬 Community</option></select>
+      <div style="display:flex; gap:6px; overflow-x:auto; margin-top:8px; padding-bottom:4px;">
+        <div class="mock-button" style="white-space:nowrap;">Moderation</div>
+        <div class="mock-button" style="white-space:nowrap; background:rgba(139,92,246,0.3);">Feedback</div>
+        <div class="mock-button" style="white-space:nowrap;">Badges</div>
+        <div class="mock-button" style="white-space:nowrap;">Challenges</div>
+      </div>
+      <div class="mock-content" style="margin-top:8px; min-height:100px;">Feedback table, full width</div>
+    </div>
+  </div>
+</div>

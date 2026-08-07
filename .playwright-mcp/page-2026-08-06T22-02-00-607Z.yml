@@ -1,0 +1,1795 @@
+- generic [ref=f12e3]:
+  - generic [ref=f12e5]:
+    - button "Notifications" [ref=f12e6] [cursor=pointer]
+    - button "Messages" [ref=f12e10] [cursor=pointer]
+    - button "creamkrampus Krampus" [ref=f12e13] [cursor=pointer]:
+      - img "creamkrampus" [ref=f12e14]
+      - generic [ref=f12e15]: Krampus
+  - generic [ref=f12e18]:
+    - generic [ref=f12e20]:
+      - generic [ref=f12e23]:
+        - heading "MTG Tracker" [level=1] [ref=f12e24]
+        - paragraph [ref=f12e25]: Collection Manager
+      - generic [ref=f12e226]:
+        - generic [ref=f12e227]: K
+        - generic [ref=f12e228]:
+          - paragraph [ref=f12e229]: Krampus
+          - text: admin
+      - generic [ref=f12e26]:
+        - button "Navigation" [ref=f12e27] [cursor=pointer]
+        - button "Dashboard" [ref=f12e31] [cursor=pointer]
+        - button "Collection" [ref=f12e36] [cursor=pointer]
+        - button "Deck Builder" [ref=f12e41] [cursor=pointer]
+        - button "Wishlist" [ref=f12e47] [cursor=pointer]
+        - button "Trading Board" [ref=f12e51] [cursor=pointer]
+        - button "Challenges" [ref=f12e56] [cursor=pointer]
+        - button "Forum" [ref=f12e64] [cursor=pointer]
+        - button "Community Decks" [ref=f12e68] [cursor=pointer]
+        - button "Life Counter" [ref=f12e73] [cursor=pointer]
+        - button "Settings" [ref=f12e80] [cursor=pointer]
+        - button "Actions" [ref=f12e85] [cursor=pointer]
+        - button "Import" [ref=f12e89] [cursor=pointer]
+        - button "Export JSON" [ref=f12e94] [cursor=pointer]
+        - button "Export CSV" [ref=f12e99] [cursor=pointer]
+        - button "Update Prices" [ref=f12e104] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f12e111] [cursor=pointer]
+        - button "Tools" [ref=f12e118] [cursor=pointer]
+        - button "Commanders" [ref=f12e122] [cursor=pointer]
+        - button "Sets" [ref=f12e126] [cursor=pointer]
+        - button "Combos" [ref=f12e130] [cursor=pointer]
+        - button "Finance" [ref=f12e134] [cursor=pointer]
+        - button "Scan Card" [ref=f12e138] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f12e143] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f12e148] [cursor=pointer]
+        - button "Spoiler Season" [ref=f12e152] [cursor=pointer]
+        - button "Learn" [ref=f12e157] [cursor=pointer]
+        - button "Card Rulings" [ref=f12e161] [cursor=pointer]
+        - button "Interaction Checker" [ref=f12e166] [cursor=pointer]
+        - button "New Player Guide" [ref=f12e170] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f12e175] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f12e180] [cursor=pointer]
+        - button "Format Guides" [ref=f12e184] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f12e192] [cursor=pointer]
+        - button "Gameplay" [ref=f12e198] [cursor=pointer]
+        - generic [ref=f12e230]: Admin
+        - button "Admin Panel" [ref=f12e231] [cursor=pointer]
+      - generic [ref=f12e235]:
+        - button "Account" [ref=f12e236] [cursor=pointer]
+        - button "Sign Out" [ref=f12e241] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f12e203] [cursor=pointer]:
+        - generic [ref=f12e206]: Command Palette
+        - generic [ref=f12e207]: Ctrl+K
+      - button "Collapse" [ref=f12e209] [cursor=pointer]
+    - main [ref=f12e213]:
+      - generic [ref=f12e214]:
+        - navigation [ref=f12e215]:
+          - button "Home" [ref=f12e216] [cursor=pointer]
+          - generic [ref=f12e223]: Deck Builder
+        - generic [ref=f12e1295]:
+          - generic [ref=f12e1296]:
+            - textbox [ref=f12e1297]: Every changed when fire nation attacked. Ozai Phoenix 10+
+            - generic [ref=f12e1298]: 99/100
+            - generic [ref=f12e1299]:
+              - button "Save Deck" [ref=f12e1300] [cursor=pointer]
+              - button "Cancel" [ref=f12e1301] [cursor=pointer]
+          - generic [ref=f12e1302]:
+            - generic [ref=f12e1303]:
+              - heading "Add Cards" [level=3] [ref=f12e1304]
+              - textbox "Search Scryfall to add any card..." [ref=f12e1306]
+              - textbox "Filter your collection..." [ref=f12e1307]
+              - generic [ref=f12e1308]: "Filtered to commander color identity: BR"
+              - generic [ref=f12e1309]: Your collection (383 cards)
+              - generic [ref=f12e1310]:
+                - 'button "Abhorrent Overlord {5}{B}{B}" [ref=f12e1311]':
+                  - generic [ref=f12e1312]: Abhorrent Overlord
+                  - generic [ref=f12e1313]: "{5}{B}{B}"
+                - 'button "Abrade {1}{R}" [ref=f12e1314]':
+                  - generic [ref=f12e1315]: Abrade
+                  - generic [ref=f12e1316]: "{1}{R}"
+                - 'button "Abyssal Gatekeeper {1}{B}" [ref=f12e1317]':
+                  - generic [ref=f12e1318]: Abyssal Gatekeeper
+                  - generic [ref=f12e1319]: "{1}{B}"
+                - 'button "Acolyte of Aclazotz {2}{B}" [ref=f12e1320]':
+                  - generic [ref=f12e1321]: Acolyte of Aclazotz
+                  - generic [ref=f12e1322]: "{2}{B}"
+                - 'button "Aether Poisoner {1}{B}" [ref=f12e1323]':
+                  - generic [ref=f12e1324]: Aether Poisoner
+                  - generic [ref=f12e1325]: "{1}{B}"
+                - 'button "Agonizing Remorse {1}{B}" [ref=f12e1326]':
+                  - generic [ref=f12e1327]: Agonizing Remorse
+                  - generic [ref=f12e1328]: "{1}{B}"
+                - 'button "Akki Battle Squad {5}{R}" [ref=f12e1329]':
+                  - generic [ref=f12e1330]: Akki Battle Squad
+                  - generic [ref=f12e1331]: "{5}{R}"
+                - 'button "Akroma, Angel of Fury {5}{R}{R}{R}" [ref=f12e1332]':
+                  - generic [ref=f12e1333]: Akroma, Angel of Fury
+                  - generic [ref=f12e1334]: "{5}{R}{R}{R}"
+                - 'button "Altar''s Reap {1}{B}" [ref=f12e1335]':
+                  - generic [ref=f12e1336]: Altar's Reap
+                  - generic [ref=f12e1337]: "{1}{B}"
+                - 'button "Ancient Hellkite {4}{R}{R}{R}" [ref=f12e1338]':
+                  - generic [ref=f12e1339]: Ancient Hellkite
+                  - generic [ref=f12e1340]: "{4}{R}{R}{R}"
+                - 'button "Anje, Maid of Dishonor {2}{B}{R}" [ref=f12e1341]':
+                  - generic [ref=f12e1342]: Anje, Maid of Dishonor
+                  - generic [ref=f12e1343]: "{2}{B}{R}"
+                - 'button "Annihilating Glare {B}" [ref=f12e1344]':
+                  - generic [ref=f12e1345]: Annihilating Glare
+                  - generic [ref=f12e1346]: "{B}"
+                - 'button "Arbiter of Woe {4}{B}{B}" [ref=f12e1347]':
+                  - generic [ref=f12e1348]: Arbiter of Woe
+                  - generic [ref=f12e1349]: "{4}{B}{B}"
+                - 'button "Arcane Signet {2} in deck" [ref=f12e1350]':
+                  - generic [ref=f12e1351]: Arcane Signet
+                  - generic [ref=f12e1352]: "{2}"
+                  - generic [ref=f12e1353]: in deck
+                - button "Arguel's Blood Fast // Temple of Aclazotz" [ref=f12e1354]
+                - 'button "Armor of Shadows {B}" [ref=f12e1356]':
+                  - generic [ref=f12e1357]: Armor of Shadows
+                  - generic [ref=f12e1358]: "{B}"
+                - 'button "Arrogant Outlaw {2}{B}" [ref=f12e1359]':
+                  - generic [ref=f12e1360]: Arrogant Outlaw
+                  - generic [ref=f12e1361]: "{2}{B}"
+                - button "Ash Barrens" [ref=f12e1362]
+                - 'button "Asylum Visitor {1}{B}" [ref=f12e1364]':
+                  - generic [ref=f12e1365]: Asylum Visitor
+                  - generic [ref=f12e1366]: "{1}{B}"
+                - button "Balloon Stand" [ref=f12e1367]
+                - 'button "Bat Whisperer {3}{B}" [ref=f12e1369]':
+                  - generic [ref=f12e1370]: Bat Whisperer
+                  - generic [ref=f12e1371]: "{3}{B}"
+                - 'button "Belligerent Guest {2}{R}" [ref=f12e1372]':
+                  - generic [ref=f12e1373]: Belligerent Guest
+                  - generic [ref=f12e1374]: "{2}{R}"
+                - 'button "Blood Artist {1}{B}" [ref=f12e1375]':
+                  - generic [ref=f12e1376]: Blood Artist
+                  - generic [ref=f12e1377]: "{1}{B}"
+                - 'button "Blood Fountain {B}" [ref=f12e1378]':
+                  - generic [ref=f12e1379]: Blood Fountain
+                  - generic [ref=f12e1380]: "{B}"
+                - 'button "Blood Operative {1}{B}{B}" [ref=f12e1381]':
+                  - generic [ref=f12e1382]: Blood Operative
+                  - generic [ref=f12e1383]: "{1}{B}{B}"
+                - 'button "Blood Tithe {3}{B}" [ref=f12e1384]':
+                  - generic [ref=f12e1385]: Blood Tithe
+                  - generic [ref=f12e1386]: "{3}{B}"
+                - 'button "Bloodchief''s Thirst {B}" [ref=f12e1387]':
+                  - generic [ref=f12e1388]: Bloodchief's Thirst
+                  - generic [ref=f12e1389]: "{B}"
+                - 'button "Bloodcrazed Socialite {3}{B}" [ref=f12e1390]':
+                  - generic [ref=f12e1391]: Bloodcrazed Socialite
+                  - generic [ref=f12e1392]: "{3}{B}"
+                - button "Bloodfell Caves" [ref=f12e1393]
+                - 'button "Bloodgift Demon {3}{B}{B}" [ref=f12e1395]':
+                  - generic [ref=f12e1396]: Bloodgift Demon
+                  - generic [ref=f12e1397]: "{3}{B}{B}"
+                - 'button "Bloodthrone Vampire {1}{B}" [ref=f12e1398]':
+                  - generic [ref=f12e1399]: Bloodthrone Vampire
+                  - generic [ref=f12e1400]: "{1}{B}"
+                - 'button "Bloodvial Purveyor {2}{B}{B}" [ref=f12e1401]':
+                  - generic [ref=f12e1402]: Bloodvial Purveyor
+                  - generic [ref=f12e1403]: "{2}{B}{B}"
+                - button "Blossoming Sands" [ref=f12e1404]
+                - 'button "Bombard {2}{R}" [ref=f12e1406]':
+                  - generic [ref=f12e1407]: Bombard
+                  - generic [ref=f12e1408]: "{2}{R}"
+                - 'button "Bone Shards {B}" [ref=f12e1409]':
+                  - generic [ref=f12e1410]: Bone Shards
+                  - generic [ref=f12e1411]: "{B}"
+                - 'button "Bone Splinters {B}" [ref=f12e1412]':
+                  - generic [ref=f12e1413]: Bone Splinters
+                  - generic [ref=f12e1414]: "{B}"
+                - 'button "Boot Nipper {1}{B}" [ref=f12e1415]':
+                  - generic [ref=f12e1416]: Boot Nipper
+                  - generic [ref=f12e1417]: "{1}{B}"
+                - 'button "Boots of Speed {R}" [ref=f12e1418]':
+                  - generic [ref=f12e1419]: Boots of Speed
+                  - generic [ref=f12e1420]: "{R}"
+                - button "Bounce Chamber" [ref=f12e1421]
+                - 'button "Bubbling Muck {B}" [ref=f12e1423]':
+                  - generic [ref=f12e1424]: Bubbling Muck
+                  - generic [ref=f12e1425]: "{B}"
+                - 'button "Bump in the Night {B}" [ref=f12e1426]':
+                  - generic [ref=f12e1427]: Bump in the Night
+                  - generic [ref=f12e1428]: "{B}"
+                - button "Bumper Cars" [ref=f12e1429]
+                - 'button "Burning-Rune Demon {4}{B}{B}" [ref=f12e1431]':
+                  - generic [ref=f12e1432]: Burning-Rune Demon
+                  - generic [ref=f12e1433]: "{4}{B}{B}"
+                - 'button "Bushmeat Poacher {3}{B}" [ref=f12e1434]':
+                  - generic [ref=f12e1435]: Bushmeat Poacher
+                  - generic [ref=f12e1436]: "{3}{B}"
+                - 'button "Cacophony Unleashed {5}{B}{B}" [ref=f12e1437]':
+                  - generic [ref=f12e1438]: Cacophony Unleashed
+                  - generic [ref=f12e1439]: "{5}{B}{B}"
+                - 'button "Call the Bloodline {1}{B}" [ref=f12e1440]':
+                  - generic [ref=f12e1441]: Call the Bloodline
+                  - generic [ref=f12e1442]: "{1}{B}"
+                - 'button "Canonized in Blood {1}{B}" [ref=f12e1443]':
+                  - generic [ref=f12e1444]: Canonized in Blood
+                  - generic [ref=f12e1445]: "{1}{B}"
+                - button "Canopy Vista" [ref=f12e1446]
+                - 'button "Captivating Vampire {1}{B}{B}" [ref=f12e1448]':
+                  - generic [ref=f12e1449]: Captivating Vampire
+                  - generic [ref=f12e1450]: "{1}{B}{B}"
+                - button "Cavern of Souls in deck" [ref=f12e1451]:
+                  - generic [ref=f12e1452]: Cavern of Souls
+                  - generic [ref=f12e1453]: in deck
+                - button "Caves of Koilos" [ref=f12e1454]
+                - button "Centrifuge" [ref=f12e1456]
+                - 'button "Charcoal Diamond {2}" [ref=f12e1458]':
+                  - generic [ref=f12e1459]: Charcoal Diamond
+                  - generic [ref=f12e1460]: "{2}"
+                - button "Clown Extruder" [ref=f12e1461]
+                - 'button "Collision of Realms {6}{R}" [ref=f12e1463]':
+                  - generic [ref=f12e1464]: Collision of Realms
+                  - generic [ref=f12e1465]: "{6}{R}"
+                - button "Command Tower in deck" [ref=f12e1466]:
+                  - generic [ref=f12e1467]: Command Tower
+                  - generic [ref=f12e1468]: in deck
+                - 'button "Commander''s Sphere {3}" [ref=f12e1469]':
+                  - generic [ref=f12e1470]: Commander's Sphere
+                  - generic [ref=f12e1471]: "{3}"
+                - button "Concession Stand" [ref=f12e1472]
+                - 'button "Cordial Vampire {B}{B}" [ref=f12e1474]':
+                  - generic [ref=f12e1475]: Cordial Vampire
+                  - generic [ref=f12e1476]: "{B}{B}"
+                - 'button "Corrupted Conviction {B}" [ref=f12e1477]':
+                  - generic [ref=f12e1478]: Corrupted Conviction
+                  - generic [ref=f12e1479]: "{B}"
+                - 'button "Costly Plunder {1}{B}" [ref=f12e1480]':
+                  - generic [ref=f12e1481]: Costly Plunder
+                  - generic [ref=f12e1482]: "{1}{B}"
+                - button "Costume Shop" [ref=f12e1483]
+                - button "Cover the Spot" [ref=f12e1485]
+                - 'button "Cranial Plating {2}" [ref=f12e1487]':
+                  - generic [ref=f12e1488]: Cranial Plating
+                  - generic [ref=f12e1489]: "{2}"
+                - 'button "Cunning Rhetoric {2}{B}" [ref=f12e1490]':
+                  - generic [ref=f12e1491]: Cunning Rhetoric
+                  - generic [ref=f12e1492]: "{2}{B}"
+                - 'button "Cursed Mirror {2}{R}" [ref=f12e1493]':
+                  - generic [ref=f12e1494]: Cursed Mirror
+                  - generic [ref=f12e1495]: "{2}{R}"
+                - 'button "Cut Down {B}" [ref=f12e1496]':
+                  - generic [ref=f12e1497]: Cut Down
+                  - generic [ref=f12e1498]: "{B}"
+                - 'button "Cut of the Profits {X}{B}{B}" [ref=f12e1499]':
+                  - generic [ref=f12e1500]: Cut of the Profits
+                  - generic [ref=f12e1501]: "{X}{B}{B}"
+                - 'button "Damnable Pact {X}{B}{B}" [ref=f12e1502]':
+                  - generic [ref=f12e1503]: Damnable Pact
+                  - generic [ref=f12e1504]: "{X}{B}{B}"
+                - 'button "Damnation {2}{B}{B} in deck" [ref=f12e1505]':
+                  - generic [ref=f12e1506]: Damnation
+                  - generic [ref=f12e1507]: "{2}{B}{B}"
+                  - generic [ref=f12e1508]: in deck
+                - 'button "Dark Ritual {B} in deck" [ref=f12e1509]':
+                  - generic [ref=f12e1510]: Dark Ritual
+                  - generic [ref=f12e1511]: "{B}"
+                  - generic [ref=f12e1512]: in deck
+                - button "Dart Throw" [ref=f12e1513]
+                - 'button "Deadeye Duelist {1}{R}" [ref=f12e1515]':
+                  - generic [ref=f12e1516]: Deadeye Duelist
+                  - generic [ref=f12e1517]: "{1}{R}"
+                - 'button "Deadly Dispute {1}{B}" [ref=f12e1518]':
+                  - generic [ref=f12e1519]: Deadly Dispute
+                  - generic [ref=f12e1520]: "{1}{B}"
+                - 'button "Death-Rattle Oni {6}{B}" [ref=f12e1521]':
+                  - generic [ref=f12e1522]: Death-Rattle Oni
+                  - generic [ref=f12e1523]: "{6}{B}"
+                - 'button "Deathgreeter {B}" [ref=f12e1524]':
+                  - generic [ref=f12e1525]: Deathgreeter
+                  - generic [ref=f12e1526]: "{B}"
+                - 'button "Defile {B}" [ref=f12e1527]':
+                  - generic [ref=f12e1528]: Defile
+                  - generic [ref=f12e1529]: "{B}"
+                - button "Demolition Field" [ref=f12e1530]
+                - 'button "Demon of Fate''s Design {4}{B}{B}" [ref=f12e1532]':
+                  - generic [ref=f12e1533]: Demon of Fate's Design
+                  - generic [ref=f12e1534]: "{4}{B}{B}"
+                - 'button "Demon of Loathing {5}{B}{B}" [ref=f12e1535]':
+                  - generic [ref=f12e1536]: Demon of Loathing
+                  - generic [ref=f12e1537]: "{5}{B}{B}"
+                - 'button "Demonic Appetite {B}" [ref=f12e1538]':
+                  - generic [ref=f12e1539]: Demonic Appetite
+                  - generic [ref=f12e1540]: "{B}"
+                - 'button "Demonic Taskmaster {2}{B}" [ref=f12e1541]':
+                  - generic [ref=f12e1542]: Demonic Taskmaster
+                  - generic [ref=f12e1543]: "{2}{B}"
+                - 'button "Demonlord Belzenlok {4}{B}{B}" [ref=f12e1544]':
+                  - generic [ref=f12e1545]: Demonlord Belzenlok
+                  - generic [ref=f12e1546]: "{4}{B}{B}"
+                - 'button "Diabolic Intent {1}{B} in deck" [ref=f12e1547]':
+                  - generic [ref=f12e1548]: Diabolic Intent
+                  - generic [ref=f12e1549]: "{1}{B}"
+                  - generic [ref=f12e1550]: in deck
+                - 'button "Dire Fleet Neckbreaker {2}{B}{R}" [ref=f12e1551]':
+                  - generic [ref=f12e1552]: Dire Fleet Neckbreaker
+                  - generic [ref=f12e1553]: "{2}{B}{R}"
+                - 'button "Dire Fleet Ravager {3}{B}{B}" [ref=f12e1554]':
+                  - generic [ref=f12e1555]: Dire Fleet Ravager
+                  - generic [ref=f12e1556]: "{3}{B}{B}"
+                - 'button "Discerning Peddler {1}{R}" [ref=f12e1557]':
+                  - generic [ref=f12e1558]: Discerning Peddler
+                  - generic [ref=f12e1559]: "{1}{R}"
+                - 'button "Discourtesy Clerk {3}{B}" [ref=f12e1560]':
+                  - generic [ref=f12e1561]: Discourtesy Clerk
+                  - generic [ref=f12e1562]: "{3}{B}"
+                - 'button "Doomed Necromancer {2}{B}" [ref=f12e1563]':
+                  - generic [ref=f12e1564]: Doomed Necromancer
+                  - generic [ref=f12e1565]: "{2}{B}"
+                - 'button "Doomwake Giant {4}{B}" [ref=f12e1566]':
+                  - generic [ref=f12e1567]: Doomwake Giant
+                  - generic [ref=f12e1568]: "{4}{B}"
+                - 'button "Dragon Hatchling {1}{R}" [ref=f12e1569]':
+                  - generic [ref=f12e1570]: Dragon Hatchling
+                  - generic [ref=f12e1571]: "{1}{R}"
+                - 'button "Dragonwing Glider {3}{R}{R}" [ref=f12e1572]':
+                  - generic [ref=f12e1573]: Dragonwing Glider
+                  - generic [ref=f12e1574]: "{3}{R}{R}"
+                - 'button "Dread Fugue {B}" [ref=f12e1575]':
+                  - generic [ref=f12e1576]: Dread Fugue
+                  - generic [ref=f12e1577]: "{B}"
+                - 'button "Dread Return {2}{B}{B}" [ref=f12e1578]':
+                  - generic [ref=f12e1579]: Dread Return
+                  - generic [ref=f12e1580]: "{2}{B}{B}"
+                - 'button "Dreadhorde Invasion {1}{B}" [ref=f12e1581]':
+                  - generic [ref=f12e1582]: Dreadhorde Invasion
+                  - generic [ref=f12e1583]: "{1}{B}"
+                - 'button "Driver of the Dead {3}{B}" [ref=f12e1584]':
+                  - generic [ref=f12e1585]: Driver of the Dead
+                  - generic [ref=f12e1586]: "{3}{B}"
+                - button "Drop Tower" [ref=f12e1587]
+                - 'button "Duress {B}" [ref=f12e1589]':
+                  - generic [ref=f12e1590]: Duress
+                  - generic [ref=f12e1591]: "{B}"
+                - 'button "Eaten Alive {B}" [ref=f12e1592]':
+                  - generic [ref=f12e1593]: Eaten Alive
+                  - generic [ref=f12e1594]: "{B}"
+                - button "Edgar, Charmed Groom // Edgar Markov's Coffin" [ref=f12e1595]
+                - 'button "Elemental Mastery {3}{R}" [ref=f12e1597]':
+                  - generic [ref=f12e1598]: Elemental Mastery
+                  - generic [ref=f12e1599]: "{3}{R}"
+                - 'button "End the Festivities {R}" [ref=f12e1600]':
+                  - generic [ref=f12e1601]: End the Festivities
+                  - generic [ref=f12e1602]: "{R}"
+                - 'button "Endless Scream {X}{B}" [ref=f12e1603]':
+                  - generic [ref=f12e1604]: Endless Scream
+                  - generic [ref=f12e1605]: "{X}{B}"
+                - 'button "Enduring Tenacity {2}{B}{B}" [ref=f12e1606]':
+                  - generic [ref=f12e1607]: Enduring Tenacity
+                  - generic [ref=f12e1608]: "{2}{B}{B}"
+                - 'button "Enterprising Scallywag {1}{R}" [ref=f12e1609]':
+                  - generic [ref=f12e1610]: Enterprising Scallywag
+                  - generic [ref=f12e1611]: "{1}{R}"
+                - 'button "Erebos, Bleak-Hearted {3}{B}" [ref=f12e1612]':
+                  - generic [ref=f12e1613]: Erebos, Bleak-Hearted
+                  - generic [ref=f12e1614]: "{3}{B}"
+                - 'button "Erratic Cyclops {3}{R}" [ref=f12e1615]':
+                  - generic [ref=f12e1616]: Erratic Cyclops
+                  - generic [ref=f12e1617]: "{3}{R}"
+                - button "Evolving Wilds" [ref=f12e1618]
+                - 'button "Executioner''s Capsule {B}" [ref=f12e1620]':
+                  - generic [ref=f12e1621]: Executioner's Capsule
+                  - generic [ref=f12e1622]: "{B}"
+                - button "Exotic Orchard" [ref=f12e1623]
+                - 'button "Explosive Derailment {R}" [ref=f12e1625]':
+                  - generic [ref=f12e1626]: Explosive Derailment
+                  - generic [ref=f12e1627]: "{R}"
+                - 'button "Extinguish All Hope {4}{B}{B}" [ref=f12e1628]':
+                  - generic [ref=f12e1629]: Extinguish All Hope
+                  - generic [ref=f12e1630]: "{4}{B}{B}"
+                - 'button "Faithless Looting {R} in deck" [ref=f12e1631]':
+                  - generic [ref=f12e1632]: Faithless Looting
+                  - generic [ref=f12e1633]: "{R}"
+                  - generic [ref=f12e1634]: in deck
+                - 'button "Falkenrath Celebrants {4}{R}" [ref=f12e1635]':
+                  - generic [ref=f12e1636]: Falkenrath Celebrants
+                  - generic [ref=f12e1637]: "{4}{R}"
+                - 'button "Falkenrath Noble {3}{B}" [ref=f12e1638]':
+                  - generic [ref=f12e1639]: Falkenrath Noble
+                  - generic [ref=f12e1640]: "{3}{B}"
+                - 'button "Fatal Push {B}" [ref=f12e1641]':
+                  - generic [ref=f12e1642]: Fatal Push
+                  - generic [ref=f12e1643]: "{B}"
+                - 'button "Fear {B}{B}" [ref=f12e1644]':
+                  - generic [ref=f12e1645]: Fear
+                  - generic [ref=f12e1646]: "{B}{B}"
+                - 'button "Fear of the Dark {4}{B}" [ref=f12e1647]':
+                  - generic [ref=f12e1648]: Fear of the Dark
+                  - generic [ref=f12e1649]: "{4}{B}"
+                - 'button "Feed the Swarm {1}{B} in deck" [ref=f12e1650]':
+                  - generic [ref=f12e1651]: Feed the Swarm
+                  - generic [ref=f12e1652]: "{1}{B}"
+                  - generic [ref=f12e1653]: in deck
+                - 'button "Feign Death {B}" [ref=f12e1654]':
+                  - generic [ref=f12e1655]: Feign Death
+                  - generic [ref=f12e1656]: "{B}"
+                - button "Ferris Wheel" [ref=f12e1657]
+                - 'button "Fireshrieker {3}" [ref=f12e1659]':
+                  - generic [ref=f12e1660]: Fireshrieker
+                  - generic [ref=f12e1661]: "{3}"
+                - 'button "Flame-Blessed Bolt {R}" [ref=f12e1662]':
+                  - generic [ref=f12e1663]: Flame-Blessed Bolt
+                  - generic [ref=f12e1664]: "{R}"
+                - button "Foam Weapons Kiosk" [ref=f12e1665]
+                - button "Forest" [ref=f12e1667]
+                - button "Fortified Village" [ref=f12e1669]
+                - button "Fortune Teller" [ref=f12e1671]
+                - 'button "Foundry Street Denizen {R}" [ref=f12e1673]':
+                  - generic [ref=f12e1674]: Foundry Street Denizen
+                  - generic [ref=f12e1675]: "{R}"
+                - 'button "Frenzied Raider {1}{R}" [ref=f12e1676]':
+                  - generic [ref=f12e1677]: Frenzied Raider
+                  - generic [ref=f12e1678]: "{1}{R}"
+                - 'button "Funeral Room // Awakening Hall {2}{B} // {6}{B}{B}" [ref=f12e1679]':
+                  - generic [ref=f12e1680]: Funeral Room // Awakening Hall
+                  - generic [ref=f12e1681]: "{2}{B} // {6}{B}{B}"
+                - 'button "Furnace Hellkite {5}{R}{R}" [ref=f12e1682]':
+                  - generic [ref=f12e1683]: Furnace Hellkite
+                  - generic [ref=f12e1684]: "{5}{R}{R}"
+                - button "Gallery of Legends" [ref=f12e1685]
+                - button "Game Trail" [ref=f12e1687]
+                - 'button "Ghoulish Impetus {2}{B}" [ref=f12e1689]':
+                  - generic [ref=f12e1690]: Ghoulish Impetus
+                  - generic [ref=f12e1691]: "{2}{B}"
+                - button "Gift Shop" [ref=f12e1692]
+                - 'button "Goblin Arsonist {R}" [ref=f12e1694]':
+                  - generic [ref=f12e1695]: Goblin Arsonist
+                  - generic [ref=f12e1696]: "{R}"
+                - 'button "Goblin Battle Jester {3}{R}" [ref=f12e1697]':
+                  - generic [ref=f12e1698]: Goblin Battle Jester
+                  - generic [ref=f12e1699]: "{3}{R}"
+                - 'button "Goblin Bombardment {1}{R}" [ref=f12e1700]':
+                  - generic [ref=f12e1701]: Goblin Bombardment
+                  - generic [ref=f12e1702]: "{1}{R}"
+                - 'button "Goblin Chieftain {1}{R}{R}" [ref=f12e1703]':
+                  - generic [ref=f12e1704]: Goblin Chieftain
+                  - generic [ref=f12e1705]: "{1}{R}{R}"
+                - 'button "Goblin Fire Fiend {3}{R}" [ref=f12e1706]':
+                  - generic [ref=f12e1707]: Goblin Fire Fiend
+                  - generic [ref=f12e1708]: "{3}{R}"
+                - 'button "Goblin Matron {2}{R}" [ref=f12e1709]':
+                  - generic [ref=f12e1710]: Goblin Matron
+                  - generic [ref=f12e1711]: "{2}{R}"
+                - 'button "Goblin Picker {1}{R}" [ref=f12e1712]':
+                  - generic [ref=f12e1713]: Goblin Picker
+                  - generic [ref=f12e1714]: "{1}{R}"
+                - 'button "Goblin Rally {3}{R}{R}" [ref=f12e1715]':
+                  - generic [ref=f12e1716]: Goblin Rally
+                  - generic [ref=f12e1717]: "{3}{R}{R}"
+                - 'button "Goblin Razerunners {2}{R}{R}" [ref=f12e1718]':
+                  - generic [ref=f12e1719]: Goblin Razerunners
+                  - generic [ref=f12e1720]: "{2}{R}{R}"
+                - 'button "Goblin Smuggler {2}{R}" [ref=f12e1721]':
+                  - generic [ref=f12e1722]: Goblin Smuggler
+                  - generic [ref=f12e1723]: "{2}{R}"
+                - 'button "Goblin Trashmaster {2}{R}{R}" [ref=f12e1724]':
+                  - generic [ref=f12e1725]: Goblin Trashmaster
+                  - generic [ref=f12e1726]: "{2}{R}{R}"
+                - 'button "Goblin Tunneler {1}{R}" [ref=f12e1727]':
+                  - generic [ref=f12e1728]: Goblin Tunneler
+                  - generic [ref=f12e1729]: "{1}{R}"
+                - 'button "Goblin Warchief {1}{R}{R}" [ref=f12e1730]':
+                  - generic [ref=f12e1731]: Goblin Warchief
+                  - generic [ref=f12e1732]: "{1}{R}{R}"
+                - button "Golgari Rot Farm" [ref=f12e1733]
+                - 'button "Golgari Signet {2}" [ref=f12e1735]':
+                  - generic [ref=f12e1736]: Golgari Signet
+                  - generic [ref=f12e1737]: "{2}"
+                - 'button "Gollum, Patient Plotter {1}{B}" [ref=f12e1738]':
+                  - generic [ref=f12e1739]: Gollum, Patient Plotter
+                  - generic [ref=f12e1740]: "{1}{B}"
+                - 'button "Granitic Titan {4}{R}{R}" [ref=f12e1741]':
+                  - generic [ref=f12e1742]: Granitic Titan
+                  - generic [ref=f12e1743]: "{4}{R}{R}"
+                - button "Great Furnace" [ref=f12e1744]
+                - 'button "Greedy Freebooter {B}" [ref=f12e1746]':
+                  - generic [ref=f12e1747]: Greedy Freebooter
+                  - generic [ref=f12e1748]: "{B}"
+                - 'button "Grievous Wound {3}{B}{B}" [ref=f12e1749]':
+                  - generic [ref=f12e1750]: Grievous Wound
+                  - generic [ref=f12e1751]: "{3}{B}{B}"
+                - 'button "Grotag Night-Runner {2}{R}" [ref=f12e1752]':
+                  - generic [ref=f12e1753]: Grotag Night-Runner
+                  - generic [ref=f12e1754]: "{2}{R}"
+                - button "Gruul Guildgate" [ref=f12e1755]
+                - 'button "Gríma Wormtongue {2}{B}" [ref=f12e1757]':
+                  - generic [ref=f12e1758]: Gríma Wormtongue
+                  - generic [ref=f12e1759]: "{2}{B}"
+                - button "Guess Your Fate" [ref=f12e1760]
+                - 'button "Guildsworn Prowler {1}{B}" [ref=f12e1762]':
+                  - generic [ref=f12e1763]: Guildsworn Prowler
+                  - generic [ref=f12e1764]: "{1}{B}"
+                - button "Hall of Mirrors" [ref=f12e1765]
+                - 'button "Hammerhand {R}" [ref=f12e1767]':
+                  - generic [ref=f12e1768]: Hammerhand
+                  - generic [ref=f12e1769]: "{R}"
+                - 'button "Hand of Silumgar {1}{B}" [ref=f12e1770]':
+                  - generic [ref=f12e1771]: Hand of Silumgar
+                  - generic [ref=f12e1772]: "{1}{B}"
+                - button "Haunted House" [ref=f12e1773]
+                - button "Haunted Mire" [ref=f12e1775]
+                - 'button "Herald of Anguish {5}{B}{B}" [ref=f12e1777]':
+                  - generic [ref=f12e1778]: Herald of Anguish
+                  - generic [ref=f12e1779]: "{5}{B}{B}"
+                - 'button "Hero''s Heirloom {2}" [ref=f12e1780]':
+                  - generic [ref=f12e1781]: Hero's Heirloom
+                  - generic [ref=f12e1782]: "{2}"
+                - 'button "Hexgold Halberd {1}{R}" [ref=f12e1783]':
+                  - generic [ref=f12e1784]: Hexgold Halberd
+                  - generic [ref=f12e1785]: "{1}{R}"
+                - 'button "Hired Blade {2}{B}" [ref=f12e1786]':
+                  - generic [ref=f12e1787]: Hired Blade
+                  - generic [ref=f12e1788]: "{2}{B}"
+                - 'button "Hired Poisoner {B}" [ref=f12e1789]':
+                  - generic [ref=f12e1790]: Hired Poisoner
+                  - generic [ref=f12e1791]: "{B}"
+                - 'button "Hit the Mother Lode {4}{R}{R}{R}" [ref=f12e1792]':
+                  - generic [ref=f12e1793]: Hit the Mother Lode
+                  - generic [ref=f12e1794]: "{4}{R}{R}{R}"
+                - 'button "Hobblefiend {1}{R}" [ref=f12e1795]':
+                  - generic [ref=f12e1796]: Hobblefiend
+                  - generic [ref=f12e1797]: "{1}{R}"
+                - 'button "Hobgoblin Captain {1}{R}" [ref=f12e1798]':
+                  - generic [ref=f12e1799]: Hobgoblin Captain
+                  - generic [ref=f12e1800]: "{1}{R}"
+                - 'button "Hostility {3}{R}{R}{R}" [ref=f12e1801]':
+                  - generic [ref=f12e1802]: Hostility
+                  - generic [ref=f12e1803]: "{3}{R}{R}{R}"
+                - 'button "Hulking Bugbear {1}{R}{R}" [ref=f12e1804]':
+                  - generic [ref=f12e1805]: Hulking Bugbear
+                  - generic [ref=f12e1806]: "{1}{R}{R}"
+                - 'button "Imp''s Mischief {1}{B} in deck" [ref=f12e1807]':
+                  - generic [ref=f12e1808]: Imp's Mischief
+                  - generic [ref=f12e1809]: "{1}{B}"
+                  - generic [ref=f12e1810]: in deck
+                - 'button "Impact Tremors {1}{R}" [ref=f12e1811]':
+                  - generic [ref=f12e1812]: Impact Tremors
+                  - generic [ref=f12e1813]: "{1}{R}"
+                - 'button "Impetuous Lootmonger {1}{R}" [ref=f12e1814]':
+                  - generic [ref=f12e1815]: Impetuous Lootmonger
+                  - generic [ref=f12e1816]: "{1}{R}"
+                - 'button "Impulsive Pilferer {R}" [ref=f12e1817]':
+                  - generic [ref=f12e1818]: Impulsive Pilferer
+                  - generic [ref=f12e1819]: "{R}"
+                - 'button "In Garruk''s Wake {7}{B}{B}" [ref=f12e1820]':
+                  - generic [ref=f12e1821]: In Garruk's Wake
+                  - generic [ref=f12e1822]: "{7}{B}{B}"
+                - 'button "Incinerate {1}{R}" [ref=f12e1823]':
+                  - generic [ref=f12e1824]: Incinerate
+                  - generic [ref=f12e1825]: "{1}{R}"
+                - 'button "Incriminate {1}{B}" [ref=f12e1826]':
+                  - generic [ref=f12e1827]: Incriminate
+                  - generic [ref=f12e1828]: "{1}{B}"
+                - 'button "Infernal Grasp {1}{B}" [ref=f12e1829]':
+                  - generic [ref=f12e1830]: Infernal Grasp
+                  - generic [ref=f12e1831]: "{1}{B}"
+                - button "Information Booth" [ref=f12e1832]
+                - 'button "Infuriate {R}" [ref=f12e1834]':
+                  - generic [ref=f12e1835]: Infuriate
+                  - generic [ref=f12e1836]: "{R}"
+                - 'button "Innocent Blood {B}" [ref=f12e1837]':
+                  - generic [ref=f12e1838]: Innocent Blood
+                  - generic [ref=f12e1839]: "{B}"
+                - 'button "Insatiable Avarice {B}" [ref=f12e1840]':
+                  - generic [ref=f12e1841]: Insatiable Avarice
+                  - generic [ref=f12e1842]: "{B}"
+                - 'button "Inspiring Statuary {3}" [ref=f12e1843]':
+                  - generic [ref=f12e1844]: Inspiring Statuary
+                  - generic [ref=f12e1845]: "{3}"
+                - 'button "Kazarov, Sengir Pureblood {5}{B}{B}" [ref=f12e1846]':
+                  - generic [ref=f12e1847]: Kazarov, Sengir Pureblood
+                  - generic [ref=f12e1848]: "{5}{B}{B}"
+                - 'button "Kazuul, Tyrant of the Cliffs {3}{R}{R}" [ref=f12e1849]':
+                  - generic [ref=f12e1850]: Kazuul, Tyrant of the Cliffs
+                  - generic [ref=f12e1851]: "{3}{R}{R}"
+                - button "Kiddie Coaster" [ref=f12e1852]
+                - 'button "Krenko, Mob Boss {2}{R}{R}" [ref=f12e1854]':
+                  - generic [ref=f12e1855]: Krenko, Mob Boss
+                  - generic [ref=f12e1856]: "{2}{R}{R}"
+                - 'button "Krenko, Tin Street Kingpin {2}{R}" [ref=f12e1857]':
+                  - generic [ref=f12e1858]: Krenko, Tin Street Kingpin
+                  - generic [ref=f12e1859]: "{2}{R}"
+                - button "Krosan Verge" [ref=f12e1860]
+                - button "Labyrinth of Skophos" [ref=f12e1862]
+                - 'button "Lash of the Balrog {B}" [ref=f12e1864]':
+                  - generic [ref=f12e1865]: Lash of the Balrog
+                  - generic [ref=f12e1866]: "{B}"
+                - 'button "Legion Vanguard {1}{B}" [ref=f12e1867]':
+                  - generic [ref=f12e1868]: Legion Vanguard
+                  - generic [ref=f12e1869]: "{1}{B}"
+                - 'button "Legion Warboss {2}{R}" [ref=f12e1870]':
+                  - generic [ref=f12e1871]: Legion Warboss
+                  - generic [ref=f12e1872]: "{2}{R}"
+                - 'button "Leyline of Combustion {2}{R}{R}" [ref=f12e1873]':
+                  - generic [ref=f12e1874]: Leyline of Combustion
+                  - generic [ref=f12e1875]: "{2}{R}{R}"
+                - 'button "Lightning Greaves {2}" [ref=f12e1876]':
+                  - generic [ref=f12e1877]: Lightning Greaves
+                  - generic [ref=f12e1878]: "{2}"
+                - 'button "Lightning Spear {1}{R}" [ref=f12e1879]':
+                  - generic [ref=f12e1880]: Lightning Spear
+                  - generic [ref=f12e1881]: "{1}{R}"
+                - 'button "Lightning Strike {1}{R}" [ref=f12e1882]':
+                  - generic [ref=f12e1883]: Lightning Strike
+                  - generic [ref=f12e1884]: "{1}{R}"
+                - 'button "Line Cutter {3}{B}" [ref=f12e1885]':
+                  - generic [ref=f12e1886]: Line Cutter
+                  - generic [ref=f12e1887]: "{3}{B}"
+                - 'button "Lively Dirge {1}{B}" [ref=f12e1888]':
+                  - generic [ref=f12e1889]: Lively Dirge
+                  - generic [ref=f12e1890]: "{1}{B}"
+                - button "Llanowar Wastes" [ref=f12e1891]
+                - button "Log Flume" [ref=f12e1893]
+                - 'button "Lord of the Void {4}{B}{B}{B}" [ref=f12e1895]':
+                  - generic [ref=f12e1896]: Lord of the Void
+                  - generic [ref=f12e1897]: "{4}{B}{B}{B}"
+                - 'button "Lurking Deadeye {3}{B}" [ref=f12e1898]':
+                  - generic [ref=f12e1899]: Lurking Deadeye
+                  - generic [ref=f12e1900]: "{3}{B}"
+                - 'button "Markov Baron {2}{B}" [ref=f12e1901]':
+                  - generic [ref=f12e1902]: Markov Baron
+                  - generic [ref=f12e1903]: "{2}{B}"
+                - 'button "Mask of Griselbrand {1}{B}{B}" [ref=f12e1904]':
+                  - generic [ref=f12e1905]: Mask of Griselbrand
+                  - generic [ref=f12e1906]: "{1}{B}{B}"
+                - 'button "Massacre Girl {3}{B}{B}" [ref=f12e1907]':
+                  - generic [ref=f12e1908]: Massacre Girl
+                  - generic [ref=f12e1909]: "{3}{B}{B}"
+                - 'button "Massacre Girl, Known Killer {2}{B}{B}" [ref=f12e1910]':
+                  - generic [ref=f12e1911]: Massacre Girl, Known Killer
+                  - generic [ref=f12e1912]: "{2}{B}{B}"
+                - 'button "Massacre Wurm {3}{B}{B}{B}" [ref=f12e1913]':
+                  - generic [ref=f12e1914]: Massacre Wurm
+                  - generic [ref=f12e1915]: "{3}{B}{B}{B}"
+                - button "Memory Test" [ref=f12e1916]
+                - button "Merry-Go-Round" [ref=f12e1918]
+                - 'button "Mezzio Mugger {4}{R}" [ref=f12e1920]':
+                  - generic [ref=f12e1921]: Mezzio Mugger
+                  - generic [ref=f12e1922]: "{4}{R}"
+                - 'button "Mindwrack Harpy {3}{B}" [ref=f12e1923]':
+                  - generic [ref=f12e1924]: Mindwrack Harpy
+                  - generic [ref=f12e1925]: "{3}{B}"
+                - 'button "Mire Triton {1}{B}" [ref=f12e1926]':
+                  - generic [ref=f12e1927]: Mire Triton
+                  - generic [ref=f12e1928]: "{1}{B}"
+                - 'button "Mogg War Marshal {1}{R}" [ref=f12e1929]':
+                  - generic [ref=f12e1930]: Mogg War Marshal
+                  - generic [ref=f12e1931]: "{1}{R}"
+                - 'button "Monumental Corruption {3}{B}{B}" [ref=f12e1932]':
+                  - generic [ref=f12e1933]: Monumental Corruption
+                  - generic [ref=f12e1934]: "{3}{B}{B}"
+                - 'button "Mordor Muster {1}{B}" [ref=f12e1935]':
+                  - generic [ref=f12e1936]: Mordor Muster
+                  - generic [ref=f12e1937]: "{1}{B}"
+                - 'button "Mortician Beetle {B}" [ref=f12e1938]':
+                  - generic [ref=f12e1939]: Mortician Beetle
+                  - generic [ref=f12e1940]: "{B}"
+                - button "Mortuary Mire" [ref=f12e1941]
+                - button "Mountain" [ref=f12e1943]
+                - 'button "Mourner''s Surprise {1}{B}" [ref=f12e1945]':
+                  - generic [ref=f12e1946]: Mourner's Surprise
+                  - generic [ref=f12e1947]: "{1}{B}"
+                - 'button "Nasty End {1}{B}" [ref=f12e1948]':
+                  - generic [ref=f12e1949]: Nasty End
+                  - generic [ref=f12e1950]: "{1}{B}"
+                - button "Necroblossom Snarl" [ref=f12e1951]
+                - 'button "Necromantic Thirst {2}{B}{B}" [ref=f12e1953]':
+                  - generic [ref=f12e1954]: Necromantic Thirst
+                  - generic [ref=f12e1955]: "{2}{B}{B}"
+                - 'button "Necropolis Regent {3}{B}{B}{B}" [ref=f12e1956]':
+                  - generic [ref=f12e1957]: Necropolis Regent
+                  - generic [ref=f12e1958]: "{3}{B}{B}{B}"
+                - 'button "Nevinyrral''s Disk {4}" [ref=f12e1959]':
+                  - generic [ref=f12e1960]: Nevinyrral's Disk
+                  - generic [ref=f12e1961]: "{4}"
+                - 'button "Nezumi Linkbreaker {B}" [ref=f12e1962]':
+                  - generic [ref=f12e1963]: Nezumi Linkbreaker
+                  - generic [ref=f12e1964]: "{B}"
+                - 'button "Night Shift of the Living Dead {3}{B}" [ref=f12e1965]':
+                  - generic [ref=f12e1966]: Night Shift of the Living Dead
+                  - generic [ref=f12e1967]: "{3}{B}"
+                - 'button "Night''s Whisper {1}{B}" [ref=f12e1968]':
+                  - generic [ref=f12e1969]: Night's Whisper
+                  - generic [ref=f12e1970]: "{1}{B}"
+                - 'button "Nighthaze {B}" [ref=f12e1971]':
+                  - generic [ref=f12e1972]: Nighthaze
+                  - generic [ref=f12e1973]: "{B}"
+                - 'button "Oblivion''s Hunger {1}{B}" [ref=f12e1974]':
+                  - generic [ref=f12e1975]: Oblivion's Hunger
+                  - generic [ref=f12e1976]: "{1}{B}"
+                - 'button "Olivia''s Attendants {4}{R}{R}" [ref=f12e1977]':
+                  - generic [ref=f12e1978]: Olivia's Attendants
+                  - generic [ref=f12e1979]: "{4}{R}{R}"
+                - 'button "Olivia''s Dragoon {1}{B}" [ref=f12e1980]':
+                  - generic [ref=f12e1981]: Olivia's Dragoon
+                  - generic [ref=f12e1982]: "{1}{B}"
+                - 'button "Orcish Medicine {1}{B}" [ref=f12e1983]':
+                  - generic [ref=f12e1984]: Orcish Medicine
+                  - generic [ref=f12e1985]: "{1}{B}"
+                - 'button "Ornithopter of Paradise {2}" [ref=f12e1986]':
+                  - generic [ref=f12e1987]: Ornithopter of Paradise
+                  - generic [ref=f12e1988]: "{2}"
+                - button "Orzhov Basilica" [ref=f12e1989]
+                - 'button "Overzealous Muscle {4}{B}" [ref=f12e1991]':
+                  - generic [ref=f12e1992]: Overzealous Muscle
+                  - generic [ref=f12e1993]: "{4}{B}"
+                - 'button "Pashalik Mons {2}{R}" [ref=f12e1994]':
+                  - generic [ref=f12e1995]: Pashalik Mons
+                  - generic [ref=f12e1996]: "{2}{R}"
+                - 'button "Pennon Blade {3}" [ref=f12e1997]':
+                  - generic [ref=f12e1998]: Pennon Blade
+                  - generic [ref=f12e1999]: "{3}"
+                - 'button "Persistent Specimen {B}" [ref=f12e2000]':
+                  - generic [ref=f12e2001]: Persistent Specimen
+                  - generic [ref=f12e2002]: "{B}"
+                - 'button "Pharika''s Chosen {B}" [ref=f12e2003]':
+                  - generic [ref=f12e2004]: Pharika's Chosen
+                  - generic [ref=f12e2005]: "{B}"
+                - 'button "Phyresis {1}{B}" [ref=f12e2006]':
+                  - generic [ref=f12e2007]: Phyresis
+                  - generic [ref=f12e2008]: "{1}{B}"
+                - button "Pick-a-Beeble" [ref=f12e2009]
+                - 'button "Pile On {3}{B}" [ref=f12e2011]':
+                  - generic [ref=f12e2012]: Pile On
+                  - generic [ref=f12e2013]: "{3}{B}"
+                - 'button "Pirate''s Landing {R}" [ref=f12e2014]':
+                  - generic [ref=f12e2015]: Pirate's Landing
+                  - generic [ref=f12e2016]: "{R}"
+                - 'button "Pitiless Plunderer {3}{B}" [ref=f12e2017]':
+                  - generic [ref=f12e2018]: Pitiless Plunderer
+                  - generic [ref=f12e2019]: "{3}{B}"
+                - button "Plains" [ref=f12e2020]
+                - 'button "Pointed Discussion {2}{B}" [ref=f12e2022]':
+                  - generic [ref=f12e2023]: Pointed Discussion
+                  - generic [ref=f12e2024]: "{2}{B}"
+                - 'button "Port Razer {3}{R}{R}" [ref=f12e2025]':
+                  - generic [ref=f12e2026]: Port Razer
+                  - generic [ref=f12e2027]: "{3}{R}{R}"
+                - 'button "Prickly Pair {2}{R}" [ref=f12e2028]':
+                  - generic [ref=f12e2029]: Prickly Pair
+                  - generic [ref=f12e2030]: "{2}{R}"
+                - 'button "Prismatic Lens {2}" [ref=f12e2031]':
+                  - generic [ref=f12e2032]: Prismatic Lens
+                  - generic [ref=f12e2033]: "{2}"
+                - 'button "Promise of Aclazotz // Foul Rebirth {1}{B} // {2}{B}" [ref=f12e2034]':
+                  - generic [ref=f12e2035]: Promise of Aclazotz // Foul Rebirth
+                  - generic [ref=f12e2036]: "{1}{B} // {2}{B}"
+                - 'button "Prophetic Prism {2}" [ref=f12e2037]':
+                  - generic [ref=f12e2038]: Prophetic Prism
+                  - generic [ref=f12e2039]: "{2}"
+                - button "Push Your Luck" [ref=f12e2040]
+                - 'button "Quick Fixer {2}{B}" [ref=f12e2042]':
+                  - generic [ref=f12e2043]: Quick Fixer
+                  - generic [ref=f12e2044]: "{2}{B}"
+                - 'button "Quietus Spike {3}" [ref=f12e2045]':
+                  - generic [ref=f12e2046]: Quietus Spike
+                  - generic [ref=f12e2047]: "{3}"
+                - 'button "Raise Dead {B}" [ref=f12e2048]':
+                  - generic [ref=f12e2049]: Raise Dead
+                  - generic [ref=f12e2050]: "{B}"
+                - 'button "Rakish Crew {2}{B}" [ref=f12e2051]':
+                  - generic [ref=f12e2052]: Rakish Crew
+                  - generic [ref=f12e2053]: "{2}{B}"
+                - 'button "Rancid Rats {1}{B}" [ref=f12e2054]':
+                  - generic [ref=f12e2055]: Rancid Rats
+                  - generic [ref=f12e2056]: "{1}{B}"
+                - button "Raucous Carnival" [ref=f12e2057]
+                - 'button "Raven Wings {2}" [ref=f12e2059]':
+                  - generic [ref=f12e2060]: Raven Wings
+                  - generic [ref=f12e2061]: "{2}"
+                - 'button "Raven of Fell Omens {1}{B}" [ref=f12e2062]':
+                  - generic [ref=f12e2063]: Raven of Fell Omens
+                  - generic [ref=f12e2064]: "{1}{B}"
+                - 'button "Raze the Effigy {R}" [ref=f12e2065]':
+                  - generic [ref=f12e2066]: Raze the Effigy
+                  - generic [ref=f12e2067]: "{R}"
+                - 'button "Read the Bones {2}{B}" [ref=f12e2068]':
+                  - generic [ref=f12e2069]: Read the Bones
+                  - generic [ref=f12e2070]: "{2}{B}"
+                - 'button "Reanimate {B}" [ref=f12e2071]':
+                  - generic [ref=f12e2072]: Reanimate
+                  - generic [ref=f12e2073]: "{B}"
+                - 'button "Redcap Thief {2}{R}" [ref=f12e2074]':
+                  - generic [ref=f12e2075]: Redcap Thief
+                  - generic [ref=f12e2076]: "{2}{R}"
+                - 'button "Revel in Riches {4}{B}" [ref=f12e2077]':
+                  - generic [ref=f12e2078]: Revel in Riches
+                  - generic [ref=f12e2079]: "{4}{B}"
+                - 'button "Riveteers Requisitioner {1}{R}" [ref=f12e2080]':
+                  - generic [ref=f12e2081]: Riveteers Requisitioner
+                  - generic [ref=f12e2082]: "{1}{R}"
+                - 'button "Rodeo Pyromancers {3}{R}" [ref=f12e2083]':
+                  - generic [ref=f12e2084]: Rodeo Pyromancers
+                  - generic [ref=f12e2085]: "{3}{R}"
+                - button "Rogue's Passage" [ref=f12e2086]
+                - button "Roller Coaster" [ref=f12e2088]
+                - 'button "Rune-Scarred Demon {5}{B}{B}" [ref=f12e2090]':
+                  - generic [ref=f12e2091]: Rune-Scarred Demon
+                  - generic [ref=f12e2092]: "{5}{B}{B}"
+                - 'button "Ruthless Ripper {B}" [ref=f12e2093]':
+                  - generic [ref=f12e2094]: Ruthless Ripper
+                  - generic [ref=f12e2095]: "{B}"
+                - button "Sacred Peaks" [ref=f12e2096]
+                - 'button "Sam''s Desperate Rescue {B}" [ref=f12e2098]':
+                  - generic [ref=f12e2099]: Sam's Desperate Rescue
+                  - generic [ref=f12e2100]: "{B}"
+                - button "Sandsteppe Citadel" [ref=f12e2101]
+                - 'button "Sanguine Bond {3}{B}{B}" [ref=f12e2103]':
+                  - generic [ref=f12e2104]: Sanguine Bond
+                  - generic [ref=f12e2105]: "{3}{B}{B}"
+                - 'button "Savai Crystal {3}" [ref=f12e2106]':
+                  - generic [ref=f12e2107]: Savai Crystal
+                  - generic [ref=f12e2108]: "{3}"
+                - button "Savai Triome" [ref=f12e2109]
+                - 'button "Scampering Scorcher {3}{R}" [ref=f12e2111]':
+                  - generic [ref=f12e2112]: Scampering Scorcher
+                  - generic [ref=f12e2113]: "{3}{R}"
+                - button "Scavenger Hunt" [ref=f12e2114]
+                - button "Scoured Barrens" [ref=f12e2116]
+                - button "Selesnya Sanctuary" [ref=f12e2118]
+                - 'button "Sengir, the Dark Baron {4}{B}{B}" [ref=f12e2120]':
+                  - generic [ref=f12e2121]: Sengir, the Dark Baron
+                  - generic [ref=f12e2122]: "{4}{B}{B}"
+                - 'button "Sensei''s Divining Top {1}" [ref=f12e2123]':
+                  - generic [ref=f12e2124]: Sensei's Divining Top
+                  - generic [ref=f12e2125]: "{1}"
+                - 'button "Serrated Scorpion {B}" [ref=f12e2126]':
+                  - generic [ref=f12e2127]: Serrated Scorpion
+                  - generic [ref=f12e2128]: "{B}"
+                - button "Shattered Sanctum" [ref=f12e2129]
+                - button "Shineshadow Snarl" [ref=f12e2131]
+                - 'button "Shivan Branch-Burner {5}{R}{R}" [ref=f12e2133]':
+                  - generic [ref=f12e2134]: Shivan Branch-Burner
+                  - generic [ref=f12e2135]: "{5}{R}{R}"
+                - 'button "Shivan Devastator {X}{R}" [ref=f12e2136]':
+                  - generic [ref=f12e2137]: Shivan Devastator
+                  - generic [ref=f12e2138]: "{X}{R}"
+                - 'button "Siege-Gang Commander {3}{R}{R}" [ref=f12e2139]':
+                  - generic [ref=f12e2140]: Siege-Gang Commander
+                  - generic [ref=f12e2141]: "{3}{R}{R}"
+                - 'button "Sign in Blood {B}{B}" [ref=f12e2142]':
+                  - generic [ref=f12e2143]: Sign in Blood
+                  - generic [ref=f12e2144]: "{B}{B}"
+                - 'button "Skirk Prospector {R}" [ref=f12e2145]':
+                  - generic [ref=f12e2146]: Skirk Prospector
+                  - generic [ref=f12e2147]: "{R}"
+                - 'button "Slobad, Goblin Tinkerer {1}{R}" [ref=f12e2148]':
+                  - generic [ref=f12e2149]: Slobad, Goblin Tinkerer
+                  - generic [ref=f12e2150]: "{1}{R}"
+                - 'button "Slobad, Iron Goblin {2}{R}" [ref=f12e2151]':
+                  - generic [ref=f12e2152]: Slobad, Iron Goblin
+                  - generic [ref=f12e2153]: "{2}{R}"
+                - 'button "Smash {2}{R}" [ref=f12e2154]':
+                  - generic [ref=f12e2155]: Smash
+                  - generic [ref=f12e2156]: "{2}{R}"
+                - 'button "Sneaking Guide {R}" [ref=f12e2157]':
+                  - generic [ref=f12e2158]: Sneaking Guide
+                  - generic [ref=f12e2159]: "{R}"
+                - button "Snow-Covered Mountain" [ref=f12e2160]
+                - 'button "Sol Ring {1} in deck" [ref=f12e2162]':
+                  - generic [ref=f12e2163]: Sol Ring
+                  - generic [ref=f12e2164]: "{1}"
+                  - generic [ref=f12e2165]: in deck
+                - 'button "Solemn Simulacrum {4}" [ref=f12e3112]':
+                  - generic [ref=f12e2167]: Solemn Simulacrum
+                  - generic [ref=f12e2168]: "{4}"
+                - 'button "Sorin Markov {3}{B}{B}{B}" [ref=f12e2170]':
+                  - generic [ref=f12e2171]: Sorin Markov
+                  - generic [ref=f12e2172]: "{3}{B}{B}{B}"
+                - 'button "Soul Swindler {4}{B}" [ref=f12e2173]':
+                  - generic [ref=f12e2174]: Soul Swindler
+                  - generic [ref=f12e2175]: "{4}{B}"
+                - 'button "Soulshriek {B}" [ref=f12e2176]':
+                  - generic [ref=f12e2177]: Soulshriek
+                  - generic [ref=f12e2178]: "{B}"
+                - button "Spinny Ride" [ref=f12e2179]
+                - 'button "Springleaf Drum {1}" [ref=f12e2181]':
+                  - generic [ref=f12e2182]: Springleaf Drum
+                  - generic [ref=f12e2183]: "{1}"
+                - 'button "Squee, Goblin Nabob {2}{R}" [ref=f12e2184]':
+                  - generic [ref=f12e2185]: Squee, Goblin Nabob
+                  - generic [ref=f12e2186]: "{2}{R}"
+                - 'button "Squee, the Immortal {1}{R}{R}" [ref=f12e2187]':
+                  - generic [ref=f12e2188]: Squee, the Immortal
+                  - generic [ref=f12e2189]: "{1}{R}{R}"
+                - button "Squirrel Stack" [ref=f12e2190]
+                - 'button "Starstorm {X}{R}{R}" [ref=f12e2192]':
+                  - generic [ref=f12e2193]: Starstorm
+                  - generic [ref=f12e2194]: "{X}{R}{R}"
+                - 'button "Staunch Throneguard {5}" [ref=f12e2195]':
+                  - generic [ref=f12e2196]: Staunch Throneguard
+                  - generic [ref=f12e2197]: "{5}"
+                - 'button "Step Right Up {3}{B}" [ref=f12e2198]':
+                  - generic [ref=f12e2199]: Step Right Up
+                  - generic [ref=f12e2200]: "{3}{B}"
+                - 'button "Stingblade Assassin {3}{B}" [ref=f12e2201]':
+                  - generic [ref=f12e2202]: Stingblade Assassin
+                  - generic [ref=f12e2203]: "{3}{B}"
+                - button "Storybook Ride" [ref=f12e2204]
+                - button "Sungrass Prairie" [ref=f12e2206]
+                - button "Swamp in deck" [ref=f12e2208]:
+                  - generic [ref=f12e2209]: Swamp
+                  - generic [ref=f12e2210]: in deck
+                - 'button "Swarming Goblins {4}{R}" [ref=f12e2211]':
+                  - generic [ref=f12e2212]: Swarming Goblins
+                  - generic [ref=f12e2213]: "{4}{R}"
+                - 'button "Swiftfoot Boots {2}" [ref=f12e2214]':
+                  - generic [ref=f12e2215]: Swiftfoot Boots
+                  - generic [ref=f12e2216]: "{2}"
+                - button "Swinging Ship" [ref=f12e2217]
+                - 'button "Sword of Hours {2}" [ref=f12e2219]':
+                  - generic [ref=f12e2220]: Sword of Hours
+                  - generic [ref=f12e2221]: "{2}"
+                - button "Tainted Field" [ref=f12e2222]
+                - 'button "Tainted Strike {B}" [ref=f12e2224]':
+                  - generic [ref=f12e2225]: Tainted Strike
+                  - generic [ref=f12e2226]: "{B}"
+                - button "Temple of Malady" [ref=f12e2227]
+                - button "Temple of Plenty" [ref=f12e2229]
+                - button "Temple of Silence" [ref=f12e2231]
+                - 'button "Tendrils of Despair {B}" [ref=f12e2233]':
+                  - generic [ref=f12e2234]: Tendrils of Despair
+                  - generic [ref=f12e2235]: "{B}"
+                - button "The Autonomous Furnace" [ref=f12e2236]
+                - button "The Dross Pits" [ref=f12e2238]
+                - 'button "The Eldest Reborn {4}{B}" [ref=f12e2240]':
+                  - generic [ref=f12e2241]: The Eldest Reborn
+                  - generic [ref=f12e2242]: "{4}{B}"
+                - button "The Superlatorium" [ref=f12e2243]
+                - 'button "Thorn of the Black Rose {3}{B}" [ref=f12e2245]':
+                  - generic [ref=f12e2246]: Thorn of the Black Rose
+                  - generic [ref=f12e2247]: "{3}{B}"
+                - 'button "Thoughtseize {B}" [ref=f12e2248]':
+                  - generic [ref=f12e2249]: Thoughtseize
+                  - generic [ref=f12e2250]: "{B}"
+                - 'button "Thrill of Possibility {1}{R}" [ref=f12e2251]':
+                  - generic [ref=f12e2252]: Thrill of Possibility
+                  - generic [ref=f12e2253]: "{1}{R}"
+                - 'button "Thrill-Kill Assassin {1}{B}" [ref=f12e2254]':
+                  - generic [ref=f12e2255]: Thrill-Kill Assassin
+                  - generic [ref=f12e2256]: "{1}{B}"
+                - 'button "Thriving Skyclaw {2}{R}{R}" [ref=f12e2257]':
+                  - generic [ref=f12e2258]: Thriving Skyclaw
+                  - generic [ref=f12e2259]: "{2}{R}{R}"
+                - 'button "Thundering Rebuke {1}{R}" [ref=f12e2260]':
+                  - generic [ref=f12e2261]: Thundering Rebuke
+                  - generic [ref=f12e2262]: "{1}{R}"
+                - 'button "Tibalt, Wicked Tormentor {3}{R}{R}" [ref=f12e2263]':
+                  - generic [ref=f12e2264]: Tibalt, Wicked Tormentor
+                  - generic [ref=f12e2265]: "{3}{R}{R}"
+                - 'button "Ticket Booth // Tunnel of Hate {2}{R} // {4}{R}{R}" [ref=f12e2266]':
+                  - generic [ref=f12e2267]: Ticket Booth // Tunnel of Hate
+                  - generic [ref=f12e2268]: "{2}{R} // {4}{R}{R}"
+                - 'button "Tormentor''s Helm {R}" [ref=f12e2269]':
+                  - generic [ref=f12e2270]: Tormentor's Helm
+                  - generic [ref=f12e2271]: "{R}"
+                - 'button "Tragic Slip {B}" [ref=f12e2272]':
+                  - generic [ref=f12e2273]: Tragic Slip
+                  - generic [ref=f12e2274]: "{B}"
+                - 'button "Trailblazer''s Torch {4}" [ref=f12e2275]':
+                  - generic [ref=f12e2276]: Trailblazer's Torch
+                  - generic [ref=f12e2277]: "{4}"
+                - 'button "Transmogrant Altar {3}" [ref=f12e2278]':
+                  - generic [ref=f12e2279]: Transmogrant Altar
+                  - generic [ref=f12e2280]: "{3}"
+                - button "Trash Bin" [ref=f12e2281]
+                - button "Trivia Contest" [ref=f12e2283]
+                - 'button "Tuktuk Rubblefort {2}{R}" [ref=f12e2285]':
+                  - generic [ref=f12e2286]: Tuktuk Rubblefort
+                  - generic [ref=f12e2287]: "{2}{R}"
+                - button "Tunnel of Love" [ref=f12e2288]
+                - 'button "Typhoid Rats {B}" [ref=f12e2290]':
+                  - generic [ref=f12e2291]: Typhoid Rats
+                  - generic [ref=f12e2292]: "{B}"
+                - 'button "Underdark Explorer {4}{B}" [ref=f12e2293]':
+                  - generic [ref=f12e2294]: Underdark Explorer
+                  - generic [ref=f12e2295]: "{4}{B}"
+                - 'button "Unfortunate Accident {B}" [ref=f12e2296]':
+                  - generic [ref=f12e2297]: Unfortunate Accident
+                  - generic [ref=f12e2298]: "{B}"
+                - 'button "Unholy Annex // Ritual Chamber {2}{B} // {3}{B}{B}" [ref=f12e2299]':
+                  - generic [ref=f12e2300]: Unholy Annex // Ritual Chamber
+                  - generic [ref=f12e2301]: "{2}{B} // {3}{B}{B}"
+                - 'button "Unstoppable Slasher {2}{B}" [ref=f12e2302]':
+                  - generic [ref=f12e2303]: Unstoppable Slasher
+                  - generic [ref=f12e2304]: "{2}{B}"
+                - 'button "Vadmir, New Blood {1}{B}" [ref=f12e2305]':
+                  - generic [ref=f12e2306]: Vadmir, New Blood
+                  - generic [ref=f12e2307]: "{1}{B}"
+                - 'button "Vampire Neonate {B}" [ref=f12e2308]':
+                  - generic [ref=f12e2309]: Vampire Neonate
+                  - generic [ref=f12e2310]: "{B}"
+                - 'button "Vampire Nocturnus {1}{B}{B}{B}" [ref=f12e2311]':
+                  - generic [ref=f12e2312]: Vampire Nocturnus
+                  - generic [ref=f12e2313]: "{1}{B}{B}{B}"
+                - 'button "Vampire Socialite {B}{R}" [ref=f12e2314]':
+                  - generic [ref=f12e2315]: Vampire Socialite
+                  - generic [ref=f12e2316]: "{B}{R}"
+                - 'button "Vampire Sovereign {3}{B}{B}" [ref=f12e2317]':
+                  - generic [ref=f12e2318]: Vampire Sovereign
+                  - generic [ref=f12e2319]: "{3}{B}{B}"
+                - 'button "Vampire Spawn {2}{B}" [ref=f12e2320]':
+                  - generic [ref=f12e2321]: Vampire Spawn
+                  - generic [ref=f12e2322]: "{2}{B}"
+                - 'button "Vampiric Fury {1}{R}" [ref=f12e2323]':
+                  - generic [ref=f12e2324]: Vampiric Fury
+                  - generic [ref=f12e2325]: "{1}{R}"
+                - button "Vault of Whispers" [ref=f12e2326]
+                - 'button "Vein Ripper {3}{B}{B}{B}" [ref=f12e2328]':
+                  - generic [ref=f12e2329]: Vein Ripper
+                  - generic [ref=f12e2330]: "{3}{B}{B}{B}"
+                - 'button "Vial Smasher, Gleeful Grenadier {B}{R}" [ref=f12e2331]':
+                  - generic [ref=f12e2332]: Vial Smasher, Gleeful Grenadier
+                  - generic [ref=f12e2333]: "{B}{R}"
+                - 'button "Vicious Battlerager {3}{B}" [ref=f12e2334]':
+                  - generic [ref=f12e2335]: Vicious Battlerager
+                  - generic [ref=f12e2336]: "{3}{B}"
+                - 'button "Victimize {2}{B}" [ref=f12e2337]':
+                  - generic [ref=f12e2338]: Victimize
+                  - generic [ref=f12e2339]: "{2}{B}"
+                - 'button "Village Rites {B}" [ref=f12e2340]':
+                  - generic [ref=f12e2341]: Village Rites
+                  - generic [ref=f12e2342]: "{B}"
+                - 'button "Viscera Seer {B}" [ref=f12e2343]':
+                  - generic [ref=f12e2344]: Viscera Seer
+                  - generic [ref=f12e2345]: "{B}"
+                - 'button "Vito''s Inquisitor {3}{B}" [ref=f12e2346]':
+                  - generic [ref=f12e2347]: Vito's Inquisitor
+                  - generic [ref=f12e2348]: "{3}{B}"
+                - button "Voldaren Bloodcaster // Bloodbat Summoner" [ref=f12e2349]
+                - 'button "Voldaren Epicure {R}" [ref=f12e2351]':
+                  - generic [ref=f12e2352]: Voldaren Epicure
+                  - generic [ref=f12e2353]: "{R}"
+                - 'button "Vorpal Sword {B}" [ref=f12e2354]':
+                  - generic [ref=f12e2355]: Vorpal Sword
+                  - generic [ref=f12e2356]: "{B}"
+                - 'button "Vraska''s Fall {2}{B}" [ref=f12e2357]':
+                  - generic [ref=f12e2358]: Vraska's Fall
+                  - generic [ref=f12e2359]: "{2}{B}"
+                - 'button "Warping Wail {1}{C}" [ref=f12e2360]':
+                  - generic [ref=f12e2361]: Warping Wail
+                  - generic [ref=f12e2362]: "{1}{C}"
+                - 'button "Whip of Erebos {2}{B}{B}" [ref=f12e2363]':
+                  - generic [ref=f12e2364]: Whip of Erebos
+                  - generic [ref=f12e2365]: "{2}{B}{B}"
+                - 'button "Whispersilk Cloak {3}" [ref=f12e2366]':
+                  - generic [ref=f12e2367]: Whispersilk Cloak
+                  - generic [ref=f12e2368]: "{3}"
+                - 'button "Witch''s Cauldron {B}" [ref=f12e2369]':
+                  - generic [ref=f12e2370]: Witch's Cauldron
+                  - generic [ref=f12e2371]: "{B}"
+                - button "Witch's Cottage" [ref=f12e2372]
+                - 'button "Witchstalker Frenzy {3}{R}" [ref=f12e2374]':
+                  - generic [ref=f12e2375]: Witchstalker Frenzy
+                  - generic [ref=f12e2376]: "{3}{R}"
+                - 'button "Withercrown {1}{B}" [ref=f12e2377]':
+                  - generic [ref=f12e2378]: Withercrown
+                  - generic [ref=f12e2379]: "{1}{B}"
+                - 'button "Xenosquirrels {1}{B}" [ref=f12e2380]':
+                  - generic [ref=f12e2381]: Xenosquirrels
+                  - generic [ref=f12e2382]: "{1}{B}"
+                - 'button "Yuan-Ti Fang-Blade {2}{B}" [ref=f12e2383]':
+                  - generic [ref=f12e2384]: Yuan-Ti Fang-Blade
+                  - generic [ref=f12e2385]: "{2}{B}"
+                - 'button "Zada, Hedron Grinder {3}{R}" [ref=f12e2386]':
+                  - generic [ref=f12e2387]: Zada, Hedron Grinder
+                  - generic [ref=f12e2388]: "{3}{R}"
+            - generic [ref=f12e2389]:
+              - 'heading "Deck ContentsCommander: Ozai, the Phoenix King" [level=3] [ref=f12e2390]':
+                - text: Deck Contents
+                - generic [ref=f12e2391]: "Commander: Ozai, the Phoenix King"
+              - generic [ref=f12e2392]:
+                - generic [ref=f12e2393]:
+                  - generic [ref=f12e2394]:
+                    - generic [ref=f12e2395]: Creatures
+                    - generic [ref=f12e2396]: "11"
+                  - generic [ref=f12e2397]:
+                    - generic [ref=f12e2398]:
+                      - generic [ref=f12e2399]:
+                        - button "−" [ref=f12e2400] [cursor=pointer]
+                        - generic [ref=f12e2401]: "1"
+                        - button "+" [ref=f12e2402] [cursor=pointer]
+                      - generic [ref=f12e2403]: Electro, Assaulting Battery
+                      - generic [ref=f12e2404]: "{1}{R}{R}"
+                      - button "✕" [ref=f12e2405] [cursor=pointer]
+                    - generic [ref=f12e2406]:
+                      - generic [ref=f12e2407]:
+                        - button "−" [ref=f12e2408] [cursor=pointer]
+                        - generic [ref=f12e2409]: "1"
+                        - button "+" [ref=f12e2410] [cursor=pointer]
+                      - generic [ref=f12e2411]: Avatar Roku, Firebender
+                      - generic [ref=f12e2412]: "{3}{R}{R}{R}"
+                      - button "✕" [ref=f12e2413] [cursor=pointer]
+                    - generic [ref=f12e2414]:
+                      - generic [ref=f12e2415]:
+                        - button "−" [ref=f12e2416] [cursor=pointer]
+                        - generic [ref=f12e2417]: "1"
+                        - button "+" [ref=f12e2418] [cursor=pointer]
+                      - generic [ref=f12e2419]: Neheb, the Eternal
+                      - generic [ref=f12e2420]: "{3}{R}{R}"
+                      - button "✕" [ref=f12e2421] [cursor=pointer]
+                    - generic [ref=f12e2422]:
+                      - generic [ref=f12e2423]:
+                        - button "−" [ref=f12e2424] [cursor=pointer]
+                        - generic [ref=f12e2425]: "1"
+                        - button "+" [ref=f12e2426] [cursor=pointer]
+                      - generic [ref=f12e2427]: Birgi, God of Storytelling // Harnfel, Horn of Bounty
+                      - button "✕" [ref=f12e2428] [cursor=pointer]
+                    - generic [ref=f12e2429]:
+                      - generic [ref=f12e2430]:
+                        - button "−" [ref=f12e2431] [cursor=pointer]
+                        - generic [ref=f12e2432]: "1"
+                        - button "+" [ref=f12e2433] [cursor=pointer]
+                      - generic [ref=f12e2434]: Ragavan, Nimble Pilferer
+                      - generic [ref=f12e2435]: "{R}"
+                      - button "✕" [ref=f12e2436] [cursor=pointer]
+                    - generic [ref=f12e2437]:
+                      - generic [ref=f12e2438]:
+                        - button "−" [ref=f12e2439] [cursor=pointer]
+                        - generic [ref=f12e2440]: "1"
+                        - button "+" [ref=f12e2441] [cursor=pointer]
+                      - generic [ref=f12e2442]: Orcish Bowmasters
+                      - generic [ref=f12e2443]: "{1}{B}"
+                      - button "✕" [ref=f12e2444] [cursor=pointer]
+                    - generic [ref=f12e2445]:
+                      - generic [ref=f12e2446]:
+                        - button "−" [ref=f12e2447] [cursor=pointer]
+                        - generic [ref=f12e2448]: "1"
+                        - button "+" [ref=f12e2449] [cursor=pointer]
+                      - generic [ref=f12e2450]: Roaming Throne
+                      - generic [ref=f12e2451]: "{4}"
+                      - button "✕" [ref=f12e2452] [cursor=pointer]
+                    - generic [ref=f12e2453]:
+                      - generic [ref=f12e2454]:
+                        - button "−" [ref=f12e2455] [cursor=pointer]
+                        - generic [ref=f12e2456]: "1"
+                        - button "+" [ref=f12e2457] [cursor=pointer]
+                      - generic [ref=f12e2458]: Professional Face-Breaker
+                      - generic [ref=f12e2459]: "{2}{R}"
+                      - button "✕" [ref=f12e2460] [cursor=pointer]
+                    - generic [ref=f12e2461]:
+                      - generic [ref=f12e2462]:
+                        - button "−" [ref=f12e2463] [cursor=pointer]
+                        - generic [ref=f12e2464]: "1"
+                        - button "+" [ref=f12e2465] [cursor=pointer]
+                      - generic [ref=f12e2466]: Grim Hireling
+                      - generic [ref=f12e2467]: "{3}{B}"
+                      - button "✕" [ref=f12e2468] [cursor=pointer]
+                    - generic [ref=f12e2469]:
+                      - generic [ref=f12e2470]:
+                        - button "−" [ref=f12e2471] [cursor=pointer]
+                        - generic [ref=f12e2472]: "1"
+                        - button "+" [ref=f12e2473] [cursor=pointer]
+                      - generic [ref=f12e2474]: Opposition Agent
+                      - generic [ref=f12e2475]: "{2}{B}"
+                      - button "✕" [ref=f12e2476] [cursor=pointer]
+                    - generic [ref=f12e2477]:
+                      - generic [ref=f12e2478]:
+                        - button "−" [ref=f12e2479] [cursor=pointer]
+                        - generic [ref=f12e2480]: "1"
+                        - button "+" [ref=f12e2481] [cursor=pointer]
+                      - generic [ref=f12e2482]: Karlach, Fury of Avernus
+                      - generic [ref=f12e2483]: "{4}{R}"
+                      - button "✕" [ref=f12e2484] [cursor=pointer]
+                - generic [ref=f12e2493]:
+                  - generic [ref=f12e2494]:
+                    - generic [ref=f12e2495]: Instants
+                    - generic [ref=f12e2496]: "17"
+                  - generic [ref=f12e2497]:
+                    - generic [ref=f12e2498]:
+                      - generic [ref=f12e2499]:
+                        - button "−" [ref=f12e2500] [cursor=pointer]
+                        - generic [ref=f12e2501]: "1"
+                        - button "+" [ref=f12e2502] [cursor=pointer]
+                      - generic [ref=f12e2503]: Deflecting Swat
+                      - generic [ref=f12e2504]: "{2}{R}"
+                      - button "✕" [ref=f12e2505] [cursor=pointer]
+                    - generic [ref=f12e2506]:
+                      - generic [ref=f12e2507]:
+                        - button "−" [ref=f12e2508] [cursor=pointer]
+                        - generic [ref=f12e2509]: "1"
+                        - button "+" [ref=f12e2510] [cursor=pointer]
+                      - generic [ref=f12e2511]: Chaos Warp
+                      - generic [ref=f12e2512]: "{2}{R}"
+                      - button "✕" [ref=f12e2513] [cursor=pointer]
+                    - generic [ref=f12e2514]:
+                      - generic [ref=f12e2515]:
+                        - button "−" [ref=f12e2516] [cursor=pointer]
+                        - generic [ref=f12e2517]: "1"
+                        - button "+" [ref=f12e2518] [cursor=pointer]
+                      - generic [ref=f12e2519]: Untimely Malfunction
+                      - generic [ref=f12e2520]: "{1}{R}"
+                      - button "✕" [ref=f12e2521] [cursor=pointer]
+                    - generic [ref=f12e2522]:
+                      - generic [ref=f12e2523]:
+                        - button "−" [ref=f12e2524] [cursor=pointer]
+                        - generic [ref=f12e2525]: "1"
+                        - button "+" [ref=f12e2526] [cursor=pointer]
+                      - generic [ref=f12e2527]: The Last Agni Kai
+                      - generic [ref=f12e2528]: "{1}{R}"
+                      - button "✕" [ref=f12e2529] [cursor=pointer]
+                    - generic [ref=f12e2530]:
+                      - generic [ref=f12e2531]:
+                        - button "−" [ref=f12e2532] [cursor=pointer]
+                        - generic [ref=f12e2533]: "1"
+                        - button "+" [ref=f12e2534] [cursor=pointer]
+                      - generic [ref=f12e2535]: Bolt Bend
+                      - generic [ref=f12e2536]: "{3}{R}"
+                      - button "✕" [ref=f12e2537] [cursor=pointer]
+                    - generic [ref=f12e2538]:
+                      - generic [ref=f12e2539]:
+                        - button "−" [ref=f12e2540] [cursor=pointer]
+                        - generic [ref=f12e2541]: "1"
+                        - button "+" [ref=f12e2542] [cursor=pointer]
+                      - generic [ref=f12e2543]: Cabal Ritual
+                      - generic [ref=f12e2544]: "{1}{B}"
+                      - button "✕" [ref=f12e2545] [cursor=pointer]
+                    - generic [ref=f12e2546]:
+                      - generic [ref=f12e2547]:
+                        - button "−" [ref=f12e2548] [cursor=pointer]
+                        - generic [ref=f12e2549]: "1"
+                        - button "+" [ref=f12e2550] [cursor=pointer]
+                      - generic [ref=f12e2551]: Desperate Ritual
+                      - generic [ref=f12e2552]: "{1}{R}"
+                      - button "✕" [ref=f12e2553] [cursor=pointer]
+                    - generic [ref=f12e2554]:
+                      - generic [ref=f12e2555]:
+                        - button "−" [ref=f12e2556] [cursor=pointer]
+                        - generic [ref=f12e2557]: "1"
+                        - button "+" [ref=f12e2558] [cursor=pointer]
+                      - generic [ref=f12e2559]: Pyretic Ritual
+                      - generic [ref=f12e2560]: "{1}{R}"
+                      - button "✕" [ref=f12e2561] [cursor=pointer]
+                    - generic [ref=f12e2562]:
+                      - generic [ref=f12e2563]:
+                        - button "−" [ref=f12e2564] [cursor=pointer]
+                        - generic [ref=f12e2565]: "1"
+                        - button "+" [ref=f12e2566] [cursor=pointer]
+                      - generic [ref=f12e2567]: Dark Ritual
+                      - generic [ref=f12e2568]: "{B}"
+                      - button "✕" [ref=f12e2569] [cursor=pointer]
+                    - generic [ref=f12e2570]:
+                      - generic [ref=f12e2571]:
+                        - button "−" [ref=f12e2572] [cursor=pointer]
+                        - generic [ref=f12e2573]: "1"
+                        - button "+" [ref=f12e2574] [cursor=pointer]
+                      - generic [ref=f12e2575]: Seething Song
+                      - generic [ref=f12e2576]: "{2}{R}"
+                      - button "✕" [ref=f12e2577] [cursor=pointer]
+                    - generic [ref=f12e2578]:
+                      - generic [ref=f12e2579]:
+                        - button "−" [ref=f12e2580] [cursor=pointer]
+                        - generic [ref=f12e2581]: "1"
+                        - button "+" [ref=f12e2582] [cursor=pointer]
+                      - generic [ref=f12e2583]: Valakut Awakening // Valakut Stoneforge
+                      - button "✕" [ref=f12e2584] [cursor=pointer]
+                    - generic [ref=f12e2585]:
+                      - generic [ref=f12e2586]:
+                        - button "−" [ref=f12e2587] [cursor=pointer]
+                        - generic [ref=f12e2588]: "1"
+                        - button "+" [ref=f12e2589] [cursor=pointer]
+                      - generic [ref=f12e2590]: Malakir Rebirth // Malakir Mire
+                      - button "✕" [ref=f12e2591] [cursor=pointer]
+                    - generic [ref=f12e2592]:
+                      - generic [ref=f12e2593]:
+                        - button "−" [ref=f12e2594] [cursor=pointer]
+                        - generic [ref=f12e2595]: "1"
+                        - button "+" [ref=f12e2596] [cursor=pointer]
+                      - generic [ref=f12e2597]: Vampiric Tutor
+                      - generic [ref=f12e2598]: "{B}"
+                      - button "✕" [ref=f12e2599] [cursor=pointer]
+                    - generic [ref=f12e2600]:
+                      - generic [ref=f12e2601]:
+                        - button "−" [ref=f12e2602] [cursor=pointer]
+                        - generic [ref=f12e2603]: "1"
+                        - button "+" [ref=f12e2604] [cursor=pointer]
+                      - generic [ref=f12e2605]: Tibalt's Trickery
+                      - generic [ref=f12e2606]: "{1}{R}"
+                      - button "✕" [ref=f12e2607] [cursor=pointer]
+                    - generic [ref=f12e2608]:
+                      - generic [ref=f12e2609]:
+                        - button "−" [ref=f12e2610] [cursor=pointer]
+                        - generic [ref=f12e2611]: "1"
+                        - button "+" [ref=f12e2612] [cursor=pointer]
+                      - generic [ref=f12e2613]: Imp's Mischief
+                      - generic [ref=f12e2614]: "{1}{B}"
+                      - button "✕" [ref=f12e2615] [cursor=pointer]
+                    - generic [ref=f12e2616]:
+                      - generic [ref=f12e2617]:
+                        - button "−" [ref=f12e2618] [cursor=pointer]
+                        - generic [ref=f12e2619]: "1"
+                        - button "+" [ref=f12e2620] [cursor=pointer]
+                      - generic [ref=f12e2621]: Deadly Rollick
+                      - generic [ref=f12e2622]: "{3}{B}"
+                      - button "✕" [ref=f12e2623] [cursor=pointer]
+                    - generic [ref=f12e2624]:
+                      - generic [ref=f12e2625]:
+                        - button "−" [ref=f12e2626] [cursor=pointer]
+                        - generic [ref=f12e2627]: "1"
+                        - button "+" [ref=f12e2628] [cursor=pointer]
+                      - generic [ref=f12e2629]: Redirect Lightning
+                      - generic [ref=f12e2630]: "{R}"
+                      - button "✕" [ref=f12e2631] [cursor=pointer]
+                - generic [ref=f12e2632]:
+                  - generic [ref=f12e2633]:
+                    - generic [ref=f12e2634]: Sorcerys
+                    - generic [ref=f12e2635]: "20"
+                  - generic [ref=f12e2636]:
+                    - generic [ref=f12e2637]:
+                      - generic [ref=f12e2638]:
+                        - button "−" [ref=f12e2639] [cursor=pointer]
+                        - generic [ref=f12e2640]: "1"
+                        - button "+" [ref=f12e2641] [cursor=pointer]
+                      - generic [ref=f12e2642]: Damnation
+                      - generic [ref=f12e2643]: "{2}{B}{B}"
+                      - button "✕" [ref=f12e2644] [cursor=pointer]
+                    - generic [ref=f12e2645]:
+                      - generic [ref=f12e2646]:
+                        - button "−" [ref=f12e2647] [cursor=pointer]
+                        - generic [ref=f12e2648]: "1"
+                        - button "+" [ref=f12e2649] [cursor=pointer]
+                      - generic [ref=f12e2650]: Wheel of Misfortune
+                      - generic [ref=f12e2651]: "{2}{R}"
+                      - button "✕" [ref=f12e2652] [cursor=pointer]
+                    - generic [ref=f12e2653]:
+                      - generic [ref=f12e2654]:
+                        - button "−" [ref=f12e2655] [cursor=pointer]
+                        - generic [ref=f12e2656]: "1"
+                        - button "+" [ref=f12e2657] [cursor=pointer]
+                      - generic [ref=f12e2658]: Torment of Hailfire
+                      - generic [ref=f12e2659]: "{X}{B}{B}"
+                      - button "✕" [ref=f12e2660] [cursor=pointer]
+                    - generic [ref=f12e2661]:
+                      - generic [ref=f12e2662]:
+                        - button "−" [ref=f12e2663] [cursor=pointer]
+                        - generic [ref=f12e2664]: "1"
+                        - button "+" [ref=f12e2665] [cursor=pointer]
+                      - generic [ref=f12e2666]: Grim Tutor
+                      - generic [ref=f12e2667]: "{1}{B}{B}"
+                      - button "✕" [ref=f12e2668] [cursor=pointer]
+                    - generic [ref=f12e2669]:
+                      - generic [ref=f12e2670]:
+                        - button "−" [ref=f12e2671] [cursor=pointer]
+                        - generic [ref=f12e2672]: "1"
+                        - button "+" [ref=f12e2673] [cursor=pointer]
+                      - generic [ref=f12e2674]: Yawgmoth's Will
+                      - generic [ref=f12e2675]: "{2}{B}"
+                      - button "✕" [ref=f12e2676] [cursor=pointer]
+                    - generic [ref=f12e2677]:
+                      - generic [ref=f12e2678]:
+                        - button "−" [ref=f12e2679] [cursor=pointer]
+                        - generic [ref=f12e2680]: "1"
+                        - button "+" [ref=f12e2681] [cursor=pointer]
+                      - generic [ref=f12e2682]: Demonic Tutor
+                      - generic [ref=f12e2683]: "{1}{B}"
+                      - button "✕" [ref=f12e2684] [cursor=pointer]
+                    - generic [ref=f12e2685]:
+                      - generic [ref=f12e2686]:
+                        - button "−" [ref=f12e2687] [cursor=pointer]
+                        - generic [ref=f12e2688]: "1"
+                        - button "+" [ref=f12e2689] [cursor=pointer]
+                      - generic [ref=f12e2690]: Wheel of Fortune
+                      - generic [ref=f12e2691]: "{2}{R}"
+                      - button "✕" [ref=f12e2692] [cursor=pointer]
+                    - generic [ref=f12e2693]:
+                      - generic [ref=f12e2694]:
+                        - button "−" [ref=f12e2695] [cursor=pointer]
+                        - generic [ref=f12e2696]: "1"
+                        - button "+" [ref=f12e2697] [cursor=pointer]
+                      - generic [ref=f12e2698]: Jeska's Will
+                      - generic [ref=f12e2699]: "{2}{R}"
+                      - button "✕" [ref=f12e2700] [cursor=pointer]
+                    - generic [ref=f12e2701]:
+                      - generic [ref=f12e2702]:
+                        - button "−" [ref=f12e2703] [cursor=pointer]
+                        - generic [ref=f12e2704]: "1"
+                        - button "+" [ref=f12e2705] [cursor=pointer]
+                      - generic [ref=f12e2706]: Crackle with Power
+                      - generic [ref=f12e2707]: "{X}{X}{X}{R}{R}"
+                      - button "✕" [ref=f12e2708] [cursor=pointer]
+                    - generic [ref=f12e2709]:
+                      - generic [ref=f12e2710]:
+                        - button "−" [ref=f12e2711] [cursor=pointer]
+                        - generic [ref=f12e2712]: "1"
+                        - button "+" [ref=f12e2713] [cursor=pointer]
+                      - generic [ref=f12e2714]: Imperial Seal
+                      - generic [ref=f12e2715]: "{B}"
+                      - button "✕" [ref=f12e2716] [cursor=pointer]
+                    - generic [ref=f12e2717]:
+                      - generic [ref=f12e2718]:
+                        - button "−" [ref=f12e2719] [cursor=pointer]
+                        - generic [ref=f12e2720]: "1"
+                        - button "+" [ref=f12e2721] [cursor=pointer]
+                      - generic [ref=f12e2722]: Gamble
+                      - generic [ref=f12e2723]: "{R}"
+                      - button "✕" [ref=f12e2724] [cursor=pointer]
+                    - generic [ref=f12e2725]:
+                      - generic [ref=f12e2726]:
+                        - button "−" [ref=f12e2727] [cursor=pointer]
+                        - generic [ref=f12e2728]: "1"
+                        - button "+" [ref=f12e2729] [cursor=pointer]
+                      - generic [ref=f12e2730]: Grapeshot
+                      - generic [ref=f12e2731]: "{1}{R}"
+                      - button "✕" [ref=f12e2732] [cursor=pointer]
+                    - generic [ref=f12e2733]:
+                      - generic [ref=f12e2734]:
+                        - button "−" [ref=f12e2735] [cursor=pointer]
+                        - generic [ref=f12e2736]: "1"
+                        - button "+" [ref=f12e2737] [cursor=pointer]
+                      - generic [ref=f12e2738]: Exsanguinate
+                      - generic [ref=f12e2739]: "{X}{B}{B}"
+                      - button "✕" [ref=f12e2740] [cursor=pointer]
+                    - generic [ref=f12e2741]:
+                      - generic [ref=f12e2742]:
+                        - button "−" [ref=f12e2743] [cursor=pointer]
+                        - generic [ref=f12e2744]: "1"
+                        - button "+" [ref=f12e2745] [cursor=pointer]
+                      - generic [ref=f12e2746]: Beseech the Mirror
+                      - generic [ref=f12e2747]: "{1}{B}{B}{B}"
+                      - button "✕" [ref=f12e2748] [cursor=pointer]
+                    - generic [ref=f12e2749]:
+                      - generic [ref=f12e2750]:
+                        - button "−" [ref=f12e2751] [cursor=pointer]
+                        - generic [ref=f12e2752]: "1"
+                        - button "+" [ref=f12e2753] [cursor=pointer]
+                      - generic [ref=f12e2754]: Diabolic Intent
+                      - generic [ref=f12e2755]: "{1}{B}"
+                      - button "✕" [ref=f12e2756] [cursor=pointer]
+                    - generic [ref=f12e2757]:
+                      - generic [ref=f12e2758]:
+                        - button "−" [ref=f12e2759] [cursor=pointer]
+                        - generic [ref=f12e2760]: "1"
+                        - button "+" [ref=f12e2761] [cursor=pointer]
+                      - generic [ref=f12e2762]: Cruel Tutor
+                      - generic [ref=f12e2763]: "{2}{B}"
+                      - button "✕" [ref=f12e2764] [cursor=pointer]
+                    - generic [ref=f12e2765]:
+                      - generic [ref=f12e2766]:
+                        - button "−" [ref=f12e2767] [cursor=pointer]
+                        - generic [ref=f12e2768]: "1"
+                        - button "+" [ref=f12e2769] [cursor=pointer]
+                      - generic [ref=f12e2770]: Faithless Looting
+                      - generic [ref=f12e2771]: "{R}"
+                      - button "✕" [ref=f12e2772] [cursor=pointer]
+                    - generic [ref=f12e2773]:
+                      - generic [ref=f12e2774]:
+                        - button "−" [ref=f12e2775] [cursor=pointer]
+                        - generic [ref=f12e2776]: "1"
+                        - button "+" [ref=f12e2777] [cursor=pointer]
+                      - generic [ref=f12e2778]: Feed the Swarm
+                      - generic [ref=f12e2779]: "{1}{B}"
+                      - button "✕" [ref=f12e2780] [cursor=pointer]
+                    - generic [ref=f12e2781]:
+                      - generic [ref=f12e2782]:
+                        - button "−" [ref=f12e2783] [cursor=pointer]
+                        - generic [ref=f12e2784]: "1"
+                        - button "+" [ref=f12e2785] [cursor=pointer]
+                      - generic [ref=f12e2786]: Mana Geyser
+                      - generic [ref=f12e2787]: "{3}{R}{R}"
+                      - button "✕" [ref=f12e2788] [cursor=pointer]
+                    - generic [ref=f12e2789]:
+                      - generic [ref=f12e2790]:
+                        - button "−" [ref=f12e2791] [cursor=pointer]
+                        - generic [ref=f12e2792]: "1"
+                        - button "+" [ref=f12e2793] [cursor=pointer]
+                      - generic [ref=f12e2794]: Blasphemous Act
+                      - generic [ref=f12e2795]: "{8}{R}"
+                      - button "✕" [ref=f12e2796] [cursor=pointer]
+                - generic [ref=f12e2797]:
+                  - generic [ref=f12e2798]:
+                    - generic [ref=f12e2799]: Enchantments
+                    - generic [ref=f12e2800]: "5"
+                  - generic [ref=f12e2801]:
+                    - generic [ref=f12e2802]:
+                      - generic [ref=f12e2803]:
+                        - button "−" [ref=f12e2804] [cursor=pointer]
+                        - generic [ref=f12e2805]: "1"
+                        - button "+" [ref=f12e2806] [cursor=pointer]
+                      - generic [ref=f12e2807]: Underworld Breach
+                      - generic [ref=f12e2808]: "{1}{R}"
+                      - button "✕" [ref=f12e2809] [cursor=pointer]
+                    - generic [ref=f12e2810]:
+                      - generic [ref=f12e2811]:
+                        - button "−" [ref=f12e2812] [cursor=pointer]
+                        - generic [ref=f12e2813]: "1"
+                        - button "+" [ref=f12e2814] [cursor=pointer]
+                      - generic [ref=f12e2815]: Aggravated Assault
+                      - generic [ref=f12e2816]: "{2}{R}"
+                      - button "✕" [ref=f12e2817] [cursor=pointer]
+                    - generic [ref=f12e2818]:
+                      - generic [ref=f12e2819]:
+                        - button "−" [ref=f12e2820] [cursor=pointer]
+                        - generic [ref=f12e2821]: "1"
+                        - button "+" [ref=f12e2822] [cursor=pointer]
+                      - generic [ref=f12e2823]: Blood Moon
+                      - generic [ref=f12e2824]: "{2}{R}"
+                      - button "✕" [ref=f12e2825] [cursor=pointer]
+                    - generic [ref=f12e2826]:
+                      - generic [ref=f12e2827]:
+                        - button "−" [ref=f12e2828] [cursor=pointer]
+                        - generic [ref=f12e2829]: "1"
+                        - button "+" [ref=f12e2830] [cursor=pointer]
+                      - generic [ref=f12e2831]: Necropotence
+                      - generic [ref=f12e2832]: "{B}{B}{B}"
+                      - button "✕" [ref=f12e2833] [cursor=pointer]
+                    - generic [ref=f12e2834]:
+                      - generic [ref=f12e2835]:
+                        - button "−" [ref=f12e2836] [cursor=pointer]
+                        - generic [ref=f12e2837]: "1"
+                        - button "+" [ref=f12e2838] [cursor=pointer]
+                      - generic [ref=f12e2839]: Urza's Saga
+                      - button "✕" [ref=f12e2840] [cursor=pointer]
+                - generic [ref=f12e2841]:
+                  - generic [ref=f12e2842]:
+                    - generic [ref=f12e2843]: Artifacts
+                    - generic [ref=f12e2844]: "16"
+                  - generic [ref=f12e2845]:
+                    - generic [ref=f12e2846]:
+                      - generic [ref=f12e2847]:
+                        - button "−" [ref=f12e2848] [cursor=pointer]
+                        - generic [ref=f12e2849]: "1"
+                        - button "+" [ref=f12e2850] [cursor=pointer]
+                      - generic [ref=f12e2851]: Talisman of Indulgence
+                      - generic [ref=f12e2852]: "{2}"
+                      - button "✕" [ref=f12e2853] [cursor=pointer]
+                    - generic [ref=f12e2854]:
+                      - generic [ref=f12e2855]:
+                        - button "−" [ref=f12e2856] [cursor=pointer]
+                        - generic [ref=f12e2857]: "1"
+                        - button "+" [ref=f12e2858] [cursor=pointer]
+                      - generic [ref=f12e2859]: Arcane Signet
+                      - generic [ref=f12e2860]: "{2}"
+                      - button "✕" [ref=f12e2861] [cursor=pointer]
+                    - generic [ref=f12e2862]:
+                      - generic [ref=f12e2863]:
+                        - button "−" [ref=f12e2864] [cursor=pointer]
+                        - generic [ref=f12e2865]: "1"
+                        - button "+" [ref=f12e2866] [cursor=pointer]
+                      - generic [ref=f12e2867]: Sol Ring
+                      - generic [ref=f12e2868]: "{1}"
+                      - button "✕" [ref=f12e2869] [cursor=pointer]
+                    - generic [ref=f12e2870]:
+                      - generic [ref=f12e2871]:
+                        - button "−" [ref=f12e2872] [cursor=pointer]
+                        - generic [ref=f12e2873]: "1"
+                        - button "+" [ref=f12e2874] [cursor=pointer]
+                      - generic [ref=f12e2875]: Fellwar Stone
+                      - generic [ref=f12e2876]: "{2}"
+                      - button "✕" [ref=f12e2877] [cursor=pointer]
+                    - generic [ref=f12e2878]:
+                      - generic [ref=f12e2879]:
+                        - button "−" [ref=f12e2880] [cursor=pointer]
+                        - generic [ref=f12e2881]: "1"
+                        - button "+" [ref=f12e2882] [cursor=pointer]
+                      - generic [ref=f12e2883]: Grinding Station
+                      - generic [ref=f12e2884]: "{2}"
+                      - button "✕" [ref=f12e2885] [cursor=pointer]
+                    - generic [ref=f12e2886]:
+                      - generic [ref=f12e2887]:
+                        - button "−" [ref=f12e2888] [cursor=pointer]
+                        - generic [ref=f12e2889]: "1"
+                        - button "+" [ref=f12e2890] [cursor=pointer]
+                      - generic [ref=f12e2891]: Doubling Cube
+                      - generic [ref=f12e2892]: "{2}"
+                      - button "✕" [ref=f12e2893] [cursor=pointer]
+                    - generic [ref=f12e2894]:
+                      - generic [ref=f12e2895]:
+                        - button "−" [ref=f12e2896] [cursor=pointer]
+                        - generic [ref=f12e2897]: "1"
+                        - button "+" [ref=f12e2898] [cursor=pointer]
+                      - generic [ref=f12e2899]: Rakdos Signet
+                      - generic [ref=f12e2900]: "{2}"
+                      - button "✕" [ref=f12e2901] [cursor=pointer]
+                    - generic [ref=f12e2902]:
+                      - generic [ref=f12e2903]:
+                        - button "−" [ref=f12e2904] [cursor=pointer]
+                        - generic [ref=f12e2905]: "1"
+                        - button "+" [ref=f12e2906] [cursor=pointer]
+                      - generic [ref=f12e2907]: Mana Vault
+                      - generic [ref=f12e2908]: "{1}"
+                      - button "✕" [ref=f12e2909] [cursor=pointer]
+                    - generic [ref=f12e2910]:
+                      - generic [ref=f12e2911]:
+                        - button "−" [ref=f12e2912] [cursor=pointer]
+                        - generic [ref=f12e2913]: "1"
+                        - button "+" [ref=f12e2914] [cursor=pointer]
+                      - generic [ref=f12e2915]: Lion's Eye Diamond
+                      - generic [ref=f12e2916]: "{0}"
+                      - button "✕" [ref=f12e2917] [cursor=pointer]
+                    - generic [ref=f12e2918]:
+                      - generic [ref=f12e2919]:
+                        - button "−" [ref=f12e2920] [cursor=pointer]
+                        - generic [ref=f12e2921]: "1"
+                        - button "+" [ref=f12e2922] [cursor=pointer]
+                      - generic [ref=f12e2923]: Mox Amber
+                      - generic [ref=f12e2924]: "{0}"
+                      - button "✕" [ref=f12e2925] [cursor=pointer]
+                    - generic [ref=f12e2926]:
+                      - generic [ref=f12e2927]:
+                        - button "−" [ref=f12e2928] [cursor=pointer]
+                        - generic [ref=f12e2929]: "1"
+                        - button "+" [ref=f12e2930] [cursor=pointer]
+                      - generic [ref=f12e2931]: Chrome Mox
+                      - generic [ref=f12e2932]: "{0}"
+                      - button "✕" [ref=f12e2933] [cursor=pointer]
+                    - generic [ref=f12e2934]:
+                      - generic [ref=f12e2935]:
+                        - button "−" [ref=f12e2936] [cursor=pointer]
+                        - generic [ref=f12e2937]: "1"
+                        - button "+" [ref=f12e2938] [cursor=pointer]
+                      - generic [ref=f12e2939]: The One Ring
+                      - generic [ref=f12e2940]: "{4}"
+                      - button "✕" [ref=f12e2941] [cursor=pointer]
+                    - generic [ref=f12e2942]:
+                      - generic [ref=f12e2943]:
+                        - button "−" [ref=f12e2944] [cursor=pointer]
+                        - generic [ref=f12e2945]: "1"
+                        - button "+" [ref=f12e2946] [cursor=pointer]
+                      - generic [ref=f12e2947]: Wishclaw Talisman
+                      - generic [ref=f12e2948]: "{1}{B}"
+                      - button "✕" [ref=f12e2949] [cursor=pointer]
+                    - generic [ref=f12e2950]:
+                      - generic [ref=f12e2951]:
+                        - button "−" [ref=f12e2952] [cursor=pointer]
+                        - generic [ref=f12e2953]: "1"
+                        - button "+" [ref=f12e2954] [cursor=pointer]
+                      - generic [ref=f12e2955]: The Soul Stone
+                      - generic [ref=f12e2956]: "{1}{B}"
+                      - button "✕" [ref=f12e2957] [cursor=pointer]
+                    - generic [ref=f12e2958]:
+                      - generic [ref=f12e2959]:
+                        - button "−" [ref=f12e2960] [cursor=pointer]
+                        - generic [ref=f12e2961]: "1"
+                        - button "+" [ref=f12e2962] [cursor=pointer]
+                      - generic [ref=f12e2963]: Fire Nation Turret
+                      - generic [ref=f12e2964]: "{2}{R}"
+                      - button "✕" [ref=f12e2965] [cursor=pointer]
+                    - generic [ref=f12e2966]:
+                      - generic [ref=f12e2967]:
+                        - button "−" [ref=f12e2968] [cursor=pointer]
+                        - generic [ref=f12e2969]: "1"
+                        - button "+" [ref=f12e2970] [cursor=pointer]
+                      - generic [ref=f12e2971]: Lotus Petal
+                      - generic [ref=f12e2972]: "{0}"
+                      - button "✕" [ref=f12e2973] [cursor=pointer]
+                - generic [ref=f12e2974]:
+                  - generic [ref=f12e2975]:
+                    - generic [ref=f12e2976]: Lands
+                    - generic [ref=f12e2977]: "30"
+                  - generic [ref=f12e2978]:
+                    - generic [ref=f12e2979]:
+                      - generic [ref=f12e2980]:
+                        - button "−" [ref=f12e2981] [cursor=pointer]
+                        - generic [ref=f12e2982]: "1"
+                        - button "+" [ref=f12e2983] [cursor=pointer]
+                      - generic [ref=f12e2984]: Mana Confluence
+                      - button "✕" [ref=f12e2985] [cursor=pointer]
+                    - generic [ref=f12e2986]:
+                      - generic [ref=f12e2987]:
+                        - button "−" [ref=f12e2988] [cursor=pointer]
+                        - generic [ref=f12e2989]: "1"
+                        - button "+" [ref=f12e2990] [cursor=pointer]
+                      - generic [ref=f12e2991]: Arena of Glory
+                      - button "✕" [ref=f12e2992] [cursor=pointer]
+                    - generic [ref=f12e2993]:
+                      - generic [ref=f12e2994]:
+                        - button "−" [ref=f12e2995] [cursor=pointer]
+                        - generic [ref=f12e2996]: "1"
+                        - button "+" [ref=f12e2997] [cursor=pointer]
+                      - generic [ref=f12e2998]: Fire Nation Palace
+                      - button "✕" [ref=f12e2999] [cursor=pointer]
+                    - generic [ref=f12e3000]:
+                      - generic [ref=f12e3001]:
+                        - button "−" [ref=f12e3002] [cursor=pointer]
+                        - generic [ref=f12e3003]: "1"
+                        - button "+" [ref=f12e3004] [cursor=pointer]
+                      - generic [ref=f12e3005]: Ancient Tomb
+                      - button "✕" [ref=f12e3006] [cursor=pointer]
+                    - generic [ref=f12e3007]:
+                      - generic [ref=f12e3008]:
+                        - button "−" [ref=f12e3009] [cursor=pointer]
+                        - generic [ref=f12e3010]: "1"
+                        - button "+" [ref=f12e3011] [cursor=pointer]
+                      - generic [ref=f12e3012]: Cavern of Souls
+                      - button "✕" [ref=f12e3013] [cursor=pointer]
+                    - generic [ref=f12e3014]:
+                      - generic [ref=f12e3015]:
+                        - button "−" [ref=f12e3016] [cursor=pointer]
+                        - generic [ref=f12e3017]: "1"
+                        - button "+" [ref=f12e3018] [cursor=pointer]
+                      - generic [ref=f12e3019]: Blightstep Pathway // Searstep Pathway
+                      - button "✕" [ref=f12e3020] [cursor=pointer]
+                    - generic [ref=f12e3021]:
+                      - generic [ref=f12e3022]:
+                        - button "−" [ref=f12e3023] [cursor=pointer]
+                        - generic [ref=f12e3024]: "1"
+                        - button "+" [ref=f12e3025] [cursor=pointer]
+                      - generic [ref=f12e3026]: Haunted Ridge
+                      - button "✕" [ref=f12e3027] [cursor=pointer]
+                    - generic [ref=f12e3028]:
+                      - generic [ref=f12e3029]:
+                        - button "−" [ref=f12e3030] [cursor=pointer]
+                        - generic [ref=f12e3031]: "1"
+                        - button "+" [ref=f12e3032] [cursor=pointer]
+                      - generic [ref=f12e3033]: Takenuma, Abandoned Mire
+                      - button "✕" [ref=f12e3034] [cursor=pointer]
+                    - generic [ref=f12e3035]:
+                      - generic [ref=f12e3036]:
+                        - button "−" [ref=f12e3037] [cursor=pointer]
+                        - generic [ref=f12e3038]: "1"
+                        - button "+" [ref=f12e3039] [cursor=pointer]
+                      - generic [ref=f12e3040]: Bloodstained Mire
+                      - button "✕" [ref=f12e3041] [cursor=pointer]
+                    - generic [ref=f12e3042]:
+                      - generic [ref=f12e3043]:
+                        - button "−" [ref=f12e3044] [cursor=pointer]
+                        - generic [ref=f12e3045]: "1"
+                        - button "+" [ref=f12e3046] [cursor=pointer]
+                      - generic [ref=f12e3047]: Phyrexian Tower
+                      - button "✕" [ref=f12e3048] [cursor=pointer]
+                    - generic [ref=f12e3049]:
+                      - generic [ref=f12e3050]:
+                        - button "−" [ref=f12e3051] [cursor=pointer]
+                        - generic [ref=f12e3052]: "1"
+                        - button "+" [ref=f12e3053] [cursor=pointer]
+                      - generic [ref=f12e3054]: Talon Gates of Madara
+                      - button "✕" [ref=f12e3055] [cursor=pointer]
+                    - generic [ref=f12e3056]:
+                      - generic [ref=f12e3057]:
+                        - button "−" [ref=f12e3058] [cursor=pointer]
+                        - generic [ref=f12e3059]: "1"
+                        - button "+" [ref=f12e3060] [cursor=pointer]
+                      - generic [ref=f12e3061]: Command Beacon
+                      - button "✕" [ref=f12e3062] [cursor=pointer]
+                    - generic [ref=f12e3063]:
+                      - generic [ref=f12e3064]:
+                        - button "−" [ref=f12e3065] [cursor=pointer]
+                        - generic [ref=f12e3066]: "1"
+                        - button "+" [ref=f12e3067] [cursor=pointer]
+                      - generic [ref=f12e3068]: Gemstone Caverns
+                      - button "✕" [ref=f12e3069] [cursor=pointer]
+                    - generic [ref=f12e3070]:
+                      - generic [ref=f12e3071]:
+                        - button "−" [ref=f12e3072] [cursor=pointer]
+                        - generic [ref=f12e3073]: "1"
+                        - button "+" [ref=f12e3074] [cursor=pointer]
+                      - generic [ref=f12e3075]: Blood Crypt
+                      - button "✕" [ref=f12e3076] [cursor=pointer]
+                    - generic [ref=f12e3077]:
+                      - generic [ref=f12e3078]:
+                        - button "−" [ref=f12e3079] [cursor=pointer]
+                        - generic [ref=f12e3080]: "1"
+                        - button "+" [ref=f12e3081] [cursor=pointer]
+                      - generic [ref=f12e3082]: Command Tower
+                      - button "✕" [ref=f12e3083] [cursor=pointer]
+                    - generic [ref=f12e3084]:
+                      - generic [ref=f12e3085]:
+                        - button "−" [ref=f12e3086] [cursor=pointer]
+                        - generic [ref=f12e3087]: "1"
+                        - button "+" [ref=f12e3088] [cursor=pointer]
+                      - generic [ref=f12e3089]: Luxury Suite
+                      - button "✕" [ref=f12e3090] [cursor=pointer]
+                    - generic [ref=f12e3091]:
+                      - generic [ref=f12e3092]:
+                        - button "−" [ref=f12e3093] [cursor=pointer]
+                        - generic [ref=f12e3094]: "1"
+                        - button "+" [ref=f12e3095] [cursor=pointer]
+                      - generic [ref=f12e3096]: Dragonskull Summit
+                      - button "✕" [ref=f12e3097] [cursor=pointer]
+                    - generic [ref=f12e3098]:
+                      - generic [ref=f12e3099]:
+                        - button "−" [ref=f12e3100] [cursor=pointer]
+                        - generic [ref=f12e3101]: "5"
+                        - button "+" [ref=f12e3102] [cursor=pointer]
+                      - generic [ref=f12e3103]: Mountain
+                      - button "✕" [ref=f12e3104] [cursor=pointer]
+                    - generic [ref=f12e3105]:
+                      - generic [ref=f12e3106]:
+                        - button "−" [ref=f12e3107] [cursor=pointer]
+                        - generic [ref=f12e3108]: "8"
+                        - button "+" [ref=f12e3109] [cursor=pointer]
+                      - generic [ref=f12e3110]: Swamp
+                      - button "✕" [ref=f12e3111] [cursor=pointer]

@@ -1,0 +1,618 @@
+- generic [ref=f30e3]:
+  - generic [ref=f30e5]:
+    - button "Notifications" [ref=f30e6] [cursor=pointer]
+    - button "Messages" [ref=f30e10] [cursor=pointer]
+    - button "Send Feedback" [ref=f30e13] [cursor=pointer]
+    - button "creamkrampus Krampus" [ref=f30e1479] [cursor=pointer]:
+      - img "creamkrampus" [ref=f30e17]
+      - generic [ref=f30e1480]: Krampus
+  - generic [ref=f30e20]:
+    - generic [ref=f30e1482]:
+      - generic [ref=f30e1485]:
+        - heading "MTG Tracker" [level=1] [ref=f30e1486]
+        - paragraph [ref=f30e1487]: Collection Manager
+      - generic [ref=f30e1489]:
+        - generic [ref=f30e1490]: K
+        - generic [ref=f30e1491]:
+          - paragraph [ref=f30e1492]: Krampus
+          - text: admin
+      - generic [ref=f30e1493]:
+        - button "Navigation" [ref=f30e1494] [cursor=pointer]
+        - button "Dashboard" [ref=f30e1498] [cursor=pointer]
+        - button "Collection" [ref=f30e1503] [cursor=pointer]
+        - button "Deck Builder" [ref=f30e1508] [cursor=pointer]
+        - button "Wishlist" [ref=f30e1514] [cursor=pointer]
+        - button "Trading Board" [ref=f30e1518] [cursor=pointer]
+        - button "Challenges" [ref=f30e1523] [cursor=pointer]
+        - button "Forum" [ref=f30e1531] [cursor=pointer]
+        - button "Community Decks" [ref=f30e1535] [cursor=pointer]
+        - button "Life Counter" [ref=f30e1540] [cursor=pointer]
+        - button "Settings" [ref=f30e1547] [cursor=pointer]
+        - button "Actions" [ref=f30e1552] [cursor=pointer]
+        - button "Import" [ref=f30e1556] [cursor=pointer]
+        - button "Export JSON" [ref=f30e1561] [cursor=pointer]
+        - button "Export CSV" [ref=f30e1566] [cursor=pointer]
+        - button "Update Prices" [ref=f30e1571] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f30e1578] [cursor=pointer]
+        - button "Tools" [ref=f30e1585] [cursor=pointer]
+        - button "Commanders" [ref=f30e1589] [cursor=pointer]
+        - button "Sets" [ref=f30e1593] [cursor=pointer]
+        - button "Combos" [ref=f30e1597] [cursor=pointer]
+        - button "Finance" [ref=f30e1601] [cursor=pointer]
+        - button "Scan Card" [ref=f30e1605] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f30e1610] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f30e1615] [cursor=pointer]
+        - button "Spoiler Season" [ref=f30e1619] [cursor=pointer]
+        - button "Learn" [ref=f30e1624] [cursor=pointer]
+        - button "Card Rulings" [ref=f30e1628] [cursor=pointer]
+        - button "Interaction Checker" [ref=f30e1633] [cursor=pointer]
+        - button "New Player Guide" [ref=f30e1637] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f30e1642] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f30e1647] [cursor=pointer]
+        - button "Format Guides" [ref=f30e1651] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f30e1659] [cursor=pointer]
+        - button "Gameplay" [ref=f30e1665] [cursor=pointer]
+        - generic [ref=f30e1669]: Admin
+        - button "Admin Panel" [ref=f30e1670] [cursor=pointer]
+      - generic [ref=f30e1674]:
+        - button "Account" [ref=f30e1675] [cursor=pointer]
+        - button "Sign Out" [ref=f30e1680] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f30e1686] [cursor=pointer]:
+        - generic [ref=f30e1689]: Command Palette
+        - generic [ref=f30e1690]: Ctrl+K
+      - button "Collapse" [ref=f30e1692] [cursor=pointer]
+    - main [ref=f30e216]:
+      - generic [ref=f30e217]:
+        - navigation [ref=f30e218]:
+          - button "Home" [ref=f30e219] [cursor=pointer]
+          - generic [ref=f30e814]: Deck Builder
+        - generic [ref=f30e816]:
+          - generic [ref=f30e817]:
+            - generic [ref=f30e818]:
+              - heading "My Decks" [level=2] [ref=f30e819]
+              - button "📁 Uncategorised decks ▾" [ref=f30e821] [cursor=pointer]
+            - generic [ref=f30e822]:
+              - button "Calculate Sleeves" [ref=f30e823] [cursor=pointer]
+              - button "Find Staples" [ref=f30e824] [cursor=pointer]
+              - button "Compare Decks" [ref=f30e825] [cursor=pointer]
+              - button "Shopping List" [ref=f30e826] [cursor=pointer]
+              - button "New Deck" [ref=f30e827] [cursor=pointer]
+              - button "Import Deck" [ref=f30e829] [cursor=pointer]
+          - generic [ref=f30e1959] [cursor=pointer]:
+            - img "Ozai, the Phoenix King" [ref=f30e1961]
+            - generic [ref=f30e1962]:
+              - heading "Every changed when fire nation attacked. Ozai Phoenix 10+" [level=3] [ref=f30e1963]
+              - generic [ref=f30e1964]: Commander
+            - generic [ref=f30e1965]: "Commander: Ozai, the Phoenix King"
+            - generic [ref=f30e1966]:
+              - generic [ref=f30e1967]: 100 cards
+              - generic [ref=f30e1968]: $0.00
+            - button "Delete" [ref=f30e1969]
+          - generic [ref=f30e1970]:
+            - generic [ref=f30e1971]:
+              - generic [ref=f30e1972]:
+                - heading "Compare Decks" [level=2] [ref=f30e1973]
+                - button [ref=f30e1979] [cursor=pointer]
+              - generic [ref=f30e1992]:
+                - generic [ref=f30e1993]:
+                  - heading "Edgar Markov vs Kaalia of the Vast" [level=3] [ref=f30e1994]
+                  - button "Change decks" [ref=f30e1995] [cursor=pointer]
+                - generic [ref=f30e1996]:
+                  - generic [ref=f30e1997]:
+                    - img "Edgar Markov" [ref=f30e1998]
+                    - generic [ref=f30e1999]:
+                      - generic [ref=f30e2000]: Deck A
+                      - generic [ref=f30e2001]: Edgar Markov
+                  - generic [ref=f30e2002]:
+                    - img "Kaalia of the Vast" [ref=f30e2003]
+                    - generic [ref=f30e2004]:
+                      - generic [ref=f30e2005]: Deck B
+                      - generic [ref=f30e2006]: Kaalia of the Vast
+                - generic [ref=f30e2007]:
+                  - generic [ref=f30e2008]:
+                    - heading "Mana Curve" [level=4] [ref=f30e2009]
+                    - generic [ref=f30e2010]:
+                      - generic [ref=f30e2011]: Edgar Markov
+                      - generic [ref=f30e2013]: Kaalia of the Vast
+                    - generic [ref=f30e2015]:
+                      - generic [ref=f30e2016]:
+                        - generic [ref=f30e2017]:
+                          - 'generic "Deck A: 32 at CMC 0" [ref=f30e2018]'
+                          - 'generic "Deck B: 39 at CMC 0" [ref=f30e2019]'
+                        - generic [ref=f30e2020]: "0"
+                      - generic [ref=f30e2021]:
+                        - generic [ref=f30e2022]:
+                          - 'generic "Deck A: 9 at CMC 1" [ref=f30e2023]'
+                          - 'generic "Deck B: 5 at CMC 1" [ref=f30e2024]'
+                        - generic [ref=f30e2025]: "1"
+                      - generic [ref=f30e2026]:
+                        - generic [ref=f30e2027]:
+                          - 'generic "Deck A: 12 at CMC 2" [ref=f30e2028]'
+                          - 'generic "Deck B: 14 at CMC 2" [ref=f30e2029]'
+                        - generic [ref=f30e2030]: "2"
+                      - generic [ref=f30e2031]:
+                        - generic [ref=f30e2032]:
+                          - 'generic "Deck A: 14 at CMC 3" [ref=f30e2033]'
+                          - 'generic "Deck B: 6 at CMC 3" [ref=f30e2034]'
+                        - generic [ref=f30e2035]: "3"
+                      - generic [ref=f30e2036]:
+                        - generic [ref=f30e2037]:
+                          - 'generic "Deck A: 15 at CMC 4" [ref=f30e2038]'
+                          - 'generic "Deck B: 7 at CMC 4" [ref=f30e2039]'
+                        - generic [ref=f30e2040]: "4"
+                      - generic [ref=f30e2041]:
+                        - generic [ref=f30e2042]:
+                          - 'generic "Deck A: 8 at CMC 5" [ref=f30e2043]'
+                          - 'generic "Deck B: 9 at CMC 5" [ref=f30e2044]'
+                        - generic [ref=f30e2045]: "5"
+                      - generic [ref=f30e2046]:
+                        - generic [ref=f30e2047]:
+                          - 'generic "Deck A: 7 at CMC 6" [ref=f30e2048]'
+                          - 'generic "Deck B: 5 at CMC 6" [ref=f30e2049]'
+                        - generic [ref=f30e2050]: "6"
+                      - generic [ref=f30e2051]:
+                        - generic [ref=f30e2052]:
+                          - 'generic "Deck A: 3 at CMC 7+" [ref=f30e2053]'
+                          - 'generic "Deck B: 15 at CMC 7+" [ref=f30e2054]'
+                        - generic [ref=f30e2055]: 7+
+                  - generic [ref=f30e2056]:
+                    - heading "Colors" [level=4] [ref=f30e2057]
+                    - generic [ref=f30e2058]:
+                      - generic [ref=f30e2059]:
+                        - generic [ref=f30e2060]: W
+                        - generic [ref=f30e2061]:
+                          - 'generic "Edgar Markov: 14" [ref=f30e2062]'
+                          - generic [ref=f30e2064]: "14"
+                        - generic [ref=f30e2065]:
+                          - generic [ref=f30e2066]: "33"
+                          - 'generic "Kaalia of the Vast: 33" [ref=f30e2067]'
+                      - generic [ref=f30e2069]:
+                        - generic [ref=f30e2070]: B
+                        - generic [ref=f30e2071]:
+                          - 'generic "Edgar Markov: 55" [ref=f30e2072]'
+                          - generic [ref=f30e2074]: "55"
+                        - generic [ref=f30e2075]:
+                          - generic [ref=f30e2076]: "16"
+                          - 'generic "Kaalia of the Vast: 16" [ref=f30e2077]'
+                      - generic [ref=f30e2079]:
+                        - generic [ref=f30e2080]: R
+                        - generic [ref=f30e2081]:
+                          - 'generic "Edgar Markov: 10" [ref=f30e2082]'
+                          - generic [ref=f30e2084]: "10"
+                        - generic [ref=f30e2085]:
+                          - generic [ref=f30e2086]: "12"
+                          - 'generic "Kaalia of the Vast: 12" [ref=f30e2087]'
+                      - generic [ref=f30e2089]:
+                        - generic [ref=f30e2090]: C
+                        - generic [ref=f30e2091]:
+                          - 'generic "Edgar Markov: 5" [ref=f30e2092]'
+                          - generic [ref=f30e2094]: "5"
+                        - generic [ref=f30e2095]:
+                          - generic [ref=f30e2096]: "4"
+                          - 'generic "Kaalia of the Vast: 4" [ref=f30e2097]'
+                - generic [ref=f30e2099]:
+                  - button "All (137)" [ref=f30e2100] [cursor=pointer]
+                  - button "Shared (4)" [ref=f30e2101] [cursor=pointer]
+                  - button "Only Edgar Markov (70)" [ref=f30e2102] [cursor=pointer]
+                  - button "Only Kaalia of the Vast (63)" [ref=f30e2103] [cursor=pointer]
+                - generic [ref=f30e2104]:
+                  - button "Abhorrent Overlord B" [ref=f30e2105] [cursor=pointer]:
+                    - generic [ref=f30e2106]: Abhorrent Overlord
+                    - generic "Kaalia of the Vast" [ref=f30e2108]: B
+                  - button "Acolyte of Aclazotz A" [ref=f30e2109] [cursor=pointer]:
+                    - generic [ref=f30e2110]: Acolyte of Aclazotz
+                    - generic "Edgar Markov" [ref=f30e2112]: A
+                  - button "Aegis Angel B" [ref=f30e2113] [cursor=pointer]:
+                    - generic [ref=f30e2114]: Aegis Angel
+                    - generic "Kaalia of the Vast" [ref=f30e2116]: B
+                  - button "Akroma, Angel of Fury B" [ref=f30e2117] [cursor=pointer]:
+                    - generic [ref=f30e2118]: Akroma, Angel of Fury
+                    - generic "Kaalia of the Vast" [ref=f30e2120]: B
+                  - button "Akroma, Angel of Wrath B" [ref=f30e2121] [cursor=pointer]:
+                    - generic [ref=f30e2122]: Akroma, Angel of Wrath
+                    - generic "Kaalia of the Vast" [ref=f30e2124]: B
+                  - button "Ancient Hellkite B" [ref=f30e2125] [cursor=pointer]:
+                    - generic [ref=f30e2126]: Ancient Hellkite
+                    - generic "Kaalia of the Vast" [ref=f30e2128]: B
+                  - button "Angel of Finality B" [ref=f30e2129] [cursor=pointer]:
+                    - generic [ref=f30e2130]: Angel of Finality
+                    - generic "Kaalia of the Vast" [ref=f30e2132]: B
+                  - button "Angel of the Ruins B" [ref=f30e2133] [cursor=pointer]:
+                    - generic [ref=f30e2134]: Angel of the Ruins
+                    - generic "Kaalia of the Vast" [ref=f30e2136]: B
+                  - button "Angel of Vitality B" [ref=f30e2137] [cursor=pointer]:
+                    - generic [ref=f30e2138]: Angel of Vitality
+                    - generic "Kaalia of the Vast" [ref=f30e2140]: B
+                  - button "Angelic Field Marshal B" [ref=f30e2141] [cursor=pointer]:
+                    - generic [ref=f30e2142]: Angelic Field Marshal
+                    - generic "Kaalia of the Vast" [ref=f30e2144]: B
+                  - button "Angelic Intervention B" [ref=f30e2145] [cursor=pointer]:
+                    - generic [ref=f30e2146]: Angelic Intervention
+                    - generic "Kaalia of the Vast" [ref=f30e2148]: B
+                  - button "Anje, Maid of Dishonor A" [ref=f30e2149] [cursor=pointer]:
+                    - generic [ref=f30e2150]: Anje, Maid of Dishonor
+                    - generic "Edgar Markov" [ref=f30e2152]: A
+                  - button "Arbiter of Woe B" [ref=f30e2153] [cursor=pointer]:
+                    - generic [ref=f30e2154]: Arbiter of Woe
+                    - generic "Kaalia of the Vast" [ref=f30e2156]: B
+                  - button "Archaeomancer's Map B" [ref=f30e2157] [cursor=pointer]:
+                    - generic [ref=f30e2158]: Archaeomancer's Map
+                    - generic "Kaalia of the Vast" [ref=f30e2160]: B
+                  - button "Arguel's Blood Fast // Temple of Aclazotz B" [ref=f30e2161] [cursor=pointer]:
+                    - generic [ref=f30e2162]: Arguel's Blood Fast // Temple of Aclazotz
+                    - generic "Kaalia of the Vast" [ref=f30e2164]: B
+                  - button "Arrogant Outlaw A" [ref=f30e2165] [cursor=pointer]:
+                    - generic [ref=f30e2166]: Arrogant Outlaw
+                    - generic "Edgar Markov" [ref=f30e2168]: A
+                  - button "Astarion, the Decadent A" [ref=f30e2169] [cursor=pointer]:
+                    - generic [ref=f30e2170]: Astarion, the Decadent
+                    - generic "Edgar Markov" [ref=f30e2172]: A
+                  - button "Asylum Visitor A" [ref=f30e2173] [cursor=pointer]:
+                    - generic [ref=f30e2174]: Asylum Visitor
+                    - generic "Edgar Markov" [ref=f30e2176]: A
+                  - button "Banishing Stroke B" [ref=f30e2177] [cursor=pointer]:
+                    - generic [ref=f30e2178]: Banishing Stroke
+                    - generic "Kaalia of the Vast" [ref=f30e2180]: B
+                  - button "Bartolomé del Presidio A" [ref=f30e2181] [cursor=pointer]:
+                    - generic [ref=f30e2182]: Bartolomé del Presidio
+                    - generic "Edgar Markov" [ref=f30e2184]: A
+                  - button "Basilica Shepherd B" [ref=f30e2185] [cursor=pointer]:
+                    - generic [ref=f30e2186]: Basilica Shepherd
+                    - generic "Kaalia of the Vast" [ref=f30e2188]: B
+                  - button "Bat Whisperer A" [ref=f30e2189] [cursor=pointer]:
+                    - generic [ref=f30e2190]: Bat Whisperer
+                    - generic "Edgar Markov" [ref=f30e2192]: A
+                  - button "Belligerent Guest A" [ref=f30e2193] [cursor=pointer]:
+                    - generic [ref=f30e2194]: Belligerent Guest
+                    - generic "Edgar Markov" [ref=f30e2196]: A
+                  - button "Bishop of Wings B" [ref=f30e2197] [cursor=pointer]:
+                    - generic [ref=f30e2198]: Bishop of Wings
+                    - generic "Kaalia of the Vast" [ref=f30e2200]: B
+                  - button "Blood Artist A" [ref=f30e2201] [cursor=pointer]:
+                    - generic [ref=f30e2202]: Blood Artist
+                    - generic "Edgar Markov" [ref=f30e2204]: A
+                  - button "Blood Fountain A" [ref=f30e2205] [cursor=pointer]:
+                    - generic [ref=f30e2206]: Blood Fountain
+                    - generic "Edgar Markov" [ref=f30e2208]: A
+                  - button "Blood Tithe A" [ref=f30e2209] [cursor=pointer]:
+                    - generic [ref=f30e2210]: Blood Tithe
+                    - generic "Edgar Markov" [ref=f30e2212]: A
+                  - button "Bloodcrazed Socialite A" [ref=f30e2213] [cursor=pointer]:
+                    - generic [ref=f30e2214]: Bloodcrazed Socialite
+                    - generic "Edgar Markov" [ref=f30e2216]: A
+                  - button "Bloodgift Demon B" [ref=f30e2217] [cursor=pointer]:
+                    - generic [ref=f30e2218]: Bloodgift Demon
+                    - generic "Kaalia of the Vast" [ref=f30e2220]: B
+                  - button "Bloodthrone Vampire A" [ref=f30e2221] [cursor=pointer]:
+                    - generic [ref=f30e2222]: Bloodthrone Vampire
+                    - generic "Edgar Markov" [ref=f30e2224]: A
+                  - button "Bloodvial Purveyor A" [ref=f30e2225] [cursor=pointer]:
+                    - generic [ref=f30e2226]: Bloodvial Purveyor
+                    - generic "Edgar Markov" [ref=f30e2228]: A
+                  - button "Boon of Safety B" [ref=f30e2229] [cursor=pointer]:
+                    - generic [ref=f30e2230]: Boon of Safety
+                    - generic "Kaalia of the Vast" [ref=f30e2232]: B
+                  - button "Boon-Bringer Valkyrie B" [ref=f30e2233] [cursor=pointer]:
+                    - generic [ref=f30e2234]: Boon-Bringer Valkyrie
+                    - generic "Kaalia of the Vast" [ref=f30e2236]: B
+                  - button "Bump in the Night A" [ref=f30e2237] [cursor=pointer]:
+                    - generic [ref=f30e2238]: Bump in the Night
+                    - generic "Edgar Markov" [ref=f30e2240]: A
+                  - button "Burning-Rune Demon B" [ref=f30e2241] [cursor=pointer]:
+                    - generic [ref=f30e2242]: Burning-Rune Demon
+                    - generic "Kaalia of the Vast" [ref=f30e2244]: B
+                  - button "Call the Bloodline A" [ref=f30e2245] [cursor=pointer]:
+                    - generic [ref=f30e2246]: Call the Bloodline
+                    - generic "Edgar Markov" [ref=f30e2248]: A
+                  - button "Canonized in Blood A" [ref=f30e2249] [cursor=pointer]:
+                    - generic [ref=f30e2250]: Canonized in Blood
+                    - generic "Edgar Markov" [ref=f30e2252]: A
+                  - button "Captivating Vampire A" [ref=f30e2253] [cursor=pointer]:
+                    - generic [ref=f30e2254]: Captivating Vampire
+                    - generic "Edgar Markov" [ref=f30e2256]: A
+                  - button "Cavern of Souls A" [ref=f30e2257] [cursor=pointer]:
+                    - generic [ref=f30e2258]: Cavern of Souls
+                    - generic "Edgar Markov" [ref=f30e2260]: A
+                  - button "Clavileño, First of the Blessed A" [ref=f30e2261] [cursor=pointer]:
+                    - generic [ref=f30e2262]: Clavileño, First of the Blessed
+                    - generic "Edgar Markov" [ref=f30e2264]: A
+                  - button "Cordial Vampire A" [ref=f30e2265] [cursor=pointer]:
+                    - generic [ref=f30e2266]: Cordial Vampire
+                    - generic "Edgar Markov" [ref=f30e2268]: A
+                  - button "Corrupted Conviction A" [ref=f30e2269] [cursor=pointer]:
+                    - generic [ref=f30e2270]: Corrupted Conviction
+                    - generic "Edgar Markov" [ref=f30e2272]: A
+                  - button "Crumb and Get It B" [ref=f30e2273] [cursor=pointer]:
+                    - generic [ref=f30e2274]: Crumb and Get It
+                    - generic "Kaalia of the Vast" [ref=f30e2276]: B
+                  - button "Damnation A" [ref=f30e2277] [cursor=pointer]:
+                    - generic [ref=f30e2278]: Damnation
+                    - generic "Edgar Markov" [ref=f30e2280]: A
+                  - button "Dawn Charm B" [ref=f30e2281] [cursor=pointer]:
+                    - generic [ref=f30e2282]: Dawn Charm
+                    - generic "Kaalia of the Vast" [ref=f30e2284]: B
+                  - button "Death-Rattle Oni B" [ref=f30e2285] [cursor=pointer]:
+                    - generic [ref=f30e2286]: Death-Rattle Oni
+                    - generic "Kaalia of the Vast" [ref=f30e2288]: B
+                  - button "Demon of Loathing B" [ref=f30e2289] [cursor=pointer]:
+                    - generic [ref=f30e2290]: Demon of Loathing
+                    - generic "Kaalia of the Vast" [ref=f30e2292]: B
+                  - button "Demonic Taskmaster B" [ref=f30e2293] [cursor=pointer]:
+                    - generic [ref=f30e2294]: Demonic Taskmaster
+                    - generic "Kaalia of the Vast" [ref=f30e2296]: B
+                  - button "Demonlord Belzenlok B" [ref=f30e2297] [cursor=pointer]:
+                    - generic [ref=f30e2298]: Demonlord Belzenlok
+                    - generic "Kaalia of the Vast" [ref=f30e2300]: B
+                  - button "Depopulate B" [ref=f30e2301] [cursor=pointer]:
+                    - generic [ref=f30e2302]: Depopulate
+                    - generic "Kaalia of the Vast" [ref=f30e2304]: B
+                  - button "Destroy Evil B" [ref=f30e2305] [cursor=pointer]:
+                    - generic [ref=f30e2306]: Destroy Evil
+                    - generic "Kaalia of the Vast" [ref=f30e2308]: B
+                  - button "Diabolic Intent B" [ref=f30e2309] [cursor=pointer]:
+                    - generic [ref=f30e2310]: Diabolic Intent
+                    - generic "Kaalia of the Vast" [ref=f30e2312]: B
+                  - button "Dragon Hatchling B" [ref=f30e2313] [cursor=pointer]:
+                    - generic [ref=f30e2314]: Dragon Hatchling
+                    - generic "Kaalia of the Vast" [ref=f30e2316]: B
+                  - button "Edgar, Charmed Groom // Edgar Markov's Coffin A" [ref=f30e2317] [cursor=pointer]:
+                    - generic [ref=f30e2318]: Edgar, Charmed Groom // Edgar Markov's Coffin
+                    - generic "Edgar Markov" [ref=f30e2320]: A
+                  - button "Emerge from the Cocoon B" [ref=f30e2321] [cursor=pointer]:
+                    - generic [ref=f30e2322]: Emerge from the Cocoon
+                    - generic "Kaalia of the Vast" [ref=f30e2324]: B
+                  - button "Enduring Tenacity A" [ref=f30e2325] [cursor=pointer]:
+                    - generic [ref=f30e2326]: Enduring Tenacity
+                    - generic "Edgar Markov" [ref=f30e2328]: A
+                  - button "Evolving Wilds B" [ref=f30e2329] [cursor=pointer]:
+                    - generic [ref=f30e2330]: Evolving Wilds
+                    - generic "Kaalia of the Vast" [ref=f30e2332]: B
+                  - button "Faithless Looting B" [ref=f30e2333] [cursor=pointer]:
+                    - generic [ref=f30e2334]: Faithless Looting
+                    - generic "Kaalia of the Vast" [ref=f30e2336]: B
+                  - button "Falkenrath Celebrants A" [ref=f30e2337] [cursor=pointer]:
+                    - generic [ref=f30e2338]: Falkenrath Celebrants
+                    - generic "Edgar Markov" [ref=f30e2340]: A
+                  - button "Falkenrath Noble A" [ref=f30e2341] [cursor=pointer]:
+                    - generic [ref=f30e2342]: Falkenrath Noble
+                    - generic "Edgar Markov" [ref=f30e2344]: A
+                  - button "Family Reunion B" [ref=f30e2345] [cursor=pointer]:
+                    - generic [ref=f30e2346]: Family Reunion
+                    - generic "Kaalia of the Vast" [ref=f30e2348]: B
+                  - button "Fell the Mighty A" [ref=f30e2349] [cursor=pointer]:
+                    - generic [ref=f30e2350]: Fell the Mighty
+                    - generic "Edgar Markov" [ref=f30e2352]: A
+                  - button "Flicker of Fate B" [ref=f30e2353] [cursor=pointer]:
+                    - generic [ref=f30e2354]: Flicker of Fate
+                    - generic "Kaalia of the Vast" [ref=f30e2356]: B
+                  - button "Frenzied Raider B" [ref=f30e2357] [cursor=pointer]:
+                    - generic [ref=f30e2358]: Frenzied Raider
+                    - generic "Kaalia of the Vast" [ref=f30e2360]: B
+                  - button "Funeral Room // Awakening Hall A" [ref=f30e2361] [cursor=pointer]:
+                    - generic [ref=f30e2362]: Funeral Room // Awakening Hall
+                    - generic "Edgar Markov" [ref=f30e2364]: A
+                  - button "Furnace Hellkite B" [ref=f30e2365] [cursor=pointer]:
+                    - generic [ref=f30e2366]: Furnace Hellkite
+                    - generic "Kaalia of the Vast" [ref=f30e2368]: B
+                  - button "Grievous Wound A" [ref=f30e2369] [cursor=pointer]:
+                    - generic [ref=f30e2370]: Grievous Wound
+                    - generic "Edgar Markov" [ref=f30e2372]: A
+                  - button "Gríma Wormtongue A" [ref=f30e2373] [cursor=pointer]:
+                    - generic [ref=f30e2374]: Gríma Wormtongue
+                    - generic "Edgar Markov" [ref=f30e2376]: A
+                  - button "Guardian of the Great Door B" [ref=f30e2377] [cursor=pointer]:
+                    - generic [ref=f30e2378]: Guardian of the Great Door
+                    - generic "Kaalia of the Vast" [ref=f30e2380]: B
+                  - button "Herald of Anguish B" [ref=f30e2381] [cursor=pointer]:
+                    - generic [ref=f30e2382]: Herald of Anguish
+                    - generic "Kaalia of the Vast" [ref=f30e2384]: B
+                  - button "Herald of Eternal Dawn B" [ref=f30e2385] [cursor=pointer]:
+                    - generic [ref=f30e2386]: Herald of Eternal Dawn
+                    - generic "Kaalia of the Vast" [ref=f30e2388]: B
+                  - button "Kazarov, Sengir Pureblood A" [ref=f30e2389] [cursor=pointer]:
+                    - generic [ref=f30e2390]: Kazarov, Sengir Pureblood
+                    - generic "Edgar Markov" [ref=f30e2392]: A
+                  - button "Liesa, Forgotten Archangel B" [ref=f30e2393] [cursor=pointer]:
+                    - generic [ref=f30e2394]: Liesa, Forgotten Archangel
+                    - generic "Kaalia of the Vast" [ref=f30e2396]: B
+                  - button "Life Insurance A" [ref=f30e2397] [cursor=pointer]:
+                    - generic [ref=f30e2398]: Life Insurance
+                    - generic "Edgar Markov" [ref=f30e2400]: A
+                  - button "Lightning Greaves A" [ref=f30e2401] [cursor=pointer]:
+                    - generic [ref=f30e2402]: Lightning Greaves
+                    - generic "Edgar Markov" [ref=f30e2404]: A
+                  - button "Lord of the Void B" [ref=f30e2405] [cursor=pointer]:
+                    - generic [ref=f30e2406]: Lord of the Void
+                    - generic "Kaalia of the Vast" [ref=f30e2408]: B
+                  - button "Markov Baron A" [ref=f30e2409] [cursor=pointer]:
+                    - generic [ref=f30e2410]: Markov Baron
+                    - generic "Edgar Markov" [ref=f30e2412]: A
+                  - button "Mathas, Fiend Seeker A" [ref=f30e2413] [cursor=pointer]:
+                    - generic [ref=f30e2414]: Mathas, Fiend Seeker
+                    - generic "Edgar Markov" [ref=f30e2416]: A
+                  - button "Mountain A B" [ref=f30e2417] [cursor=pointer]:
+                    - generic [ref=f30e2418]: Mountain
+                    - generic [ref=f30e2419]:
+                      - generic "Edgar Markov" [ref=f30e2420]: A
+                      - generic "Kaalia of the Vast" [ref=f30e2421]: B
+                  - button "Necropolis Regent A" [ref=f30e2422] [cursor=pointer]:
+                    - generic [ref=f30e2423]: Necropolis Regent
+                    - generic "Edgar Markov" [ref=f30e2425]: A
+                  - button "Olivia, Opulent Outlaw A" [ref=f30e2426] [cursor=pointer]:
+                    - generic [ref=f30e2427]: Olivia, Opulent Outlaw
+                    - generic "Edgar Markov" [ref=f30e2429]: A
+                  - button "Olivia's Attendants A" [ref=f30e2430] [cursor=pointer]:
+                    - generic [ref=f30e2431]: Olivia's Attendants
+                    - generic "Edgar Markov" [ref=f30e2433]: A
+                  - button "Olivia's Dragoon A" [ref=f30e2434] [cursor=pointer]:
+                    - generic [ref=f30e2435]: Olivia's Dragoon
+                    - generic "Edgar Markov" [ref=f30e2437]: A
+                  - button "Orcish Medicine B" [ref=f30e2438] [cursor=pointer]:
+                    - generic [ref=f30e2439]: Orcish Medicine
+                    - generic "Kaalia of the Vast" [ref=f30e2441]: B
+                  - button "Order // Chaos B" [ref=f30e2442] [cursor=pointer]:
+                    - generic [ref=f30e2443]: Order // Chaos
+                    - generic "Kaalia of the Vast" [ref=f30e2445]: B
+                  - button "Pennon Blade B" [ref=f30e2446] [cursor=pointer]:
+                    - generic [ref=f30e2447]: Pennon Blade
+                    - generic "Kaalia of the Vast" [ref=f30e2449]: B
+                  - button "Pile On B" [ref=f30e2450] [cursor=pointer]:
+                    - generic [ref=f30e2451]: Pile On
+                    - generic "Kaalia of the Vast" [ref=f30e2453]: B
+                  - button "Plains A B" [ref=f30e2454] [cursor=pointer]:
+                    - generic [ref=f30e2455]: Plains
+                    - generic [ref=f30e2456]:
+                      - generic "Edgar Markov" [ref=f30e2457]: A
+                      - generic "Kaalia of the Vast" [ref=f30e2458]: B
+                  - button "Planar Ally B" [ref=f30e2459] [cursor=pointer]:
+                    - generic [ref=f30e2460]: Planar Ally
+                    - generic "Kaalia of the Vast" [ref=f30e2462]: B
+                  - button "Pointed Discussion A" [ref=f30e2463] [cursor=pointer]:
+                    - generic [ref=f30e2464]: Pointed Discussion
+                    - generic "Edgar Markov" [ref=f30e2466]: A
+                  - button "Promise of Aclazotz // Foul Rebirth A" [ref=f30e2467] [cursor=pointer]:
+                    - generic [ref=f30e2468]: Promise of Aclazotz // Foul Rebirth
+                    - generic "Edgar Markov" [ref=f30e2470]: A
+                  - button "Prophetic Prism A B" [ref=f30e2471] [cursor=pointer]:
+                    - generic [ref=f30e2472]: Prophetic Prism
+                    - generic [ref=f30e2473]:
+                      - generic "Edgar Markov" [ref=f30e2474]: A
+                      - generic "Kaalia of the Vast" [ref=f30e2475]: B
+                  - button "Raucous Carnival B" [ref=f30e2476] [cursor=pointer]:
+                    - generic [ref=f30e2477]: Raucous Carnival
+                    - generic "Kaalia of the Vast" [ref=f30e2479]: B
+                  - button "Revel in Riches A" [ref=f30e2480] [cursor=pointer]:
+                    - generic [ref=f30e2481]: Revel in Riches
+                    - generic "Edgar Markov" [ref=f30e2483]: A
+                  - button "Riot Control B" [ref=f30e2484] [cursor=pointer]:
+                    - generic [ref=f30e2485]: Riot Control
+                    - generic "Kaalia of the Vast" [ref=f30e2487]: B
+                  - button "Rite of the Moth A" [ref=f30e2488] [cursor=pointer]:
+                    - generic [ref=f30e2489]: Rite of the Moth
+                    - generic "Edgar Markov" [ref=f30e2491]: A
+                  - button "Rune-Scarred Demon B" [ref=f30e2492] [cursor=pointer]:
+                    - generic [ref=f30e2493]: Rune-Scarred Demon
+                    - generic "Kaalia of the Vast" [ref=f30e2495]: B
+                  - button "Safe Passage B" [ref=f30e2496] [cursor=pointer]:
+                    - generic [ref=f30e2497]: Safe Passage
+                    - generic "Kaalia of the Vast" [ref=f30e2499]: B
+                  - button "Sanguine Bond A" [ref=f30e2500] [cursor=pointer]:
+                    - generic [ref=f30e2501]: Sanguine Bond
+                    - generic "Edgar Markov" [ref=f30e2503]: A
+                  - button "Savai Crystal A" [ref=f30e2504] [cursor=pointer]:
+                    - generic [ref=f30e2505]: Savai Crystal
+                    - generic "Edgar Markov" [ref=f30e2507]: A
+                  - button "Savai Triome A" [ref=f30e2508] [cursor=pointer]:
+                    - generic [ref=f30e2509]: Savai Triome
+                    - generic "Edgar Markov" [ref=f30e2511]: A
+                  - button "Sengir, the Dark Baron A" [ref=f30e2512] [cursor=pointer]:
+                    - generic [ref=f30e2513]: Sengir, the Dark Baron
+                    - generic "Edgar Markov" [ref=f30e2515]: A
+                  - button "Sensei's Divining Top A" [ref=f30e2516] [cursor=pointer]:
+                    - generic [ref=f30e2517]: Sensei's Divining Top
+                    - generic "Edgar Markov" [ref=f30e2519]: A
+                  - button "Serra Angel B" [ref=f30e2520] [cursor=pointer]:
+                    - generic [ref=f30e2521]: Serra Angel
+                    - generic "Kaalia of the Vast" [ref=f30e2523]: B
+                  - button "Shattered Sanctum B" [ref=f30e2524] [cursor=pointer]:
+                    - generic [ref=f30e2525]: Shattered Sanctum
+                    - generic "Kaalia of the Vast" [ref=f30e2527]: B
+                  - button "Shivan Branch-Burner B" [ref=f30e2528] [cursor=pointer]:
+                    - generic [ref=f30e2529]: Shivan Branch-Burner
+                    - generic "Kaalia of the Vast" [ref=f30e2531]: B
+                  - button "Sol Ring B" [active] [ref=f30e2532] [cursor=pointer]:
+                    - generic [ref=f30e2533]: Sol Ring
+                    - generic "Kaalia of the Vast" [ref=f30e2535]: B
+                  - button "Solemn Simulacrum B" [ref=f30e2536] [cursor=pointer]:
+                    - generic [ref=f30e2537]: Solemn Simulacrum
+                    - generic "Kaalia of the Vast" [ref=f30e2539]: B
+                  - button "Sorin Markov A" [ref=f30e2540] [cursor=pointer]:
+                    - generic [ref=f30e2541]: Sorin Markov
+                    - generic "Edgar Markov" [ref=f30e2543]: A
+                  - button "Sorin, Grim Nemesis A" [ref=f30e2544] [cursor=pointer]:
+                    - generic [ref=f30e2545]: Sorin, Grim Nemesis
+                    - generic "Edgar Markov" [ref=f30e2547]: A
+                  - button "Sorin, Vengeful Bloodlord A" [ref=f30e2548] [cursor=pointer]:
+                    - generic [ref=f30e2549]: Sorin, Vengeful Bloodlord
+                    - generic "Edgar Markov" [ref=f30e2551]: A
+                  - button "Spare from Evil B" [ref=f30e2552] [cursor=pointer]:
+                    - generic [ref=f30e2553]: Spare from Evil
+                    - generic "Kaalia of the Vast" [ref=f30e2555]: B
+                  - button "Split Up A" [ref=f30e2556] [cursor=pointer]:
+                    - generic [ref=f30e2557]: Split Up
+                    - generic "Edgar Markov" [ref=f30e2559]: A
+                  - button "Sunscorch Regent B" [ref=f30e2560] [cursor=pointer]:
+                    - generic [ref=f30e2561]: Sunscorch Regent
+                    - generic "Kaalia of the Vast" [ref=f30e2563]: B
+                  - button "Surge of Salvation B" [ref=f30e2564] [cursor=pointer]:
+                    - generic [ref=f30e2565]: Surge of Salvation
+                    - generic "Kaalia of the Vast" [ref=f30e2567]: B
+                  - button "Swamp A B" [ref=f30e2568] [cursor=pointer]:
+                    - generic [ref=f30e2569]: Swamp
+                    - generic [ref=f30e2570]:
+                      - generic "Edgar Markov" [ref=f30e2571]: A
+                      - generic "Kaalia of the Vast" [ref=f30e2572]: B
+                  - button "Thrill of Possibility B" [ref=f30e2573] [cursor=pointer]:
+                    - generic [ref=f30e2574]: Thrill of Possibility
+                    - generic "Kaalia of the Vast" [ref=f30e2576]: B
+                  - button "Thriving Skyclaw B" [ref=f30e2577] [cursor=pointer]:
+                    - generic [ref=f30e2578]: Thriving Skyclaw
+                    - generic "Kaalia of the Vast" [ref=f30e2580]: B
+                  - button "Ticket Booth // Tunnel of Hate B" [ref=f30e2581] [cursor=pointer]:
+                    - generic [ref=f30e2582]: Ticket Booth // Tunnel of Hate
+                    - generic "Kaalia of the Vast" [ref=f30e2584]: B
+                  - button "Timeless Dragon B" [ref=f30e2585] [cursor=pointer]:
+                    - generic [ref=f30e2586]: Timeless Dragon
+                    - generic "Kaalia of the Vast" [ref=f30e2588]: B
+                  - button "Transmogrant Altar A" [ref=f30e2589] [cursor=pointer]:
+                    - generic [ref=f30e2590]: Transmogrant Altar
+                    - generic "Edgar Markov" [ref=f30e2592]: A
+                  - button "Unholy Annex // Ritual Chamber A" [ref=f30e2593] [cursor=pointer]:
+                    - generic [ref=f30e2594]: Unholy Annex // Ritual Chamber
+                    - generic "Edgar Markov" [ref=f30e2596]: A
+                  - button "Unholy Officiant A" [ref=f30e2597] [cursor=pointer]:
+                    - generic [ref=f30e2598]: Unholy Officiant
+                    - generic "Edgar Markov" [ref=f30e2600]: A
+                  - button "Vampire Neonate A" [ref=f30e2601] [cursor=pointer]:
+                    - generic [ref=f30e2602]: Vampire Neonate
+                    - generic "Edgar Markov" [ref=f30e2604]: A
+                  - button "Vampire Nocturnus A" [ref=f30e2605] [cursor=pointer]:
+                    - generic [ref=f30e2606]: Vampire Nocturnus
+                    - generic "Edgar Markov" [ref=f30e2608]: A
+                  - button "Vampire Socialite A" [ref=f30e2609] [cursor=pointer]:
+                    - generic [ref=f30e2610]: Vampire Socialite
+                    - generic "Edgar Markov" [ref=f30e2612]: A
+                  - button "Vampire Sovereign A" [ref=f30e2613] [cursor=pointer]:
+                    - generic [ref=f30e2614]: Vampire Sovereign
+                    - generic "Edgar Markov" [ref=f30e2616]: A
+                  - button "Vampire Spawn A" [ref=f30e2617] [cursor=pointer]:
+                    - generic [ref=f30e2618]: Vampire Spawn
+                    - generic "Edgar Markov" [ref=f30e2620]: A
+                  - button "Vampiric Fury A" [ref=f30e2621] [cursor=pointer]:
+                    - generic [ref=f30e2622]: Vampiric Fury
+                    - generic "Edgar Markov" [ref=f30e2624]: A
+                  - button "Victimize A" [ref=f30e2625] [cursor=pointer]:
+                    - generic [ref=f30e2626]: Victimize
+                    - generic "Edgar Markov" [ref=f30e2628]: A
+                  - button "Village Rites A" [ref=f30e2629] [cursor=pointer]:
+                    - generic [ref=f30e2630]: Village Rites
+                    - generic "Edgar Markov" [ref=f30e2632]: A
+                  - button "Viscera Seer A" [ref=f30e2633] [cursor=pointer]:
+                    - generic [ref=f30e2634]: Viscera Seer
+                    - generic "Edgar Markov" [ref=f30e2636]: A
+                  - button "Vito, Fanatic of Aclazotz A" [ref=f30e2637] [cursor=pointer]:
+                    - generic [ref=f30e2638]: Vito, Fanatic of Aclazotz
+                    - generic "Edgar Markov" [ref=f30e2640]: A
+                  - button "Vito's Inquisitor A" [ref=f30e2641] [cursor=pointer]:
+                    - generic [ref=f30e2642]: Vito's Inquisitor
+                    - generic "Edgar Markov" [ref=f30e2644]: A
+                  - button "Voldaren Bloodcaster // Bloodbat Summoner A" [ref=f30e2645] [cursor=pointer]:
+                    - generic [ref=f30e2646]: Voldaren Bloodcaster // Bloodbat Summoner
+                    - generic "Edgar Markov" [ref=f30e2648]: A
+                  - button "Voldaren Epicure A" [ref=f30e2649] [cursor=pointer]:
+                    - generic [ref=f30e2650]: Voldaren Epicure
+                    - generic "Edgar Markov" [ref=f30e2652]: A
+                  - button "Whip of Erebos A" [ref=f30e2653] [cursor=pointer]:
+                    - generic [ref=f30e2654]: Whip of Erebos
+                    - generic "Edgar Markov" [ref=f30e2656]: A
+            - img "Sol Ring" [ref=f30e2658]

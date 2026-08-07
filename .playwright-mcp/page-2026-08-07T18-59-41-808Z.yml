@@ -1,0 +1,692 @@
+- generic [ref=f30e3]:
+  - generic [ref=f30e5]:
+    - button "Notifications" [ref=f30e6] [cursor=pointer]
+    - button "Messages" [ref=f30e10] [cursor=pointer]
+    - button "Send Feedback" [ref=f30e13] [cursor=pointer]
+    - button "creamkrampus Krampus" [ref=f30e1479] [cursor=pointer]:
+      - img "creamkrampus" [ref=f30e17]
+      - generic [ref=f30e1480]: Krampus
+  - generic [ref=f30e20]:
+    - generic [ref=f30e1482]:
+      - generic [ref=f30e1485]:
+        - heading "MTG Tracker" [level=1] [ref=f30e1486]
+        - paragraph [ref=f30e1487]: Collection Manager
+      - generic [ref=f30e1489]:
+        - generic [ref=f30e1490]: K
+        - generic [ref=f30e1491]:
+          - paragraph [ref=f30e1492]: Krampus
+          - text: admin
+      - generic [ref=f30e1493]:
+        - button "Navigation" [ref=f30e1494] [cursor=pointer]
+        - button "Dashboard" [ref=f30e1498] [cursor=pointer]
+        - button "Collection" [ref=f30e1503] [cursor=pointer]
+        - button "Deck Builder" [ref=f30e1508] [cursor=pointer]
+        - button "Wishlist" [ref=f30e1514] [cursor=pointer]
+        - button "Trading Board" [ref=f30e1518] [cursor=pointer]
+        - button "Challenges" [ref=f30e1523] [cursor=pointer]
+        - button "Forum" [ref=f30e1531] [cursor=pointer]
+        - button "Community Decks" [ref=f30e1535] [cursor=pointer]
+        - button "Life Counter" [ref=f30e1540] [cursor=pointer]
+        - button "Settings" [ref=f30e1547] [cursor=pointer]
+        - button "Actions" [ref=f30e1552] [cursor=pointer]
+        - button "Import" [ref=f30e1556] [cursor=pointer]
+        - button "Export JSON" [ref=f30e1561] [cursor=pointer]
+        - button "Export CSV" [ref=f30e1566] [cursor=pointer]
+        - button "Update Prices" [ref=f30e1571] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f30e1578] [cursor=pointer]
+        - button "Tools" [ref=f30e1585] [cursor=pointer]
+        - button "Commanders" [ref=f30e1589] [cursor=pointer]
+        - button "Sets" [ref=f30e1593] [cursor=pointer]
+        - button "Combos" [ref=f30e1597] [cursor=pointer]
+        - button "Finance" [ref=f30e1601] [cursor=pointer]
+        - button "Scan Card" [ref=f30e1605] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f30e1610] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f30e1615] [cursor=pointer]
+        - button "Spoiler Season" [ref=f30e1619] [cursor=pointer]
+        - button "Learn" [ref=f30e1624] [cursor=pointer]
+        - button "Card Rulings" [ref=f30e1628] [cursor=pointer]
+        - button "Interaction Checker" [ref=f30e1633] [cursor=pointer]
+        - button "New Player Guide" [ref=f30e1637] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f30e1642] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f30e1647] [cursor=pointer]
+        - button "Format Guides" [ref=f30e1651] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f30e1659] [cursor=pointer]
+        - button "Gameplay" [ref=f30e1665] [cursor=pointer]
+        - generic [ref=f30e1669]: Admin
+        - button "Admin Panel" [ref=f30e1670] [cursor=pointer]
+      - generic [ref=f30e1674]:
+        - button "Account" [ref=f30e1675] [cursor=pointer]
+        - button "Sign Out" [ref=f30e1680] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f30e1686] [cursor=pointer]:
+        - generic [ref=f30e1689]: Command Palette
+        - generic [ref=f30e1690]: Ctrl+K
+      - button "Collapse" [ref=f30e1692] [cursor=pointer]
+    - main [ref=f30e216]:
+      - generic [ref=f30e217]:
+        - navigation [ref=f30e218]:
+          - button "Home" [ref=f30e219] [cursor=pointer]
+          - generic [ref=f30e814]: Deck Builder
+        - generic [ref=f30e816]:
+          - generic [ref=f30e817]:
+            - generic [ref=f30e818]:
+              - heading "My Decks" [level=2] [ref=f30e819]
+              - button "📁 Uncategorised decks ▾" [ref=f30e821] [cursor=pointer]
+            - generic [ref=f30e822]:
+              - button "Calculate Sleeves" [ref=f30e823] [cursor=pointer]
+              - button "Find Staples" [ref=f30e824] [cursor=pointer]
+              - button "Compare Decks" [ref=f30e825] [cursor=pointer]
+              - button "Shopping List" [ref=f30e826] [cursor=pointer]
+              - button "New Deck" [ref=f30e827] [cursor=pointer]
+              - button "Import Deck" [ref=f30e829] [cursor=pointer]
+          - generic [ref=f30e1959] [cursor=pointer]:
+            - img "Ozai, the Phoenix King" [ref=f30e1961]
+            - generic [ref=f30e1962]:
+              - heading "Every changed when fire nation attacked. Ozai Phoenix 10+" [level=3] [ref=f30e1963]
+              - generic [ref=f30e1964]: Commander
+            - generic [ref=f30e1965]: "Commander: Ozai, the Phoenix King"
+            - generic [ref=f30e1966]:
+              - generic [ref=f30e1967]: 100 cards
+              - generic [ref=f30e1968]: $0.00
+            - button "Delete" [ref=f30e1969]
+          - generic [ref=f30e1971]:
+            - generic [ref=f30e1972]:
+              - heading "Compare Decks" [level=2] [ref=f30e1973]
+              - button [ref=f30e1979] [cursor=pointer]
+            - generic [ref=f30e2668]:
+              - generic [ref=f30e2669]:
+                - heading "Edgar Markov vs Imported Deck" [level=3] [ref=f30e2670]
+                - button "Change decks" [ref=f30e2671] [cursor=pointer]
+              - generic [ref=f30e2672]:
+                - generic [ref=f30e2673]:
+                  - img "Edgar Markov" [ref=f30e2674]
+                  - generic [ref=f30e2675]:
+                    - generic [ref=f30e2676]: Deck A
+                    - generic [ref=f30e2677]: Edgar Markov
+                - generic [ref=f30e2678]:
+                  - img "Ezio Auditore da Firenze" [ref=f30e2679]
+                  - generic [ref=f30e2680]:
+                    - generic [ref=f30e2681]: Deck B
+                    - generic [ref=f30e2682]: Ezio Auditore da Firenze
+              - generic [ref=f30e2683]:
+                - generic [ref=f30e2684]:
+                  - heading "Mana Curve" [level=4] [ref=f30e2685]
+                  - generic [ref=f30e2686]:
+                    - generic [ref=f30e2687]: Edgar Markov
+                    - generic [ref=f30e2689]: Imported Deck
+                  - generic [ref=f30e2691]:
+                    - generic [ref=f30e2692]:
+                      - generic [ref=f30e2693]:
+                        - 'generic "Deck A: 32 at CMC 0" [ref=f30e2694]'
+                        - 'generic "Deck B: 37 at CMC 0" [ref=f30e2695]'
+                      - generic [ref=f30e2696]: "0"
+                    - generic [ref=f30e2697]:
+                      - generic [ref=f30e2698]:
+                        - 'generic "Deck A: 9 at CMC 1" [ref=f30e2699]'
+                        - 'generic "Deck B: 5 at CMC 1" [ref=f30e2700]'
+                      - generic [ref=f30e2701]: "1"
+                    - generic [ref=f30e2702]:
+                      - generic [ref=f30e2703]:
+                        - 'generic "Deck A: 12 at CMC 2" [ref=f30e2704]'
+                        - 'generic "Deck B: 23 at CMC 2" [ref=f30e2705]'
+                      - generic [ref=f30e2706]: "2"
+                    - generic [ref=f30e2707]:
+                      - generic [ref=f30e2708]:
+                        - 'generic "Deck A: 14 at CMC 3" [ref=f30e2709]'
+                        - 'generic "Deck B: 18 at CMC 3" [ref=f30e2710]'
+                      - generic [ref=f30e2711]: "3"
+                    - generic [ref=f30e2712]:
+                      - generic [ref=f30e2713]:
+                        - 'generic "Deck A: 15 at CMC 4" [ref=f30e2714]'
+                        - 'generic "Deck B: 12 at CMC 4" [ref=f30e2715]'
+                      - generic [ref=f30e2716]: "4"
+                    - generic [ref=f30e2717]:
+                      - generic [ref=f30e2718]:
+                        - 'generic "Deck A: 8 at CMC 5" [ref=f30e2719]'
+                        - 'generic "Deck B: 4 at CMC 5" [ref=f30e2720]'
+                      - generic [ref=f30e2721]: "5"
+                    - generic [ref=f30e2722]:
+                      - generic [ref=f30e2723]:
+                        - 'generic "Deck A: 7 at CMC 6" [ref=f30e2724]'
+                        - 'generic "Deck B: 1 at CMC 6" [ref=f30e2725]'
+                      - generic [ref=f30e2726]: "6"
+                    - generic [ref=f30e2727]:
+                      - generic [ref=f30e2728]:
+                        - 'generic "Deck A: 3 at CMC 7+" [ref=f30e2729]'
+                        - 'generic "Deck B: 0 at CMC 7+"'
+                      - generic [ref=f30e2730]: 7+
+                - generic [ref=f30e2731]:
+                  - heading "Colors" [level=4] [ref=f30e2732]
+                  - generic [ref=f30e2733]:
+                    - generic [ref=f30e2734]:
+                      - generic [ref=f30e2735]: W
+                      - generic [ref=f30e2736]:
+                        - 'generic "Edgar Markov: 14" [ref=f30e2737]'
+                        - generic [ref=f30e2739]: "14"
+                      - generic [ref=f30e2740]:
+                        - generic [ref=f30e2741]: "9"
+                        - 'generic "Imported Deck: 9" [ref=f30e2742]'
+                    - generic [ref=f30e2744]:
+                      - generic [ref=f30e2745]: U
+                      - generic [ref=f30e2746]:
+                        - 'generic "Edgar Markov: 0" [ref=f30e2747]'
+                        - generic [ref=f30e2748]: "0"
+                      - generic [ref=f30e2749]:
+                        - generic [ref=f30e2750]: "14"
+                        - 'generic "Imported Deck: 14" [ref=f30e2751]'
+                    - generic [ref=f30e2753]:
+                      - generic [ref=f30e2754]: B
+                      - generic [ref=f30e2755]:
+                        - 'generic "Edgar Markov: 55" [ref=f30e2756]'
+                        - generic [ref=f30e2758]: "55"
+                      - generic [ref=f30e2759]:
+                        - generic [ref=f30e2760]: "32"
+                        - 'generic "Imported Deck: 32" [ref=f30e2761]'
+                    - generic [ref=f30e2763]:
+                      - generic [ref=f30e2764]: R
+                      - generic [ref=f30e2765]:
+                        - 'generic "Edgar Markov: 10" [ref=f30e2766]'
+                        - generic [ref=f30e2768]: "10"
+                      - generic [ref=f30e2769]:
+                        - generic [ref=f30e2770]: "7"
+                        - 'generic "Imported Deck: 7" [ref=f30e2771]'
+                    - generic [ref=f30e2773]:
+                      - generic [ref=f30e2774]: G
+                      - generic [ref=f30e2775]:
+                        - 'generic "Edgar Markov: 0" [ref=f30e2776]'
+                        - generic [ref=f30e2777]: "0"
+                      - generic [ref=f30e2778]:
+                        - generic [ref=f30e2779]: "1"
+                        - 'generic "Imported Deck: 1" [ref=f30e2780]'
+                    - generic [ref=f30e2782]:
+                      - generic [ref=f30e2783]: C
+                      - generic [ref=f30e2784]:
+                        - 'generic "Edgar Markov: 5" [ref=f30e2785]'
+                        - generic [ref=f30e2787]: "5"
+                      - generic [ref=f30e2788]:
+                        - generic [ref=f30e2789]: "17"
+                        - 'generic "Imported Deck: 17" [ref=f30e2790]'
+              - generic [ref=f30e2792]:
+                - button "All (157)" [ref=f30e2793] [cursor=pointer]
+                - button "Shared (4)" [ref=f30e2794] [cursor=pointer]
+                - button "Only Edgar Markov (70)" [ref=f30e2795] [cursor=pointer]
+                - button "Only Imported Deck (83)" [ref=f30e2796] [cursor=pointer]
+              - generic [ref=f30e2797]:
+                - button "Access Tunnel B" [ref=f30e2798] [cursor=pointer]:
+                  - generic [ref=f30e2799]: Access Tunnel
+                  - generic "Imported Deck" [ref=f30e2801]: B
+                - button "Acolyte of Aclazotz A" [ref=f30e2802] [cursor=pointer]:
+                  - generic [ref=f30e2803]: Acolyte of Aclazotz
+                  - generic "Edgar Markov" [ref=f30e2805]: A
+                - button "Altaïr Ibn-La'Ahad B" [ref=f30e2806] [cursor=pointer]:
+                  - generic [ref=f30e2807]: Altaïr Ibn-La'Ahad
+                  - generic "Imported Deck" [ref=f30e2809]: B
+                - button "An Offer You Can't Refuse B" [ref=f30e2810] [cursor=pointer]:
+                  - generic [ref=f30e2811]: An Offer You Can't Refuse
+                  - generic "Imported Deck" [ref=f30e2813]: B
+                - button "Ancient Ziggurat B" [ref=f30e2814] [cursor=pointer]:
+                  - generic [ref=f30e2815]: Ancient Ziggurat
+                  - generic "Imported Deck" [ref=f30e2817]: B
+                - button "Anje, Maid of Dishonor A" [ref=f30e2818] [cursor=pointer]:
+                  - generic [ref=f30e2819]: Anje, Maid of Dishonor
+                  - generic "Edgar Markov" [ref=f30e2821]: A
+                - button "Arbaaz Mir B" [ref=f30e2822] [cursor=pointer]:
+                  - generic [ref=f30e2823]: Arbaaz Mir
+                  - generic "Imported Deck" [ref=f30e2825]: B
+                - button "Arcane Signet B" [ref=f30e2826] [cursor=pointer]:
+                  - generic [ref=f30e2827]: Arcane Signet
+                  - generic "Imported Deck" [ref=f30e2829]: B
+                - button "Arno Dorian B" [ref=f30e2830] [cursor=pointer]:
+                  - generic [ref=f30e2831]: Arno Dorian
+                  - generic "Imported Deck" [ref=f30e2833]: B
+                - button "Arrogant Outlaw A" [ref=f30e2834] [cursor=pointer]:
+                  - generic [ref=f30e2835]: Arrogant Outlaw
+                  - generic "Edgar Markov" [ref=f30e2837]: A
+                - button "Ash Barrens B" [ref=f30e2838] [cursor=pointer]:
+                  - generic [ref=f30e2839]: Ash Barrens
+                  - generic "Imported Deck" [ref=f30e2841]: B
+                - button "Astarion, the Decadent A" [ref=f30e2842] [cursor=pointer]:
+                  - generic [ref=f30e2843]: Astarion, the Decadent
+                  - generic "Edgar Markov" [ref=f30e2845]: A
+                - button "Asylum Visitor A" [ref=f30e2846] [cursor=pointer]:
+                  - generic [ref=f30e2847]: Asylum Visitor
+                  - generic "Edgar Markov" [ref=f30e2849]: A
+                - button "Auditore Ambush B" [ref=f30e2850] [cursor=pointer]:
+                  - generic [ref=f30e2851]: Auditore Ambush
+                  - generic "Imported Deck" [ref=f30e2853]: B
+                - button "Aven Heartstabber B" [ref=f30e2854] [cursor=pointer]:
+                  - generic [ref=f30e2855]: Aven Heartstabber
+                  - generic "Imported Deck" [ref=f30e2857]: B
+                - button "Aya of Alexandria B" [ref=f30e2858] [cursor=pointer]:
+                  - generic [ref=f30e2859]: Aya of Alexandria
+                  - generic "Imported Deck" [ref=f30e2861]: B
+                - button "Bartolomé del Presidio A" [ref=f30e2862] [cursor=pointer]:
+                  - generic [ref=f30e2863]: Bartolomé del Presidio
+                  - generic "Edgar Markov" [ref=f30e2865]: A
+                - button "Bat Whisperer A" [ref=f30e2866] [cursor=pointer]:
+                  - generic [ref=f30e2867]: Bat Whisperer
+                  - generic "Edgar Markov" [ref=f30e2869]: A
+                - button "Bayek of Siwa B" [ref=f30e2870] [cursor=pointer]:
+                  - generic [ref=f30e2871]: Bayek of Siwa
+                  - generic "Imported Deck" [ref=f30e2873]: B
+                - button "Belligerent Guest A" [ref=f30e2874] [cursor=pointer]:
+                  - generic [ref=f30e2875]: Belligerent Guest
+                  - generic "Edgar Markov" [ref=f30e2877]: A
+                - button "Beseech the Queen B" [ref=f30e2878] [cursor=pointer]:
+                  - generic [ref=f30e2879]: Beseech the Queen
+                  - generic "Imported Deck" [ref=f30e2881]: B
+                - button "Blood Artist A" [ref=f30e2882] [cursor=pointer]:
+                  - generic [ref=f30e2883]: Blood Artist
+                  - generic "Edgar Markov" [ref=f30e2885]: A
+                - button "Blood Fountain A" [ref=f30e2886] [cursor=pointer]:
+                  - generic [ref=f30e2887]: Blood Fountain
+                  - generic "Edgar Markov" [ref=f30e2889]: A
+                - button "Blood Tithe A" [ref=f30e2890] [cursor=pointer]:
+                  - generic [ref=f30e2891]: Blood Tithe
+                  - generic "Edgar Markov" [ref=f30e2893]: A
+                - button "Bloodcrazed Socialite A" [ref=f30e2894] [cursor=pointer]:
+                  - generic [ref=f30e2895]: Bloodcrazed Socialite
+                  - generic "Edgar Markov" [ref=f30e2897]: A
+                - button "Bloodthrone Vampire A" [ref=f30e2898] [cursor=pointer]:
+                  - generic [ref=f30e2899]: Bloodthrone Vampire
+                  - generic "Edgar Markov" [ref=f30e2901]: A
+                - button "Bloodvial Purveyor A" [ref=f30e2902] [cursor=pointer]:
+                  - generic [ref=f30e2903]: Bloodvial Purveyor
+                  - generic "Edgar Markov" [ref=f30e2905]: A
+                - button "Brotherhood Headquarters B" [ref=f30e2906] [cursor=pointer]:
+                  - generic [ref=f30e2907]: Brotherhood Headquarters
+                  - generic "Imported Deck" [ref=f30e2909]: B
+                - button "Brotherhood Spy B" [ref=f30e2910] [cursor=pointer]:
+                  - generic [ref=f30e2911]: Brotherhood Spy
+                  - generic "Imported Deck" [ref=f30e2913]: B
+                - button "Bump in the Night A" [ref=f30e2914] [cursor=pointer]:
+                  - generic [ref=f30e2915]: Bump in the Night
+                  - generic "Edgar Markov" [ref=f30e2917]: A
+                - button "Call the Bloodline A" [ref=f30e2918] [cursor=pointer]:
+                  - generic [ref=f30e2919]: Call the Bloodline
+                  - generic "Edgar Markov" [ref=f30e2921]: A
+                - button "Canonized in Blood A" [ref=f30e2922] [cursor=pointer]:
+                  - generic [ref=f30e2923]: Canonized in Blood
+                  - generic "Edgar Markov" [ref=f30e2925]: A
+                - button "Captivating Vampire A" [ref=f30e2926] [cursor=pointer]:
+                  - generic [ref=f30e2927]: Captivating Vampire
+                  - generic "Edgar Markov" [ref=f30e2929]: A
+                - button "Cascading Cataracts B" [ref=f30e2930] [cursor=pointer]:
+                  - generic [ref=f30e2931]: Cascading Cataracts
+                  - generic "Imported Deck" [ref=f30e2933]: B
+                - button "Cavern of Souls A" [ref=f30e2934] [cursor=pointer]:
+                  - generic [ref=f30e2935]: Cavern of Souls
+                  - generic "Edgar Markov" [ref=f30e2937]: A
+                - button "Chain Assassination B" [ref=f30e2938] [cursor=pointer]:
+                  - generic [ref=f30e2939]: Chain Assassination
+                  - generic "Imported Deck" [ref=f30e2941]: B
+                - button "Choked Estuary B" [ref=f30e2942] [cursor=pointer]:
+                  - generic [ref=f30e2943]: Choked Estuary
+                  - generic "Imported Deck" [ref=f30e2945]: B
+                - button "Chromatic Lantern B" [ref=f30e2946] [cursor=pointer]:
+                  - generic [ref=f30e2947]: Chromatic Lantern
+                  - generic "Imported Deck" [ref=f30e2949]: B
+                - button "Clavileño, First of the Blessed A" [ref=f30e2950] [cursor=pointer]:
+                  - generic [ref=f30e2951]: Clavileño, First of the Blessed
+                  - generic "Edgar Markov" [ref=f30e2953]: A
+                - button "Command Tower B" [ref=f30e2954] [cursor=pointer]:
+                  - generic [ref=f30e2955]: Command Tower
+                  - generic "Imported Deck" [ref=f30e2957]: B
+                - button "Cordial Vampire A" [ref=f30e2958] [cursor=pointer]:
+                  - generic [ref=f30e2959]: Cordial Vampire
+                  - generic "Edgar Markov" [ref=f30e2961]: A
+                - button "Corrupted Conviction A" [ref=f30e2962] [cursor=pointer]:
+                  - generic [ref=f30e2963]: Corrupted Conviction
+                  - generic "Edgar Markov" [ref=f30e2965]: A
+                - button "Counterspell B" [ref=f30e2966] [cursor=pointer]:
+                  - generic [ref=f30e2967]: Counterspell
+                  - generic "Imported Deck" [ref=f30e2969]: B
+                - button "Cover of Darkness B" [ref=f30e2970] [cursor=pointer]:
+                  - generic [ref=f30e2971]: Cover of Darkness
+                  - generic "Imported Deck" [ref=f30e2973]: B
+                - button "Damnation A" [ref=f30e2974] [cursor=pointer]:
+                  - generic [ref=f30e2975]: Damnation
+                  - generic "Edgar Markov" [ref=f30e2977]: A
+                - button "Dark Impostor B" [ref=f30e2978] [cursor=pointer]:
+                  - generic [ref=f30e2979]: Dark Impostor
+                  - generic "Imported Deck" [ref=f30e2981]: B
+                - button "Deadly Dispute B" [ref=f30e2982] [cursor=pointer]:
+                  - generic [ref=f30e2983]: Deadly Dispute
+                  - generic "Imported Deck" [ref=f30e2985]: B
+                - button "Desmond Miles B" [ref=f30e2986] [cursor=pointer]:
+                  - generic [ref=f30e2987]: Desmond Miles
+                  - generic "Imported Deck" [ref=f30e2989]: B
+                - button "Diabolic Tutor B" [ref=f30e2990] [cursor=pointer]:
+                  - generic [ref=f30e2991]: Diabolic Tutor
+                  - generic "Imported Deck" [ref=f30e2993]: B
+                - button "Dimir Signet B" [ref=f30e2994] [cursor=pointer]:
+                  - generic [ref=f30e2995]: Dimir Signet
+                  - generic "Imported Deck" [ref=f30e2997]: B
+                - button "Drowned Catacomb B" [ref=f30e2998] [cursor=pointer]:
+                  - generic [ref=f30e2999]: Drowned Catacomb
+                  - generic "Imported Deck" [ref=f30e3001]: B
+                - button "Eagle Vision B" [ref=f30e3002] [cursor=pointer]:
+                  - generic [ref=f30e3003]: Eagle Vision
+                  - generic "Imported Deck" [ref=f30e3005]: B
+                - button "Edgar, Charmed Groom // Edgar Markov's Coffin A" [ref=f30e3006] [cursor=pointer]:
+                  - generic [ref=f30e3007]: Edgar, Charmed Groom // Edgar Markov's Coffin
+                  - generic "Edgar Markov" [ref=f30e3009]: A
+                - button "Enduring Tenacity A" [ref=f30e3010] [cursor=pointer]:
+                  - generic [ref=f30e3011]: Enduring Tenacity
+                  - generic "Edgar Markov" [ref=f30e3013]: A
+                - button "Etrata, Deadly Fugitive B" [ref=f30e3014] [cursor=pointer]:
+                  - generic [ref=f30e3015]: Etrata, Deadly Fugitive
+                  - generic "Imported Deck" [ref=f30e3017]: B
+                - button "Evie Frye B" [ref=f30e3018] [cursor=pointer]:
+                  - generic [ref=f30e3019]: Evie Frye
+                  - generic "Imported Deck" [ref=f30e3021]: B
+                - button "Evolving Wilds B" [ref=f30e3022] [cursor=pointer]:
+                  - generic [ref=f30e3023]: Evolving Wilds
+                  - generic "Imported Deck" [ref=f30e3025]: B
+                - button "Exotic Orchard B" [ref=f30e3026] [cursor=pointer]:
+                  - generic [ref=f30e3027]: Exotic Orchard
+                  - generic "Imported Deck" [ref=f30e3029]: B
+                - button "Ezio, Blade of Vengeance B" [ref=f30e3030] [cursor=pointer]:
+                  - generic [ref=f30e3031]: Ezio, Blade of Vengeance
+                  - generic "Imported Deck" [ref=f30e3033]: B
+                - button "Ezio, Brash Novice B" [ref=f30e3034] [cursor=pointer]:
+                  - generic [ref=f30e3035]: Ezio, Brash Novice
+                  - generic "Imported Deck" [ref=f30e3037]: B
+                - button "Falkenrath Celebrants A" [ref=f30e3038] [cursor=pointer]:
+                  - generic [ref=f30e3039]: Falkenrath Celebrants
+                  - generic "Edgar Markov" [ref=f30e3041]: A
+                - button "Falkenrath Noble A" [ref=f30e3042] [cursor=pointer]:
+                  - generic [ref=f30e3043]: Falkenrath Noble
+                  - generic "Edgar Markov" [ref=f30e3045]: A
+                - button "Fell the Mighty A" [ref=f30e3046] [cursor=pointer]:
+                  - generic [ref=f30e3047]: Fell the Mighty
+                  - generic "Edgar Markov" [ref=f30e3049]: A
+                - button "Fellwar Stone B" [ref=f30e3050] [cursor=pointer]:
+                  - generic [ref=f30e3051]: Fellwar Stone
+                  - generic "Imported Deck" [ref=f30e3053]: B
+                - button "Forbidden Orchard B" [ref=f30e3054] [cursor=pointer]:
+                  - generic [ref=f30e3055]: Forbidden Orchard
+                  - generic "Imported Deck" [ref=f30e3057]: B
+                - button "Forest B" [ref=f30e3058] [cursor=pointer]:
+                  - generic [ref=f30e3059]: Forest
+                  - generic "Imported Deck" [ref=f30e3061]: B
+                - button "Funeral Room // Awakening Hall A" [ref=f30e3062] [cursor=pointer]:
+                  - generic [ref=f30e3063]: Funeral Room // Awakening Hall
+                  - generic "Edgar Markov" [ref=f30e3065]: A
+                - button "Gix, Yawgmoth Praetor B" [ref=f30e3066] [cursor=pointer]:
+                  - generic [ref=f30e3067]: Gix, Yawgmoth Praetor
+                  - generic "Imported Deck" [ref=f30e3069]: B
+                - button "Go for the Throat B" [ref=f30e3070] [cursor=pointer]:
+                  - generic [ref=f30e3071]: Go for the Throat
+                  - generic "Imported Deck" [ref=f30e3073]: B
+                - button "Grand Coliseum B" [ref=f30e3074] [cursor=pointer]:
+                  - generic [ref=f30e3075]: Grand Coliseum
+                  - generic "Imported Deck" [ref=f30e3077]: B
+                - button "Graveshifter B" [ref=f30e3078] [cursor=pointer]:
+                  - generic [ref=f30e3079]: Graveshifter
+                  - generic "Imported Deck" [ref=f30e3081]: B
+                - button "Grievous Wound A" [ref=f30e3082] [cursor=pointer]:
+                  - generic [ref=f30e3083]: Grievous Wound
+                  - generic "Edgar Markov" [ref=f30e3085]: A
+                - button "Gríma Wormtongue A" [ref=f30e3086] [cursor=pointer]:
+                  - generic [ref=f30e3087]: Gríma Wormtongue
+                  - generic "Edgar Markov" [ref=f30e3089]: A
+                - button "Island B" [ref=f30e3090] [cursor=pointer]:
+                  - generic [ref=f30e3091]: Island
+                  - generic "Imported Deck" [ref=f30e3093]: B
+                - button "Isolated Chapel B" [ref=f30e3094] [cursor=pointer]:
+                  - generic [ref=f30e3095]: Isolated Chapel
+                  - generic "Imported Deck" [ref=f30e3097]: B
+                - button "Jacob Frye B" [ref=f30e3098] [cursor=pointer]:
+                  - generic [ref=f30e3099]: Jacob Frye
+                  - generic "Imported Deck" [ref=f30e3101]: B
+                - button "Kazarov, Sengir Pureblood A" [ref=f30e3102] [cursor=pointer]:
+                  - generic [ref=f30e3103]: Kazarov, Sengir Pureblood
+                  - generic "Edgar Markov" [ref=f30e3105]: A
+                - button "Key to the City B" [ref=f30e3106] [cursor=pointer]:
+                  - generic [ref=f30e3107]: Key to the City
+                  - generic "Imported Deck" [ref=f30e3109]: B
+                - button "Layla Hassan B" [ref=f30e3110] [cursor=pointer]:
+                  - generic [ref=f30e3111]: Layla Hassan
+                  - generic "Imported Deck" [ref=f30e3113]: B
+                - button "Legions to Ashes B" [ref=f30e3114] [cursor=pointer]:
+                  - generic [ref=f30e3115]: Legions to Ashes
+                  - generic "Imported Deck" [ref=f30e3117]: B
+                - button "Life Insurance A" [ref=f30e3118] [cursor=pointer]:
+                  - generic [ref=f30e3119]: Life Insurance
+                  - generic "Edgar Markov" [ref=f30e3121]: A
+                - button "Lightning Greaves A" [ref=f30e3122] [cursor=pointer]:
+                  - generic [ref=f30e3123]: Lightning Greaves
+                  - generic "Edgar Markov" [ref=f30e3125]: A
+                - button "Lydia Frye B" [ref=f30e3126] [cursor=pointer]:
+                  - generic [ref=f30e3127]: Lydia Frye
+                  - generic "Imported Deck" [ref=f30e3129]: B
+                - button "Markov Baron A" [ref=f30e3130] [cursor=pointer]:
+                  - generic [ref=f30e3131]: Markov Baron
+                  - generic "Edgar Markov" [ref=f30e3133]: A
+                - button "Mask of Memory B" [ref=f30e3134] [cursor=pointer]:
+                  - generic [ref=f30e3135]: Mask of Memory
+                  - generic "Imported Deck" [ref=f30e3137]: B
+                - button "Mathas, Fiend Seeker A" [ref=f30e3138] [cursor=pointer]:
+                  - generic [ref=f30e3139]: Mathas, Fiend Seeker
+                  - generic "Edgar Markov" [ref=f30e3141]: A
+                - button "Mountain A B" [ref=f30e3142] [cursor=pointer]:
+                  - generic [ref=f30e3143]: Mountain
+                  - generic [ref=f30e3144]:
+                    - generic "Edgar Markov" [ref=f30e3145]: A
+                    - generic "Imported Deck" [ref=f30e3146]: B
+                - button "Necropolis Regent A" [ref=f30e3147] [cursor=pointer]:
+                  - generic [ref=f30e3148]: Necropolis Regent
+                  - generic "Edgar Markov" [ref=f30e3150]: A
+                - button "Olivia, Opulent Outlaw A" [ref=f30e3151] [cursor=pointer]:
+                  - generic [ref=f30e3152]: Olivia, Opulent Outlaw
+                  - generic "Edgar Markov" [ref=f30e3154]: A
+                - button "Olivia's Attendants A" [ref=f30e3155] [cursor=pointer]:
+                  - generic [ref=f30e3156]: Olivia's Attendants
+                  - generic "Edgar Markov" [ref=f30e3158]: A
+                - button "Olivia's Dragoon A" [ref=f30e3159] [cursor=pointer]:
+                  - generic [ref=f30e3160]: Olivia's Dragoon
+                  - generic "Edgar Markov" [ref=f30e3162]: A
+                - button "Origin of the Hidden Ones B" [ref=f30e3163] [cursor=pointer]:
+                  - generic [ref=f30e3164]: Origin of the Hidden Ones
+                  - generic "Imported Deck" [ref=f30e3166]: B
+                - button "Path of Ancestry B" [ref=f30e3167] [cursor=pointer]:
+                  - generic [ref=f30e3168]: Path of Ancestry
+                  - generic "Imported Deck" [ref=f30e3170]: B
+                - button "Plains A B" [ref=f30e3171] [cursor=pointer]:
+                  - generic [ref=f30e3172]: Plains
+                  - generic [ref=f30e3173]:
+                    - generic "Edgar Markov" [ref=f30e3174]: A
+                    - generic "Imported Deck" [ref=f30e3175]: B
+                - button "Pointed Discussion A" [ref=f30e3176] [cursor=pointer]:
+                  - generic [ref=f30e3177]: Pointed Discussion
+                  - generic "Edgar Markov" [ref=f30e3179]: A
+                - button "Profane Tutor B" [ref=f30e3180] [cursor=pointer]:
+                  - generic [ref=f30e3181]: Profane Tutor
+                  - generic "Imported Deck" [ref=f30e3183]: B
+                - button "Promise of Aclazotz // Foul Rebirth A" [ref=f30e3184] [cursor=pointer]:
+                  - generic [ref=f30e3185]: Promise of Aclazotz // Foul Rebirth
+                  - generic "Edgar Markov" [ref=f30e3187]: A
+                - button "Prophetic Prism A" [ref=f30e3188] [cursor=pointer]:
+                  - generic [ref=f30e3189]: Prophetic Prism
+                  - generic "Edgar Markov" [ref=f30e3191]: A
+                - button "Quietus Spike B" [ref=f30e3192] [cursor=pointer]:
+                  - generic [ref=f30e3193]: Quietus Spike
+                  - generic "Imported Deck" [ref=f30e3195]: B
+                - button "Raffine's Silencer B" [ref=f30e3196] [cursor=pointer]:
+                  - generic [ref=f30e3197]: Raffine's Silencer
+                  - generic "Imported Deck" [ref=f30e3199]: B
+                - button "Rakdos Signet B" [ref=f30e3200] [cursor=pointer]:
+                  - generic [ref=f30e3201]: Rakdos Signet
+                  - generic "Imported Deck" [ref=f30e3203]: B
+                - button "Ramses, Assassin Lord B" [ref=f30e3204] [cursor=pointer]:
+                  - generic [ref=f30e3205]: Ramses, Assassin Lord
+                  - generic "Imported Deck" [ref=f30e3207]: B
+                - button "Ratonhnhaké꞉ton B" [ref=f30e3208] [cursor=pointer]:
+                  - generic [ref=f30e3209]: Ratonhnhaké꞉ton
+                  - generic "Imported Deck" [ref=f30e3211]: B
+                - button "Reconnaissance Mission B" [ref=f30e3212] [cursor=pointer]:
+                  - generic [ref=f30e3213]: Reconnaissance Mission
+                  - generic "Imported Deck" [ref=f30e3215]: B
+                - button "Relic of Legends B" [ref=f30e3216] [cursor=pointer]:
+                  - generic [ref=f30e3217]: Relic of Legends
+                  - generic "Imported Deck" [ref=f30e3219]: B
+                - button "Revel in Riches A" [ref=f30e3220] [cursor=pointer]:
+                  - generic [ref=f30e3221]: Revel in Riches
+                  - generic "Edgar Markov" [ref=f30e3223]: A
+                - button "Rite of the Moth A" [ref=f30e3224] [cursor=pointer]:
+                  - generic [ref=f30e3225]: Rite of the Moth
+                  - generic "Edgar Markov" [ref=f30e3227]: A
+                - button "Rogue's Passage B" [ref=f30e3228] [cursor=pointer]:
+                  - generic [ref=f30e3229]: Rogue's Passage
+                  - generic "Imported Deck" [ref=f30e3231]: B
+                - button "Roshan, Hidden Magister B" [ref=f30e3232] [cursor=pointer]:
+                  - generic [ref=f30e3233]: Roshan, Hidden Magister
+                  - generic "Imported Deck" [ref=f30e3235]: B
+                - button "Sanguine Bond A" [ref=f30e3236] [cursor=pointer]:
+                  - generic [ref=f30e3237]: Sanguine Bond
+                  - generic "Edgar Markov" [ref=f30e3239]: A
+                - button "Savai Crystal A" [ref=f30e3240] [cursor=pointer]:
+                  - generic [ref=f30e3241]: Savai Crystal
+                  - generic "Edgar Markov" [ref=f30e3243]: A
+                - button "Savai Triome A" [ref=f30e3244] [cursor=pointer]:
+                  - generic [ref=f30e3245]: Savai Triome
+                  - generic "Edgar Markov" [ref=f30e3247]: A
+                - button "Scarblade Elite B" [ref=f30e3248] [cursor=pointer]:
+                  - generic [ref=f30e3249]: Scarblade Elite
+                  - generic "Imported Deck" [ref=f30e3251]: B
+                - button "Secluded Courtyard B" [ref=f30e3252] [cursor=pointer]:
+                  - generic [ref=f30e3253]: Secluded Courtyard
+                  - generic "Imported Deck" [ref=f30e3255]: B
+                - button "Sengir, the Dark Baron A" [ref=f30e3256] [cursor=pointer]:
+                  - generic [ref=f30e3257]: Sengir, the Dark Baron
+                  - generic "Edgar Markov" [ref=f30e3259]: A
+                - button "Sensei's Divining Top A" [ref=f30e3260] [cursor=pointer]:
+                  - generic [ref=f30e3261]: Sensei's Divining Top
+                  - generic "Edgar Markov" [ref=f30e3263]: A
+                - button "Shay Cormac B" [ref=f30e3264] [cursor=pointer]:
+                  - generic [ref=f30e3265]: Shay Cormac
+                  - generic "Imported Deck" [ref=f30e3267]: B
+                - button "Slip Through Space B" [ref=f30e3268] [cursor=pointer]:
+                  - generic [ref=f30e3269]: Slip Through Space
+                  - generic "Imported Deck" [ref=f30e3271]: B
+                - button "Sol Ring B" [ref=f30e3272] [cursor=pointer]:
+                  - generic [ref=f30e3273]: Sol Ring
+                  - generic "Imported Deck" [ref=f30e3275]: B
+                - button "Sorin Markov A B" [ref=f30e3276] [cursor=pointer]:
+                  - generic [ref=f30e3277]: Sorin Markov
+                  - generic [ref=f30e3278]:
+                    - generic "Edgar Markov" [ref=f30e3279]: A
+                    - generic "Imported Deck" [ref=f30e3280]: B
+                - button "Sorin, Grim Nemesis A" [ref=f30e3281] [cursor=pointer]:
+                  - generic [ref=f30e3282]: Sorin, Grim Nemesis
+                  - generic "Edgar Markov" [ref=f30e3284]: A
+                - button "Sorin, Vengeful Bloodlord A" [ref=f30e3285] [cursor=pointer]:
+                  - generic [ref=f30e3286]: Sorin, Vengeful Bloodlord
+                  - generic "Edgar Markov" [ref=f30e3288]: A
+                - button "Split Up A" [ref=f30e3289] [cursor=pointer]:
+                  - generic [ref=f30e3290]: Split Up
+                  - generic "Edgar Markov" [ref=f30e3292]: A
+                - button "Sunken Hollow B" [ref=f30e3293] [cursor=pointer]:
+                  - generic [ref=f30e3294]: Sunken Hollow
+                  - generic "Imported Deck" [ref=f30e3296]: B
+                - button "Swamp A B" [ref=f30e3297] [cursor=pointer]:
+                  - generic [ref=f30e3298]: Swamp
+                  - generic [ref=f30e3299]:
+                    - generic "Edgar Markov" [ref=f30e3300]: A
+                    - generic "Imported Deck" [ref=f30e3301]: B
+                - button "Swiftfoot Boots B" [ref=f30e3302] [cursor=pointer]:
+                  - generic [ref=f30e3303]: Swiftfoot Boots
+                  - generic "Imported Deck" [ref=f30e3305]: B
+                - button "Sword of Feast and Famine B" [ref=f30e3306] [cursor=pointer]:
+                  - generic [ref=f30e3307]: Sword of Feast and Famine
+                  - generic "Imported Deck" [ref=f30e3309]: B
+                - button "Tainted Strike B" [ref=f30e3310] [cursor=pointer]:
+                  - generic [ref=f30e3311]: Tainted Strike
+                  - generic "Imported Deck" [ref=f30e3313]: B
+                - button "Talisman of Dominance B" [ref=f30e3314] [cursor=pointer]:
+                  - generic [ref=f30e3315]: Talisman of Dominance
+                  - generic "Imported Deck" [ref=f30e3317]: B
+                - button "Talisman of Hierarchy B" [ref=f30e3318] [cursor=pointer]:
+                  - generic [ref=f30e3319]: Talisman of Hierarchy
+                  - generic "Imported Deck" [ref=f30e3321]: B
+                - button "Talisman of Indulgence B" [ref=f30e3322] [cursor=pointer]:
+                  - generic [ref=f30e3323]: Talisman of Indulgence
+                  - generic "Imported Deck" [ref=f30e3325]: B
+                - button "Terramorphic Expanse B" [ref=f30e3326] [cursor=pointer]:
+                  - generic [ref=f30e3327]: Terramorphic Expanse
+                  - generic "Imported Deck" [ref=f30e3329]: B
+                - button "The Revelations of Ezio B" [ref=f30e3330] [cursor=pointer]:
+                  - generic [ref=f30e3331]: The Revelations of Ezio
+                  - generic "Imported Deck" [ref=f30e3333]: B
+                - button "Transmogrant Altar A" [ref=f30e3334] [cursor=pointer]:
+                  - generic [ref=f30e3335]: Transmogrant Altar
+                  - generic "Edgar Markov" [ref=f30e3337]: A
+                - button "Tree of Perdition B" [ref=f30e3338] [cursor=pointer]:
+                  - generic [ref=f30e3339]: Tree of Perdition
+                  - generic "Imported Deck" [ref=f30e3341]: B
+                - button "Unclaimed Territory B" [ref=f30e3342] [cursor=pointer]:
+                  - generic [ref=f30e3343]: Unclaimed Territory
+                  - generic "Imported Deck" [ref=f30e3345]: B
+                - button "Unholy Annex // Ritual Chamber A" [ref=f30e3346] [cursor=pointer]:
+                  - generic [ref=f30e3347]: Unholy Annex // Ritual Chamber
+                  - generic "Edgar Markov" [ref=f30e3349]: A
+                - button "Unholy Officiant A" [ref=f30e3350] [cursor=pointer]:
+                  - generic [ref=f30e3351]: Unholy Officiant
+                  - generic "Edgar Markov" [ref=f30e3353]: A
+                - button "Unscrupulous Contractor B" [ref=f30e3354] [cursor=pointer]:
+                  - generic [ref=f30e3355]: Unscrupulous Contractor
+                  - generic "Imported Deck" [ref=f30e3357]: B
+                - button "Unstoppable Slasher B" [ref=f30e3358] [cursor=pointer]:
+                  - generic [ref=f30e3359]: Unstoppable Slasher
+                  - generic "Imported Deck" [ref=f30e3361]: B
+                - button "Vampire Neonate A" [ref=f30e3362] [cursor=pointer]:
+                  - generic [ref=f30e3363]: Vampire Neonate
+                  - generic "Edgar Markov" [ref=f30e3365]: A
+                - button "Vampire Nocturnus A" [ref=f30e3366] [cursor=pointer]:
+                  - generic [ref=f30e3367]: Vampire Nocturnus
+                  - generic "Edgar Markov" [ref=f30e3369]: A
+                - button "Vampire Socialite A" [ref=f30e3370] [cursor=pointer]:
+                  - generic [ref=f30e3371]: Vampire Socialite
+                  - generic "Edgar Markov" [ref=f30e3373]: A
+                - button "Vampire Sovereign A" [ref=f30e3374] [cursor=pointer]:
+                  - generic [ref=f30e3375]: Vampire Sovereign
+                  - generic "Edgar Markov" [ref=f30e3377]: A
+                - button "Vampire Spawn A" [ref=f30e3378] [cursor=pointer]:
+                  - generic [ref=f30e3379]: Vampire Spawn
+                  - generic "Edgar Markov" [ref=f30e3381]: A
+                - button "Vampiric Fury A" [ref=f30e3382] [cursor=pointer]:
+                  - generic [ref=f30e3383]: Vampiric Fury
+                  - generic "Edgar Markov" [ref=f30e3385]: A
+                - button "Victimize A" [ref=f30e3386] [cursor=pointer]:
+                  - generic [ref=f30e3387]: Victimize
+                  - generic "Edgar Markov" [ref=f30e3389]: A
+                - button "Viewpoint Synchronization B" [ref=f30e3390] [cursor=pointer]:
+                  - generic [ref=f30e3391]: Viewpoint Synchronization
+                  - generic "Imported Deck" [ref=f30e3393]: B
+                - button "Village Rites A" [ref=f30e3394] [cursor=pointer]:
+                  - generic [ref=f30e3395]: Village Rites
+                  - generic "Edgar Markov" [ref=f30e3397]: A
+                - button "Viscera Seer A" [ref=f30e3398] [cursor=pointer]:
+                  - generic [ref=f30e3399]: Viscera Seer
+                  - generic "Edgar Markov" [ref=f30e3401]: A
+                - button "Vito, Fanatic of Aclazotz A" [ref=f30e3402] [cursor=pointer]:
+                  - generic [ref=f30e3403]: Vito, Fanatic of Aclazotz
+                  - generic "Edgar Markov" [ref=f30e3405]: A
+                - button "Vito's Inquisitor A" [ref=f30e3406] [cursor=pointer]:
+                  - generic [ref=f30e3407]: Vito's Inquisitor
+                  - generic "Edgar Markov" [ref=f30e3409]: A
+                - button "Voldaren Bloodcaster // Bloodbat Summoner A" [ref=f30e3410] [cursor=pointer]:
+                  - generic [ref=f30e3411]: Voldaren Bloodcaster // Bloodbat Summoner
+                  - generic "Edgar Markov" [ref=f30e3413]: A
+                - button "Voldaren Epicure A" [ref=f30e3414] [cursor=pointer]:
+                  - generic [ref=f30e3415]: Voldaren Epicure
+                  - generic "Edgar Markov" [ref=f30e3417]: A
+                - button "Wayfarer's Bauble B" [ref=f30e3418] [cursor=pointer]:
+                  - generic [ref=f30e3419]: Wayfarer's Bauble
+                  - generic "Imported Deck" [ref=f30e3421]: B
+                - button "Whip of Erebos A" [ref=f30e3422] [cursor=pointer]:
+                  - generic [ref=f30e3423]: Whip of Erebos
+                  - generic "Edgar Markov" [ref=f30e3425]: A
+                - button "Whispersilk Cloak B" [ref=f30e3426] [cursor=pointer]:
+                  - generic [ref=f30e3427]: Whispersilk Cloak
+                  - generic "Imported Deck" [ref=f30e3429]: B

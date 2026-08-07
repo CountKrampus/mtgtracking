@@ -1,0 +1,115 @@
+[     573ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/static/js/bundle.js:96554
+[   21695ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/trades/offers/received:0
+[   21695ms] [ERROR] fetchOffers: TypeError: Failed to fetch
+    at http://localhost:3000/static/js/bundle.js:159137:26
+    at http://localhost:3000/static/js/bundle.js:160516:47
+    at http://localhost:3000/static/js/bundle.js:160585:7
+    at commitHookEffectListMount (http://localhost:3000/static/js/bundle.js:90849:30)
+    at commitPassiveMountOnFiber (http://localhost:3000/static/js/bundle.js:92342:17)
+    at commitPassiveMountEffects_complete (http://localhost:3000/static/js/bundle.js:92314:13)
+    at commitPassiveMountEffects_begin (http://localhost:3000/static/js/bundle.js:92304:11)
+    at commitPassiveMountEffects (http://localhost:3000/static/js/bundle.js:92294:7)
+    at flushPassiveEffectsImpl (http://localhost:3000/static/js/bundle.js:94177:7)
+    at flushPassiveEffects (http://localhost:3000/static/js/bundle.js:94130:18) @ http://localhost:3000/static/js/bundle.js:160519
+[   21709ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/users/avatar/9c69847e-9e84-484e-825d-d5248aafbe4a.jpg:0
+[   21972ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/trades/my-listings:0
+[   21972ms] [ERROR] fetchMyListings: TypeError: Failed to fetch
+    at http://localhost:3000/static/js/bundle.js:159137:26
+    at http://localhost:3000/static/js/bundle.js:160507:25
+    at http://localhost:3000/static/js/bundle.js:160584:7
+    at commitHookEffectListMount (http://localhost:3000/static/js/bundle.js:90849:30)
+    at commitPassiveMountOnFiber (http://localhost:3000/static/js/bundle.js:92342:17)
+    at commitPassiveMountEffects_complete (http://localhost:3000/static/js/bundle.js:92314:13)
+    at commitPassiveMountEffects_begin (http://localhost:3000/static/js/bundle.js:92304:11)
+    at commitPassiveMountEffects (http://localhost:3000/static/js/bundle.js:92294:7)
+    at flushPassiveEffectsImpl (http://localhost:3000/static/js/bundle.js:94177:7)
+    at flushPassiveEffects (http://localhost:3000/static/js/bundle.js:94130:18) @ http://localhost:3000/static/js/bundle.js:160509
+[   22018ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/trades?limit=20&offset=0:0
+[   22018ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/auth/status:0
+[   22018ms] [WARNING] checkSystemStatus attempt 1 failed: Failed to fetch @ http://localhost:3000/static/js/bundle.js:161065
+[   22018ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/trades/offers/sent:0
+[   22019ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/trades/matches:0
+[   22019ms] [ERROR] fetchMatches: TypeError: Failed to fetch
+    at http://localhost:3000/static/js/bundle.js:159137:26
+    at http://localhost:3000/static/js/bundle.js:160526:25
+    at http://localhost:3000/static/js/bundle.js:160586:7
+    at commitHookEffectListMount (http://localhost:3000/static/js/bundle.js:90849:30)
+    at commitPassiveMountOnFiber (http://localhost:3000/static/js/bundle.js:92342:17)
+    at commitPassiveMountEffects_complete (http://localhost:3000/static/js/bundle.js:92314:13)
+    at commitPassiveMountEffects_begin (http://localhost:3000/static/js/bundle.js:92304:11)
+    at commitPassiveMountEffects (http://localhost:3000/static/js/bundle.js:92294:7)
+    at flushPassiveEffectsImpl (http://localhost:3000/static/js/bundle.js:94177:7)
+    at flushPassiveEffects (http://localhost:3000/static/js/bundle.js:94130:18) @ http://localhost:3000/static/js/bundle.js:160532
+[   42744ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/trades/my-listings:0
+[   42744ms] [ERROR] fetchMyListings: TypeError: Failed to fetch
+    at http://localhost:3000/static/js/bundle.js:159137:26
+    at http://localhost:3000/static/js/bundle.js:160507:25
+    at http://localhost:3000/static/js/bundle.js:160584:7
+    at commitHookEffectListMount (http://localhost:3000/static/js/bundle.js:90849:30)
+    at invokePassiveEffectMountInDEV (http://localhost:3000/static/js/bundle.js:92538:17)
+    at invokeEffectsInDev (http://localhost:3000/static/js/bundle.js:94435:15)
+    at commitDoubleInvokeEffectsInDEV (http://localhost:3000/static/js/bundle.js:94418:11)
+    at flushPassiveEffectsImpl (http://localhost:3000/static/js/bundle.js:94191:9)
+    at flushPassiveEffects (http://localhost:3000/static/js/bundle.js:94130:18)
+    at http://localhost:3000/static/js/bundle.js:93945:13 @ http://localhost:3000/static/js/bundle.js:160509
+[   43020ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/trades/offers/received:0
+[   43020ms] [ERROR] fetchOffers: TypeError: Failed to fetch
+    at http://localhost:3000/static/js/bundle.js:159137:26
+    at http://localhost:3000/static/js/bundle.js:160516:47
+    at http://localhost:3000/static/js/bundle.js:160585:7
+    at commitHookEffectListMount (http://localhost:3000/static/js/bundle.js:90849:30)
+    at invokePassiveEffectMountInDEV (http://localhost:3000/static/js/bundle.js:92538:17)
+    at invokeEffectsInDev (http://localhost:3000/static/js/bundle.js:94435:15)
+    at commitDoubleInvokeEffectsInDEV (http://localhost:3000/static/js/bundle.js:94418:11)
+    at flushPassiveEffectsImpl (http://localhost:3000/static/js/bundle.js:94191:9)
+    at flushPassiveEffects (http://localhost:3000/static/js/bundle.js:94130:18)
+    at http://localhost:3000/static/js/bundle.js:93945:13 @ http://localhost:3000/static/js/bundle.js:160519
+[   43065ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/trades/offers/sent:0
+[   43065ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/trades/matches:0
+[   43065ms] [ERROR] fetchMatches: TypeError: Failed to fetch
+    at http://localhost:3000/static/js/bundle.js:159137:26
+    at http://localhost:3000/static/js/bundle.js:160526:25
+    at http://localhost:3000/static/js/bundle.js:160586:7
+    at commitHookEffectListMount (http://localhost:3000/static/js/bundle.js:90849:30)
+    at invokePassiveEffectMountInDEV (http://localhost:3000/static/js/bundle.js:92538:17)
+    at invokeEffectsInDev (http://localhost:3000/static/js/bundle.js:94435:15)
+    at commitDoubleInvokeEffectsInDEV (http://localhost:3000/static/js/bundle.js:94418:11)
+    at flushPassiveEffectsImpl (http://localhost:3000/static/js/bundle.js:94191:9)
+    at flushPassiveEffects (http://localhost:3000/static/js/bundle.js:94130:18)
+    at http://localhost:3000/static/js/bundle.js:93945:13 @ http://localhost:3000/static/js/bundle.js:160532
+[   43066ms] [ERROR] Error fetching wishlist: AxiosError @ http://localhost:3000/static/js/bundle.js:160741
+[   43066ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/wishlist:0
+[   43066ms] [ERROR] Error fetching locations: AxiosError @ http://localhost:3000/static/js/bundle.js:160025
+[   43066ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/locations:0
+[   63778ms] [ERROR] Error fetching tags: AxiosError @ http://localhost:3000/static/js/bundle.js:160108
+[   63778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/tags:0
+[   64054ms] [ERROR] Error fetching wishlist: AxiosError @ http://localhost:3000/static/js/bundle.js:160741
+[   64054ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/wishlist:0
+[   64100ms] [ERROR] Error fetching locations: AxiosError @ http://localhost:3000/static/js/bundle.js:160025
+[   64100ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/locations:0
+[   64100ms] [ERROR] Error fetching tags: AxiosError @ http://localhost:3000/static/js/bundle.js:160108
+[   64100ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/tags:0
+[   64115ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[   64115ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134751:30)
+    at http://localhost:3000/static/js/bundle.js:134782:5
+    at commitHookEffectListMount (http://localhost:3000/static/js/bundle.js:90849:30)
+    at commitPassiveMountOnFiber (http://localhost:3000/static/js/bundle.js:92342:17)
+    at commitPassiveMountEffects_complete (http://localhost:3000/static/js/bundle.js:92314:13)
+    at commitPassiveMountEffects_begin (http://localhost:3000/static/js/bundle.js:92304:11)
+    at commitPassiveMountEffects (http://localhost:3000/static/js/bundle.js:92294:7)
+    at flushPassiveEffectsImpl (http://localhost:3000/static/js/bundle.js:94177:7)
+    at flushPassiveEffects (http://localhost:3000/static/js/bundle.js:94130:18)
+    at http://localhost:3000/static/js/bundle.js:93945:13 @ http://localhost:3000/static/js/bundle.js:134761
+[   64115ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://mtgtracker.store/api/notifications:0
+[   64115ms] [ERROR] Error fetching notifications: TypeError: Failed to fetch
+    at fetchNotifications (http://localhost:3000/static/js/bundle.js:134751:30)
+    at http://localhost:3000/static/js/bundle.js:134782:5
+    at commitHookEffectListMount (http://localhost:3000/static/js/bundle.js:90849:30)
+    at invokePassiveEffectMountInDEV (http://localhost:3000/static/js/bundle.js:92538:17)
+    at invokeEffectsInDev (http://localhost:3000/static/js/bundle.js:94435:15)
+    at commitDoubleInvokeEffectsInDEV (http://localhost:3000/static/js/bundle.js:94418:11)
+    at flushPassiveEffectsImpl (http://localhost:3000/static/js/bundle.js:94191:9)
+    at flushPassiveEffects (http://localhost:3000/static/js/bundle.js:94130:18)
+    at http://localhost:3000/static/js/bundle.js:93945:13
+    at workLoop (http://localhost:3000/static/js/bundle.js:111191:38) @ http://localhost:3000/static/js/bundle.js:134761

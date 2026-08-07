@@ -1,0 +1,81 @@
+<h2>Delete confirmation pattern</h2>
+<p class="subtitle">This replaces all <code>window.confirm</code> dialogs across the admin panel. Which feels right?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="inline" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#0f172a">
+      <div style="font-size:11px;color:#64748b;margin-bottom:8px">ROW BEFORE CLICK</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#1e293b;border-radius:6px;padding:10px 12px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:28px;height:28px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:11px;color:white">A</div>
+          <div>
+            <div style="color:#f1f5f9;font-size:13px">alice_wonder</div>
+            <div style="color:#64748b;font-size:11px">Thread: How do I...  · 2h ago</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button style="padding:4px 10px;background:#ef4444;border:none;border-radius:4px;color:white;font-size:12px;cursor:pointer">Delete</button>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#64748b;margin-bottom:8px">ROW AFTER CLICK — expands inline</div>
+      <div style="background:#7f1d1d;border:1px solid #ef4444;border-radius:6px;padding:12px;display:flex;align-items:center;justify-content:space-between">
+        <span style="color:#fca5a5;font-size:13px">Delete this post by alice_wonder?</span>
+        <div style="display:flex;gap:6px">
+          <button style="padding:4px 12px;background:#ef4444;border:none;border-radius:4px;color:white;font-size:12px">Confirm</button>
+          <button style="padding:4px 12px;background:#334155;border:none;border-radius:4px;color:#cbd5e1;font-size:12px">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Inline row expansion</h3>
+      <p>Row transforms into a confirmation state in-place. No overlay, no scroll interruption. Fast and focused.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="modal" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#0f172a;position:relative">
+      <div style="background:#1e293b;border-radius:6px;padding:10px 12px;margin-bottom:4px;opacity:0.4">
+        <div style="color:#f1f5f9;font-size:13px">alice_wonder · How do I...</div>
+      </div>
+      <div style="background:#1e293b;border-radius:6px;padding:10px 12px;opacity:0.4">
+        <div style="color:#f1f5f9;font-size:13px">bob_deckbuilder · Best commanders...</div>
+      </div>
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);border-radius:8px;display:flex;align-items:center;justify-content:center">
+        <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:20px 24px;width:260px;text-align:center">
+          <div style="width:36px;height:36px;background:#7f1d1d;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:16px">🗑</div>
+          <div style="color:#f1f5f9;font-weight:600;margin-bottom:6px;font-size:14px">Delete post?</div>
+          <div style="color:#94a3b8;font-size:12px;margin-bottom:16px">By alice_wonder · "How do I..."</div>
+          <div style="display:flex;gap:8px;justify-content:center">
+            <button style="padding:6px 16px;background:#ef4444;border:none;border-radius:6px;color:white;font-size:13px">Delete</button>
+            <button style="padding:6px 16px;background:#334155;border:none;border-radius:6px;color:#cbd5e1;font-size:13px">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Styled modal dialog</h3>
+      <p>Custom overlay with context. More formal, harder to miss. Good for destructive actions with more context shown.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="toast-undo" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#0f172a">
+      <div style="background:#1e293b;border-radius:6px;padding:10px 12px;margin-bottom:4px">
+        <div style="color:#f1f5f9;font-size:13px">bob_deckbuilder · Best commanders...</div>
+      </div>
+      <div style="background:#1e293b;border-radius:6px;padding:10px 12px;margin-bottom:12px;opacity:0.3;text-decoration:line-through">
+        <div style="color:#f1f5f9;font-size:13px">alice_wonder · How do I... [DELETED]</div>
+      </div>
+      <div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid #22c55e;border-radius:8px;padding:10px 16px;display:flex;align-items:center;gap:12px;width:280px">
+        <span style="color:#86efac;font-size:13px">✓ Post deleted</span>
+        <button style="padding:4px 12px;background:#16a34a;border:none;border-radius:4px;color:white;font-size:12px;margin-left:auto">Undo (5s)</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Delete immediately + Undo toast</h3>
+      <p>No confirmation step — item vanishes, toast appears with 5s undo window. Fastest flow but requires more backend work (soft-delete + restore endpoint).</p>
+    </div>
+  </div>
+
+</div>

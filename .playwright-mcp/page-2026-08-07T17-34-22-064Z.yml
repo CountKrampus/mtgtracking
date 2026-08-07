@@ -1,0 +1,95 @@
+- generic [ref=f19e3]:
+  - generic [ref=f19e5]:
+    - button "Notifications" [ref=f19e6] [cursor=pointer]
+    - button "Messages" [ref=f19e10] [cursor=pointer]
+    - button "Send Feedback" [ref=f19e13] [cursor=pointer]
+    - button [ref=f19e16] [cursor=pointer]:
+      - img "creamkrampus" [ref=f19e17]
+  - generic [ref=f19e20]:
+    - button [ref=f19e21] [cursor=pointer]
+    - generic [ref=f19e24]:
+      - generic [ref=f19e26]:
+        - generic [ref=f19e27]:
+          - heading "MTG Tracker" [level=1] [ref=f19e28]
+          - paragraph [ref=f19e29]: Collection Manager
+        - button [ref=f19e30] [cursor=pointer]
+      - generic [ref=f19e35]:
+        - generic [ref=f19e36]: K
+        - generic [ref=f19e37]:
+          - paragraph [ref=f19e38]: Krampus
+          - text: admin
+      - generic [ref=f19e39]:
+        - button "Navigation" [ref=f19e40] [cursor=pointer]
+        - button "Dashboard" [ref=f19e44] [cursor=pointer]
+        - button "Collection" [ref=f19e49] [cursor=pointer]
+        - button "Deck Builder" [ref=f19e54] [cursor=pointer]
+        - button "Wishlist" [ref=f19e60] [cursor=pointer]
+        - button "Trading Board" [ref=f19e64] [cursor=pointer]
+        - button "Challenges" [ref=f19e69] [cursor=pointer]
+        - button "Forum" [ref=f19e77] [cursor=pointer]
+        - button "Community Decks" [ref=f19e81] [cursor=pointer]
+        - button "Life Counter" [ref=f19e86] [cursor=pointer]
+        - button "Settings" [ref=f19e93] [cursor=pointer]
+        - button "Actions" [ref=f19e98] [cursor=pointer]
+        - button "Import" [ref=f19e102] [cursor=pointer]
+        - button "Export JSON" [ref=f19e107] [cursor=pointer]
+        - button "Export CSV" [ref=f19e112] [cursor=pointer]
+        - button "Update Prices" [ref=f19e117] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f19e124] [cursor=pointer]
+        - button "Tools" [ref=f19e131] [cursor=pointer]
+        - button "Commanders" [ref=f19e135] [cursor=pointer]
+        - button "Sets" [ref=f19e139] [cursor=pointer]
+        - button "Combos" [ref=f19e143] [cursor=pointer]
+        - button "Finance" [ref=f19e147] [cursor=pointer]
+        - button "Scan Card" [ref=f19e151] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f19e156] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f19e161] [cursor=pointer]
+        - button "Spoiler Season" [ref=f19e165] [cursor=pointer]
+        - button "Learn" [ref=f19e170] [cursor=pointer]
+        - button "Card Rulings" [ref=f19e174] [cursor=pointer]
+        - button "Interaction Checker" [ref=f19e179] [cursor=pointer]
+        - button "New Player Guide" [ref=f19e183] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f19e188] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f19e193] [cursor=pointer]
+        - button "Format Guides" [ref=f19e197] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f19e205] [cursor=pointer]
+        - button "Gameplay" [ref=f19e211] [cursor=pointer]
+        - generic [ref=f19e215]: Admin
+        - button "Admin Panel" [ref=f19e216] [cursor=pointer]
+      - generic [ref=f19e220]:
+        - button "Account" [ref=f19e221] [cursor=pointer]
+        - button "Sign Out" [ref=f19e226] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f19e232] [cursor=pointer]:
+        - generic [ref=f19e235]: Command Palette
+        - generic [ref=f19e236]: Ctrl+K
+    - main [ref=f19e237]:
+      - generic [ref=f19e238]:
+        - navigation [ref=f19e239]:
+          - button "Home" [ref=f19e240] [cursor=pointer]
+          - generic [ref=f19e247]: Forum
+        - generic [ref=f19e315]:
+          - generic [ref=f19e316]:
+            - generic [ref=f19e317]:
+              - button "Back to forum" [ref=f19e318] [cursor=pointer]
+              - heading "Threads" [level=2] [ref=f19e321]
+            - button "New Thread" [ref=f19e322] [cursor=pointer]
+          - button "💬 Discussion Rules By Krampus • 0 posts 31 views 8/3/2026" [ref=f19e325] [cursor=pointer]:
+            - generic [ref=f19e326]:
+              - generic [ref=f19e327]:
+                - generic [ref=f19e328]:
+                  - generic [ref=f19e329]: 💬 Discussion
+                  - heading "Rules" [level=3] [ref=f19e330]
+                - generic [ref=f19e334]:
+                  - text: By
+                  - button "Krampus" [ref=f19e335]
+                  - text: • 0 posts
+              - generic [ref=f19e336]:
+                - generic [ref=f19e337]: 31 views
+                - generic [ref=f19e338]: 8/3/2026
+    - navigation [ref=f19e251]:
+      - generic [ref=f19e252]:
+        - button "Dashboard" [ref=f19e253] [cursor=pointer]
+        - button "Collection" [ref=f19e258] [cursor=pointer]
+        - button "Forum" [ref=f19e263] [cursor=pointer]
+        - button "Decks" [ref=f19e267] [cursor=pointer]
+        - button "More" [ref=f19e273] [cursor=pointer]

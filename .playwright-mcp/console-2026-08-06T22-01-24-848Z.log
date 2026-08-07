@@ -1,0 +1,15 @@
+[      95ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/static/js/bundle.js:96564
+[     238ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/lifecounter/stats:0
+[     258ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/lifecounter/stats:0
+[    7141ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/decks/6a70c8c472afce31cca30df5/changelog:0
+[    7141ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/decks/6a70c8c472afce31cca30df5/stats:0
+[    7141ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/decks/6a70c8c472afce31cca30df5/value-history:0
+[    7154ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/decks/6a70c8c472afce31cca30df5/stats:0
+[    7154ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/decks/6a70c8c472afce31cca30df5/value-history:0
+[    7154ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/decks/6a70c8c472afce31cca30df5/changelog:0
+[   43029ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/decks/6a70c8c472afce31cca30df5/stats:0
+[   43029ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/decks/6a70c8c472afce31cca30df5/changelog:0
+[   43029ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/decks/6a70c8c472afce31cca30df5/value-history:0
+[   43039ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/decks/6a70c8c472afce31cca30df5/value-history:0
+[   43040ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/decks/6a70c8c472afce31cca30df5/changelog:0
+[   43040ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://mtgtracker.store/api/decks/6a70c8c472afce31cca30df5/stats:0

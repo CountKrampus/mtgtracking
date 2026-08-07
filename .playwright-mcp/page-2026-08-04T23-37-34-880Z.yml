@@ -1,0 +1,50 @@
+- generic [ref=f1e4]:
+  - generic [ref=f1e6]:
+    - generic [ref=f1e9]:
+      - heading "MTG Tracker" [level=1] [ref=f1e10]
+      - paragraph [ref=f1e11]: Collection Manager
+    - generic [ref=f1e12]:
+      - button "Navigation" [ref=f1e13] [cursor=pointer]
+      - button "Dashboard" [ref=f1e17] [cursor=pointer]
+      - button "Collection" [ref=f1e22] [cursor=pointer]
+      - button "Deck Builder" [ref=f1e27] [cursor=pointer]
+      - button "Wishlist" [ref=f1e33] [cursor=pointer]
+      - button "Trading Board" [ref=f1e37] [cursor=pointer]
+      - button "Challenges" [ref=f1e42] [cursor=pointer]
+      - button "Forum" [ref=f1e50] [cursor=pointer]
+      - button "Community Decks" [ref=f1e54] [cursor=pointer]
+      - button "Life Counter" [ref=f1e59] [cursor=pointer]
+      - button "Settings" [ref=f1e66] [cursor=pointer]
+      - button "Actions" [ref=f1e71] [cursor=pointer]
+      - button "Import" [ref=f1e75] [cursor=pointer]
+      - button "Export JSON" [ref=f1e80] [cursor=pointer]
+      - button "Export CSV" [ref=f1e85] [cursor=pointer]
+      - button "Update Prices" [ref=f1e90] [cursor=pointer]
+      - button "Fetch Card Text" [ref=f1e97] [cursor=pointer]
+      - button "Tools" [ref=f1e104] [cursor=pointer]
+      - button "Commanders" [ref=f1e108] [cursor=pointer]
+      - button "Sets" [ref=f1e112] [cursor=pointer]
+      - button "Combos" [ref=f1e116] [cursor=pointer]
+      - button "Finance" [ref=f1e120] [cursor=pointer]
+      - button "Scan Card" [ref=f1e124] [cursor=pointer]
+      - button "Reprint Tracker" [ref=f1e129] [cursor=pointer]
+      - button "Set Release Calendar" [ref=f1e134] [cursor=pointer]
+      - button "Spoiler Season" [ref=f1e138] [cursor=pointer]
+      - button "Learn" [ref=f1e143] [cursor=pointer]
+      - button "Card Rulings" [ref=f1e147] [cursor=pointer]
+      - button "Interaction Checker" [ref=f1e152] [cursor=pointer]
+      - button "New Player Guide" [ref=f1e156] [cursor=pointer]
+      - button "Keyword Glossary" [ref=f1e161] [cursor=pointer]
+      - button "Combo Tutorials" [ref=f1e166] [cursor=pointer]
+      - button "Format Guides" [ref=f1e170] [cursor=pointer]
+      - button "Sealed Simulator" [ref=f1e178] [cursor=pointer]
+      - button "Gameplay" [ref=f1e184] [cursor=pointer]
+    - button "Command Palette Ctrl+K" [ref=f1e189] [cursor=pointer]:
+      - generic [ref=f1e192]: Command Palette
+      - generic [ref=f1e193]: Ctrl+K
+    - button "Collapse" [ref=f1e195] [cursor=pointer]
+  - main [ref=f1e199]:
+    - generic [ref=f1e200]:
+      - navigation [ref=f1e201]:
+        - button "Home" [ref=f1e202] [cursor=pointer]
+      - generic [ref=f1e207]: Loading...

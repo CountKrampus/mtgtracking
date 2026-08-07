@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(D:\\Card Tracker\\mtg-tracker\\AnythingLLM Superpowers\\Plans/**)"
+    ]
+  },
+  "$version": 4
+}

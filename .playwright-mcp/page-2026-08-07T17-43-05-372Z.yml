@@ -1,0 +1,94 @@
+- generic [ref=f28e3]:
+  - generic [ref=f28e5]:
+    - button "Notifications" [ref=f28e6] [cursor=pointer]
+    - button "Messages" [ref=f28e10] [cursor=pointer]
+    - button "Send Feedback" [ref=f28e13] [cursor=pointer]
+    - button [ref=f28e16] [cursor=pointer]:
+      - img "creamkrampus" [ref=f28e17]
+  - generic [ref=f28e20]:
+    - button [ref=f28e21] [cursor=pointer]
+    - generic [ref=f28e24]:
+      - generic [ref=f28e26]:
+        - generic [ref=f28e27]:
+          - heading "MTG Tracker" [level=1] [ref=f28e28]
+          - paragraph [ref=f28e29]: Collection Manager
+        - button [ref=f28e30] [cursor=pointer]
+      - generic [ref=f28e34]:
+        - button "Navigation" [ref=f28e35] [cursor=pointer]
+        - button "Dashboard" [ref=f28e39] [cursor=pointer]
+        - button "Collection" [ref=f28e44] [cursor=pointer]
+        - button "Deck Builder" [ref=f28e49] [cursor=pointer]
+        - button "Wishlist" [ref=f28e55] [cursor=pointer]
+        - button "Trading Board" [ref=f28e59] [cursor=pointer]
+        - button "Challenges" [ref=f28e64] [cursor=pointer]
+        - button "Forum" [ref=f28e72] [cursor=pointer]
+        - button "Community Decks" [ref=f28e76] [cursor=pointer]
+        - button "Life Counter" [ref=f28e81] [cursor=pointer]
+        - button "Settings" [ref=f28e88] [cursor=pointer]
+        - button "Actions" [ref=f28e93] [cursor=pointer]
+        - button "Import" [ref=f28e97] [cursor=pointer]
+        - button "Export JSON" [ref=f28e102] [cursor=pointer]
+        - button "Export CSV" [ref=f28e107] [cursor=pointer]
+        - button "Update Prices" [ref=f28e112] [cursor=pointer]
+        - button "Fetch Card Text" [ref=f28e119] [cursor=pointer]
+        - button "Tools" [ref=f28e126] [cursor=pointer]
+        - button "Commanders" [ref=f28e130] [cursor=pointer]
+        - button "Sets" [ref=f28e134] [cursor=pointer]
+        - button "Combos" [ref=f28e138] [cursor=pointer]
+        - button "Finance" [ref=f28e142] [cursor=pointer]
+        - button "Scan Card" [ref=f28e146] [cursor=pointer]
+        - button "Reprint Tracker" [ref=f28e151] [cursor=pointer]
+        - button "Set Release Calendar" [ref=f28e156] [cursor=pointer]
+        - button "Spoiler Season" [ref=f28e160] [cursor=pointer]
+        - button "Learn" [ref=f28e165] [cursor=pointer]
+        - button "Card Rulings" [ref=f28e169] [cursor=pointer]
+        - button "Interaction Checker" [ref=f28e174] [cursor=pointer]
+        - button "New Player Guide" [ref=f28e178] [cursor=pointer]
+        - button "Keyword Glossary" [ref=f28e183] [cursor=pointer]
+        - button "Combo Tutorials" [ref=f28e188] [cursor=pointer]
+        - button "Format Guides" [ref=f28e192] [cursor=pointer]
+        - button "Sealed Simulator" [ref=f28e200] [cursor=pointer]
+        - button "Gameplay" [ref=f28e206] [cursor=pointer]
+      - button "Command Palette Ctrl+K" [ref=f28e211] [cursor=pointer]:
+        - generic [ref=f28e214]: Command Palette
+        - generic [ref=f28e215]: Ctrl+K
+    - main [ref=f28e216]:
+      - generic [ref=f28e217]:
+        - navigation [ref=f28e218]:
+          - button "Home" [ref=f28e219] [cursor=pointer]
+          - generic [ref=f28e226]: Community Decks
+        - generic [ref=f28e227]:
+          - heading "Community Decks" [level=1] [ref=f28e232]
+          - generic [ref=f28e234]:
+            - combobox [ref=f28e235]:
+              - option "All Formats" [selected]
+              - option "Commander"
+              - option "Standard"
+              - option "Modern"
+              - option "Pioneer"
+              - option "Legacy"
+              - option "Vintage"
+              - option "Pauper"
+              - option "Draft"
+              - option "Oathbreaker"
+              - option "Other"
+            - generic [ref=f28e236]:
+              - button "☀️" [ref=f28e237] [cursor=pointer]
+              - button "💧" [ref=f28e238] [cursor=pointer]
+              - button "💀" [ref=f28e239] [cursor=pointer]
+              - button "🔥" [ref=f28e240] [cursor=pointer]
+              - button "🌲" [ref=f28e241] [cursor=pointer]
+            - textbox "Commander name..." [ref=f28e246]
+            - textbox "Tags (comma-separated)..." [ref=f28e247]
+            - combobox [ref=f28e248]:
+              - option "Newest" [selected]
+              - option "Most Imported"
+              - option "Name A–Z"
+          - generic [ref=f28e249]: Loading decks...
+    - navigation [ref=f28e250]:
+      - generic [ref=f28e251]:
+        - button "Dashboard" [ref=f28e252] [cursor=pointer]
+        - button "Collection" [ref=f28e257] [cursor=pointer]
+        - button "Forum" [ref=f28e262] [cursor=pointer]
+        - button "Decks" [ref=f28e266] [cursor=pointer]
+        - button "More" [ref=f28e272] [cursor=pointer]
