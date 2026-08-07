@@ -25,5 +25,9 @@
       "Bash(timeout 10 node:*)",
       "Bash([ -s \"$out\" ])"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "mongodb",
+    "serena"
+  ]
 }
