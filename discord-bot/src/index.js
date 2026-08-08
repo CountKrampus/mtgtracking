@@ -3,6 +3,7 @@ require('dotenv').config();
 const { Client, GatewayIntentBits, Events } = require('discord.js');
 const { client: apiClient, resolveImageUrl } = require('./apiClient');
 const { handleTradeButton } = require('./tradeButtons');
+const { formatDM } = require('./lib/formatDM');
 
 const commands = new Map([
   require('./commands/link'),
@@ -96,7 +97,7 @@ async function startNotificationPoller() {
         for (const notif of res.data.notifications) {
           try {
             const user = await client.users.fetch(notif.discordUserId);
-            await user.send({ content: `📉 Price Alert: ${notif.content}` });
+            await user.send({ content: formatDM(notif.type, notif.content) });
             deliveredIds.push(notif.id);
           } catch (dmError) {
             console.error(`Failed to DM ${notif.discordUserId}:`, dmError.message);
