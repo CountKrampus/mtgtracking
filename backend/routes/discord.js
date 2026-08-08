@@ -32,6 +32,12 @@ function requireMultiUser(req, res, next) {
   next();
 }
 
+const DISCORD_NOTIF_TYPES = [
+  'price_alert', 'trade_offer', 'trade_accepted', 'trade_rejected',
+  'trade_countered', 'mention', 'reply', 'upvote', 'dm',
+  'collection_health_report', 'price_flag_resolved',
+];
+
 // GET /api/discord/link - normal authenticated web session checks whether
 // it currently has a linked Discord account, for the Settings UI.
 router.get('/link', requireMultiUser, requireAuth, async (req, res) => {
@@ -96,6 +102,38 @@ router.delete('/link', requireMultiUser, requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/discord/link/prefs - returns notification preferences for the
+// linked Discord account of the authenticated user.
+router.get('/link/prefs', requireMultiUser, requireAuth, async (req, res) => {
+  try {
+    const link = await DiscordLink.findOne({ userId: req.user._id });
+    if (!link) return res.status(404).json({ message: 'No Discord account linked' });
+    res.json(link.notificationPrefs);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PATCH /api/discord/link/prefs - update one or more notification preference
+// flags. Unknown keys are rejected; valid keys are coerced to Boolean.
+router.patch('/link/prefs', requireMultiUser, requireAuth, async (req, res) => {
+  try {
+    const link = await DiscordLink.findOne({ userId: req.user._id });
+    if (!link) return res.status(404).json({ message: 'No Discord account linked' });
+    const unknownKeys = Object.keys(req.body).filter(k => !DISCORD_NOTIF_TYPES.includes(k));
+    if (unknownKeys.length > 0) {
+      return res.status(400).json({ message: `Unknown notification type(s): ${unknownKeys.join(', ')}` });
+    }
+    for (const [key, val] of Object.entries(req.body)) {
+      link.notificationPrefs[key] = Boolean(val);
+    }
+    await link.save();
+    res.json(link.notificationPrefs);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // GET /api/discord/notifications/pending - bot-only. Polled on an interval;
 // returns price_alert Notifications for ALL linked users that haven't been
 // marked as Discord-delivered yet, mapped to their discordUserId so the bot
@@ -108,17 +146,32 @@ router.get('/notifications/pending', requireBotServiceToken, async (req, res) =>
   try {
     const links = await DiscordLink.find({});
     const discordIdByUserId = new Map(links.map(l => [l.userId.toString(), l.discordUserId]));
-    const userIds = links.map(l => l.userId);
+
+    const orClauses = links
+      .map(link => {
+        const prefs = link.notificationPrefs || {};
+        const enabledTypes = DISCORD_NOTIF_TYPES.filter(t =>
+          t === 'price_alert' ? (prefs.price_alert !== false) : prefs[t] === true
+        );
+        return enabledTypes.length > 0
+          ? { userId: link.userId, type: { $in: enabledTypes } }
+          : null;
+      })
+      .filter(Boolean);
+
+    if (orClauses.length === 0) {
+      return res.json({ notifications: [], polledAt: new Date().toISOString() });
+    }
 
     const notifications = await Notification.find({
-      userId: { $in: userIds },
-      type: 'price_alert',
-      discordDeliveredAt: null
+      $or: orClauses,
+      discordDeliveredAt: null,
     }).sort({ createdAt: 1 }).lean();
 
     const results = notifications.map(n => ({
       id: n._id,
       discordUserId: discordIdByUserId.get(n.userId.toString()),
+      type: n.type,
       content: n.content,
       cardId: n.cardId,
       createdAt: n.createdAt
