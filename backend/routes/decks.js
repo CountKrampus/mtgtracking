@@ -18,7 +18,7 @@ const { buildUserQuery, getUserId } = require('../middleware/multiUser');
 const { activityLoggers } = require('../middleware/activityLogger');
 const { checkAndAwardBadges } = require('../utils/badgeManager');
 const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore, COLOR_SOURCES, NONBASIC_LAND_NAMES, SALTY_CARDS, POWER_INDICATORS } = require('../utils/deckAnalysis');
-const { cachedApiCall } = require('../utils/apiCache');
+const { cachedApiCall, ApiCache } = require('../utils/apiCache');
 const User = require('../models/User');
 
 // Import Card model and getPriceWithFallback from parent scope
@@ -536,6 +536,35 @@ router.post('/:id/add-card', requireAuth, requireEditor, async (req, res) => {
   }
 });
 
+// Atomically remove one card by name and add a replacement
+router.post('/:id/swap-card', requireAuth, requireEditor, async (req, res) => {
+  try {
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(query);
+    if (!deck) return res.status(404).json({ message: 'Deck not found' });
+
+    const { removeName, addCard } = req.body;
+
+    // Remove the named card
+    const beforeLen = deck.mainDeck.length;
+    deck.mainDeck = deck.mainDeck.filter(c => c.name !== removeName);
+    if (deck.mainDeck.length === beforeLen) {
+      return res.status(404).json({ message: `Card "${removeName}" not found in deck` });
+    }
+
+    // Add replacement (skip if already present by scryfallId)
+    if (addCard && !deck.mainDeck.find(c => c.scryfallId === addCard.scryfallId)) {
+      deck.mainDeck.push({ ...addCard, quantity: 1 });
+    }
+
+    deck.statistics = calculateDeckStatistics(deck);
+    await deck.save();
+    res.json(deck);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 // Get deck game stats (win rate, matchups, etc.)
 router.get('/:id/stats', requireAuth, async (req, res) => {
   try {
@@ -729,20 +758,82 @@ router.get('/:id/recommendations', requireAuth, async (req, res) => {
 // Scryfall, so the 500ms courtesy delay can be skipped on cache hits.
 async function fetchCandidateCardData(name) {
   let fromNetwork = false;
-  const data = await cachedApiCall(`manabase-candidate:${name}`, async () => {
+  const data = await cachedApiCall(`manabase-candidate-v2:${name}`, async () => {
     fromNetwork = true;
-    const response = await axios.get(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(name)}`);
-    return {
-      scryfallId: response.data.id,
-      manaCost: response.data.mana_cost || '',
-      imageUrl: response.data.image_uris?.normal || response.data.card_faces?.[0]?.image_uris?.normal || null,
-      price: response.data.prices?.usd ? parseFloat(response.data.prices.usd) : 0,
-    };
+    // Retry up to 3 times on 429 with increasing backoff
+    let lastError;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, 1500 * attempt));
+      try {
+        const response = await axios.get(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(name)}`);
+        return {
+          scryfallId: response.data.id,
+          manaCost: response.data.mana_cost || '',
+          imageUrl: response.data.image_uris?.normal || response.data.card_faces?.[0]?.image_uris?.normal || null,
+          price: response.data.prices?.usd ? parseFloat(response.data.prices.usd) : 0,
+          colorIdentity: response.data.color_identity || [],
+        };
+      } catch (err) {
+        lastError = err;
+        if (err.response?.status !== 429) break;
+      }
+    }
+    throw lastError;
   }).catch(error => {
     console.error(`Manabase builder: failed to fetch Scryfall data for "${name}":`, error.message);
-    return { scryfallId: null, manaCost: '', imageUrl: null, price: 0 };
+    return { scryfallId: null, manaCost: '', imageUrl: null, price: 0, colorIdentity: [] };
   });
   return { ...data, fromNetwork };
+}
+
+// Batch version of fetchCandidateCardData: one MongoDB cache query + one Scryfall
+// /cards/collection POST for all cache misses, instead of N sequential GETs.
+async function fetchCandidatesBatch(names) {
+  if (!names.length) return {};
+
+  const cacheKeys = names.map(n => `manabase-candidate-v2:${n}`);
+  let cachedDocs = [];
+  try { cachedDocs = await ApiCache.find({ key: { $in: cacheKeys } }).lean(); } catch {}
+
+  const result = {};
+  const cachedNames = new Set();
+  for (const doc of cachedDocs) {
+    const name = doc.key.replace('manabase-candidate-v2:', '');
+    result[name] = doc.data;
+    cachedNames.add(name);
+  }
+
+  const toFetch = names.filter(n => !cachedNames.has(n));
+  if (!toFetch.length) return result;
+
+  // Scryfall /cards/collection accepts up to 75 identifiers per request
+  for (let i = 0; i < toFetch.length; i += 75) {
+    const chunk = toFetch.slice(i, i + 75);
+    try {
+      const response = await axios.post('https://api.scryfall.com/cards/collection', {
+        identifiers: chunk.map(name => ({ name })),
+      });
+      for (const card of (response.data.data || [])) {
+        const data = {
+          scryfallId: card.id,
+          manaCost: card.mana_cost || '',
+          imageUrl: card.image_uris?.normal || card.card_faces?.[0]?.image_uris?.normal || null,
+          price: card.prices?.usd ? parseFloat(card.prices.usd) : 0,
+          colorIdentity: card.color_identity || [],
+        };
+        result[card.name] = data;
+        ApiCache.findOneAndUpdate(
+          { key: `manabase-candidate-v2:${card.name}` },
+          { key: `manabase-candidate-v2:${card.name}`, data, createdAt: new Date() },
+          { upsert: true }
+        ).catch(() => {});
+      }
+    } catch (err) {
+      console.error('Batch Scryfall fetch failed:', err.message);
+    }
+  }
+
+  return result;
 }
 
 // Suggests a budget-constrained fixing-land package for a deck: candidates
@@ -809,6 +900,102 @@ router.get('/:id/manabase-builder', requireAuth, async (req, res) => {
   }
 });
 
+// Suggests specific card-for-card swaps to improve a deck's weakest areas.
+// Pairs "filler" cards already in the deck (not staples, not lands) with
+// staple replacements for the deck's lowest-scoring ramp/draw/removal categories.
+router.get('/:id/improve-suggestions', requireAuth, async (req, res) => {
+  try {
+    const { scope = 'all' } = req.query;
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(query).lean();
+    if (!deck) return res.status(404).json({ message: 'Deck not found' });
+
+    const commanderIdentity = deck.format === 'commander'
+      ? new Set([...(deck.commander?.colorIdentity || []), ...(deck.partnerCommander?.colorIdentity || [])])
+      : null;
+    const isColorLegal = (colors) => !commanderIdentity || commanderIdentity.size === 0
+      || (colors || []).every(c => commanderIdentity.has(c));
+
+    const existingNames = new Set([
+      ...(deck.mainDeck || []).map(c => c.name),
+      deck.commander?.name,
+      deck.partnerCommander?.name,
+    ].filter(Boolean));
+
+    // Filler detection: not a land, not a known staple, not commander
+    const allStapleNames = new Set([
+      ...POWER_INDICATORS.fastMana, ...POWER_INDICATORS.tutors,
+      ...POWER_INDICATORS.comboPieces, ...POWER_INDICATORS.efficientRemoval,
+      ...POWER_INDICATORS.powerhouses, ...POWER_INDICATORS.ramp, ...POWER_INDICATORS.draw,
+    ]);
+    const isStaple = (name) =>
+      allStapleNames.has(name) || name.includes('Signet') || name.includes('Talisman');
+
+    const fillerCards = (deck.mainDeck || [])
+      .filter(c => !isStaple(c.name) && !(c.types || []).includes('Land'))
+      .map(c => ({ name: c.name, manaCost: c.manaCost || '', types: c.types || [] }));
+
+    // Find weak categories (score under 60 = meaningful room to improve)
+    const health = calculateDeckHealthScore(deck);
+    const categories = [
+      { key: 'ramp', label: 'Ramp', score: health.breakdown.ramp, list: POWER_INDICATORS.ramp },
+      { key: 'draw', label: 'Card Draw', score: health.breakdown.draw, list: POWER_INDICATORS.draw },
+      { key: 'removal', label: 'Removal', score: health.breakdown.removal, list: POWER_INDICATORS.efficientRemoval },
+    ].filter(c => c.score < 60).sort((a, b) => a.score - b.score); // weakest first
+
+    if (categories.length === 0 || fillerCards.length === 0) {
+      return res.json({ suggestions: [], healthBreakdown: health.breakdown });
+    }
+
+    // Batch-fetch all candidate data up front (one cache query + one Scryfall call)
+    const allCandidateNames = [...new Set(
+      categories.flatMap(cat => cat.list.filter(name => !existingNames.has(name)))
+    )];
+
+    let cardDataMap = {};
+    if (scope === 'all') {
+      cardDataMap = await fetchCandidatesBatch(allCandidateNames);
+    }
+
+    const suggestions = [];
+    let fillerIdx = 0;
+
+    for (const cat of categories) {
+      const candidates = cat.list.filter(name => !existingNames.has(name));
+      for (const addName of candidates.slice(0, 2)) {
+        if (fillerIdx >= fillerCards.length) break;
+
+        let addData = null;
+        if (scope === 'owned') {
+          const owned = await Card.findOne(buildUserQuery({ name: addName }, req)).lean();
+          if (!owned || !isColorLegal(owned.colors || [])) continue;
+          addData = {
+            name: addName, price: owned.price || 0,
+            scryfallId: owned.scryfallId, imageUrl: owned.imageUrl,
+            colors: owned.colors || [], manaCost: owned.manaCost || '',
+            types: owned.types || [],
+          };
+        } else {
+          const cardData = cardDataMap[addName];
+          if (!cardData || !isColorLegal(cardData.colorIdentity || [])) continue;
+          addData = { name: addName, types: [], ...cardData };
+        }
+
+        suggestions.push({
+          remove: fillerCards[fillerIdx],
+          add: addData,
+          category: cat.label,
+        });
+        fillerIdx++;
+      }
+    }
+
+    res.json({ suggestions, healthBreakdown: health.breakdown });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Suggests cards to add for a given improvement category (power/salt/health).
 // scope=owned: filters the user's Card collection; scope=all: fetches via Scryfall.
 // Budget filters by card price (0 = no limit).
@@ -830,6 +1017,14 @@ router.get('/:id/card-suggestions', requireAuth, async (req, res) => {
       deck.commander?.name,
       deck.partnerCommander?.name,
     ].filter(Boolean));
+
+    // For commander format, collect the legal color identity set
+    const commanderIdentity = deck.format === 'commander'
+      ? new Set([
+          ...(deck.commander?.colorIdentity || []),
+          ...(deck.partnerCommander?.colorIdentity || []),
+        ])
+      : null; // null = no restriction
 
     // Build deduped candidate list with subcategory labels
     const seen = new Set();
@@ -871,15 +1066,23 @@ router.get('/:id/card-suggestions', requireAuth, async (req, res) => {
       }
     }
 
+    // Pre-fetch user's collection matches for both scopes (avoids redundant Scryfall calls in scope=all)
+    const allNames = rawCandidates.map(c => c.name);
+    const ownedCards = Card
+      ? await Card.find(buildUserQuery({ name: { $in: allNames } }, req))
+          .select('name price scryfallId imageUrl colors manaCost').lean()
+      : [];
+    const ownedMap = Object.fromEntries(ownedCards.map(c => [c.name, c]));
+
+    // Returns true if a card's colors are legal in the commander's color identity.
+    // Colorless cards (empty colors array) are always legal.
+    const isColorLegal = (colors) => {
+      if (!commanderIdentity) return true;
+      return (colors || []).every(c => commanderIdentity.has(c));
+    };
+
     let results;
     if (scope === 'owned') {
-      const names = rawCandidates.map(c => c.name);
-      const owned = Card
-        ? await Card.find(buildUserQuery({ name: { $in: names } }, req))
-            .select('name price scryfallId imageUrl colors manaCost').lean()
-        : [];
-      const ownedMap = Object.fromEntries(owned.map(c => [c.name, c]));
-
       results = rawCandidates
         .filter(c => ownedMap[c.name])
         .map(c => ({
@@ -890,17 +1093,29 @@ router.get('/:id/card-suggestions', requireAuth, async (req, res) => {
           colors: ownedMap[c.name].colors || [],
           manaCost: ownedMap[c.name].manaCost || '',
         }))
+        .filter(c => isColorLegal(c.colors))
         .filter(c => budget <= 0 || c.price <= budget);
     } else {
+      const capped = rawCandidates.slice(0, 20);
+      // Batch-fetch all uncached cards in one Scryfall call
+      const uncachedNames = capped.filter(c => !ownedMap[c.name]).map(c => c.name);
+      const batchData = await fetchCandidatesBatch(uncachedNames);
+
       results = [];
-      for (const cand of rawCandidates) {
-        const { fromNetwork, ...cardData } = await fetchCandidateCardData(cand.name);
-        if (budget > 0 && cardData.price > budget) {
-          if (fromNetwork) await new Promise(r => setTimeout(r, 500));
-          continue;
+      for (const cand of capped) {
+        if (ownedMap[cand.name]) {
+          const o = ownedMap[cand.name];
+          if (!isColorLegal(o.colors || [])) continue;
+          if (budget > 0 && (o.price || 0) > budget) continue;
+          results.push({ name: cand.name, subcat: cand.subcat, salt: cand.salt,
+            price: o.price || 0, scryfallId: o.scryfallId, imageUrl: o.imageUrl,
+            colors: o.colors || [], manaCost: o.manaCost || '' });
+        } else {
+          const cardData = batchData[cand.name];
+          if (!cardData || !isColorLegal(cardData.colorIdentity || [])) continue;
+          if (budget > 0 && cardData.price > budget) continue;
+          results.push({ name: cand.name, subcat: cand.subcat, salt: cand.salt, ...cardData });
         }
-        results.push({ name: cand.name, subcat: cand.subcat, salt: cand.salt, ...cardData });
-        if (fromNetwork) await new Promise(r => setTimeout(r, 500));
       }
     }
 
