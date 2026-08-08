@@ -170,8 +170,8 @@ function CommunityDecks() {
   const handleRemoveSpotlight = async () => {
     if (!spotlight) return;
     try {
-      await authFetch(`${API_URL}/deck-spotlight/${spotlight._id}`, { method: 'DELETE' });
-      setSpotlight(null);
+      const res = await authFetch(`${API_URL}/deck-spotlight/${spotlight._id}`, { method: 'DELETE' });
+      if (res.ok) setSpotlight(null);
     } catch {
       alert('Failed to remove spotlight');
     }
