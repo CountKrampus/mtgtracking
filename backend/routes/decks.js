@@ -64,7 +64,25 @@ function getDeckColorIdentity(deck) {
 router.get('/', requireAuth, async (req, res) => {
   try {
     const query = buildUserQuery({}, req);
-    const decks = await Deck.find(query).sort({ name: 1 });
+    const decks = await Deck.find(query).sort({ name: 1 }).lean();
+
+    // Compute totalValue for every deck in one Card query
+    if (Card) {
+      const allNames = [...new Set(
+        decks.flatMap(d => (d.mainDeck || []).map(c => c.name).filter(Boolean))
+      )];
+      const priceRecords = allNames.length
+        ? await Card.find(buildUserQuery({ name: { $in: allNames } }, req))
+            .select('name price').lean()
+        : [];
+      const priceMap = Object.fromEntries(priceRecords.filter(r => r.price > 0).map(r => [r.name, r.price]));
+      for (const deck of decks) {
+        deck.totalValue = (deck.mainDeck || []).reduce(
+          (sum, c) => sum + (priceMap[c.name] || 0) * (c.quantity || 1), 0
+        );
+      }
+    }
+
     res.json(decks);
   } catch (error) {
     res.status(500).json({ message: error.message });
