@@ -19,7 +19,8 @@ export default function NotificationBell({ apiUrl, user, openPanel, setOpenPanel
     upvote: '⬆️',
     dm: '💌',
     price_alert: '📉',
-    collection_health_report: '📊'
+    collection_health_report: '📊',
+    price_flag_resolved: '🏳️'
   };
 
   const fetchNotifications = async () => {
