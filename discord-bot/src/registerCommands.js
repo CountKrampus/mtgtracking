@@ -78,6 +78,24 @@ const commands = [
     .addSubcommand(sub => sub.setName('deck').setDescription('Show off a deck')
       .addStringOption(o => o.setName('name').setDescription('Deck name').setRequired(true))),
 
+  new SlashCommandBuilder().setName('notifications').setDescription('Manage your Discord notification preferences')
+    .addSubcommand(sub => sub.setName('list').setDescription('Show all notification types and their on/off state'))
+    .addSubcommand(sub => sub.setName('toggle').setDescription('Enable or disable a notification type')
+      .addStringOption(o => o.setName('type').setDescription('Notification type').setRequired(true)
+        .addChoices(
+          { name: 'Price Alert',           value: 'price_alert' },
+          { name: 'Trade Offer',           value: 'trade_offer' },
+          { name: 'Trade Accepted',        value: 'trade_accepted' },
+          { name: 'Trade Declined',        value: 'trade_rejected' },
+          { name: 'Trade Countered',       value: 'trade_countered' },
+          { name: 'Mention',               value: 'mention' },
+          { name: 'Reply',                 value: 'reply' },
+          { name: 'Upvote',                value: 'upvote' },
+          { name: 'Direct Message',        value: 'dm' },
+          { name: 'Collection Report',     value: 'collection_health_report' },
+          { name: 'Price Flag Resolution', value: 'price_flag_resolved' }
+        ))),
+
   new SlashCommandBuilder().setName('trades').setDescription('Trading commands')
     .addSubcommand(sub => sub.setName('browse').setDescription('Browse active trade listings')
       .addStringOption(o => o.setName('type').setDescription('Filter by listing type')
