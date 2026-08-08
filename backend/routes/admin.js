@@ -22,6 +22,7 @@ const { verifyToken, requireAuth, requireAdmin, requireModerator, requirePermiss
 const Challenge = require('../models/Challenge');
 const ChallengeParticipation = require('../models/ChallengeParticipation');
 const PriceFlag = require('../models/PriceFlag');
+const Notification = require('../models/Notification');
 const Feedback = require('../models/Feedback');
 const { VALID_METRICS, validateMetricParams } = require('../utils/challengeProgress');
 const { logActivity, getClientIp } = require('../middleware/activityLogger');
@@ -2832,10 +2833,12 @@ router.put('/price-flags/:id', requireModerator(), async (req, res) => {
     const flag = await PriceFlag.findById(req.params.id);
     if (!flag) return res.status(404).json({ message: 'Price flag not found' });
 
+    let cardName = 'Unknown Card';
     if (action === 'resolve') {
       const Card = mongoose.model('Card');
       const card = await Card.findById(flag.cardId);
       if (card) {
+        cardName = card.name;
         const priceData = await getPriceWithFallback(card.name, card.isFoil);
         if (priceData.usd > 0) {
           card.lastPrice = card.price;
@@ -2843,6 +2846,10 @@ router.put('/price-flags/:id', requireModerator(), async (req, res) => {
           await card.save();
         }
       }
+    } else {
+      const Card = mongoose.model('Card');
+      const card = await Card.findById(flag.cardId).select('name').lean();
+      if (card) cardName = card.name;
     }
 
     flag.status = action === 'resolve' ? 'resolved' : 'dismissed';
@@ -2856,6 +2863,20 @@ router.put('/price-flags/:id', requireModerator(), async (req, res) => {
       actionDetails: { flagId: flag._id, cardId: flag.cardId, action },
       performedBy: req.user._id
     });
+
+    try {
+      const content = action === 'resolve'
+        ? `Your price correction for ${cardName} was accepted and the price has been updated.`
+        : `Your price correction for ${cardName} was reviewed and dismissed.`;
+      await Notification.create({
+        userId: flag.flaggedBy,
+        type: 'price_flag_resolved',
+        cardId: flag.cardId,
+        content,
+      });
+    } catch (notifErr) {
+      console.error('[price-flag] Failed to create resolution notification:', notifErr.message);
+    }
 
     res.json(flag);
   } catch (err) {
