@@ -19,6 +19,7 @@ import ContentModerationTab from './community/ContentModerationTab';
 import FeedbackTab from './community/FeedbackTab';
 import BadgesTab from './community/BadgesTab';
 import ChallengesTab from './community/ChallengesTab';
+import DeckSpotlightTab from './community/DeckSpotlightTab';
 
 import ActivityLogTab from './system/ActivityLogTab';
 import SettingsTab from './system/SettingsTab';
@@ -63,7 +64,8 @@ const groups = [
       { id: 'moderation', label: 'Content Moderation', icon: Shield, requiresRole: 'moderator' },
       { id: 'feedback', label: 'Feedback', icon: MessageSquare, requiresRole: 'support' },
       { id: 'badges', label: 'Badges', icon: Award, requiresRole: 'admin' },
-      { id: 'challenges', label: 'Challenges', icon: Trophy, requiresRole: 'admin' }
+      { id: 'challenges', label: 'Challenges', icon: Trophy, requiresRole: 'admin' },
+      { id: 'deck-spotlight', label: 'Deck Spotlight', icon: Award, requiresRole: 'admin' }
     ]
   },
   {
@@ -109,6 +111,7 @@ function renderContent(activeTab) {
     case 'feedback':   return <FeedbackTab />;
     case 'badges':     return <BadgesTab />;
     case 'challenges': return <ChallengesTab />;
+    case 'deck-spotlight': return <DeckSpotlightTab />;
     case 'activity':     return <ActivityLogTab />;
     case 'settings':     return <SettingsTab />;
     case 'sessions':     return <SessionsTab />;
