@@ -17,7 +17,7 @@ const { requireAuth, requireEditor } = require('../middleware/auth');
 const { buildUserQuery, getUserId } = require('../middleware/multiUser');
 const { activityLoggers } = require('../middleware/activityLogger');
 const { checkAndAwardBadges } = require('../utils/badgeManager');
-const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore, COLOR_SOURCES, NONBASIC_LAND_NAMES } = require('../utils/deckAnalysis');
+const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore, COLOR_SOURCES, NONBASIC_LAND_NAMES, SALTY_CARDS, POWER_INDICATORS } = require('../utils/deckAnalysis');
 const { cachedApiCall } = require('../utils/apiCache');
 const User = require('../models/User');
 
@@ -786,6 +786,108 @@ router.get('/:id/manabase-builder', requireAuth, async (req, res) => {
     }
 
     res.json({ budget, suggested, candidates: priced });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Suggests cards to add for a given improvement category (power/salt/health).
+// scope=owned: filters the user's Card collection; scope=all: fetches via Scryfall.
+// Budget filters by card price (0 = no limit).
+router.get('/:id/card-suggestions', requireAuth, async (req, res) => {
+  try {
+    const { category, scope = 'owned', budget: budgetStr } = req.query;
+    const budget = parseFloat(budgetStr) || 0;
+
+    if (!['power', 'salt', 'health'].includes(category)) {
+      return res.status(400).json({ message: 'category must be power, salt, or health' });
+    }
+
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(query).lean();
+    if (!deck) return res.status(404).json({ message: 'Deck not found' });
+
+    const existingNames = new Set([
+      ...(deck.mainDeck || []).map(c => c.name),
+      deck.commander?.name,
+      deck.partnerCommander?.name,
+    ].filter(Boolean));
+
+    // Build deduped candidate list with subcategory labels
+    const seen = new Set();
+    const rawCandidates = [];
+
+    if (category === 'power') {
+      const subcats = [
+        ['fastMana', 'Fast Mana'], ['tutors', 'Tutor'],
+        ['comboPieces', 'Combo'], ['efficientRemoval', 'Removal'], ['powerhouses', 'Powerhouse'],
+      ];
+      for (const [key, label] of subcats) {
+        for (const name of (POWER_INDICATORS[key] || [])) {
+          if (!existingNames.has(name) && !seen.has(name)) {
+            rawCandidates.push({ name, subcat: label });
+            seen.add(name);
+          }
+        }
+      }
+    } else if (category === 'salt') {
+      for (const [name, salt] of Object.entries(SALTY_CARDS)) {
+        if (!existingNames.has(name) && !seen.has(name)) {
+          rawCandidates.push({ name, subcat: `Salt +${salt}`, salt });
+          seen.add(name);
+        }
+      }
+    } else if (category === 'health') {
+      const healthLists = [
+        ['Ramp', POWER_INDICATORS.ramp || []],
+        ['Draw', POWER_INDICATORS.draw || []],
+        ['Removal', POWER_INDICATORS.efficientRemoval || []],
+      ];
+      for (const [label, list] of healthLists) {
+        for (const name of list) {
+          if (!existingNames.has(name) && !seen.has(name)) {
+            rawCandidates.push({ name, subcat: label });
+            seen.add(name);
+          }
+        }
+      }
+    }
+
+    let results;
+    if (scope === 'owned') {
+      const names = rawCandidates.map(c => c.name);
+      const owned = Card
+        ? await Card.find(buildUserQuery({ name: { $in: names } }, req))
+            .select('name price scryfallId imageUrl colors manaCost').lean()
+        : [];
+      const ownedMap = Object.fromEntries(owned.map(c => [c.name, c]));
+
+      results = rawCandidates
+        .filter(c => ownedMap[c.name])
+        .map(c => ({
+          name: c.name, subcat: c.subcat, salt: c.salt,
+          price: ownedMap[c.name].price || 0,
+          scryfallId: ownedMap[c.name].scryfallId,
+          imageUrl: ownedMap[c.name].imageUrl,
+          colors: ownedMap[c.name].colors || [],
+          manaCost: ownedMap[c.name].manaCost || '',
+        }))
+        .filter(c => budget <= 0 || c.price <= budget);
+    } else {
+      results = [];
+      for (const cand of rawCandidates) {
+        const { fromNetwork, ...cardData } = await fetchCandidateCardData(cand.name);
+        if (budget > 0 && cardData.price > budget) {
+          if (fromNetwork) await new Promise(r => setTimeout(r, 500));
+          continue;
+        }
+        results.push({ name: cand.name, subcat: cand.subcat, salt: cand.salt, ...cardData });
+        if (fromNetwork) await new Promise(r => setTimeout(r, 500));
+      }
+    }
+
+    results.sort((a, b) => (a.price || 0) - (b.price || 0));
+    res.json({ category, scope, budget, results });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

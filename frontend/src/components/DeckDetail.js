@@ -412,6 +412,12 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
   const [manabaseCandidates, setManabaseCandidates] = useState([]);
   const [selectedManabaseLands, setSelectedManabaseLands] = useState(new Set()); // Set of card names
   const [loadingManabaseBuilder, setLoadingManabaseBuilder] = useState(false);
+  const [builderTab, setBuilderTab] = useState('mana'); // 'mana' | 'power' | 'salt' | 'health'
+  const [builderBudget, setBuilderBudget] = useState('');
+  const [builderScope, setBuilderScope] = useState('owned'); // 'owned' | 'all'
+  const [builderSuggestions, setBuilderSuggestions] = useState([]);
+  const [selectedBuilderCards, setSelectedBuilderCards] = useState(new Set());
+  const [loadingBuilderSuggestions, setLoadingBuilderSuggestions] = useState(false);
 
   useEffect(() => {
     setShareCode(deck.shareCode || null);
@@ -685,6 +691,60 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
     }
     setManabaseCandidates([]);
     setSelectedManabaseLands(new Set());
+    onRefresh?.();
+  };
+
+  const fetchBuilderSuggestions = async (tab) => {
+    if (tab === 'mana') { suggestLandPackage(); return; }
+    const budget = parseFloat(builderBudget) || 0;
+    setLoadingBuilderSuggestions(true);
+    setBuilderSuggestions([]);
+    setSelectedBuilderCards(new Set());
+    try {
+      const token = localStorage.getItem('mtg_access_token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const params = new URLSearchParams({ category: tab, scope: builderScope });
+      if (budget > 0) params.set('budget', budget);
+      const res = await fetch(`${API_URL}/decks/${deck._id}/card-suggestions?${params}`, { headers });
+      const data = res.ok ? await res.json() : { results: [] };
+      const suggestions = data.results || [];
+      setBuilderSuggestions(suggestions);
+      setSelectedBuilderCards(new Set(suggestions.map(c => c.name)));
+    } catch (err) {
+      console.error('Error fetching builder suggestions:', err);
+    } finally {
+      setLoadingBuilderSuggestions(false);
+    }
+  };
+
+  const toggleBuilderCard = (name) => {
+    setSelectedBuilderCards(prev => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name); else next.add(name);
+      return next;
+    });
+  };
+
+  const addSelectedBuilderCardsToDeck = async () => {
+    const toAdd = builderSuggestions.filter(c => selectedBuilderCards.has(c.name));
+    const failed = [];
+    for (const card of toAdd) {
+      try {
+        await axios.post(`${API_URL}/decks/${deck._id}/add-card`, {
+          scryfallId: card.scryfallId,
+          name: card.name,
+          manaCost: card.manaCost,
+          types: card.types || [],
+          colors: card.colors || [],
+          imageUrl: card.imageUrl,
+        });
+      } catch {
+        failed.push(card.name);
+      }
+    }
+    if (failed.length > 0) alert(`Failed to add: ${failed.join(', ')}`);
+    setBuilderSuggestions([]);
+    setSelectedBuilderCards(new Set());
     onRefresh?.();
   };
 
@@ -1328,31 +1388,75 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
             )}
           </div>
 
-          {/* Manabase Builder */}
+          {/* Deck Builder Tools */}
           <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30 mb-6">
-            <h3 className="text-lg font-bold text-white mb-4">Manabase Builder</h3>
+            <h3 className="text-lg font-bold text-white mb-4">Deck Builder Tools</h3>
 
-            <div className="flex items-center gap-2 mb-4">
+            {/* Tabs */}
+            <div className="flex gap-0 border border-white/20 rounded-lg overflow-hidden mb-4">
+              {[
+                { key: 'mana',   label: 'Mana',   score: manabaseScore.grade },
+                { key: 'power',  label: 'Power',  score: powerLevel.level },
+                { key: 'salt',   label: 'Salt',   score: saltScore.score },
+                { key: 'health', label: 'Health', score: healthScore.score },
+              ].map(({ key, label, score }) => (
+                <button
+                  key={key}
+                  onClick={() => {
+                    setBuilderTab(key);
+                    setBuilderSuggestions([]);
+                    setSelectedBuilderCards(new Set());
+                    if (key === 'mana') { setManabaseCandidates([]); setSelectedManabaseLands(new Set()); }
+                  }}
+                  className={`flex-1 px-3 py-2 text-sm font-semibold transition flex flex-col items-center ${
+                    builderTab === key ? 'bg-purple-600 text-white' : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <span>{label}</span>
+                  <span className="text-xs opacity-70">{score}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Controls: budget + scope + suggest button */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
               <span className="text-white/60 text-sm">Budget: $</span>
               <input
                 type="number"
                 min="0"
                 step="1"
-                value={manabaseBudget}
-                onChange={(e) => setManabaseBudget(e.target.value)}
+                value={builderTab === 'mana' ? manabaseBudget : builderBudget}
+                onChange={(e) => builderTab === 'mana' ? setManabaseBudget(e.target.value) : setBuilderBudget(e.target.value)}
                 placeholder="50"
                 className="w-24 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm"
               />
+              <div className="flex rounded overflow-hidden border border-white/20">
+                {['owned', 'all'].map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setBuilderScope(s)}
+                    className={`px-3 py-1 text-xs font-medium transition ${
+                      builderScope === s ? 'bg-purple-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'
+                    }`}
+                  >
+                    {s === 'owned' ? 'My Collection' : 'All of Magic'}
+                  </button>
+                ))}
+              </div>
               <button
-                onClick={suggestLandPackage}
-                disabled={loadingManabaseBuilder || !manabaseBudget}
+                onClick={() => fetchBuilderSuggestions(builderTab)}
+                disabled={
+                  (builderTab === 'mana' ? loadingManabaseBuilder : loadingBuilderSuggestions)
+                  || (builderTab === 'mana' ? !manabaseBudget : false)
+                }
                 className="px-3 py-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded text-sm font-medium transition"
               >
-                {loadingManabaseBuilder ? 'Suggesting...' : 'Suggest Land Package'}
+                {(builderTab === 'mana' ? loadingManabaseBuilder : loadingBuilderSuggestions) ? 'Suggesting…' : 'Suggest Cards'}
               </button>
             </div>
 
-            {manabaseCandidates.length > 0 && (
+            {/* Mana tab results */}
+            {builderTab === 'mana' && manabaseCandidates.length > 0 && (
               <>
                 <div className="bg-white/5 rounded p-3 mb-3 flex items-center justify-between">
                   <span className="text-white/60 text-sm">Manabase Score</span>
@@ -1360,30 +1464,60 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
                     {manabaseScore.grade} → <span className="text-green-400">{projectedManabaseScore.grade}</span>
                   </span>
                 </div>
-
-                <div className="space-y-2 mb-3">
+                <div className="space-y-2 mb-3 max-h-72 overflow-y-auto">
                   {manabaseCandidates.map(card => (
                     <label key={card.name} className="flex items-center gap-3 text-sm cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedManabaseLands.has(card.name)}
-                        onChange={() => toggleManabaseLand(card.name)}
-                      />
-                      <span className="text-white flex-1">{card.name}</span>
-                      <span className="text-white/40 text-xs capitalize">{card.cycle}</span>
-                      <span className="text-white/60">${(card.price ?? 0).toFixed(2)}</span>
+                      <input type="checkbox" checked={selectedManabaseLands.has(card.name)} onChange={() => toggleManabaseLand(card.name)} />
+                      <span className="text-white flex-1 truncate">{card.name}</span>
+                      <span className="text-white/40 text-xs capitalize flex-shrink-0">{card.cycle}</span>
+                      <span className="text-white/60 flex-shrink-0">${(card.price ?? 0).toFixed(2)}</span>
                     </label>
                   ))}
                 </div>
-
                 <button
                   onClick={addSelectedLandsToDeck}
                   disabled={selectedManabaseLands.size === 0}
                   className="w-full px-3 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded text-sm font-semibold transition"
                 >
-                  Add Selected to Deck
+                  Add Selected to Deck ({selectedManabaseLands.size})
                 </button>
               </>
+            )}
+
+            {/* Power / Salt / Health tab results */}
+            {builderTab !== 'mana' && builderSuggestions.length > 0 && (
+              <>
+                <div className="space-y-2 mb-3 max-h-72 overflow-y-auto">
+                  {builderSuggestions.map(card => (
+                    <label key={card.name} className="flex items-center gap-3 text-sm cursor-pointer">
+                      <input type="checkbox" checked={selectedBuilderCards.has(card.name)} onChange={() => toggleBuilderCard(card.name)} />
+                      <span className="text-white flex-1 truncate">{card.name}</span>
+                      <span className={`text-xs flex-shrink-0 px-1.5 py-0.5 rounded ${
+                        builderTab === 'salt'
+                          ? 'bg-orange-500/20 text-orange-300'
+                          : builderTab === 'power'
+                          ? 'bg-purple-500/20 text-purple-300'
+                          : 'bg-teal-500/20 text-teal-300'
+                      }`}>{card.subcat}</span>
+                      <span className="text-white/60 flex-shrink-0">${(card.price ?? 0).toFixed(2)}</span>
+                    </label>
+                  ))}
+                </div>
+                <button
+                  onClick={addSelectedBuilderCardsToDeck}
+                  disabled={selectedBuilderCards.size === 0}
+                  className="w-full px-3 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded text-sm font-semibold transition"
+                >
+                  Add Selected to Deck ({selectedBuilderCards.size})
+                </button>
+              </>
+            )}
+
+            {builderTab !== 'mana' && !loadingBuilderSuggestions && builderSuggestions.length === 0
+              && builderScope === 'owned' && (
+              <p className="text-white/40 text-sm text-center py-4">
+                Enter a budget and click "Suggest Cards" to find upgrades from your collection.
+              </p>
             )}
           </div>
 
