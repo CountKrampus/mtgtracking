@@ -418,6 +418,15 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
   const [builderSuggestions, setBuilderSuggestions] = useState([]);
   const [selectedBuilderCards, setSelectedBuilderCards] = useState(new Set());
   const [loadingBuilderSuggestions, setLoadingBuilderSuggestions] = useState(false);
+  const [builderFetched, setBuilderFetched] = useState(false);
+
+  // Improve Deck
+  const [showImproveDeck, setShowImproveDeck] = useState(false);
+  const [improveScope, setImproveScope] = useState('all');
+  const [improveSuggestions, setImproveSuggestions] = useState([]);
+  const [loadingImprove, setLoadingImprove] = useState(false);
+  const [selectedSwaps, setSelectedSwaps] = useState(new Set());
+  const [applyingSwaps, setApplyingSwaps] = useState(false);
 
   useEffect(() => {
     setShareCode(deck.shareCode || null);
@@ -744,6 +753,7 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
     setLoadingBuilderSuggestions(true);
     setBuilderSuggestions([]);
     setSelectedBuilderCards(new Set());
+    setBuilderFetched(false);
     try {
       const token = localStorage.getItem('mtg_access_token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -758,6 +768,7 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
       console.error('Error fetching builder suggestions:', err);
     } finally {
       setLoadingBuilderSuggestions(false);
+      setBuilderFetched(true);
     }
   };
 
@@ -789,6 +800,50 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
     if (failed.length > 0) alert(`Failed to add: ${failed.join(', ')}`);
     setBuilderSuggestions([]);
     setSelectedBuilderCards(new Set());
+    onRefresh?.();
+  };
+
+  const fetchImproveSuggestions = async (scope) => {
+    setLoadingImprove(true);
+    setImproveSuggestions([]);
+    setSelectedSwaps(new Set());
+    try {
+      const token = localStorage.getItem('mtg_access_token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${API_URL}/decks/${deck._id}/improve-suggestions?scope=${scope}`, { headers });
+      const data = res.ok ? await res.json() : { suggestions: [] };
+      const suggestions = data.suggestions || [];
+      setImproveSuggestions(suggestions);
+      setSelectedSwaps(new Set(suggestions.map((_, i) => i)));
+    } catch (err) {
+      console.error('Error fetching improve suggestions:', err);
+    } finally {
+      setLoadingImprove(false);
+    }
+  };
+
+  const applySelectedSwaps = async () => {
+    const toApply = improveSuggestions.filter((_, i) => selectedSwaps.has(i));
+    if (toApply.length === 0) return;
+    setApplyingSwaps(true);
+    const failed = [];
+    for (const swap of toApply) {
+      try {
+        const token = localStorage.getItem('mtg_access_token');
+        const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+        await fetch(`${API_URL}/decks/${deck._id}/swap-card`, {
+          method: 'POST', headers,
+          body: JSON.stringify({ removeName: swap.remove.name, addCard: swap.add }),
+        });
+      } catch {
+        failed.push(swap.remove.name);
+      }
+    }
+    if (failed.length > 0) alert(`Failed to swap: ${failed.join(', ')}`);
+    setShowImproveDeck(false);
+    setImproveSuggestions([]);
+    setSelectedSwaps(new Set());
+    setApplyingSwaps(false);
     onRefresh?.();
   };
 
@@ -940,6 +995,12 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
             </button>
           )}
           <button
+            onClick={() => { setShowImproveDeck(true); fetchImproveSuggestions(improveScope); }}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition text-sm font-semibold"
+          >
+            ✨ Improve Deck
+          </button>
+          <button
             onClick={() => setShowExport(e => !e)}
             className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition text-sm"
           >
@@ -982,6 +1043,101 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
           </button>
         </div>
       </div>
+
+      {/* Improve Deck modal */}
+      {showImproveDeck && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-white/20 rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+              <div>
+                <h2 className="text-lg font-bold text-white">✨ Improve Deck</h2>
+                <p className="text-white/50 text-xs mt-0.5">Suggested swaps based on your deck's weakest areas</p>
+              </div>
+              <button onClick={() => setShowImproveDeck(false)} className="text-white/40 hover:text-white text-xl leading-none">✕</button>
+            </div>
+
+            {/* Scope toggle */}
+            <div className="px-5 pt-4 pb-2 flex items-center gap-2">
+              <span className="text-white/50 text-xs mr-1">Source:</span>
+              {['all', 'owned'].map(s => (
+                <button
+                  key={s}
+                  onClick={() => { setImproveScope(s); fetchImproveSuggestions(s); }}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition ${improveScope === s ? 'bg-purple-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
+                >
+                  {s === 'owned' ? 'My Collection' : 'All of Magic'}
+                </button>
+              ))}
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-5 py-3 space-y-3">
+              {loadingImprove ? (
+                <div className="text-center py-10 text-white/50 text-sm">Finding improvements…</div>
+              ) : improveSuggestions.length === 0 ? (
+                <div className="text-center py-10 text-white/50 text-sm">
+                  {improveScope === 'owned'
+                    ? "You don't own any of the suggested upgrades. Try \"All of Magic\"."
+                    : "No suggestions — your deck's ramp, draw, and removal are already in good shape!"}
+                </div>
+              ) : (
+                improveSuggestions.map((swap, i) => (
+                  <label key={i} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition ${selectedSwaps.has(i) ? 'border-emerald-500/40 bg-emerald-500/10' : 'border-white/10 bg-white/5 opacity-60'}`}>
+                    <input
+                      type="checkbox"
+                      checked={selectedSwaps.has(i)}
+                      onChange={() => setSelectedSwaps(prev => {
+                        const next = new Set(prev);
+                        if (next.has(i)) next.delete(i); else next.add(i);
+                        return next;
+                      })}
+                      className="accent-emerald-500 flex-shrink-0"
+                    />
+                    {/* Remove card */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-red-400 text-xs font-semibold uppercase tracking-wide">Remove</span>
+                        <span className="text-white text-sm font-medium truncate">{swap.remove.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-emerald-400 text-xs font-semibold uppercase tracking-wide">Add</span>
+                        <span className="text-white text-sm font-medium truncate">{swap.add.name}</span>
+                        {swap.add.price > 0 && <span className="text-white/40 text-xs">${swap.add.price.toFixed(2)}</span>}
+                      </div>
+                    </div>
+                    {/* Category badge */}
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-white/10 text-white/60 flex-shrink-0">{swap.category}</span>
+                    {/* Card image */}
+                    {swap.add.imageUrl && (
+                      <img src={swap.add.imageUrl} alt={swap.add.name} className="w-10 rounded flex-shrink-0 border border-white/10" />
+                    )}
+                  </label>
+                ))
+              )}
+            </div>
+
+            {/* Footer */}
+            {improveSuggestions.length > 0 && (
+              <div className="px-5 py-4 border-t border-white/10 flex items-center justify-between gap-3">
+                <span className="text-white/50 text-xs">{selectedSwaps.size} swap{selectedSwaps.size !== 1 ? 's' : ''} selected</span>
+                <div className="flex gap-2">
+                  <button onClick={() => setShowImproveDeck(false)} className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm transition">
+                    Cancel
+                  </button>
+                  <button
+                    onClick={applySelectedSwaps}
+                    disabled={applyingSwaps || selectedSwaps.size === 0}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition"
+                  >
+                    {applyingSwaps ? 'Applying…' : `Apply ${selectedSwaps.size} Swap${selectedSwaps.size !== 1 ? 's' : ''}`}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Export panel */}
       {showExport && (
@@ -1450,6 +1606,7 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
                     setBuilderTab(key);
                     setBuilderSuggestions([]);
                     setSelectedBuilderCards(new Set());
+                    setBuilderFetched(false);
                     if (key === 'mana') { setManabaseCandidates([]); setSelectedManabaseLands(new Set()); }
                   }}
                   className={`flex-1 px-3 py-2 text-sm font-semibold transition flex flex-col items-center ${
@@ -1478,7 +1635,7 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
                 {['owned', 'all'].map(s => (
                   <button
                     key={s}
-                    onClick={() => setBuilderScope(s)}
+                    onClick={() => { setBuilderScope(s); setBuilderFetched(false); setBuilderSuggestions([]); setSelectedBuilderCards(new Set()); }}
                     className={`px-3 py-1 text-xs font-medium transition ${
                       builderScope === s ? 'bg-purple-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'
                     }`}
@@ -1567,11 +1724,28 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
               </>
             )}
 
-            {builderTab !== 'mana' && !loadingBuilderSuggestions && builderSuggestions.length === 0
-              && builderScope === 'owned' && (
-              <p className="text-white/40 text-sm text-center py-4">
-                Enter a budget and click "Suggest Cards" to find upgrades from your collection.
-              </p>
+            {builderTab !== 'mana' && !loadingBuilderSuggestions && builderSuggestions.length === 0 && (
+              builderFetched ? (
+                builderScope === 'owned' ? (
+                  <div className="text-center py-4 space-y-2">
+                    <p className="text-white/50 text-sm">None of the suggested cards are in your collection.</p>
+                    <button
+                      onClick={() => { setBuilderScope('all'); setBuilderFetched(false); setBuilderSuggestions([]); setSelectedBuilderCards(new Set()); }}
+                      className="px-3 py-1.5 bg-purple-600/40 hover:bg-purple-600/60 text-purple-200 rounded-lg text-xs font-medium transition"
+                    >
+                      Search All of Magic instead →
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-white/40 text-sm text-center py-4">No cards found within your budget. Try a higher budget.</p>
+                )
+              ) : (
+                <p className="text-white/40 text-sm text-center py-4">
+                  {builderScope === 'owned'
+                    ? 'Click "Suggest Cards" to find upgrades from your collection.'
+                    : 'Click "Suggest Cards" to search all of Magic for upgrades.'}
+                </p>
+              )
             )}
           </div>
 
