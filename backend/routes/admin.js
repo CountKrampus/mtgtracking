@@ -2867,6 +2867,7 @@ router.put('/price-flags/:id', requireModerator(), async (req, res) => {
     if (!flag) return res.status(404).json({ message: 'Price flag not found' });
 
     let cardName = 'Unknown Card';
+    let resolvedPrice = 0;
     if (action === 'resolve') {
       const Card = mongoose.model('Card');
       const card = await Card.findById(flag.cardId);
@@ -2876,6 +2877,7 @@ router.put('/price-flags/:id', requireModerator(), async (req, res) => {
         if (priceData.usd > 0) {
           card.lastPrice = card.price;
           card.price = priceData.usd;
+          resolvedPrice = priceData.usd;
           await card.save();
         }
       }
@@ -2898,9 +2900,10 @@ router.put('/price-flags/:id', requireModerator(), async (req, res) => {
     });
 
     try {
+      const priceStr = resolvedPrice > 0 ? ` — updated to $${resolvedPrice.toFixed(2)}` : '';
       const content = action === 'resolve'
-        ? `Your price correction for ${cardName} was accepted and the price has been updated.`
-        : `Your price correction for ${cardName} was reviewed and dismissed.`;
+        ? `Your price flag for ${cardName} was accepted${priceStr}.`
+        : `Your price flag for ${cardName} was reviewed and dismissed.`;
       await Notification.create({
         userId: flag.flaggedBy,
         type: 'price_flag_resolved',
@@ -2914,6 +2917,37 @@ router.put('/price-flags/:id', requireModerator(), async (req, res) => {
     res.json(flag);
   } catch (err) {
     res.status(500).json({ message: 'Error updating price flag', error: err.message });
+  }
+});
+
+// GET /api/admin/dead-cards - Cards missing price, scryfallId, or with unknown set
+router.get('/dead-cards', requireAdmin, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const dead = await Card.find({
+      $or: [
+        { scryfallId: { $in: [null, ''] } },
+        { price: { $in: [null, 0] } },
+        { set: { $in: [null, '', 'Unknown'] } }
+      ]
+    }).select('name set setCode scryfallId price quantity userId createdAt').lean();
+
+    res.json({ count: dead.length, cards: dead });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE /api/admin/dead-cards - Bulk delete selected dead cards
+router.delete('/dead-cards', requireAdmin, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || !ids.length) return res.status(400).json({ message: 'ids array required' });
+    const result = await Card.deleteMany({ _id: { $in: ids } });
+    res.json({ deleted: result.deletedCount });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
