@@ -22,6 +22,7 @@ const Card = mongoose.models.Card || mongoose.model('Card', cardSchema);
 const User = require('../models/User');
 const PriceFlag = require('../models/PriceFlag');
 const ModerationHistory = require('../models/ModerationHistory');
+const Notification = require('../models/Notification');
 
 let mongod;
 
@@ -40,6 +41,7 @@ afterEach(async () => {
   await User.deleteMany({});
   await PriceFlag.deleteMany({});
   await ModerationHistory.deleteMany({});
+  await Notification.deleteMany({});
   jest.clearAllMocks();
 });
 
@@ -171,5 +173,24 @@ describe('PUT /api/admin/price-flags/:id', () => {
       .set('Authorization', `Bearer ${makeToken(admin._id, 'admin')}`)
       .send({ action: 'delete' })
       .expect(400);
+  });
+
+  it('resolve notification includes the updated price', async () => {
+    const admin = await createUser({ role: 'admin' });
+    const flagger = await createUser({ reputation: 60 });
+    const card = await Card.create({ userId: flagger._id, name: 'Test Card', price: 5 });
+    const flag = await PriceFlag.create({ cardId: card._id, flaggedBy: flagger._id, status: 'pending' });
+    axios.get.mockResolvedValue({ data: { prices: { usd: '12.34' } } });
+
+    const app = buildApp();
+    await request(app)
+      .put(`/api/admin/price-flags/${flag._id}`)
+      .set('Authorization', `Bearer ${makeToken(admin._id, 'admin')}`)
+      .send({ action: 'resolve' })
+      .expect(200);
+
+    const notif = await Notification.findOne({ userId: flagger._id, type: 'price_flag_resolved' });
+    expect(notif).not.toBeNull();
+    expect(notif.content).toContain('$12.34');
   });
 });
