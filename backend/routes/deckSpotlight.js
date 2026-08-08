@@ -8,6 +8,7 @@ const ForumThread = require('../models/ForumThread');
 const ForumCategory = require('../models/ForumCategory');
 const { verifyToken, requireAuth, requireAdmin } = require('../middleware/auth');
 const { estimatePowerLevel, calculateSaltScore } = require('../utils/deckAnalysis');
+const { createMentionNotifications } = require('../utils/notifications');
 
 router.use(verifyToken);
 
@@ -38,23 +39,32 @@ async function computeTotalValue(mainDeck) {
 
 function buildThreadContent(deck, owner, buildLabel, budgetTier, totalValue, saltScore) {
   const colorStr = deck.commander?.colorIdentity?.join('') || '?';
-  const tagLine = deck.tags?.length ? `\n**Tags:** ${deck.tags.join(', ')}` : '';
+  const tagLine = deck.tags?.length ? `Tags: ${deck.tags.join(', ')}` : '';
   const shareLink = deck.shareCode ? `/decks/share/${deck.shareCode}` : '';
+  const totalCards = (deck.mainDeck || []).reduce((sum, c) => sum + (c.quantity || 1), 0);
+
+  const deckList = [...(deck.mainDeck || [])]
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(c => c.quantity > 1 ? `${c.quantity}x ${c.name}` : c.name)
+    .join('\n');
+
   return [
-    `This week's spotlight deck is **${deck.name}** by **@${owner.username}** — a ${budgetTier} ${buildLabel} in the ${deck.format || 'Commander'} format.`,
+    `This week's spotlight deck is "${deck.name}" by @${owner.username} — a ${budgetTier} ${buildLabel} in the ${deck.format || 'Commander'} format.`,
     '',
-    `**Commander:** ${deck.commander?.name || 'Unknown'} (${colorStr})`,
-    `**Power Level:** ${buildLabel}`,
-    `**Salt Score:** ${saltScore}`,
-    `**Total Value:** $${totalValue.toFixed(2)}`,
-    `**Card Count:** ${(deck.mainDeck || []).length} cards`,
+    `Commander: ${deck.commander?.name || 'Unknown'} (${colorStr})`,
+    `Power Level: ${buildLabel}`,
+    `Salt Score: ${saltScore}`,
+    `Total Value: $${totalValue.toFixed(2)}`,
+    `Card Count: ${totalCards} cards`,
     tagLine,
+    shareLink ? `View deck: ${shareLink}` : '',
     '',
-    shareLink ? `[View this deck →](${shareLink})` : '',
+    '--- Decklist ---',
+    deckList,
     '',
     '---',
-    '*Think a deck deserves a spotlight? Share your deck publicly in the Community Decks section!*',
-  ].join('\n').trim();
+    'Think a deck deserves a spotlight? Share your deck publicly in the Community Decks section!',
+  ].filter(line => line !== '').join('\n');
 }
 
 async function ensureSpotlightsCategory() {
@@ -126,6 +136,16 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
       $inc:           { threadCount: 1 },
       lastActivityAt: new Date(),
     });
+
+    // Notify the deck owner via the forum @mention system
+    try {
+      await createMentionNotifications(req.user._id, 'mention', content, {
+        threadId: thread._id,
+        content: `Your deck "${deck.name}" was featured as Deck of the Week!`,
+      });
+    } catch (err) {
+      console.error('[deckSpotlight] mention notification failed:', err.message);
+    }
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 

@@ -7,6 +7,20 @@ import UserAvatar from '../avatars/UserAvatar';
 import DeckImportButton from './DeckImportButton';
 import UserHoverCard from './UserHoverCard';
 
+// Splits text on URLs (http/https) and /decks/share/ paths, rendering them as links.
+function linkifyContent(text) {
+  const parts = text.split(/(https?:\/\/[^\s]+|\/decks\/share\/[a-zA-Z0-9]+)/g);
+  return parts.map((part, i) => {
+    if (/^https?:\/\//.test(part)) {
+      return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-indigo-400 underline hover:text-indigo-300">{part}</a>;
+    }
+    if (/^\/decks\/share\//.test(part)) {
+      return <a key={i} href={part} className="text-indigo-400 underline hover:text-indigo-300">View deck →</a>;
+    }
+    return part;
+  });
+}
+
 const FOIL_STYLE = {
   animation: 'foil-shimmer 2.5s ease-in-out infinite',
 };
@@ -768,7 +782,7 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
           {thread.content && (
             <div className="mb-6 pb-6 border-b border-slate-700">
               <div className="text-slate-200 text-base leading-relaxed whitespace-pre-wrap">
-                {thread.content}
+                {linkifyContent(thread.content)}
               </div>
             </div>
           )}
