@@ -895,7 +895,7 @@ function CollectionView({
                 onClick={() => setShowFilters(!showFilters)}
                 className="w-full px-4 py-2 flex items-center justify-between text-white/70 hover:text-white font-semibold bg-white/5 rounded-t-lg transition"
               >
-                <span>{showFilters ? 'â–¼' : 'â–¶'} Search &amp; Filter</span>
+                <span>{showFilters ? '▼' : '▶'} Search &amp; Filter</span>
               </button>
               {showFilters && (
             <div className="bg-white/10 backdrop-blur-md rounded-b-lg p-4 shadow-xl sticky top-0 z-30">
@@ -1096,7 +1096,7 @@ function CollectionView({
             onClick={() => setShowAddForm(!showAddForm)}
             className="w-full px-6 py-3 flex items-center justify-between text-white font-semibold hover:bg-white/5 transition"
           >
-            <span>{showAddForm ? 'â–¼' : 'â–¶'} {editingId ? 'Edit Card' : 'Add New Card'}</span>
+            <span>{showAddForm ? '▼' : '▶'} {editingId ? 'Edit Card' : 'Add New Card'}</span>
           </button>
           {showAddForm && (
           <div className="px-6 pb-6">
@@ -1488,9 +1488,9 @@ function CollectionView({
                         {card.name}
                       </td>
                       {isColumnVisible('set') && <td className="px-6 py-4 text-white/80 text-sm hidden lg:table-cell">{card.set}</td>}
-                      {isColumnVisible('setCode') && <td className="px-6 py-4 text-white/80 text-xs hidden xl:table-cell">{card.setCode || 'â€”'}</td>}
-                      {isColumnVisible('collectorNumber') && <td className="px-6 py-4 text-white/80 text-xs hidden xl:table-cell">{card.collectorNumber || 'â€”'}</td>}
-                      {isColumnVisible('rarity') && <td className="px-6 py-4 text-white/80 text-xs hidden xl:table-cell">{card.rarity || 'â€”'}</td>}
+                      {isColumnVisible('setCode') && <td className="px-6 py-4 text-white/80 text-xs hidden xl:table-cell">{card.setCode || '—'}</td>}
+                      {isColumnVisible('collectorNumber') && <td className="px-6 py-4 text-white/80 text-xs hidden xl:table-cell">{card.collectorNumber || '—'}</td>}
+                      {isColumnVisible('rarity') && <td className="px-6 py-4 text-white/80 text-xs hidden xl:table-cell">{card.rarity || '—'}</td>}
                       {isColumnVisible('manaCost') && <td className="px-6 py-4 text-white/80 text-sm font-mono hidden lg:table-cell">
                         {card.manaCost || '0'}
                       </td>}
@@ -1512,7 +1512,7 @@ function CollectionView({
                       {isColumnVisible('foil') && <td className="px-6 py-4 hidden xl:table-cell">
                         {card.isFoil ? (
                           <span className="px-2 py-1 bg-amber-600/50 text-white text-sm rounded font-semibold">
-                            Foil âœ¨
+                            Foil ✨
                           </span>
                         ) : (
                           <span className="text-white/40 text-sm">-</span>
@@ -1845,7 +1845,7 @@ function CollectionView({
 
                 {importResults.added.length > 0 && (
                   <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-green-400 mb-2">âœ“ Added Cards</h3>
+                    <h3 className="text-lg font-semibold text-green-400 mb-2">✓ Added Cards</h3>
                     <div className="bg-white/5 rounded-lg p-3 max-h-40 overflow-y-auto">
                       {importResults.added.map((item, i) => (
                         <div key={i} className="text-sm text-white/80 py-1">{item}</div>
@@ -1881,7 +1881,7 @@ function CollectionView({
 
                 {importResults.failed.length > 0 && (
                   <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-red-400 mb-2">âœ— Failed Cards</h3>
+                    <h3 className="text-lg font-semibold text-red-400 mb-2">✗ Failed Cards</h3>
                     <div className="bg-white/5 rounded-lg p-3 max-h-40 overflow-y-auto">
                       {importResults.failed.map((item, i) => (
                         <div key={i} className="text-sm text-white/80 py-1">{item}</div>
@@ -2199,7 +2199,7 @@ function CollectionView({
                     <p className="text-white/60 mt-1">
                       Finding cards similar to <span className="text-purple-400 font-semibold">{similarCardsSource.name}</span>
                       {similarCardsSource.types?.length > 0 && ` (${similarCardsSource.types[0]})`}
-                      {similarCardsSource.colors?.length > 0 && ` â€¢ ${similarCardsSource.colors.join(', ')}`}
+                      {similarCardsSource.colors?.length > 0 && ` • ${similarCardsSource.colors.join(', ')}`}
                     </p>
                   )}
                 </div>
@@ -2273,7 +2273,7 @@ function CollectionView({
 
               <div className="p-4 border-t border-white/10 bg-white/5">
                 <p className="text-white/40 text-xs text-center">
-                  Showing up to 20 similar cards based on type and color â€¢ Powered by Scryfall
+                  Showing up to 20 similar cards based on type and color • Powered by Scryfall
                 </p>
               </div>
             </div>
@@ -2485,7 +2485,7 @@ function CollectionView({
 
               <div className="p-4 border-t border-white/10 bg-white/5">
                 <p className="text-white/40 text-xs text-center">
-                  Synergies found by analyzing tribal types, keywords, and card mechanics â€¢ Sorted by EDHREC popularity
+                  Synergies found by analyzing tribal types, keywords, and card mechanics • Sorted by EDHREC popularity
                 </p>
               </div>
             </div>

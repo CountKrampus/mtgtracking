@@ -28,6 +28,10 @@ const commands = new Map([
   require('./commands/trades'),
   require('./commands/showoff'),
   require('./commands/notifications'),
+  require('./commands/legality'),
+  require('./commands/trend'),
+  require('./commands/search'),
+  require('./commands/inventory'),
 ].map(cmd => [cmd.name, cmd]));
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });

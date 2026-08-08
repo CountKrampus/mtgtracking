@@ -160,7 +160,7 @@ export default function ComboFinderModal({ isOpen, onClose, fetchWishlist }) {
                           key={cardIdx}
                           className="px-3 py-1 bg-green-600/30 text-green-200 rounded-full text-sm font-medium"
                         >
-                          âœ“ {cardName}
+                          ✓ {cardName}
                         </span>
                       ))}
                     </div>
@@ -246,7 +246,7 @@ export default function ComboFinderModal({ isOpen, onClose, fetchWishlist }) {
                                 : 'bg-green-600/30 text-green-200'
                             }`}
                           >
-                            {isMissing ? 'âœ—' : 'âœ“'} {cardName}
+                            {isMissing ? '✗' : '✓'} {cardName}
                           </span>
                         );
                       })}

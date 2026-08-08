@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { BarChart3, Trophy, Clock, Users, Percent, X, TrendingUp } from 'lucide-react';
+import { BarChart3, Trophy, Clock, Users, Percent, X, TrendingUp, Layers } from 'lucide-react';
 import useBackendSync from './hooks/useBackendSync';
 
 function StatsDashboard({ isOpen, onClose }) {
@@ -197,6 +197,41 @@ function StatsDashboard({ isOpen, onClose }) {
                         </div>
                       </div>
                     ))}
+                </div>
+              </div>
+            )}
+
+            {/* Deck Performance */}
+            {stats.mostPlayedDecks && stats.mostPlayedDecks.length > 0 && (
+              <div className="bg-white/5 rounded-xl p-4 mb-6">
+                <h4 className="text-white/80 font-semibold mb-3 flex items-center gap-2">
+                  <Layers size={18} className="text-purple-400" />
+                  Deck Performance
+                </h4>
+                <div className="space-y-3">
+                  {stats.mostPlayedDecks.map((deck, i) => (
+                    <div key={i}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-white text-sm truncate max-w-[60%]">{deck.deckName}</span>
+                        <div className="flex items-center gap-3 text-sm flex-shrink-0">
+                          <span className="text-white/50">{deck.wins}/{deck.gamesPlayed} wins</span>
+                          <span className={`font-bold w-10 text-right ${
+                            deck.winRate >= 50 ? 'text-green-400' :
+                            deck.winRate >= 25 ? 'text-yellow-400' : 'text-red-400'
+                          }`}>{deck.winRate}%</span>
+                        </div>
+                      </div>
+                      <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all ${
+                            deck.winRate >= 50 ? 'bg-green-500' :
+                            deck.winRate >= 25 ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}
+                          style={{ width: `${deck.winRate}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

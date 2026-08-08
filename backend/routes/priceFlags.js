@@ -41,4 +41,28 @@ router.post('/:id/flag-price', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/cards/my-flags - flags the current user submitted, with resolution info
+router.get('/my-flags', requireAuth, async (req, res) => {
+  try {
+    const flags = await PriceFlag.find({ flaggedBy: req.user._id })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .populate('cardId', 'name set price')
+      .lean();
+
+    res.json(flags.map(f => ({
+      _id: f._id,
+      cardName: f.cardId?.name || 'Unknown card',
+      cardSet: f.cardId?.set || '',
+      currentPrice: f.cardId?.price || 0,
+      reason: f.reason,
+      status: f.status,
+      createdAt: f.createdAt,
+      resolvedAt: f.resolvedAt,
+    })));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

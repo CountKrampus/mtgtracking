@@ -96,6 +96,17 @@ const commands = [
           { name: 'Price Flag Resolution', value: 'price_flag_resolved' }
         ))),
 
+  new SlashCommandBuilder().setName('legality').setDescription('Check if a deck is legal in its format')
+    .addStringOption(o => o.setName('name').setDescription('Deck name').setRequired(true)),
+
+  new SlashCommandBuilder().setName('trend').setDescription('Show your collection acquisition trend')
+    .addIntegerOption(o => o.setName('days').setDescription('How many days back to look (default 30, max 365)').setMinValue(1).setMaxValue(365)),
+
+  new SlashCommandBuilder().setName('search').setDescription('Search your collection by card name or tag')
+    .addStringOption(o => o.setName('query').setDescription('Search term').setRequired(true)),
+
+  new SlashCommandBuilder().setName('inventory').setDescription('Show card count and value per storage location'),
+
   new SlashCommandBuilder().setName('trades').setDescription('Trading commands')
     .addSubcommand(sub => sub.setName('browse').setDescription('Browse active trade listings')
       .addStringOption(o => o.setName('type').setDescription('Filter by listing type')

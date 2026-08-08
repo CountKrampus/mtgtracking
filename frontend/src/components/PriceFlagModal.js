@@ -1,7 +1,14 @@
-import React, { useState } from 'react';
-import { X, Flag } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Flag, ChevronDown, ChevronUp } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../config';
+
+const STATUS_COLORS = {
+  pending:   'text-yellow-400',
+  resolved:  'text-green-400',
+  dismissed: 'text-slate-400',
+};
+const STATUS_LABELS = { pending: 'Pending', resolved: 'Resolved', dismissed: 'Dismissed' };
 
 // Lets a trusted user (reputation >= 50, enforced server-side) flag a card's
 // price as incorrect for admin review. See backend/routes/priceFlags.js and
@@ -11,6 +18,24 @@ function PriceFlagModal({ card, onClose }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const loadHistory = async () => {
+    if (history !== null) { setShowHistory(v => !v); return; }
+    setHistoryLoading(true);
+    try {
+      const res = await axios.get(`${API_URL}/cards/my-flags`);
+      setHistory(res.data);
+      setShowHistory(true);
+    } catch {
+      setHistory([]);
+      setShowHistory(true);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     setError(null);
@@ -65,20 +90,49 @@ function PriceFlagModal({ card, onClose }) {
           </>
         )}
 
-        <div className="flex justify-end gap-3 mt-4">
-          <button onClick={onClose} className="px-4 py-2 text-slate-300 hover:text-white">
-            {submitted ? 'Close' : 'Cancel'}
+        <div className="flex justify-between items-center gap-3 mt-4">
+          <button
+            onClick={loadHistory}
+            disabled={historyLoading}
+            className="text-slate-400 hover:text-white text-xs flex items-center gap-1 transition"
+          >
+            {historyLoading ? 'Loading…' : 'My flags'}
+            {!historyLoading && (showHistory ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
           </button>
-          {!submitted && (
-            <button
-              onClick={handleSubmit}
-              disabled={saving}
-              className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white rounded-lg font-medium"
-            >
-              {saving ? 'Submitting…' : 'Submit Flag'}
+          <div className="flex gap-3">
+            <button onClick={onClose} className="px-4 py-2 text-slate-300 hover:text-white">
+              {submitted ? 'Close' : 'Cancel'}
             </button>
-          )}
+            {!submitted && (
+              <button
+                onClick={handleSubmit}
+                disabled={saving}
+                className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white rounded-lg font-medium"
+              >
+                {saving ? 'Submitting…' : 'Submit Flag'}
+              </button>
+            )}
+          </div>
         </div>
+
+        {showHistory && history !== null && (
+          <div className="mt-4 border-t border-slate-700 pt-3 space-y-2 max-h-48 overflow-y-auto">
+            {history.length === 0 ? (
+              <p className="text-slate-500 text-xs">No flags submitted yet.</p>
+            ) : history.map(f => (
+              <div key={f._id} className="flex items-start justify-between gap-2 text-xs">
+                <div className="min-w-0">
+                  <span className="text-white font-medium">{f.cardName}</span>
+                  {f.cardSet && <span className="text-slate-500 ml-1">({f.cardSet})</span>}
+                  {f.reason && <p className="text-slate-400 truncate">{f.reason}</p>}
+                </div>
+                <span className={`flex-shrink-0 font-medium ${STATUS_COLORS[f.status]}`}>
+                  {STATUS_LABELS[f.status]}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

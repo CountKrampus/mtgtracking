@@ -172,6 +172,7 @@ const Dashboard = ({
   const [valueHistory, setValueHistory] = useState([]);
   const [priceChanges, setPriceChanges] = useState({ gainers: [], losers: [] });
   const [mostPlayedDecks, setMostPlayedDecks] = useState([]);
+  const [valueBreakTab, setValueBreakTab] = useState('rarity');
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -284,6 +285,43 @@ const Dashboard = ({
   const rarityTotal = Object.values(rarityDistribution).reduce((s, v) => s + v, 0) || 1;
   const setTotal = setDistribution.reduce((s, [, v]) => s + v, 0) || 1;
   const condTotal = Object.values(conditionDistribution).reduce((s, v) => s + v, 0) || 1;
+
+  const valueByRarity = useMemo(() => {
+    const out = { C: 0, U: 0, R: 0, M: 0 };
+    cards.forEach(card => {
+      const r = (card.rarity || '').charAt(0).toUpperCase();
+      if (out[r] !== undefined) out[r] += (card.price || 0) * (card.quantity || 1);
+    });
+    return out;
+  }, [cards]);
+
+  const valueByColor = useMemo(() => {
+    const out = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
+    cards.forEach(card => {
+      const val = (card.price || 0) * (card.quantity || 1);
+      if (card.colors && card.colors.length > 0) {
+        card.colors.forEach(c => { if (out[c] !== undefined) out[c] += val; });
+      } else {
+        out.C += val;
+      }
+    });
+    return out;
+  }, [cards]);
+
+  const valueBySet = useMemo(() => {
+    const out = {};
+    cards.forEach(card => {
+      const s = card.set || 'Unknown';
+      out[s] = (out[s] || 0) + (card.price || 0) * (card.quantity || 1);
+    });
+    return Object.entries(out).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  }, [cards]);
+
+  const valueBreakTotal = {
+    rarity: Object.values(valueByRarity).reduce((s, v) => s + v, 0) || 1,
+    color: Object.values(valueByColor).reduce((s, v) => s + v, 0) || 1,
+    set: valueBySet.reduce((s, [, v]) => s + v, 0) || 1,
+  };
 
   const colorConfig = {
     W: { name: 'White', bg: 'bg-yellow-200', text: 'text-yellow-900', bar: 'bg-yellow-300' },
@@ -699,6 +737,60 @@ const Dashboard = ({
           <p className="text-white/50 text-sm">No cards in collection yet.</p>
         ) : (
           <ValueHistogram buckets={valueDistribution} />
+        )}
+      </div>
+
+      {/* Value Breakdown by Rarity / Color / Set */}
+      <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 shadow-xl">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <h2 className="text-lg font-semibold text-white">Value Breakdown</h2>
+          <div className="flex rounded-lg overflow-hidden border border-white/20 text-xs">
+            {[['rarity', 'Rarity'], ['color', 'Color'], ['set', 'Top Sets']].map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setValueBreakTab(key)}
+                className={`px-3 py-1 transition ${valueBreakTab === key ? 'bg-purple-600 text-white' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {totalCards === 0 ? (
+          <p className="text-white/50 text-sm">No cards in collection yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {valueBreakTab === 'rarity' && Object.entries(valueByRarity).map(([r, val]) => (
+              <HorizontalBar
+                key={r}
+                label={rarityConfig[r].name}
+                value={val}
+                total={valueBreakTotal.rarity}
+                color={rarityConfig[r].bar}
+                formatLabel={fp}
+              />
+            ))}
+            {valueBreakTab === 'color' && Object.entries(valueByColor).map(([c, val]) => (
+              <HorizontalBar
+                key={c}
+                label={colorConfig[c].name}
+                value={val}
+                total={valueBreakTotal.color}
+                color={colorConfig[c].bar}
+                formatLabel={fp}
+              />
+            ))}
+            {valueBreakTab === 'set' && valueBySet.map(([set, val], i) => (
+              <HorizontalBar
+                key={set}
+                label={set}
+                value={val}
+                total={valueBreakTotal.set}
+                color={typeColors[i % typeColors.length]}
+                formatLabel={fp}
+              />
+            ))}
+          </div>
         )}
       </div>
 

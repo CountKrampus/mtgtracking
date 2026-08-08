@@ -60,6 +60,7 @@ export default function AppRoutes({
   authUser, settings, updateSettings, resetSettings,
   locations, availableTags, locationStats,
   newLocationName, setNewLocationName, newLocationDesc, setNewLocationDesc,
+  newLocationCapacity, setNewLocationCapacity,
   editingLocation, handleCreateLocation, handleUpdateLocation, cancelEditLocation,
   startEditLocation, handleDeleteLocation, handleToggleLocationIgnorePrice,
   newTagName, setNewTagName, handleCreateTag, handleDeleteTag, handleToggleTagIgnorePrice,
@@ -136,6 +137,8 @@ export default function AppRoutes({
           setNewLocationName={setNewLocationName}
           newLocationDesc={newLocationDesc}
           setNewLocationDesc={setNewLocationDesc}
+          newLocationCapacity={newLocationCapacity}
+          setNewLocationCapacity={setNewLocationCapacity}
           editingLocation={editingLocation}
           handleCreateLocation={handleCreateLocation}
           handleUpdateLocation={handleUpdateLocation}

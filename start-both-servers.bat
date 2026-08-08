@@ -19,7 +19,7 @@ REM Start Discord bot (skips itself if discord-bot\.env doesn't exist yet,
 REM so this script still works before the bot has been configured)
 if exist discord-bot\.env (
   cd discord-bot
-  start "MTG Tracker Discord Bot" cmd /k "npm start"
+  start "MTG Tracker Discord Bot" cmd /k "npm run dev"
   cd ..
 ) else (
   echo Skipping Discord bot - discord-bot\.env not found. Copy discord-bot\.env.example to set it up.

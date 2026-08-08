@@ -112,6 +112,7 @@ function App() {
   const {
     locations, locationStats,
     newLocationName, setNewLocationName, newLocationDesc, setNewLocationDesc,
+    newLocationCapacity, setNewLocationCapacity,
     editingLocation, startEditLocation, cancelEditLocation,
     handleCreateLocation, handleUpdateLocation, handleDeleteLocation, handleToggleLocationIgnorePrice,
     availableTags,
@@ -405,6 +406,8 @@ function App() {
             setNewLocationName={setNewLocationName}
             newLocationDesc={newLocationDesc}
             setNewLocationDesc={setNewLocationDesc}
+            newLocationCapacity={newLocationCapacity}
+            setNewLocationCapacity={setNewLocationCapacity}
             editingLocation={editingLocation}
             handleCreateLocation={handleCreateLocation}
             handleUpdateLocation={handleUpdateLocation}
