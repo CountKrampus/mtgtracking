@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { X, Copy, Loader, Check } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../config';
+import ExcessCopiesModal from './ExcessCopiesModal';
 
 function CardRow({ card, selected, selectable, onSelect }) {
   const Wrapper = selectable ? 'button' : 'div';
@@ -38,6 +39,8 @@ export default function DuplicateCleanup({ isOpen, onClose, onMerged }) {
   const [suggestedGroups, setSuggestedGroups] = useState([]);
   // Chosen target per suggestion group, keyed by the unknown card's id
   const [selectedTargets, setSelectedTargets] = useState({});
+  const [excessCandidates, setExcessCandidates] = useState([]);
+  const [showExcessModal, setShowExcessModal] = useState(false);
 
   const fetchDuplicates = useCallback(async () => {
     setLoading(true);
@@ -65,7 +68,24 @@ export default function DuplicateCleanup({ isOpen, onClose, onMerged }) {
   }, [isOpen, fetchDuplicates]);
 
   const merge = async (targetId, sourceIds) => {
-    await axios.post(`${API_URL}/cards/merge-duplicates`, { targetId, sourceIds });
+    const res = await axios.post(`${API_URL}/cards/merge-duplicates`, { targetId, sourceIds });
+    return res.data.target;
+  };
+
+  const recordIfExcess = (mergedCard) => {
+    if (mergedCard && mergedCard.quantity > 1) {
+      setExcessCandidates(prev => [...prev, {
+        _id: mergedCard._id,
+        name: mergedCard.name,
+        set: mergedCard.set,
+        setCode: mergedCard.setCode,
+        condition: mergedCard.condition,
+        quantity: mergedCard.quantity,
+        price: mergedCard.price,
+        scryfallId: mergedCard.scryfallId,
+        imageUrl: mergedCard.imageUrl,
+      }]);
+    }
   };
 
   const afterMerge = async () => {
@@ -78,7 +98,8 @@ export default function DuplicateCleanup({ isOpen, onClose, onMerged }) {
     setError('');
     try {
       const [target, ...sources] = group.cards; // oldest first (sorted by createdAt server-side)
-      await merge(target._id, sources.map(c => c._id));
+      const mergedCard = await merge(target._id, sources.map(c => c._id));
+      recordIfExcess(mergedCard);
       await afterMerge();
     } catch (err) {
       setError(err.response?.data?.message || 'Merge failed');
@@ -95,7 +116,8 @@ export default function DuplicateCleanup({ isOpen, onClose, onMerged }) {
     try {
       for (const group of exactGroups) {
         const [target, ...sources] = group.cards;
-        await merge(target._id, sources.map(c => c._id));
+        const mergedCard = await merge(target._id, sources.map(c => c._id));
+        recordIfExcess(mergedCard);
         mergedCount++;
       }
     } catch (err) {
@@ -119,7 +141,8 @@ export default function DuplicateCleanup({ isOpen, onClose, onMerged }) {
     setMerging(true);
     setError('');
     try {
-      await merge(targetId, [group.unknownCard._id]);
+      const mergedCard = await merge(targetId, [group.unknownCard._id]);
+      recordIfExcess(mergedCard);
       await afterMerge();
     } catch (err) {
       setError(err.response?.data?.message || 'Merge failed');
@@ -153,6 +176,20 @@ export default function DuplicateCleanup({ isOpen, onClose, onMerged }) {
 
           {error && (
             <div className="p-3 bg-red-600/20 border border-red-600/30 rounded text-red-400 text-sm">{error}</div>
+          )}
+
+          {excessCandidates.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-teal-600/10 border border-teal-600/30 rounded-lg">
+              <span className="text-teal-300 text-sm">
+                {excessCandidates.length} card{excessCandidates.length !== 1 ? 's' : ''} now have excess copies — list for trade?
+              </span>
+              <button
+                onClick={() => setShowExcessModal(true)}
+                className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded text-sm font-medium transition"
+              >
+                Review
+              </button>
+            </div>
           )}
 
           {empty && (
@@ -223,6 +260,13 @@ export default function DuplicateCleanup({ isOpen, onClose, onMerged }) {
           )}
         </div>
       </div>
+
+      {showExcessModal && (
+        <ExcessCopiesModal
+          candidates={excessCandidates}
+          onClose={() => { setShowExcessModal(false); setExcessCandidates([]); }}
+        />
+      )}
     </div>
   );
 }

@@ -1,10 +1,12 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { X, BarChart3, RefreshCw } from 'lucide-react';
 import axios from 'axios';
+import SetMissingCardsModal from './SetMissingCardsModal';
 
 export default function SetCompletionModal({ isOpen, onClose, cards }) {
   const [completionData, setCompletionData] = useState([]);
   const [loadingSetCompletion, setLoadingSetCompletion] = useState(false);
+  const [missingCardsSet, setMissingCardsSet] = useState(null);
 
   const getSetCompletionData = async () => {
     setLoadingSetCompletion(true);
@@ -40,6 +42,7 @@ export default function SetCompletionModal({ isOpen, onClose, cards }) {
             setName: setInfo.name,
             icon: setInfo.icon_svg_uri,
             ownedUnique: cardsBySet[code].ownedCards.size,
+            ownedCardNames: cardsBySet[code].ownedCards,
             totalInSet: setInfo.card_count,
             totalOwned: cardsBySet[code].totalOwned,
             releasedAt: setInfo.released_at,
@@ -139,6 +142,14 @@ export default function SetCompletionModal({ isOpen, onClose, cards }) {
                     <p className="text-white/40 text-xs mt-2">
                       {set.totalOwned} total copies owned
                     </p>
+                    {percentage < 100 && (
+                      <button
+                        onClick={() => setMissingCardsSet({ setCode: set.setCode, setName: set.setName, ownedCardNames: set.ownedCardNames })}
+                        className="mt-2 px-3 py-1 bg-teal-600/30 hover:bg-teal-600/50 text-teal-300 rounded text-xs font-medium transition"
+                      >
+                        View Missing
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -152,6 +163,15 @@ export default function SetCompletionModal({ isOpen, onClose, cards }) {
           </p>
         </div>
       </div>
+
+      {missingCardsSet && (
+        <SetMissingCardsModal
+          setCode={missingCardsSet.setCode}
+          setName={missingCardsSet.setName}
+          ownedCardNames={missingCardsSet.ownedCardNames}
+          onClose={() => setMissingCardsSet(null)}
+        />
+      )}
     </div>
   );
 }
