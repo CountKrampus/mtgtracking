@@ -1,4 +1,10 @@
-export const COLOR_PIPS = { W: '☀️', U: '💧', B: '💀', R: '🔥', G: '🌲' };
+export const COLOR_PIPS = { W: 'w', U: 'u', B: 'b', R: 'r', G: 'g' };
+
+export function ManaIcon({ color, size = 14 }) {
+  const key = COLOR_PIPS[color];
+  if (!key) return null;
+  return <i className={`ms ms-${key} ms-cost ms-shadow`} style={{ fontSize: size, verticalAlign: 'middle' }} />;
+}
 
 export const FORMAT_COLORS = {
   commander:   'bg-purple-600/30 text-purple-300 border-purple-500/40',

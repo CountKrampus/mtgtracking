@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { API_URL } from '../../config';
 import { useAuthContext } from '../../contexts/AuthContext';
-import { COLOR_PIPS, FORMAT_COLORS } from './deckConstants';
+import { FORMAT_COLORS, ManaIcon } from './deckConstants';
 const TYPE_ORDER = ['Commander', 'Creature', 'Instant', 'Sorcery', 'Enchantment', 'Artifact', 'Planeswalker', 'Land', 'Other'];
 
 function groupByType(mainDeck) {
@@ -91,7 +91,7 @@ function SharedDeckView({ shareCode }) {
                   </span>
                 )}
                 {colorIdentity.map(c => (
-                  <span key={c} className="text-base" title={c}>{COLOR_PIPS[c] || c}</span>
+                  <ManaIcon key={c} color={c} size={18} />
                 ))}
               </div>
               {owner && (
