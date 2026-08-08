@@ -16,10 +16,12 @@ export default function DeckSpotlightTab() {
     fetch(`${API_URL}/deck-spotlight/active`)
       .then(r => r.json())
       .then(d => setSpotlight(d.spotlight))
+      .catch(() => {})
       .finally(() => setLoading(false));
     fetch(`${API_URL}/decks/community?sort=imported&limit=200`)
       .then(r => r.json())
-      .then(d => setDecks(d.decks || []));
+      .then(d => setDecks(d.decks || []))
+      .catch(() => {});
   }, []);
 
   const filteredDecks = decks.filter(d =>
@@ -60,8 +62,12 @@ export default function DeckSpotlightTab() {
 
   const handleRemove = async () => {
     if (!spotlight || !window.confirm('Remove current spotlight?')) return;
-    const res = await authFetch(`${API_URL}/deck-spotlight/${spotlight._id}`, { method: 'DELETE' });
-    if (res.ok) setSpotlight(null);
+    try {
+      const res = await authFetch(`${API_URL}/deck-spotlight/${spotlight._id}`, { method: 'DELETE' });
+      if (res.ok) setSpotlight(null);
+    } catch {
+      alert('Failed to remove spotlight');
+    }
   };
 
   if (loading) return <p className="p-4 text-white/50">Loading…</p>;
