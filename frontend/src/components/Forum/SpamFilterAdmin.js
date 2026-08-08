@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Shield } from 'lucide-react';
+import { useAuthContext } from '../../contexts/AuthContext';
+import { API_URL } from '../../config';
 
-export default function SpamFilterAdmin({ apiUrl = 'http://localhost:5000/api' }) {
+export default function SpamFilterAdmin({ apiUrl = API_URL }) {
+  const { authFetch } = useAuthContext();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saveMessage, setSaveMessage] = useState(null);
@@ -27,7 +30,7 @@ export default function SpamFilterAdmin({ apiUrl = 'http://localhost:5000/api' }
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${apiUrl}/admin/spam-config`);
+        const response = await authFetch(`${apiUrl}/admin/spam-config`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         setSensitivity(data.sensitivity ?? 'moderate');
@@ -46,7 +49,7 @@ export default function SpamFilterAdmin({ apiUrl = 'http://localhost:5000/api' }
     const fetchFlaggedPosts = async () => {
       setFlaggedLoading(true);
       try {
-        const response = await fetch(`${apiUrl}/forum/admin/flagged-posts`);
+        const response = await authFetch(`${apiUrl}/forum/admin/flagged-posts`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         setFlaggedPosts(Array.isArray(data) ? data : []);
@@ -65,7 +68,7 @@ export default function SpamFilterAdmin({ apiUrl = 'http://localhost:5000/api' }
   const handleSaveConfig = async () => {
     setSaveMessage(null);
     try {
-      const response = await fetch(`${apiUrl}/admin/spam-config`, {
+      const response = await authFetch(`${apiUrl}/admin/spam-config`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -91,7 +94,7 @@ export default function SpamFilterAdmin({ apiUrl = 'http://localhost:5000/api' }
     setTesting(true);
     setTestResult(null);
     try {
-      const response = await fetch(`${apiUrl}/forum/admin/spam-config/test`, {
+      const response = await authFetch(`${apiUrl}/forum/admin/spam-config/test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: testText }),
