@@ -177,6 +177,7 @@ const locationSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String, default: '' },
   ignorePrice: { type: Boolean, default: false },
+  maxCapacity: { type: Number, default: null, min: 1 },
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -510,17 +511,32 @@ app.get('/api/stats', requireAuth, async (req, res) => {
 
     const colorStats = {};
     const typeStats = {};
+    const valueByRarity = {};
+    const valueByColor = {};
+    const valueBySet = {};
 
     cards.forEach(card => {
+      const cardValue = shouldIgnorePrice(card) ? 0 : (card.price || 0) * (card.quantity || 1);
       if (card.colors) {
         card.colors.forEach(color => {
           colorStats[color] = (colorStats[color] || 0) + card.quantity;
+          valueByColor[color] = (valueByColor[color] || 0) + cardValue;
         });
+        if (!card.colors.length) {
+          colorStats['C'] = (colorStats['C'] || 0) + card.quantity;
+          valueByColor['C'] = (valueByColor['C'] || 0) + cardValue;
+        }
       }
       if (card.types) {
         card.types.forEach(type => {
           typeStats[type] = (typeStats[type] || 0) + card.quantity;
         });
+      }
+      if (card.rarity) {
+        valueByRarity[card.rarity] = (valueByRarity[card.rarity] || 0) + cardValue;
+      }
+      if (card.set) {
+        valueBySet[card.set] = (valueBySet[card.set] || 0) + cardValue;
       }
     });
 
@@ -556,6 +572,12 @@ app.get('/api/stats', requireAuth, async (req, res) => {
       }
     });
 
+    // Top sets by value (cap at 10 to keep payload small)
+    const topSetsByValue = Object.entries(valueBySet)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .reduce((acc, [k, v]) => { acc[k] = v; return acc; }, {});
+
     const stats = {
       totalCards,
       uniqueCards: cards.length,
@@ -565,7 +587,10 @@ app.get('/api/stats', requireAuth, async (req, res) => {
       typeDistribution: typeStats,
       cachedImageCount,
       portfolioGain,
-      portfolioCost
+      portfolioCost,
+      valueByRarity,
+      valueByColor,
+      valueBySet: topSetsByValue,
     };
 
     // Store in cache
@@ -885,7 +910,7 @@ app.get('/api/locations', requireAuth, async (req, res) => {
 // Create new location
 app.post('/api/locations', requireAuth, requireEditor, activityLoggers.locationCreate, async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, maxCapacity } = req.body;
     if (!name || !name.trim()) {
       return res.status(400).json({ message: 'Location name is required' });
     }
@@ -893,7 +918,8 @@ app.post('/api/locations', requireAuth, requireEditor, activityLoggers.locationC
     const userId = getUserId(req);
     const locationData = {
       name: name.trim(),
-      description: description || ''
+      description: description || '',
+      maxCapacity: maxCapacity ? Number(maxCapacity) : null
     };
     if (userId) locationData.userId = userId;
 
@@ -915,10 +941,11 @@ app.put('/api/locations/:id', requireAuth, requireEditor, activityLoggers.locati
     const location = await Location.findOne(query);
     if (!location) return res.status(404).json({ message: 'Location not found' });
 
-    const { name, description, ignorePrice } = req.body;
+    const { name, description, ignorePrice, maxCapacity } = req.body;
     if (name) location.name = name.trim();
     if (description !== undefined) location.description = description;
     if (ignorePrice !== undefined) location.ignorePrice = ignorePrice;
+    if (maxCapacity !== undefined) location.maxCapacity = maxCapacity ? Number(maxCapacity) : null;
 
     const updatedLocation = await location.save();
     res.json(updatedLocation);
@@ -949,6 +976,31 @@ app.delete('/api/locations/:id', requireAuth, requireEditor, activityLoggers.loc
 
     await location.deleteOne();
     res.json({ message: 'Location deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Location inventory stats (card count + value per location)
+app.get('/api/locations/stats', requireAuth, async (req, res) => {
+  try {
+    const locationQuery = buildUserQuery({}, req);
+    const locations = await Location.find(locationQuery).lean();
+    const cardQuery = buildUserQuery({ location: { $in: locations.map(l => l.name) } }, req);
+    const cards = await Card.find(cardQuery).select('location quantity price').lean();
+
+    const byLocation = {};
+    for (const loc of locations) {
+      byLocation[loc.name] = { name: loc.name, cardCount: 0, totalValue: 0, maxCapacity: loc.maxCapacity || null };
+    }
+    for (const card of cards) {
+      if (byLocation[card.location]) {
+        byLocation[card.location].cardCount += card.quantity || 0;
+        byLocation[card.location].totalValue += (card.price || 0) * (card.quantity || 0);
+      }
+    }
+
+    res.json(Object.values(byLocation).sort((a, b) => b.cardCount - a.cardCount));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -1715,13 +1767,24 @@ app.get('/api/lifecounter/stats', requireAuth, async (req, res) => {
         }
       });
     });
-    const mostPlayedDecks = Object.values(deckPlayCounts)
+    const topDecks = Object.values(deckPlayCounts)
       .sort((a, b) => b.gamesPlayed - a.gamesPlayed)
-      .slice(0, 5)
-      .map(d => ({
-        ...d,
-        winRate: d.gamesPlayed > 0 ? Math.round((d.wins / d.gamesPlayed) * 100) : 0
-      }));
+      .slice(0, 5);
+
+    // Resolve deck names from DB
+    const deckIds = topDecks.map(d => d.deckId).filter(Boolean);
+    let deckNameMap = {};
+    if (deckIds.length) {
+      const Deck = mongoose.model('Deck');
+      const deckDocs = await Deck.find({ _id: { $in: deckIds } }).select('name').lean();
+      deckDocs.forEach(d => { deckNameMap[d._id.toString()] = d.name; });
+    }
+
+    const mostPlayedDecks = topDecks.map(d => ({
+      ...d,
+      deckName: deckNameMap[d.deckId?.toString()] || d.commanderName || 'Unknown Deck',
+      winRate: d.gamesPlayed > 0 ? Math.round((d.wins / d.gamesPlayed) * 100) : 0
+    }));
 
     res.json({
       totalGames,

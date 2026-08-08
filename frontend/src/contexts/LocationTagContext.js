@@ -14,6 +14,7 @@ export function LocationTagProvider({ children }) {
   const [locations, setLocations] = useState([]);
   const [newLocationName, setNewLocationName] = useState('');
   const [newLocationDesc, setNewLocationDesc] = useState('');
+  const [newLocationCapacity, setNewLocationCapacity] = useState('');
   const [editingLocation, setEditingLocation] = useState(null);
 
   // Location stats for QR labels
@@ -24,7 +25,10 @@ export function LocationTagProvider({ children }) {
       const cardsInLoc = Array.isArray(cards) ? cards.filter(c => c.location === loc.name) : [];
       const cardCount = cardsInLoc.reduce((sum, c) => sum + (c.quantity || 0), 0);
       const totalValue = cardsInLoc.reduce((sum, c) => sum + ((c.price || 0) * (c.quantity || 0)), 0);
-      stats[loc.name] = { cardCount, totalValue };
+      const max = loc.maxCapacity || null;
+      const nearCapacity = max && cardCount >= max * 0.9;
+      const overCapacity = max && cardCount > max;
+      stats[loc.name] = { cardCount, totalValue, max, nearCapacity, overCapacity };
     });
     return stats;
   }, [cards, locations]);
@@ -48,10 +52,12 @@ export function LocationTagProvider({ children }) {
     try {
       await axios.post(`${API_URL}/locations`, {
         name: newLocationName.trim(),
-        description: newLocationDesc.trim()
+        description: newLocationDesc.trim(),
+        maxCapacity: newLocationCapacity ? parseInt(newLocationCapacity, 10) : null
       });
       setNewLocationName('');
       setNewLocationDesc('');
+      setNewLocationCapacity('');
       fetchLocations();
     } catch (error) {
       console.error('Error creating location:', error);
@@ -65,11 +71,13 @@ export function LocationTagProvider({ children }) {
     try {
       await axios.put(`${API_URL}/locations/${editingLocation._id}`, {
         name: newLocationName.trim(),
-        description: newLocationDesc.trim()
+        description: newLocationDesc.trim(),
+        maxCapacity: newLocationCapacity ? parseInt(newLocationCapacity, 10) : null
       });
       setEditingLocation(null);
       setNewLocationName('');
       setNewLocationDesc('');
+      setNewLocationCapacity('');
       fetchLocations();
       fetchCards(); // Refresh cards in case location name changed
     } catch (error) {
@@ -94,12 +102,14 @@ export function LocationTagProvider({ children }) {
     setEditingLocation(location);
     setNewLocationName(location.name);
     setNewLocationDesc(location.description || '');
+    setNewLocationCapacity(location.maxCapacity ? String(location.maxCapacity) : '');
   };
 
   const cancelEditLocation = () => {
     setEditingLocation(null);
     setNewLocationName('');
     setNewLocationDesc('');
+    setNewLocationCapacity('');
   };
 
   const handleToggleLocationIgnorePrice = async (locationId, currentValue) => {
@@ -183,6 +193,7 @@ export function LocationTagProvider({ children }) {
     locations, setLocations, fetchLocations, locationStats,
     newLocationName, setNewLocationName,
     newLocationDesc, setNewLocationDesc,
+    newLocationCapacity, setNewLocationCapacity,
     editingLocation, startEditLocation, cancelEditLocation,
     handleCreateLocation, handleUpdateLocation, handleDeleteLocation,
     handleToggleLocationIgnorePrice,
@@ -190,7 +201,7 @@ export function LocationTagProvider({ children }) {
     newTagName, setNewTagName,
     handleCreateTag, handleDeleteTag, handleToggleTagIgnorePrice,
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [locations, locationStats, availableTags, editingLocation, newLocationName, newLocationDesc, newTagName]);
+  }), [locations, locationStats, availableTags, editingLocation, newLocationName, newLocationDesc, newLocationCapacity, newTagName]);
 
   return (
     <LocationTagContext.Provider value={value}>

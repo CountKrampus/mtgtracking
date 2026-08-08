@@ -41,6 +41,8 @@ export default function DuplicateCleanup({ isOpen, onClose, onMerged }) {
   const [selectedTargets, setSelectedTargets] = useState({});
   const [excessCandidates, setExcessCandidates] = useState([]);
   const [showExcessModal, setShowExcessModal] = useState(false);
+  // { type: 'group'|'all'|'suggestion', group?, label } — set to show confirm dialog
+  const [pendingMerge, setPendingMerge] = useState(null);
 
   const fetchDuplicates = useCallback(async () => {
     setLoading(true);
@@ -201,7 +203,7 @@ export default function DuplicateCleanup({ isOpen, onClose, onMerged }) {
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-white font-semibold">Exact duplicates ({exactGroups.length})</h3>
                 <button
-                  onClick={handleMergeAllExact}
+                  onClick={() => setPendingMerge({ type: 'all', label: `Merge all ${exactGroups.length} exact duplicate group${exactGroups.length !== 1 ? 's' : ''}` })}
                   disabled={merging}
                   className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-semibold transition disabled:opacity-50"
                 >
@@ -214,7 +216,7 @@ export default function DuplicateCleanup({ isOpen, onClose, onMerged }) {
                   <div key={i} className="border border-slate-700 rounded p-2 space-y-1">
                     {group.cards.map(card => <CardRow key={card._id} card={card} />)}
                     <button
-                      onClick={() => handleMergeExactGroup(group)}
+                      onClick={() => setPendingMerge({ type: 'group', group, label: `Merge ${group.cards.length} copies of "${group.cards[0].name}" into one row` })}
                       disabled={merging}
                       className="mt-1 px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded text-xs transition disabled:opacity-50"
                     >
@@ -247,7 +249,11 @@ export default function DuplicateCleanup({ isOpen, onClose, onMerged }) {
                       />
                     ))}
                     <button
-                      onClick={() => handleMergeSuggestion(group)}
+                      onClick={() => {
+                        const targetId = selectedTargets[group.unknownCard._id];
+                        const target = group.candidates.find(c => c._id === targetId);
+                        setPendingMerge({ type: 'suggestion', group, label: `Merge "${group.unknownCard.name}" (Unknown set) into "${target?.name}" (${target?.set})` });
+                      }}
                       disabled={merging || !selectedTargets[group.unknownCard._id]}
                       className="mt-1 px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-semibold transition disabled:opacity-50"
                     >
@@ -266,6 +272,36 @@ export default function DuplicateCleanup({ isOpen, onClose, onMerged }) {
           candidates={excessCandidates}
           onClose={() => { setShowExcessModal(false); setExcessCandidates([]); }}
         />
+      )}
+
+      {pendingMerge && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+          <div className="bg-slate-800 rounded-xl border border-slate-600 w-full max-w-sm p-6 space-y-4">
+            <h3 className="text-white font-semibold text-base">Confirm Merge</h3>
+            <p className="text-slate-300 text-sm">{pendingMerge.label}</p>
+            <p className="text-slate-400 text-xs">Quantities will be summed. This cannot be undone.</p>
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={async () => {
+                  const pm = pendingMerge;
+                  setPendingMerge(null);
+                  if (pm.type === 'all') await handleMergeAllExact();
+                  else if (pm.type === 'group') await handleMergeExactGroup(pm.group);
+                  else if (pm.type === 'suggestion') await handleMergeSuggestion(pm.group);
+                }}
+                className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold transition"
+              >
+                Merge
+              </button>
+              <button
+                onClick={() => setPendingMerge(null)}
+                className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

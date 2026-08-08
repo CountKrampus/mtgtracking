@@ -386,7 +386,7 @@ export default function CommanderRecommendationsModal({ isOpen, onClose, cards, 
 
         <div className="p-4 border-t border-white/10 bg-white/5">
           <p className="text-white/40 text-xs text-center">
-            {commanderFinderMode === 'collection' ? 'Recommendations based on your collection\'s colors and card themes' : 'Search results based on your selected preferences'} â€¢ Sorted by EDHREC popularity
+            {commanderFinderMode === 'collection' ? 'Recommendations based on your collection\'s colors and card themes' : 'Search results based on your selected preferences'} • Sorted by EDHREC popularity
           </p>
         </div>
       </div>

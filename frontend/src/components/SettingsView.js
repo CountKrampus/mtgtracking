@@ -12,6 +12,7 @@ export default function SettingsView({
   settings, updateSettings, resetSettings, formatPrice,
   locations, availableTags, locationStats,
   newLocationName, setNewLocationName, newLocationDesc, setNewLocationDesc,
+  newLocationCapacity, setNewLocationCapacity,
   editingLocation, handleCreateLocation, handleUpdateLocation, cancelEditLocation,
   startEditLocation, handleDeleteLocation, handleToggleLocationIgnorePrice,
   newTagName, setNewTagName, handleCreateTag, handleDeleteTag, handleToggleTagIgnorePrice,
@@ -358,6 +359,14 @@ export default function SettingsView({
                   placeholder="Description (optional)"
                   className="px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
+                <input
+                  type="number"
+                  min="1"
+                  value={newLocationCapacity}
+                  onChange={(e) => setNewLocationCapacity(e.target.value)}
+                  placeholder="Max capacity (optional, e.g. 100 for a binder)"
+                  className="px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
                 <div className="flex gap-2">
                   {editingLocation ? (
                     <>
@@ -412,14 +421,31 @@ export default function SettingsView({
                 {locations.map(location => (
                   <div key={location._id} className="bg-white/5 rounded-lg p-4 flex items-center justify-between">
                     <div>
-                      <div className="text-white font-medium flex items-center gap-2">
+                      <div className="text-white font-medium flex items-center gap-2 flex-wrap">
                         <MapPin size={16} /> {location.name}
-                        {locationStats[location.name] && (
-                          <span className="text-white/50 text-sm ml-2">
-                            ({locationStats[location.name].cardCount} cards, {formatPrice(locationStats[location.name].totalValue)})
-                          </span>
-                        )}
+                        {locationStats[location.name] && (() => {
+                          const s = locationStats[location.name];
+                          return (
+                            <span className={`text-sm ml-2 ${s.overCapacity ? 'text-red-400 font-semibold' : s.nearCapacity ? 'text-yellow-400' : 'text-white/50'}`}>
+                              ({s.cardCount}{s.max ? `/${s.max}` : ''} cards, {formatPrice(s.totalValue)})
+                              {s.overCapacity && ' ⚠ Over capacity!'}
+                              {!s.overCapacity && s.nearCapacity && ' ⚠ Nearly full'}
+                            </span>
+                          );
+                        })()}
                       </div>
+                      {locationStats[location.name]?.max && (() => {
+                        const s = locationStats[location.name];
+                        const pct = Math.min(100, Math.round((s.cardCount / s.max) * 100));
+                        return (
+                          <div className="mt-1.5 w-48 bg-white/10 rounded-full h-1.5">
+                            <div
+                              className={`h-1.5 rounded-full transition-all ${s.overCapacity ? 'bg-red-500' : s.nearCapacity ? 'bg-yellow-500' : 'bg-green-500'}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        );
+                      })()}
                       {location.description && (
                         <div className="text-white/60 text-sm mt-1">{location.description}</div>
                       )}
