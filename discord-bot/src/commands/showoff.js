@@ -1,4 +1,4 @@
-const { client } = require('../apiClient');
+const { client, resolveImageUrl } = require('../apiClient');
 const { replyNotLinked } = require('../lib/notLinked');
 
 module.exports = {
@@ -51,18 +51,24 @@ module.exports = {
       const deck = deckRes.data;
       const cardCount = deck.statistics?.totalCards || deck.mainDeck?.length || 0;
 
-      return interaction.followUp({
-        embeds: [{
-          title: `🃏 ${deck.name}`,
-          thumbnail: deck.commander?.imageUrl ? { url: deck.commander.imageUrl } : undefined,
-          fields: [
-            { name: 'Commander', value: deck.commander?.name || 'None', inline: true },
-            { name: 'Format', value: deck.format || 'commander', inline: true },
-            { name: 'Cards', value: String(cardCount), inline: true },
-            { name: 'Value', value: `$${(deck.totalValue || 0).toFixed(2)}`, inline: true },
-          ],
-        }],
-      });
+      const base = process.env.PUBLIC_ASSET_BASE_URL ||
+        (process.env.API_BASE_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+      const shareUrl = deck.shareCode ? `${base}/shared/deck/${deck.shareCode}` : null;
+      const thumbnailUrl = resolveImageUrl(deck.commander?.imageUrl);
+
+      const embed = {
+        title: `🃏 ${deck.name}`,
+        thumbnail: thumbnailUrl ? { url: thumbnailUrl } : undefined,
+        fields: [
+          { name: 'Commander', value: deck.commander?.name || 'None', inline: true },
+          { name: 'Format', value: deck.format || 'commander', inline: true },
+          { name: 'Cards', value: String(cardCount), inline: true },
+          { name: 'Value', value: `$${(deck.totalValue || 0).toFixed(2)}`, inline: true },
+        ],
+      };
+      if (shareUrl) embed.description = `[View deck →](${shareUrl})`;
+
+      return interaction.followUp({ embeds: [embed] });
     }
 
     return interaction.followUp({ content: 'Unknown subcommand.', ephemeral: true });
