@@ -54,7 +54,7 @@ const groups = [
       { id: 'backups', label: 'Backups & Exports', icon: Archive, requiresRole: 'admin' },
       { id: 'cleanup', label: 'Data Cleanup', icon: Trash2, requiresRole: 'admin' },
       { id: 'priceFlags', label: 'Price Flags', icon: Flag, requiresRole: 'moderator' },
-      { id: 'priceSourceHealth', label: 'Price Sources', icon: Activity, requiresRole: 'moderator' }
+      { id: 'priceSourceHealth', label: 'Price Sources', icon: Activity, requiresRole: 'content_manager' }
     ]
   },
   {
