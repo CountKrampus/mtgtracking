@@ -136,9 +136,27 @@ router.get('/community', async (req, res) => {
 router.get('/:id', requireAuth, async (req, res) => {
   try {
     const query = buildUserQuery({ _id: req.params.id }, req);
-    const deck = await Deck.findOne(query);
+    const deck = await Deck.findOne(query).lean();
     if (!deck) return res.status(404).json({ message: 'Deck not found' });
-    res.json(deck);
+
+    // Compute totalValue live from mainDeck card prices
+    const mainDeck = deck.mainDeck || [];
+    let totalValue = 0;
+    if (mainDeck.length > 0 && Card) {
+      const names = [...new Set(mainDeck.map(c => c.name).filter(Boolean))];
+      const priceRecords = await Card.find(
+        buildUserQuery({ name: { $in: names } }, req)
+      ).select('name price').lean();
+      const priceMap = {};
+      for (const r of priceRecords) {
+        if (r.price > 0) priceMap[r.name] = r.price;
+      }
+      for (const c of mainDeck) {
+        totalValue += (priceMap[c.name] || 0) * (c.quantity || 1);
+      }
+    }
+
+    res.json({ ...deck, totalValue });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
