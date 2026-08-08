@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Globe } from 'lucide-react';
 import { API_URL } from '../../config';
 import SharedDeckView from './SharedDeckView';
-import { COLOR_PIPS, FORMAT_COLORS } from './deckConstants';
+import { FORMAT_COLORS, ManaIcon } from './deckConstants';
 import { useAuthContext } from '../../contexts/AuthContext';
 
 const FORMATS = ['commander', 'standard', 'modern', 'pioneer', 'legacy', 'vintage', 'pauper', 'draft', 'oathbreaker', 'other'];
 const COLORS = ['W', 'U', 'B', 'R', 'G'];
-const COLOR_LABELS = { W: '☀️ White', U: '💧 Blue', B: '💀 Black', R: '🔥 Red', G: '🌲 Green' };
+const COLOR_NAMES = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green' };
 
 function DeckCard({ deck, onView, onFeature, isAdmin }) {
   return (
@@ -39,7 +39,7 @@ function DeckCard({ deck, onView, onFeature, isAdmin }) {
         </p>
         <div className="flex items-center gap-2 mb-3">
           {(deck.commander?.colorIdentity || []).map(c => (
-            <span key={c} className="text-sm" title={c}>{COLOR_PIPS[c] || c}</span>
+            <ManaIcon key={c} color={c} size={16} />
           ))}
           {(deck.tags || []).slice(0, 3).map(tag => (
             <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-white/10 text-gray-300 rounded">{tag}</span>
@@ -217,14 +217,14 @@ function CommunityDecks() {
               <button
                 key={c}
                 onClick={() => toggleColor(c)}
-                title={COLOR_LABELS[c]}
-                className={`w-8 h-8 rounded-lg text-base border transition ${
+                title={COLOR_NAMES[c]}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center border transition ${
                   selectedColors.includes(c)
                     ? 'bg-purple-600/50 border-purple-400 shadow-sm'
                     : 'bg-white/5 border-white/10 hover:border-purple-500/40'
                 }`}
               >
-                {COLOR_PIPS[c]}
+                <ManaIcon color={c} size={18} />
               </button>
             ))}
           </div>
