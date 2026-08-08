@@ -57,6 +57,8 @@ export function AccountSettings({ onClose }) {
   const [discordCodeExpiresAt, setDiscordCodeExpiresAt] = useState(null);
   const [discordActionLoading, setDiscordActionLoading] = useState(false);
   const [discordMessage, setDiscordMessage] = useState(null);
+  const [discordNotifPrefs, setDiscordNotifPrefs] = useState(null);
+  const [discordNotifPrefsLoading, setDiscordNotifPrefsLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,6 +76,43 @@ export function AccountSettings({ onClose }) {
     })();
     return () => { cancelled = true; };
   }, [authFetch]);
+
+  useEffect(() => {
+    if (!discordLinked) return;
+    let cancelled = false;
+    (async () => {
+      setDiscordNotifPrefsLoading(true);
+      try {
+        const response = await authFetch(`${API_URL}/discord/link/prefs`);
+        if (!response.ok || cancelled) return;
+        const data = await response.json();
+        if (!cancelled) setDiscordNotifPrefs(data);
+      } catch (err) {
+        // non-fatal: prefs section just won't show
+      } finally {
+        if (!cancelled) setDiscordNotifPrefsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [discordLinked, authFetch]);
+
+  const handleDiscordPrefToggle = async (type) => {
+    if (!discordNotifPrefs) return;
+    const newVal = !discordNotifPrefs[type];
+    setDiscordNotifPrefs(prev => ({ ...prev, [type]: newVal }));
+    try {
+      const response = await authFetch(`${API_URL}/discord/link/prefs`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [type]: newVal }),
+      });
+      if (!response.ok) {
+        setDiscordNotifPrefs(prev => ({ ...prev, [type]: !newVal }));
+      }
+    } catch (err) {
+      setDiscordNotifPrefs(prev => ({ ...prev, [type]: !newVal }));
+    }
+  };
 
   const handleAvatarSave = (avatarUrl) => {
     setCurrentAvatarUrl(avatarUrl);
@@ -589,6 +628,40 @@ export function AccountSettings({ onClose }) {
                       <Unlink size={16} />
                       {discordActionLoading ? 'Unlinking...' : 'Unlink'}
                     </button>
+                  </div>
+                )}
+
+                {!discordStatusLoading && discordLinked && discordNotifPrefs && (
+                  <div className="mt-4 space-y-3">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-white/50">Notification Preferences</h4>
+                    <p className="text-xs text-white/40">Choose which notifications are delivered to you via Discord DM.</p>
+                    {[
+                      { label: 'Pricing',    types: [['price_alert', 'Price Alert']] },
+                      { label: 'Trading',    types: [['trade_offer','Trade Offer'],['trade_accepted','Trade Accepted'],['trade_rejected','Trade Declined'],['trade_countered','Trade Countered']] },
+                      { label: 'Forum',      types: [['mention','Mention'],['reply','Reply'],['upvote','Upvote']] },
+                      { label: 'Messages',   types: [['dm','Direct Message']] },
+                      { label: 'Collection', types: [['collection_health_report','Collection Report'],['price_flag_resolved','Price Flag Resolution']] },
+                    ].map(group => (
+                      <div key={group.label}>
+                        <p className="text-xs font-medium text-white/40 mb-1">{group.label}</p>
+                        <div className="space-y-1">
+                          {group.types.map(([type, label]) => (
+                            <label key={type} className="flex items-center justify-between cursor-pointer group">
+                              <span className="text-sm text-white/70 group-hover:text-white transition-colors">{label}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleDiscordPrefToggle(type)}
+                                disabled={discordNotifPrefsLoading}
+                                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors disabled:opacity-50 ${discordNotifPrefs[type] ? 'bg-purple-600' : 'bg-gray-600'}`}
+                                aria-pressed={!!discordNotifPrefs[type]}
+                              >
+                                <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transform transition-transform ${discordNotifPrefs[type] ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
+                              </button>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
 
