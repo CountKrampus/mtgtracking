@@ -40,13 +40,8 @@ async function computeTotalValue(mainDeck) {
 function buildThreadContent(deck, owner, buildLabel, budgetTier, totalValue, saltScore) {
   const colorStr = deck.commander?.colorIdentity?.join('') || '?';
   const tagLine = deck.tags?.length ? `Tags: ${deck.tags.join(', ')}` : '';
-  const shareLink = deck.shareCode ? `/decks/share/${deck.shareCode}` : '';
+  const shareLink = deck.shareCode ? `/shared/deck/${deck.shareCode}` : '';
   const totalCards = (deck.mainDeck || []).reduce((sum, c) => sum + (c.quantity || 1), 0);
-
-  const deckList = [...(deck.mainDeck || [])]
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map(c => c.quantity > 1 ? `${c.quantity}x ${c.name}` : c.name)
-    .join('\n');
 
   return [
     `This week's spotlight deck is "${deck.name}" by @${owner.username} — a ${budgetTier} ${buildLabel} in the ${deck.format || 'Commander'} format.`,
@@ -58,9 +53,6 @@ function buildThreadContent(deck, owner, buildLabel, budgetTier, totalValue, sal
     `Card Count: ${totalCards} cards`,
     tagLine,
     shareLink ? `View deck: ${shareLink}` : '',
-    '',
-    '--- Decklist ---',
-    deckList,
     '',
     '---',
     'Think a deck deserves a spotlight? Share your deck publicly in the Community Decks section!',

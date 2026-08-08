@@ -9,12 +9,12 @@ import UserHoverCard from './UserHoverCard';
 
 // Splits text on URLs (http/https) and /decks/share/ paths, rendering them as links.
 function linkifyContent(text) {
-  const parts = text.split(/(https?:\/\/[^\s]+|\/decks\/share\/[a-zA-Z0-9]+)/g);
+  const parts = text.split(/(https?:\/\/[^\s]+|\/shared\/deck\/[a-zA-Z0-9]+)/g);
   return parts.map((part, i) => {
     if (/^https?:\/\//.test(part)) {
       return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-indigo-400 underline hover:text-indigo-300">{part}</a>;
     }
-    if (/^\/decks\/share\//.test(part)) {
+    if (/^\/shared\/deck\//.test(part)) {
       return <a key={i} href={part} className="text-indigo-400 underline hover:text-indigo-300">View deck →</a>;
     }
     return part;
