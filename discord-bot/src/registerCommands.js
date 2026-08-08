@@ -72,6 +72,12 @@ const commands = [
 
   new SlashCommandBuilder().setName('pricealerts').setDescription('List your cards with an active price alert'),
 
+  new SlashCommandBuilder().setName('showoff').setDescription('Post something to show off in the channel')
+    .addSubcommand(sub => sub.setName('cards').setDescription('Show off your most valuable cards')
+      .addIntegerOption(o => o.setName('count').setDescription('How many cards (default 5, max 10)').setMinValue(1).setMaxValue(10)))
+    .addSubcommand(sub => sub.setName('deck').setDescription('Show off a deck')
+      .addStringOption(o => o.setName('name').setDescription('Deck name').setRequired(true))),
+
   new SlashCommandBuilder().setName('trades').setDescription('Trading commands')
     .addSubcommand(sub => sub.setName('browse').setDescription('Browse active trade listings')
       .addStringOption(o => o.setName('type').setDescription('Filter by listing type')

@@ -25,6 +25,7 @@ const commands = new Map([
   require('./commands/achievements'),
   require('./commands/pricealerts'),
   require('./commands/trades'),
+  require('./commands/showoff'),
 ].map(cmd => [cmd.name, cmd]));
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
