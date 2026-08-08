@@ -97,7 +97,7 @@ function CommunityDecks() {
   const [spotlightLoading, setSpotlightLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/deck-spotlight/active')
+    fetch(`${API_URL}/deck-spotlight/active`)
       .then(r => r.json())
       .then(data => setSpotlight(data.spotlight))
       .catch(() => {})
@@ -143,8 +143,13 @@ function CommunityDecks() {
   };
 
   const handleFeatureDeck = async (deckId) => {
+    if (spotlight && !window.confirm('Replace current spotlight?')) return;
     try {
-      const res = await authFetch('/api/deck-spotlight', {
+      if (spotlight) {
+        const delRes = await authFetch(`${API_URL}/deck-spotlight/${spotlight._id}`, { method: 'DELETE' });
+        if (!delRes.ok) { alert('Failed to remove existing spotlight'); return; }
+      }
+      const res = await authFetch(`${API_URL}/deck-spotlight`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ deckId }),
@@ -154,7 +159,7 @@ function CommunityDecks() {
         alert(data.message || 'Failed to feature deck');
         return;
       }
-      const activeRes = await fetch('/api/deck-spotlight/active');
+      const activeRes = await fetch(`${API_URL}/deck-spotlight/active`);
       const activeData = await activeRes.json();
       setSpotlight(activeData.spotlight);
     } catch {
@@ -165,7 +170,7 @@ function CommunityDecks() {
   const handleRemoveSpotlight = async () => {
     if (!spotlight) return;
     try {
-      await authFetch(`/api/deck-spotlight/${spotlight._id}`, { method: 'DELETE' });
+      await authFetch(`${API_URL}/deck-spotlight/${spotlight._id}`, { method: 'DELETE' });
       setSpotlight(null);
     } catch {
       alert('Failed to remove spotlight');
