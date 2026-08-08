@@ -1995,7 +1995,95 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
               })}
             </div>
           </div>
+
+          {/* Sideboard */}
+          {(deck.sideboard || []).length > 0 && (
+            <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30 mt-4">
+              <h3 className="text-lg font-bold text-white mb-3">Sideboard ({(deck.sideboard || []).reduce((s,c)=>s+(c.quantity||1),0)} cards)</h3>
+              <div className="space-y-0.5">
+                {(deck.sideboard || []).map((card, i) => (
+                  <div key={i} className="flex items-center gap-2 py-1 text-sm border-b border-white/5 last:border-0">
+                    {card.quantity > 1 && <span className="text-white/50 text-xs w-4 text-right">{card.quantity}×</span>}
+                    <span className="text-white flex-1 truncate">{card.name}</span>
+                    <span className="text-white/30 text-xs">{card.manaCost}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Considering / Maybeboard */}
+          {(deck.considering || []).length > 0 && (
+            <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30 mt-4">
+              <h3 className="text-lg font-bold text-white mb-1">Considering ({(deck.considering || []).reduce((s,c)=>s+(c.quantity||1),0)} cards)</h3>
+              <p className="text-white/40 text-xs mb-3">Cards being evaluated for inclusion</p>
+              <div className="space-y-0.5">
+                {(deck.considering || []).map((card, i) => (
+                  <div key={i} className="flex items-center gap-2 py-1 text-sm border-b border-white/5 last:border-0">
+                    {card.quantity > 1 && <span className="text-white/50 text-xs w-4 text-right">{card.quantity}×</span>}
+                    <span className="text-white flex-1 truncate">{card.name}</span>
+                    <span className="text-white/30 text-xs">{card.manaCost}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Deck Notes / Primer */}
+          <DeckNotesPanel deck={deck} onRefresh={onRefresh} />
         </>
+      )}
+    </div>
+  );
+}
+
+function DeckNotesPanel({ deck, onRefresh }) {
+  const [editing, setEditing] = useState(false);
+  const [notes, setNotes] = useState(deck.notes || '');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { setNotes(deck.notes || ''); }, [deck.notes]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('mtg_access_token');
+      await fetch(`${API_URL}/decks/${deck._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ ...deck, notes }),
+      });
+      setEditing(false);
+      onRefresh?.();
+    } catch { /* silent */ } finally { setSaving(false); }
+  };
+
+  return (
+    <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30 mt-4">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-bold text-white">Notes / Primer</h3>
+        {!editing ? (
+          <button onClick={() => setEditing(true)} className="text-xs px-3 py-1 bg-white/10 hover:bg-white/20 text-white/70 rounded transition">
+            {notes ? 'Edit' : '+ Add Notes'}
+          </button>
+        ) : (
+          <div className="flex gap-2">
+            <button onClick={() => { setEditing(false); setNotes(deck.notes || ''); }} className="text-xs px-3 py-1 bg-white/10 hover:bg-white/20 text-white/70 rounded transition">Cancel</button>
+            <button onClick={handleSave} disabled={saving} className="text-xs px-3 py-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded transition">{saving ? 'Saving…' : 'Save'}</button>
+          </div>
+        )}
+      </div>
+      {editing ? (
+        <textarea
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          placeholder="Write your deck primer, strategy notes, combo lines, win conditions…"
+          className="w-full h-48 bg-black/30 border border-white/20 rounded-lg p-3 text-white text-sm resize-y focus:outline-none focus:ring-2 focus:ring-purple-400 placeholder-white/30"
+        />
+      ) : notes ? (
+        <div className="text-white/80 text-sm whitespace-pre-wrap leading-relaxed">{notes}</div>
+      ) : (
+        <p className="text-white/30 text-sm italic">No notes yet. Click "+ Add Notes" to write a primer or strategy guide.</p>
       )}
     </div>
   );

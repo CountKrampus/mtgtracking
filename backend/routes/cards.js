@@ -10,9 +10,26 @@ const { getFromCache, setInCache, clearCache } = require('../utils/statsCache');
 const { cacheCardImage } = require('../utils/imageCache');
 const { fetchCardFromScryfall } = require('../utils/scryfallLookup');
 const Card = require('../models/Card');
+const Deck = require('../models/Deck');
 const CardPriceSnapshot = require('../models/CardPriceSnapshot');
 const CardPriceHistory = require('../models/CardPriceHistory');
 const { parseCardLine, getDuplicateCardQuery, validateCardPayload, validateBulkUpdatePayload, buildCardListQuery, normalizeTag, findDuplicateGroups, applyMerge } = require('../utils/cardUtils');
+
+async function updateDeckTotalValuesForCard(cardName, req) {
+  try {
+    const decks = await Deck.find(buildUserQuery({ 'mainDeck.name': cardName }, req));
+    for (const deck of decks) {
+      const names = [...new Set((deck.mainDeck || []).map(c => c.name).filter(Boolean))];
+      if (!names.length) continue;
+      const priceRecords = await Card.find(buildUserQuery({ name: { $in: names } }, req)).select('name price').lean();
+      const priceMap = Object.fromEntries(priceRecords.map(r => [r.name, r.price || 0]));
+      deck.totalValue = (deck.mainDeck || []).reduce((sum, c) => sum + (priceMap[c.name] || 0) * (c.quantity || 1), 0);
+      await deck.save();
+    }
+  } catch {
+    // Non-critical
+  }
+}
 
 router.use(verifyToken);
 
@@ -205,6 +222,7 @@ router.post('/:id/update-price', requireAuth, requireEditor, activityLoggers.pri
     }
 
     await card.save();
+    await updateDeckTotalValuesForCard(card.name, req);
 
     // Save daily price snapshot for this card
     try {
@@ -237,6 +255,7 @@ router.post('/update-all-prices', requireAuth, requireEditor, activityLoggers.pr
     const cards = await Card.find(cardQuery);
     let updated = 0;
     let skipped = 0;
+    const updatedCardNames = new Set();
 
     for (const card of cards) {
       try {
@@ -310,6 +329,7 @@ router.post('/update-all-prices', requireAuth, requireEditor, activityLoggers.pr
         }
 
         await card.save();
+        updatedCardNames.add(card.name);
         updated++;
 
         // Save daily price snapshot for this card
@@ -333,6 +353,21 @@ router.post('/update-all-prices', requireAuth, requireEditor, activityLoggers.pr
       } catch (error) {
         console.error(`Error updating ${card.name}:`, error.message);
       }
+    }
+
+    // Refresh totalValue on any decks containing updated cards (best-effort)
+    if (updatedCardNames.size > 0) {
+      try {
+        const affectedDecks = await Deck.find(buildUserQuery({ 'mainDeck.name': { $in: [...updatedCardNames] } }, req));
+        for (const deck of affectedDecks) {
+          const names = [...new Set((deck.mainDeck || []).map(c => c.name).filter(Boolean))];
+          if (!names.length) continue;
+          const priceRecords = await Card.find(buildUserQuery({ name: { $in: names } }, req)).select('name price').lean();
+          const priceMap = Object.fromEntries(priceRecords.map(r => [r.name, r.price || 0]));
+          deck.totalValue = (deck.mainDeck || []).reduce((sum, c) => sum + (priceMap[c.name] || 0) * (c.quantity || 1), 0);
+          await deck.save();
+        }
+      } catch {}
     }
 
     // Clear cache if any cards were updated
@@ -1004,6 +1039,38 @@ router.post('/bulk-update', requireAuth, requireEditor, activityLoggers.cardBulk
       total: cardIds.length,
       results
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Collection acquisition trend — cards added per day over the last N days
+router.get('/acquisitions', requireAuth, async (req, res) => {
+  try {
+    const days = Math.min(Math.max(parseInt(req.query.days) || 30, 1), 365);
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+    since.setHours(0, 0, 0, 0);
+
+    const matchQuery = buildUserQuery({ createdAt: { $gte: since } }, req);
+
+    const data = await Card.aggregate([
+      { $match: matchQuery },
+      { $group: {
+        _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+        cardsAdded: { $sum: '$quantity' },
+        valueAdded: { $sum: { $multiply: ['$price', '$quantity'] } }
+      }},
+      { $sort: { _id: 1 } },
+      { $project: {
+        _id: 0,
+        date: '$_id',
+        cardsAdded: 1,
+        valueAdded: { $round: ['$valueAdded', 2] }
+      }}
+    ]);
+
+    res.json({ days, data });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

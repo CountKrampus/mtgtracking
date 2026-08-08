@@ -36,6 +36,25 @@ const deckSchema = new mongoose.Schema({
     imageUrl: { type: String },
     quantity: { type: Number, default: 1 }
   }],
+  sideboard: [{
+    scryfallId: { type: String, required: true },
+    name: { type: String, required: true },
+    manaCost: { type: String },
+    types: [{ type: String }],
+    colors: [{ type: String }],
+    imageUrl: { type: String },
+    quantity: { type: Number, default: 1 }
+  }],
+  considering: [{
+    scryfallId: { type: String, required: true },
+    name: { type: String, required: true },
+    manaCost: { type: String },
+    types: [{ type: String }],
+    colors: [{ type: String }],
+    imageUrl: { type: String },
+    quantity: { type: Number, default: 1 }
+  }],
+  notes: { type: String, default: '' },
   statistics: {
     totalCards: { type: Number, default: 100 },
     manaCurve: { type: Map, of: Number },

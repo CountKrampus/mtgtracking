@@ -98,11 +98,18 @@ function ScryfallCardSearch({ onAddCard }) {
 
 // ── Main DeckEditor ───────────────────────────────────────────────────────────
 function DeckEditor({ deck, onSave, onCancel }) {
-  const [deckName, setDeckName]   = useState(deck.name);
-  const [mainDeck, setMainDeck]   = useState(deck.mainDeck ? [...deck.mainDeck] : []);
-  const [collection, setCollection] = useState([]);
-  const [collFilter, setCollFilter] = useState('');
-  const [saving, setSaving]       = useState(false);
+  const [deckName, setDeckName]       = useState(deck.name);
+  const [mainDeck, setMainDeck]       = useState(deck.mainDeck ? [...deck.mainDeck] : []);
+  const [sideboard, setSideboard]     = useState(deck.sideboard ? [...deck.sideboard] : []);
+  const [considering, setConsidering] = useState(deck.considering ? [...deck.considering] : []);
+  const [deckListTab, setDeckListTab] = useState('main'); // 'main' | 'sideboard' | 'considering'
+  const [collection, setCollection]   = useState([]);
+  const [collFilter, setCollFilter]   = useState('');
+  const [saving, setSaving]           = useState(false);
+
+  // Helpers to get/set the active list
+  const activeList = deckListTab === 'sideboard' ? sideboard : deckListTab === 'considering' ? considering : mainDeck;
+  const setActiveList = deckListTab === 'sideboard' ? setSideboard : deckListTab === 'considering' ? setConsidering : setMainDeck;
 
   // Load user's collection
   useEffect(() => {
@@ -120,12 +127,12 @@ function DeckEditor({ deck, onSave, onCancel }) {
 
   const deckCardIndex = useMemo(() => {
     const idx = {};
-    mainDeck.forEach((c, i) => { idx[c.scryfallId] = i; });
+    activeList.forEach((c, i) => { idx[c.scryfallId] = i; });
     return idx;
-  }, [mainDeck]);
+  }, [activeList]);
 
   const addCard = useCallback((card) => {
-    setMainDeck(prev => {
+    setActiveList(prev => {
       const existing = prev.findIndex(c => c.scryfallId === card.scryfallId);
       if (existing !== -1) {
         const updated = [...prev];
@@ -134,10 +141,10 @@ function DeckEditor({ deck, onSave, onCancel }) {
       }
       return [...prev, { ...card, quantity: 1 }];
     });
-  }, []);
+  }, [setActiveList]);
 
   const removeCard = useCallback((scryfallId) => {
-    setMainDeck(prev => {
+    setActiveList(prev => {
       const existing = prev.findIndex(c => c.scryfallId === scryfallId);
       if (existing === -1) return prev;
       const current = prev[existing];
@@ -148,11 +155,11 @@ function DeckEditor({ deck, onSave, onCancel }) {
       }
       return prev.filter((_, i) => i !== existing);
     });
-  }, []);
+  }, [setActiveList]);
 
   const removeCardFully = useCallback((scryfallId) => {
-    setMainDeck(prev => prev.filter(c => c.scryfallId !== scryfallId));
-  }, []);
+    setActiveList(prev => prev.filter(c => c.scryfallId !== scryfallId));
+  }, [setActiveList]);
 
   // ── Drag-and-drop: drag a collection card onto the deck list ─────────────────
   const buildDeckCard = useCallback((card) => ({
@@ -214,13 +221,13 @@ function DeckEditor({ deck, onSave, onCancel }) {
   // ── Categorized deck ────────────────────────────────────────────────────────
   const categorizedDeck = useMemo(() => {
     const cats = {};
-    mainDeck.forEach(card => {
+    activeList.forEach(card => {
       const cat = getCategory(card);
       if (!cats[cat]) cats[cat] = [];
       cats[cat].push(card);
     });
     return cats;
-  }, [mainDeck]);
+  }, [activeList]);
 
   // ── Save ─────────────────────────────────────────────────────────────────────
   const handleSave = async () => {
@@ -231,6 +238,8 @@ function DeckEditor({ deck, onSave, onCancel }) {
         ...deck,
         name: deckName.trim(),
         mainDeck,
+        sideboard,
+        considering,
       });
       onSave(res.data);
     } catch (error) {
@@ -254,7 +263,7 @@ function DeckEditor({ deck, onSave, onCancel }) {
           onChange={e => setDeckName(e.target.value)}
           className="flex-1 px-4 py-2 bg-white/10 border border-white/30 rounded-lg text-white text-xl font-bold focus:outline-none focus:ring-2 focus:ring-purple-400"
         />
-        <span className={`text-lg font-bold flex-shrink-0 ${counterColor}`}>
+        <span className={`text-lg font-bold flex-shrink-0 ${counterColor}`} title="Main deck + commander">
           {totalCardCount}/100
         </span>
         <div className="flex gap-2 flex-shrink-0">
@@ -336,18 +345,32 @@ function DeckEditor({ deck, onSave, onCancel }) {
           onDrop={handleDeckDrop}
           className="bg-white/10 backdrop-blur-md rounded-lg p-4 border-2 border-dashed border-white/30 hover:border-purple-500/60 transition"
         >
-          <h3 className="text-base font-bold text-white mb-3">
-            Deck Contents
+          <div className="flex items-center justify-between mb-3 gap-2">
+            <div className="flex rounded-lg overflow-hidden border border-white/20 text-xs font-medium">
+              {[
+                { key: 'main', label: `Main (${mainDeck.reduce((s,c)=>s+(c.quantity||1),0)})` },
+                { key: 'sideboard', label: `Side (${sideboard.reduce((s,c)=>s+(c.quantity||1),0)})` },
+                { key: 'considering', label: `Maybe (${considering.reduce((s,c)=>s+(c.quantity||1),0)})` },
+              ].map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => setDeckListTab(t.key)}
+                  className={`px-3 py-1.5 transition ${deckListTab === t.key ? 'bg-purple-600 text-white' : 'bg-white/5 text-white/50 hover:text-white hover:bg-white/10'}`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
             {deck.commander && (
-              <span className="ml-2 text-sm font-normal text-white/50">
-                Commander: {deck.commander.name}
-              </span>
+              <span className="text-xs text-white/40 truncate">Cmdr: {deck.commander.name}</span>
             )}
-          </h3>
+          </div>
 
-          {mainDeck.length === 0 ? (
+          {activeList.length === 0 ? (
             <div className="text-white/30 text-sm text-center py-10 italic">
-              Click or drag cards from the left to add them to your deck.
+              {deckListTab === 'main' && 'Click or drag cards from the left to add them to your deck.'}
+              {deckListTab === 'sideboard' && 'Add cards here for your sideboard.'}
+              {deckListTab === 'considering' && 'Add cards here that you\'re thinking about including.'}
             </div>
           ) : (
             <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1">
