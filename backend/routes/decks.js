@@ -43,6 +43,20 @@ const RECOMMENDATION_CATEGORIES = {
   removal: 'o:"destroy target" OR o:"exile target"',
 };
 
+// Recomputes deck.totalValue from the user's Card collection prices and writes
+// it back onto the (already-in-memory) deck document. Call before deck.save().
+async function recomputeDeckTotalValue(deck, req) {
+  const names = [...new Set((deck.mainDeck || []).map(c => c.name).filter(Boolean))];
+  if (!names.length) { deck.totalValue = 0; return; }
+  const priceRecords = Card
+    ? await Card.find(buildUserQuery({ name: { $in: names } }, req)).select('name price').lean()
+    : [];
+  const priceMap = Object.fromEntries(priceRecords.map(r => [r.name, r.price || 0]));
+  deck.totalValue = (deck.mainDeck || []).reduce(
+    (sum, c) => sum + (priceMap[c.name] || 0) * (c.quantity || 1), 0
+  );
+}
+
 // Union of colors from the commander(s) and every mainDeck card - the same
 // "what colors does this deck actually play" signal already used by
 // calculateManabaseScore/estimatePowerLevel in utils/deckAnalysis.js.
@@ -211,6 +225,7 @@ router.put('/:id', requireAuth, requireEditor, activityLoggers.deckUpdate, async
     const { userId: _, ...updateData } = req.body;
     Object.assign(deck, updateData);
     deck.statistics = calculateDeckStatistics(deck);
+    await recomputeDeckTotalValue(deck, req);
 
     // Build new deck map for diffing
     const newDeckMap = new Map();
@@ -528,6 +543,7 @@ router.post('/:id/add-card', requireAuth, requireEditor, async (req, res) => {
     });
 
     deck.statistics = calculateDeckStatistics(deck);
+    await recomputeDeckTotalValue(deck, req);
     await deck.save();
 
     res.json(deck);
@@ -558,6 +574,7 @@ router.post('/:id/swap-card', requireAuth, requireEditor, async (req, res) => {
     }
 
     deck.statistics = calculateDeckStatistics(deck);
+    await recomputeDeckTotalValue(deck, req);
     await deck.save();
     res.json(deck);
   } catch (error) {
@@ -1226,6 +1243,70 @@ router.post('/community/:shareCode/import', requireAuth, async (req, res) => {
 
     res.status(201).json({ deckId: newDeck._id });
   } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// Format legality check — returns illegal cards for the deck's format
+router.get('/:id/legality', requireAuth, async (req, res) => {
+  try {
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(query).lean();
+    if (!deck) return res.status(404).json({ message: 'Deck not found' });
+
+    const format = deck.format || 'commander';
+    const names = [...new Set((deck.mainDeck || []).map(c => c.name).filter(Boolean))];
+    if (!names.length) return res.json({ format, violations: [], checked: 0 });
+
+    // Fetch legality data with caching
+    const cacheKeyPrefix = 'legality-v1:';
+    const legality = {};
+
+    // Check cache first
+    const cacheKeys = names.map(n => `${cacheKeyPrefix}${n}`);
+    let cachedDocs = [];
+    try { cachedDocs = await ApiCache.find({ key: { $in: cacheKeys } }).lean(); } catch {}
+    for (const doc of cachedDocs) {
+      const name = doc.key.replace(cacheKeyPrefix, '');
+      legality[name] = doc.data;
+    }
+
+    // Batch-fetch missing cards from Scryfall
+    const missing = names.filter(n => !legality[n]);
+    for (let i = 0; i < missing.length; i += 75) {
+      const chunk = missing.slice(i, i + 75);
+      try {
+        const response = await axios.post('https://api.scryfall.com/cards/collection', {
+          identifiers: chunk.map(name => ({ name })),
+        });
+        for (const card of (response.data.data || [])) {
+          const data = { legalities: card.legalities || {} };
+          legality[card.name] = data;
+          ApiCache.findOneAndUpdate(
+            { key: `${cacheKeyPrefix}${card.name}` },
+            { key: `${cacheKeyPrefix}${card.name}`, data, createdAt: new Date() },
+            { upsert: true }
+          ).catch(() => {});
+        }
+      } catch (err) {
+        console.error('Legality batch fetch failed:', err.message);
+      }
+    }
+
+    // Evaluate violations
+    const formatKey = format.toLowerCase().replace(/\s+/g, '');
+    const violations = [];
+    for (const card of (deck.mainDeck || [])) {
+      const info = legality[card.name];
+      if (!info) continue;
+      const status = info.legalities?.[formatKey];
+      if (status && status !== 'legal' && status !== 'restricted') {
+        violations.push({ name: card.name, status });
+      }
+    }
+
+    res.json({ format, violations, checked: names.length });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 // Share deck (generate share code)

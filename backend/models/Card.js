@@ -63,6 +63,7 @@ cardSchema.index({ userId: 1, name: 1 });
 cardSchema.index({ userId: 1, set: 1 });
 cardSchema.index({ userId: 1, condition: 1 });
 cardSchema.index({ userId: 1, updatedAt: -1 });
+cardSchema.index({ userId: 1, location: 1, condition: 1 }); // filtered location+condition queries
 
 cardSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
