@@ -112,10 +112,11 @@ function DeckEditor({ deck, onSave, onCancel }) {
   }, []);
 
   // ── Deck helpers ────────────────────────────────────────────────────────────
-  const totalCardCount = useMemo(
-    () => mainDeck.reduce((sum, c) => sum + (c.quantity || 1), 0),
-    [mainDeck]
-  );
+  const totalCardCount = useMemo(() => {
+    const mainCount = mainDeck.reduce((sum, c) => sum + (c.quantity || 1), 0);
+    const commanderCount = (deck.commander ? 1 : 0) + (deck.partnerCommander ? 1 : 0);
+    return mainCount + commanderCount;
+  }, [mainDeck, deck.commander, deck.partnerCommander]);
 
   const deckCardIndex = useMemo(() => {
     const idx = {};
