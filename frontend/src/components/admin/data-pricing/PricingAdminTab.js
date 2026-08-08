@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { RefreshCw, Play, Square, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { RefreshCw, Play, Square, AlertTriangle, CheckCircle, Clock, Activity } from 'lucide-react';
 import { useAuthContext } from '../../../contexts/AuthContext';
 import { API_URL } from '../../../config';
 
@@ -56,6 +56,43 @@ function ProgressBar({ completed, total }) {
   );
 }
 
+function SourceStatCard({ label, count, percentage, tone }) {
+  const toneClasses = {
+    good: 'text-green-400',
+    warn: 'text-yellow-400',
+    bad: 'text-red-400',
+  };
+  return (
+    <div className="bg-gray-700/50 rounded-lg p-3 text-center">
+      <p className="text-gray-400 text-xs mb-1">{label}</p>
+      <p className={`text-2xl font-bold ${toneClasses[tone]}`}>{percentage}%</p>
+      <p className="text-gray-500 text-xs">{count} fetches</p>
+    </div>
+  );
+}
+
+function DailyTrendChart({ dailyTrend }) {
+  if (dailyTrend.length === 0) return null;
+  const maxDaily = Math.max(...dailyTrend.map(d => d.Scryfall + d['MTGGoldfish (backup)'] + d['None (not found)']), 1);
+  return (
+    <div className="flex items-end gap-1 h-32 overflow-x-auto pb-1">
+      {dailyTrend.map(d => {
+        const total = d.Scryfall + d['MTGGoldfish (backup)'] + d['None (not found)'];
+        const heightPct = (total / maxDaily) * 100;
+        return (
+          <div key={d.date} className="flex flex-col items-center gap-1 flex-shrink-0 w-6" title={`${d.date}: ${total} fetches`}>
+            <div className="w-full bg-gray-700 rounded-t flex flex-col-reverse overflow-hidden" style={{ height: `${heightPct}%`, minHeight: total > 0 ? '4px' : '0' }}>
+              <div className="w-full bg-green-500" style={{ height: `${(d.Scryfall / total) * 100}%` }} />
+              <div className="w-full bg-yellow-500" style={{ height: `${(d['MTGGoldfish (backup)'] / total) * 100}%` }} />
+              <div className="w-full bg-red-500" style={{ height: `${(d['None (not found)'] / total) * 100}%` }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── Main component ────────────────────────────────────────────────────────────
 
 export function PricingAdminTab() {
@@ -74,6 +111,10 @@ export function PricingAdminTab() {
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState(null);
   const [pollError, setPollError] = useState(null);
+
+  // Price source health
+  const [sourceHealth, setSourceHealth] = useState(null);
+  const [sourceHealthLoading, setSourceHealthLoading] = useState(true);
 
   const intervalRef = useRef(null);
 
@@ -123,6 +164,15 @@ export function PricingAdminTab() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId, polling]);
+
+  useEffect(() => {
+    authFetch(`${API_URL}/admin/price-source-health`)
+      .then(r => r.json())
+      .then(setSourceHealth)
+      .catch(() => setSourceHealth(null))
+      .finally(() => setSourceHealthLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -357,6 +407,35 @@ export function PricingAdminTab() {
               even after you leave or cancel monitoring.
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* ── Section 3: Price Source Health ── */}
+      <div className="bg-gray-800 rounded-xl border border-gray-700/50 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-700/50">
+          <h2 className="text-base font-semibold text-white flex items-center gap-2">
+            <Activity size={18} className="text-purple-400" />
+            Price Source Health
+          </h2>
+          <p className="text-xs text-gray-400 mt-1">
+            Which pricing source recent updates actually resolved to, over the last 30 days.
+          </p>
+        </div>
+        <div className="p-5 space-y-4">
+          {sourceHealthLoading ? (
+            <p className="text-gray-400 text-sm">Loading...</p>
+          ) : !sourceHealth || sourceHealth.totalFetches === 0 ? (
+            <p className="text-gray-400 text-sm">No price fetches recorded in the last 30 days yet — this fills in as prices are updated.</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-3 gap-3">
+                <SourceStatCard label="Scryfall" count={sourceHealth.bySource.Scryfall.count} percentage={sourceHealth.bySource.Scryfall.percentage} tone="good" />
+                <SourceStatCard label="MTGGoldfish Backup" count={sourceHealth.bySource['MTGGoldfish (backup)'].count} percentage={sourceHealth.bySource['MTGGoldfish (backup)'].percentage} tone="warn" />
+                <SourceStatCard label="Not Found" count={sourceHealth.bySource['None (not found)'].count} percentage={sourceHealth.bySource['None (not found)'].percentage} tone="bad" />
+              </div>
+              <DailyTrendChart dailyTrend={sourceHealth.dailyTrend} />
+            </>
+          )}
         </div>
       </div>
 
