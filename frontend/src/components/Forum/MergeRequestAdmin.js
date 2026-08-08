@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Loader } from 'lucide-react';
 import { API_URL } from '../../config';
+import { useAuthContext } from '../../contexts/AuthContext';
 
 export default function MergeRequestAdmin() {
+  const { authFetch } = useAuthContext();
   const [activeTab, setActiveTab] = useState('pending');
   const [pendingRequests, setPendingRequests] = useState([]);
   const [resolvedRequests, setResolvedRequests] = useState([]);
@@ -38,17 +40,18 @@ export default function MergeRequestAdmin() {
   }, []);
 
   const handleApprove = async (req) => {
-    if (!req.sourceThread?._id || !req.targetThread?._id) {
+    const targetId = req.mergeRequest?.suggestedThreadId?._id;
+    if (!req._id || !targetId) {
       setActionErrors(prev => ({ ...prev, [req._id]: 'Cannot approve: source or target thread data is missing.' }));
       return;
     }
     setActionLoadingId(req._id);
     setActionErrors(prev => ({ ...prev, [req._id]: '' }));
     try {
-      const res = await fetch(`${API_URL}/forum/threads/${req.sourceThread._id}/merge`, {
+      const res = await authFetch(`${API_URL}/forum/threads/${req._id}/merge`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetThreadId: req.targetThread._id })
+        body: JSON.stringify({ targetThreadId: targetId })
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -64,14 +67,14 @@ export default function MergeRequestAdmin() {
   };
 
   const handleReject = async (req) => {
-    if (!req.sourceThread?._id) {
+    if (!req._id) {
       setActionErrors(prev => ({ ...prev, [req._id]: 'Cannot reject: source thread data is missing.' }));
       return;
     }
     setActionLoadingId(req._id);
     setActionErrors(prev => ({ ...prev, [req._id]: '' }));
     try {
-      const res = await fetch(`${API_URL}/forum/threads/${req.sourceThread._id}/merge-request/reject`, {
+      const res = await authFetch(`${API_URL}/forum/threads/${req._id}/merge-request/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -144,19 +147,19 @@ export default function MergeRequestAdmin() {
                 <div className="space-y-1">
                   <div className="text-sm text-slate-400">
                     <span className="font-medium text-slate-300">Source Thread:</span>{' '}
-                    <span className="text-white">{req.sourceThread?.title || 'Unknown'}</span>
+                    <span className="text-white">{req.title || 'Unknown'}</span>
                   </div>
                   <div className="text-sm text-slate-400">
                     <span className="font-medium text-slate-300">Merge Into:</span>{' '}
-                    <span className="text-white">{req.targetThread?.title || 'Unknown'}</span>
+                    <span className="text-white">{req.mergeRequest?.suggestedThreadId?.title || 'Unknown'}</span>
                   </div>
-                  {req.similarity != null && (
+                  {req.mergeRequest?.similarity != null && (
                     <span className="inline-block px-2 py-0.5 bg-amber-500/20 border border-amber-500/30 rounded text-amber-400 text-xs font-semibold">
-                      {getSimilarityPercent(req.similarity)}% match
+                      {getSimilarityPercent(req.mergeRequest.similarity)}% match
                     </span>
                   )}
-                  {req.requestedBy && (
-                    <div className="text-xs text-slate-500">Requested by: {req.requestedBy}</div>
+                  {req.mergeRequest?.requestedBy && (
+                    <div className="text-xs text-slate-500">Requested by: {req.mergeRequest.requestedBy}</div>
                   )}
                 </div>
 
@@ -169,9 +172,9 @@ export default function MergeRequestAdmin() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleApprove(req)}
-                    disabled={actionLoadingId !== null || !req.sourceThread?._id || !req.targetThread?._id}
+                    disabled={actionLoadingId !== null || !req.mergeRequest?.suggestedThreadId?._id}
                     className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-semibold text-sm transition disabled:opacity-50 flex items-center gap-2"
-                    title={!req.sourceThread?._id || !req.targetThread?._id ? 'Thread data missing — cannot approve' : undefined}
+                    title={!req.mergeRequest?.suggestedThreadId?._id ? 'Target thread data missing — cannot approve' : undefined}
                   >
                     {actionLoadingId === req._id && <Loader size={14} className="animate-spin" />}
                     Approve Merge
