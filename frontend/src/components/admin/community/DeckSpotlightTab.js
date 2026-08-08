@@ -77,14 +77,24 @@ export default function DeckSpotlightTab() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="font-semibold text-white">{spotlight.deckId?.name}</p>
+              {spotlight.deckId?.commander?.name && (
+                <p className="text-xs text-purple-300">{spotlight.deckId.commander.name}</p>
+              )}
               <p className="mt-0.5 text-sm text-white/60">
                 {spotlight.budgetTier} {spotlight.buildLabel} · Expires in {daysLeft} day{daysLeft !== 1 ? 's' : ''}
               </p>
-              {spotlight.threadId && (
-                <a href={`/forum/thread/${spotlight.threadId}`} className="mt-1 block text-xs text-indigo-400 hover:underline">
-                  View Forum Thread →
-                </a>
-              )}
+              <div className="mt-1 flex gap-3">
+                {spotlight.deckId?.shareCode && (
+                  <a href={`/decks/share/${spotlight.deckId.shareCode}`} className="text-xs text-yellow-400 hover:underline">
+                    View Deck →
+                  </a>
+                )}
+                {spotlight.threadId && (
+                  <a href={`/forum/thread/${spotlight.threadId}`} className="text-xs text-indigo-400 hover:underline">
+                    View Forum Thread →
+                  </a>
+                )}
+              </div>
             </div>
             <button
               onClick={handleRemove}
