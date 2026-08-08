@@ -1,4 +1,9 @@
 const axios = require('axios');
+const PriceSourceLog = require('../models/PriceSourceLog');
+
+function logPriceSource(source) {
+  PriceSourceLog.create({ source }).catch(() => {});
+}
 
 const BROWSER_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
@@ -86,6 +91,7 @@ async function getPriceWithFallback(cardName, isFoil = false) {
       ? (response.data.prices.usd_foil ? parseFloat(response.data.prices.usd_foil) : 0)
       : (response.data.prices.usd ? parseFloat(response.data.prices.usd) : 0);
     if (scryfallPrice > 0) {
+      logPriceSource('Scryfall');
       return { cad: 0, usd: scryfallPrice, source: 'Scryfall' };
     }
   } catch (error) {
@@ -95,9 +101,11 @@ async function getPriceWithFallback(cardName, isFoil = false) {
   // Fallback: MTGGoldfish if Scryfall has no price
   const goldfish = await fetchMTGGoldfishPrice(cardName);
   if (goldfish.usd > 0) {
+    logPriceSource('MTGGoldfish (backup)');
     return { cad: 0, usd: goldfish.usd, source: 'MTGGoldfish (backup)' };
   }
 
+  logPriceSource('None (not found)');
   return { cad: 0, usd: 0, source: 'None (not found)' };
 }
 
