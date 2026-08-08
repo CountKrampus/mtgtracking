@@ -540,6 +540,50 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
   // ── Deck Health Score ─────────────────────────────────────────────────────
   const healthScore = useMemo(() => calculateDeckHealthScore(deck), [deck]);
 
+  // ── Builder projected scores (for Power / Salt / Health tabs) ─────────────
+  const projectedPowerLevel = useMemo(() => {
+    if (builderTab !== 'power' || selectedBuilderCards.size === 0) return powerLevel;
+    const selectedCards = builderSuggestions.filter(c => selectedBuilderCards.has(c.name));
+    const allNames = [
+      ...(deck.mainDeck || []).map(c => c.name),
+      deck.commander?.name,
+      ...selectedCards.map(c => c.name),
+    ].filter(Boolean);
+    const bd = { fastMana: 0, tutors: 0, comboPieces: 0, efficientRemoval: 0, powerhouses: 0,
+      avgCmc: powerLevel.breakdown.avgCmc, deckValue: powerLevel.breakdown.deckValue };
+    allNames.forEach(n => {
+      if (POWER_INDICATORS.fastMana.includes(n)) bd.fastMana++;
+      if (POWER_INDICATORS.tutors.includes(n)) bd.tutors++;
+      if (POWER_INDICATORS.comboPieces.includes(n)) bd.comboPieces++;
+      if (POWER_INDICATORS.efficientRemoval.includes(n)) bd.efficientRemoval++;
+      if (POWER_INDICATORS.powerhouses.includes(n)) bd.powerhouses++;
+    });
+    let s = Math.min(bd.fastMana * 0.5, 2) + Math.min(bd.tutors * 0.4, 2)
+           + Math.min(bd.comboPieces * 0.6, 2) + Math.min(bd.efficientRemoval * 0.3, 1)
+           + Math.min(bd.powerhouses * 0.3, 1.5);
+    if (bd.avgCmc < 2.5) s += 1; else if (bd.avgCmc < 3) s += 0.5;
+    if (bd.deckValue > 1000) s += 0.5;
+    if (bd.deckValue > 2500) s += 0.5;
+    return { level: Math.min(10, Math.max(1, Math.round(3 + s))), breakdown: bd };
+  }, [builderTab, selectedBuilderCards, builderSuggestions, deck, powerLevel]);
+
+  const projectedSaltScore = useMemo(() => {
+    if (builderTab !== 'salt' || selectedBuilderCards.size === 0) return saltScore;
+    const added = builderSuggestions
+      .filter(c => selectedBuilderCards.has(c.name))
+      .reduce((sum, c) => sum + (c.salt || 1), 0);
+    return { ...saltScore, score: saltScore.score + added };
+  }, [builderTab, selectedBuilderCards, builderSuggestions, saltScore]);
+
+  const projectedHealthScore = useMemo(() => {
+    if (builderTab !== 'health' || selectedBuilderCards.size === 0) return healthScore;
+    const selectedCards = builderSuggestions
+      .filter(c => selectedBuilderCards.has(c.name))
+      .map(c => ({ name: c.name, manaCost: c.manaCost || '', types: c.types || [], quantity: 1 }));
+    const hypotheticalDeck = { ...deck, mainDeck: [...(deck.mainDeck || []), ...selectedCards] };
+    return calculateDeckHealthScore(hypotheticalDeck);
+  }, [builderTab, selectedBuilderCards, builderSuggestions, deck, healthScore]);
+
   // ── Global Score ──────────────────────────────────────────────────────────
   const globalScore = useMemo(
     () => calculateGlobalScore(powerLevel, saltScore, manabaseScore, healthScore),
@@ -1487,6 +1531,16 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
             {/* Power / Salt / Health tab results */}
             {builderTab !== 'mana' && builderSuggestions.length > 0 && (
               <>
+                <div className="bg-white/5 rounded p-3 mb-3 flex items-center justify-between">
+                  <span className="text-white/60 text-sm">
+                    {builderTab === 'power' ? 'Power Level' : builderTab === 'salt' ? 'Salt Score' : 'Health Score'}
+                  </span>
+                  <span className="text-white text-sm font-semibold">
+                    {builderTab === 'power' && <>{powerLevel.level} → <span className="text-green-400">{projectedPowerLevel.level}</span></>}
+                    {builderTab === 'salt'  && <>{saltScore.score} → <span className="text-orange-400">{projectedSaltScore.score}</span></>}
+                    {builderTab === 'health' && <>{healthScore.score} → <span className="text-green-400">{projectedHealthScore.score}</span></>}
+                  </span>
+                </div>
                 <div className="space-y-2 mb-3 max-h-72 overflow-y-auto">
                   {builderSuggestions.map(card => (
                     <label key={card.name} className="flex items-center gap-3 text-sm cursor-pointer">
