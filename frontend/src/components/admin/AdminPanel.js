@@ -14,6 +14,7 @@ import CollectionAuditsTab from './data-pricing/CollectionAuditsTab';
 import BackupsExportsTab from './data-pricing/BackupsExportsTab';
 import DataCleanupTab from './data-pricing/DataCleanupTab';
 import PriceCorrectionsTab from './data-pricing/PriceCorrectionsTab';
+import PriceSourceHealthTab from './data-pricing/PriceSourceHealthTab';
 
 import ContentModerationTab from './community/ContentModerationTab';
 import FeedbackTab from './community/FeedbackTab';
@@ -52,7 +53,8 @@ const groups = [
       { id: 'audits', label: 'Collection Audits', icon: FileText, requiresRole: 'content_manager' },
       { id: 'backups', label: 'Backups & Exports', icon: Archive, requiresRole: 'admin' },
       { id: 'cleanup', label: 'Data Cleanup', icon: Trash2, requiresRole: 'admin' },
-      { id: 'priceFlags', label: 'Price Flags', icon: Flag, requiresRole: 'moderator' }
+      { id: 'priceFlags', label: 'Price Flags', icon: Flag, requiresRole: 'moderator' },
+      { id: 'priceSourceHealth', label: 'Price Sources', icon: Activity, requiresRole: 'moderator' }
     ]
   },
   {
@@ -107,6 +109,7 @@ function renderContent(activeTab) {
     case 'backups':    return <BackupsExportsTab />;
     case 'cleanup':    return <DataCleanupTab />;
     case 'priceFlags': return <PriceCorrectionsTab />;
+    case 'priceSourceHealth': return <PriceSourceHealthTab />;
     case 'moderation': return <ContentModerationTab />;
     case 'feedback':   return <FeedbackTab />;
     case 'badges':     return <BadgesTab />;
