@@ -22,6 +22,7 @@ const { verifyToken, requireAuth, requireAdmin, requireModerator, requirePermiss
 const Challenge = require('../models/Challenge');
 const ChallengeParticipation = require('../models/ChallengeParticipation');
 const PriceFlag = require('../models/PriceFlag');
+const PriceSourceLog = require('../models/PriceSourceLog');
 const Notification = require('../models/Notification');
 const Feedback = require('../models/Feedback');
 const { VALID_METRICS, validateMetricParams } = require('../utils/challengeProgress');
@@ -1900,6 +1901,38 @@ router.get('/force-price-update/:jobId', requirePermission('prices:force-update'
   const job = priceUpdateJobs[req.params.jobId];
   if (!job) return res.status(404).json({ message: 'Job not found' });
   res.json({ jobId: req.params.jobId, ...job });
+});
+
+/**
+ * GET /api/admin/price-source-health - Aggregated price source usage stats
+ */
+router.get('/price-source-health', requirePermission('prices:force-update'), async (req, res) => {
+  try {
+    const logs = await PriceSourceLog.find({}).lean();
+    const totalFetches = logs.length;
+
+    const sources = ['Scryfall', 'MTGGoldfish (backup)', 'None (not found)'];
+    const bySource = {};
+    for (const source of sources) {
+      const count = logs.filter(l => l.source === source).length;
+      bySource[source] = {
+        count,
+        percentage: totalFetches > 0 ? Math.round((count / totalFetches) * 1000) / 10 : 0,
+      };
+    }
+
+    const byDay = {};
+    for (const log of logs) {
+      const day = log.createdAt.toISOString().slice(0, 10);
+      if (!byDay[day]) byDay[day] = { date: day, Scryfall: 0, 'MTGGoldfish (backup)': 0, 'None (not found)': 0 };
+      byDay[day][log.source]++;
+    }
+    const dailyTrend = Object.values(byDay).sort((a, b) => a.date.localeCompare(b.date));
+
+    res.json({ totalFetches, bySource, dailyTrend });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 // ==================== COLLECTION AUDITS ====================
