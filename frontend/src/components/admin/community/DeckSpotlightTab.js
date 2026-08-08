@@ -91,7 +91,7 @@ export default function DeckSpotlightTab() {
               </p>
               <div className="mt-1 flex gap-3">
                 {spotlight.deckId?.shareCode && (
-                  <a href={`/decks/share/${spotlight.deckId.shareCode}`} className="text-xs text-yellow-400 hover:underline">
+                  <a href={`/shared/deck/${spotlight.deckId.shareCode}`} className="text-xs text-yellow-400 hover:underline">
                     View Deck →
                   </a>
                 )}
