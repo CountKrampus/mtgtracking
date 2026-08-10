@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { AlertTriangle, Trash2, Eye, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { AlertTriangle, Trash2, Eye, CheckCircle, RefreshCw } from 'lucide-react';
 import { useAuthContext } from '../../../contexts/AuthContext';
 import { API_URL } from '../../../config';
 
@@ -212,6 +212,98 @@ export function DataCleanupTab() {
 
       {cleanupResults && (
         <CleanupResultsCard results={cleanupResults} />
+      )}
+
+      <DeadCardsPanel token={token} />
+    </div>
+  );
+}
+
+function DeadCardsPanel({ token }) {
+  const [loading, setLoading] = useState(false);
+  const [cards, setCards] = useState(null);
+  const [selected, setSelected] = useState(new Set());
+  const [deleting, setDeleting] = useState(false);
+  const [deleted, setDeleted] = useState(0);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/admin/dead-cards`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      setCards(data.cards || []);
+      setSelected(new Set());
+    } finally { setLoading(false); }
+  };
+
+  const toggleAll = () => {
+    if (selected.size === cards.length) setSelected(new Set());
+    else setSelected(new Set(cards.map(c => c._id)));
+  };
+
+  const handleDelete = async () => {
+    if (!selected.size || !window.confirm(`Delete ${selected.size} card(s)? This cannot be undone.`)) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`${API_URL}/admin/dead-cards`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [...selected] })
+      });
+      const data = await res.json();
+      setDeleted(d => d + (data.deleted || 0));
+      await load();
+    } finally { setDeleting(false); }
+  };
+
+  return (
+    <div className="bg-gray-800 rounded-lg p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-white font-semibold">Dead Card Cleanup</h3>
+        <button onClick={load} disabled={loading} className="flex items-center gap-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg transition">
+          <RefreshCw size={12} className={loading ? 'animate-spin' : ''} /> Scan
+        </button>
+      </div>
+      <p className="text-gray-400 text-sm">Cards missing a Scryfall ID, price, or set name — likely from failed imports.</p>
+      {deleted > 0 && <p className="text-green-400 text-sm">{deleted} card(s) deleted this session.</p>}
+      {cards === null ? (
+        <p className="text-gray-500 text-sm">Click Scan to find dead cards.</p>
+      ) : cards.length === 0 ? (
+        <p className="text-green-400 text-sm">No dead cards found.</p>
+      ) : (
+        <>
+          <div className="flex items-center justify-between text-sm">
+            <label className="flex items-center gap-2 text-gray-300 cursor-pointer">
+              <input type="checkbox" checked={selected.size === cards.length} onChange={toggleAll} className="accent-purple-500" />
+              Select all ({cards.length})
+            </label>
+            {selected.size > 0 && (
+              <button onClick={handleDelete} disabled={deleting} className="flex items-center gap-1.5 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white px-3 py-1 rounded-lg text-xs transition">
+                <Trash2 size={12} /> Delete {selected.size}
+              </button>
+            )}
+          </div>
+          <div className="max-h-64 overflow-y-auto space-y-1">
+            {cards.map(c => (
+              <label key={c._id} className="flex items-center gap-3 p-2 rounded hover:bg-gray-700 cursor-pointer text-sm">
+                <input type="checkbox" checked={selected.has(c._id)} onChange={() => {
+                  const s = new Set(selected);
+                  s.has(c._id) ? s.delete(c._id) : s.add(c._id);
+                  setSelected(s);
+                }} className="accent-purple-500 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <span className="text-white font-medium">{c.name}</span>
+                  <span className="text-gray-400 ml-2">{c.set || 'Unknown set'}</span>
+                </div>
+                <div className="flex gap-2 text-xs flex-shrink-0">
+                  {!c.scryfallId && <span className="text-orange-400">no ID</span>}
+                  {!c.price && <span className="text-yellow-400">$0</span>}
+                  {(!c.set || c.set === 'Unknown') && <span className="text-red-400">no set</span>}
+                </div>
+              </label>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
