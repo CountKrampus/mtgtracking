@@ -11,6 +11,7 @@ const { cacheCardImage } = require('../utils/imageCache');
 const { fetchCardFromScryfall } = require('../utils/scryfallLookup');
 const Card = require('../models/Card');
 const Deck = require('../models/Deck');
+const ActivityLog = require('../models/ActivityLog');
 const CardPriceSnapshot = require('../models/CardPriceSnapshot');
 const CardPriceHistory = require('../models/CardPriceHistory');
 const { parseCardLine, getDuplicateCardQuery, validateCardPayload, validateBulkUpdatePayload, buildCardListQuery, normalizeTag, findDuplicateGroups, applyMerge } = require('../utils/cardUtils');
@@ -187,11 +188,12 @@ router.post('/:id/update-price', requireAuth, requireEditor, activityLoggers.pri
         card.collectorNumber = cardData.collector_number;
         card.rarity = cardData.rarity[0].toUpperCase();
         card.colors = cardData.colors || [];
-        card.types = cardData.type_line ? cardData.type_line.split('â€”')[0].trim().split(' ') : [];
+        card.types = cardData.type_line ? cardData.type_line.split('â€"')[0].trim().split(' ') : [];
         card.manaCost = cardData.mana_cost || '';
         card.scryfallId = cardData.id;
         card.imageUrl = cachedImageUrl;
         card.oracleText = cardData.oracle_text || '';
+        card.reserved = cardData.reserved || false;
         card.price = priceData.usd > 0 ? priceData.usd : card.price;
       } catch (error) {
         console.error(`Failed to fetch full data for ${card.name}:`, error.message);
@@ -294,11 +296,12 @@ router.post('/update-all-prices', requireAuth, requireEditor, activityLoggers.pr
             card.collectorNumber = cardData.collector_number;
             card.rarity = cardData.rarity[0].toUpperCase();
             card.colors = cardData.colors || [];
-            card.types = cardData.type_line ? cardData.type_line.split('â€”')[0].trim().split(' ') : [];
+            card.types = cardData.type_line ? cardData.type_line.split('â€"')[0].trim().split(' ') : [];
             card.manaCost = cardData.mana_cost || '';
             card.scryfallId = cardData.id;
             card.imageUrl = cachedImageUrl;
             card.oracleText = cardData.oracle_text || '';
+            card.reserved = cardData.reserved || false;
             card.price = priceData.usd > 0 ? priceData.usd : card.price;
           } catch (error) {
             console.error(`Failed to fetch full data for ${card.name}:`, error.message);
@@ -435,7 +438,7 @@ router.post('/bulk-import', requireAuth, requireEditor, activityLoggers.cardBulk
               condition: 'NM',
               price: priceData.usd,
               colors: cardData.colors || [],
-              types: cardData.type_line ? cardData.type_line.split('â€”')[0].trim().split(' ') : [],
+              types: cardData.type_line ? cardData.type_line.split('â€"')[0].trim().split(' ') : [],
               manaCost: cardData.mana_cost || '',
               scryfallId: cardData.id,
               imageUrl: cachedImageUrl,
@@ -1115,6 +1118,63 @@ router.delete('/bulk-delete', requireAuth, requireEditor, activityLoggers.cardBu
       deleted: deletedCount,
       total: cardIds.length,
       results
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// GET /api/cards/changelog?from=YYYY-MM-DD&to=YYYY-MM-DD&priceThresholdPct=10
+// Returns cards added, cards deleted, and cards with significant price changes in the range.
+router.get('/changelog', requireAuth, async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { from, to, priceThresholdPct = 10 } = req.query;
+    const fromDate = from ? new Date(from) : new Date(Date.now() - 30 * 86400000);
+    const toDate = to ? new Date(to) : new Date();
+    toDate.setHours(23, 59, 59, 999);
+
+    const threshold = parseFloat(priceThresholdPct) / 100;
+
+    const [added, deletedLogs, priceChanges] = await Promise.all([
+      Card.find(buildUserQuery({ createdAt: { $gte: fromDate, $lte: toDate } }, req))
+        .select('name set rarity price quantity createdAt')
+        .sort({ createdAt: -1 })
+        .lean(),
+
+      ActivityLog.find({
+        userId,
+        activityType: 'card_delete',
+        createdAt: { $gte: fromDate, $lte: toDate }
+      }).select('targetName createdAt').sort({ createdAt: -1 }).lean(),
+
+      CardPriceHistory.aggregate([
+        { $match: { userId: userId, recordedAt: { $gte: fromDate, $lte: toDate } } },
+        { $sort: { cardId: 1, recordedAt: 1 } },
+        { $group: {
+          _id: '$cardId',
+          firstPrice: { $first: '$price' },
+          lastPrice: { $last: '$price' },
+          cardId: { $first: '$cardId' }
+        }},
+        { $match: { $expr: {
+          $gte: [{ $abs: { $divide: [{ $subtract: ['$lastPrice', '$firstPrice'] }, { $max: ['$firstPrice', 0.01] }] } }, threshold]
+        }}},
+        { $lookup: { from: 'cards', localField: '_id', foreignField: '_id', as: 'card' } },
+        { $unwind: { path: '$card', preserveNullAndEmpty: true } },
+        { $project: { name: '$card.name', set: '$card.set', firstPrice: 1, lastPrice: 1 } }
+      ])
+    ]);
+
+    res.json({
+      range: { from: fromDate, to: toDate },
+      added,
+      deleted: deletedLogs.map(l => ({ name: l.targetName, deletedAt: l.createdAt })),
+      priceChanges: priceChanges.map(p => ({
+        name: p.name, set: p.set,
+        oldPrice: p.firstPrice, newPrice: p.lastPrice,
+        changePct: ((p.lastPrice - p.firstPrice) / Math.max(p.firstPrice, 0.01)) * 100
+      }))
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

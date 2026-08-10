@@ -22,6 +22,8 @@ const cardSchema = new mongoose.Schema({
   isFoil: { type: Boolean, default: false },
   isToken: { type: Boolean, default: false },
   oracleText: { type: String, default: '' },
+  notes: { type: String, default: '' },
+  reserved: { type: Boolean, default: false },
   tags: [{ type: String, trim: true }],
   location: { type: String, default: '', trim: true },
   buylistValue: { type: Number, default: 0, min: 0 },

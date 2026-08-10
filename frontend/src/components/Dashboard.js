@@ -173,6 +173,8 @@ const Dashboard = ({
   const [priceChanges, setPriceChanges] = useState({ gainers: [], losers: [] });
   const [mostPlayedDecks, setMostPlayedDecks] = useState([]);
   const [valueBreakTab, setValueBreakTab] = useState('rarity');
+  const [showPL, setShowPL] = useState(false);
+  const [plSort, setPLSort] = useState('gain');
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -279,6 +281,22 @@ const Dashboard = ({
     });
     return buckets;
   }, [cards]);
+
+  const plRows = useMemo(() => {
+    const rows = cards
+      .filter(c => c.purchasePrice != null && c.purchasePrice > 0)
+      .map(c => {
+        const cost = c.purchasePrice * (c.quantity || 1);
+        const current = (c.price || 0) * (c.quantity || 1);
+        const gain = current - cost;
+        const gainPct = cost > 0 ? (gain / cost) * 100 : 0;
+        return { ...c, cost, current, gain, gainPct };
+      });
+    if (plSort === 'gain') return rows.sort((a, b) => b.gain - a.gain);
+    if (plSort === 'loss') return rows.sort((a, b) => a.gain - b.gain);
+    if (plSort === 'pct') return rows.sort((a, b) => b.gainPct - a.gainPct);
+    return rows.sort((a, b) => a.name.localeCompare(b.name));
+  }, [cards, plSort]);
 
   const colorTotal = Object.values(colorDistribution).reduce((s, v) => s + v, 0) || 1;
   const typeTotal = typeDistribution.reduce((s, [, v]) => s + v, 0) || 1;
@@ -388,12 +406,22 @@ const Dashboard = ({
               <div className="text-xs text-white/40 mt-1">Based on purchase prices</div>
             </div>
             <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 shadow-xl">
-              <div className="text-sm text-white/60">Portfolio Gain / Loss</div>
-              <div className={`text-2xl font-bold ${gainPositive ? 'text-green-400' : 'text-red-400'}`}>
-                {gainPositive ? '+' : ''}{fp(portfolioGain)}
-              </div>
-              <div className={`text-xs mt-1 ${gainPositive ? 'text-green-400/70' : 'text-red-400/70'}`}>
-                {gainPositive ? '+' : ''}{returnPct.toFixed(1)}% return
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="text-sm text-white/60">Portfolio Gain / Loss</div>
+                  <div className={`text-2xl font-bold ${gainPositive ? 'text-green-400' : 'text-red-400'}`}>
+                    {gainPositive ? '+' : ''}{fp(portfolioGain)}
+                  </div>
+                  <div className={`text-xs mt-1 ${gainPositive ? 'text-green-400/70' : 'text-red-400/70'}`}>
+                    {gainPositive ? '+' : ''}{returnPct.toFixed(1)}% return
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowPL(true)}
+                  className="text-xs text-purple-400 hover:text-purple-300 underline flex-shrink-0 mt-1"
+                >
+                  View details
+                </button>
               </div>
             </div>
           </div>
@@ -884,6 +912,113 @@ const Dashboard = ({
 
       {/* Collector Achievements */}
       <AchievementsGrid />
+
+      {/* P&L Detail Modal */}
+      {showPL && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-3xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-slate-700">
+              <div>
+                <h2 className="text-lg font-bold text-white">Cost Basis &amp; P&amp;L</h2>
+                <p className="text-slate-400 text-xs mt-0.5">{plRows.length} card{plRows.length !== 1 ? 's' : ''} with purchase prices tracked</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <select
+                  value={plSort}
+                  onChange={e => setPLSort(e.target.value)}
+                  className="text-xs bg-slate-800 border border-slate-600 text-white rounded px-2 py-1"
+                >
+                  <option value="gain">Sort: Biggest Gain</option>
+                  <option value="loss">Sort: Biggest Loss</option>
+                  <option value="pct">Sort: Best Return %</option>
+                  <option value="name">Sort: Name</option>
+                </select>
+                <button onClick={() => setShowPL(false)} className="text-slate-400 hover:text-white text-lg leading-none">&times;</button>
+              </div>
+            </div>
+
+            {plRows.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 text-sm">
+                No cards with purchase prices yet. Edit a card and set a Purchase Price to start tracking P&amp;L.
+              </div>
+            ) : (
+              <>
+                {/* Summary row */}
+                {(() => {
+                  const totalCost = plRows.reduce((s, r) => s + r.cost, 0);
+                  const totalCurrent = plRows.reduce((s, r) => s + r.current, 0);
+                  const totalGain = totalCurrent - totalCost;
+                  const totalPct = totalCost > 0 ? (totalGain / totalCost) * 100 : 0;
+                  const pos = totalGain >= 0;
+                  return (
+                    <div className="grid grid-cols-4 gap-3 px-5 py-3 bg-slate-800/50 text-center border-b border-slate-700">
+                      <div>
+                        <div className="text-slate-400 text-xs">Total Paid</div>
+                        <div className="text-white font-semibold text-sm">{fp(totalCost)}</div>
+                      </div>
+                      <div>
+                        <div className="text-slate-400 text-xs">Current Value</div>
+                        <div className="text-white font-semibold text-sm">{fp(totalCurrent)}</div>
+                      </div>
+                      <div>
+                        <div className="text-slate-400 text-xs">Total Gain / Loss</div>
+                        <div className={`font-semibold text-sm ${pos ? 'text-green-400' : 'text-red-400'}`}>{pos ? '+' : ''}{fp(totalGain)}</div>
+                      </div>
+                      <div>
+                        <div className="text-slate-400 text-xs">Return</div>
+                        <div className={`font-semibold text-sm ${pos ? 'text-green-400' : 'text-red-400'}`}>{pos ? '+' : ''}{totalPct.toFixed(1)}%</div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Per-card rows */}
+                <div className="overflow-y-auto flex-1">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-slate-900/95 border-b border-slate-700">
+                      <tr className="text-slate-400 text-xs">
+                        <th className="text-left px-4 py-2">Card</th>
+                        <th className="text-right px-3 py-2">Qty</th>
+                        <th className="text-right px-3 py-2">Paid/ea</th>
+                        <th className="text-right px-3 py-2">Now/ea</th>
+                        <th className="text-right px-3 py-2">Total Paid</th>
+                        <th className="text-right px-3 py-2">Total Now</th>
+                        <th className="text-right px-4 py-2">Gain/Loss</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {plRows.map(r => {
+                        const pos = r.gain >= 0;
+                        return (
+                          <tr key={r._id} className="border-b border-slate-800 hover:bg-slate-800/40 transition">
+                            <td className="px-4 py-2.5">
+                              <div className="text-white font-medium truncate max-w-[180px]">{r.name}</div>
+                              {r.set && <div className="text-slate-500 text-xs truncate">{r.set}</div>}
+                            </td>
+                            <td className="px-3 py-2.5 text-right text-slate-300">{r.quantity}</td>
+                            <td className="px-3 py-2.5 text-right text-slate-300">{fp(r.purchasePrice)}</td>
+                            <td className="px-3 py-2.5 text-right text-slate-300">{fp(r.price || 0)}</td>
+                            <td className="px-3 py-2.5 text-right text-slate-400">{fp(r.cost)}</td>
+                            <td className="px-3 py-2.5 text-right text-slate-400">{fp(r.current)}</td>
+                            <td className="px-4 py-2.5 text-right">
+                              <div className={`font-semibold ${pos ? 'text-green-400' : 'text-red-400'}`}>
+                                {pos ? '+' : ''}{fp(r.gain)}
+                              </div>
+                              <div className={`text-xs ${pos ? 'text-green-400/60' : 'text-red-400/60'}`}>
+                                {pos ? '+' : ''}{r.gainPct.toFixed(1)}%
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

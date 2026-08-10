@@ -19,6 +19,7 @@ const { activityLoggers } = require('../middleware/activityLogger');
 const { checkAndAwardBadges } = require('../utils/badgeManager');
 const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore, COLOR_SOURCES, NONBASIC_LAND_NAMES, SALTY_CARDS, POWER_INDICATORS } = require('../utils/deckAnalysis');
 const { cachedApiCall, ApiCache } = require('../utils/apiCache');
+const { clearCache } = require('../utils/statsCache');
 const User = require('../models/User');
 
 // Import Card model and getPriceWithFallback from parent scope
@@ -1330,6 +1331,55 @@ router.post('/:id/share', requireAuth, requireEditor, async (req, res) => {
     }
 
     res.json({ shareCode: deck.shareCode, shareUrl: `/shared/deck/${deck.shareCode}` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST /api/decks/:id/sync-tags — tag every collection card that appears in this deck
+// with the deck's name. Idempotent: existing tag is skipped. Returns counts.
+router.post('/:id/sync-tags', requireAuth, requireEditor, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(query).lean();
+    if (!deck) return res.status(404).json({ message: 'Deck not found' });
+
+    const cardNames = [...new Set((deck.mainDeck || []).map(c => c.name).filter(Boolean))];
+    if (!cardNames.length) return res.json({ tagged: 0, alreadyTagged: 0 });
+
+    const tag = deck.name.toLowerCase().trim();
+    const cards = await Card.find(buildUserQuery({ name: { $in: cardNames } }, req));
+
+    let tagged = 0, alreadyTagged = 0;
+    for (const card of cards) {
+      if (card.tags.includes(tag)) { alreadyTagged++; continue; }
+      card.tags.push(tag);
+      await card.save();
+      tagged++;
+    }
+    clearCache(getUserId(req));
+    res.json({ tagged, alreadyTagged, deckName: tag });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// DELETE /api/decks/:id/sync-tags — remove this deck's name tag from all collection cards
+router.delete('/:id/sync-tags', requireAuth, requireEditor, async (req, res) => {
+  try {
+    const Card = mongoose.model('Card');
+    const query = buildUserQuery({ _id: req.params.id }, req);
+    const deck = await Deck.findOne(query).lean();
+    if (!deck) return res.status(404).json({ message: 'Deck not found' });
+
+    const tag = deck.name.toLowerCase().trim();
+    const result = await Card.updateMany(
+      buildUserQuery({ tags: tag }, req),
+      { $pull: { tags: tag } }
+    );
+    clearCache(getUserId(req));
+    res.json({ removed: result.modifiedCount, deckName: tag });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

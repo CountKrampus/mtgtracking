@@ -420,6 +420,22 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
   const [loadingBuilderSuggestions, setLoadingBuilderSuggestions] = useState(false);
   const [builderFetched, setBuilderFetched] = useState(false);
 
+  const [syncTagsStatus, setSyncTagsStatus] = useState(null); // null | 'loading' | {tagged, alreadyTagged}
+
+  const handleSyncTags = async () => {
+    setSyncTagsStatus('loading');
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await axios.post(`${API_URL}/decks/${deck._id}/sync-tags`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSyncTagsStatus(res.data);
+      setTimeout(() => setSyncTagsStatus(null), 4000);
+    } catch {
+      setSyncTagsStatus(null);
+    }
+  };
+
   // Improve Deck
   const [showImproveDeck, setShowImproveDeck] = useState(false);
   const [improveScope, setImproveScope] = useState('all');
@@ -1038,6 +1054,19 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
             </div>
           )}
           {shareError && <p className="text-red-400 text-xs mt-1">{shareError}</p>}
+          <div className="flex flex-col items-start gap-1">
+            <button
+              onClick={handleSyncTags}
+              disabled={syncTagsStatus === 'loading'}
+              className="px-3 py-1.5 bg-teal-700 hover:bg-teal-600 disabled:opacity-50 text-white rounded-lg transition text-xs font-medium"
+              title="Tag all collection cards in this deck with the deck name"
+            >
+              {syncTagsStatus === 'loading' ? 'Tagging…' : '🏷 Sync Tags'}
+            </button>
+            {syncTagsStatus && syncTagsStatus !== 'loading' && (
+              <span className="text-xs text-teal-400">{syncTagsStatus.tagged} tagged, {syncTagsStatus.alreadyTagged} already had tag</span>
+            )}
+          </div>
           <button onClick={onBack} className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition text-sm">
             ← Back
           </button>

@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Search, Trash2, Edit2, Save, X, RefreshCw, DollarSign, Camera, Settings,
   CheckSquare, Square, MapPin, Layers, Zap, Plus, SlidersHorizontal, Bookmark,
-  Upload, PlusCircle, ExternalLink, Mic, Bell, WifiOff, Flag, Copy
+  Upload, PlusCircle, ExternalLink, Mic, Bell, WifiOff, Flag, Copy, Clock
 } from 'lucide-react';
 import { standardTypes } from '../constants';
 import { buildScryfallSearchUrl } from '../utils/scryfallDeeplink';
@@ -12,6 +12,7 @@ import useVoiceSearch from '../hooks/useVoiceSearch';
 import PriceAlertModal from './PriceAlertModal';
 import PriceFlagModal from './PriceFlagModal';
 import DuplicateCleanup from './DuplicateCleanup';
+import CollectionChangelog from './CollectionChangelog';
 import PriceUpdateModal from './CollectionTools/PriceUpdateModal';
 import CommanderRecommendationsModal from './CollectionTools/CommanderRecommendationsModal';
 import SetCompletionModal from './CollectionTools/SetCompletionModal';
@@ -320,11 +321,12 @@ function CollectionView({
   const [newTag, setNewTag] = useState('');
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [showDuplicateCleanup, setShowDuplicateCleanup] = useState(false);
+  const [showChangelog, setShowChangelog] = useState(false);
   const [formData, setFormData] = useState({
     name: '', set: '', setCode: '', collectorNumber: '', rarity: '',
-    quantity: 1, condition: settings.defaultCondition, price: 0,
+    quantity: 1, condition: settings.defaultCondition, price: 0, purchasePrice: '',
     colors: [], types: [], manaCost: '', scryfallId: '', imageUrl: '',
-    isFoil: false, isToken: false, oracleText: '', tags: [], location: '',
+    isFoil: false, isToken: false, oracleText: '', notes: '', tags: [], location: '',
   });
   const [selectedCards, setSelectedCards] = useState(new Set());
   const [priceAlertCard, setPriceAlertCard] = useState(null);
@@ -484,9 +486,10 @@ function CollectionView({
   const handleEdit = (card) => {
     setFormData({
       name: card.name, set: card.set, quantity: card.quantity, condition: card.condition,
-      price: card.price, colors: card.colors || [], types: card.types || [],
+      price: card.price, purchasePrice: card.purchasePrice ?? '',
+      colors: card.colors || [], types: card.types || [],
       manaCost: card.manaCost || '', isFoil: card.isFoil || false, isToken: card.isToken || false,
-      oracleText: card.oracleText || '', tags: card.tags || [], location: card.location || '',
+      oracleText: card.oracleText || '', notes: card.notes || '', tags: card.tags || [], location: card.location || '',
     });
     setTypesInputValue(card.types ? card.types.join(', ') : '');
     setTagsInputValue(card.tags ? card.tags.join(', ') : '');
@@ -498,8 +501,8 @@ function CollectionView({
     setEditingId(null); setShowAutocomplete(false); setTypesInputValue(''); setTagsInputValue('');
     setFormData({
       name: '', set: '', quantity: 1, condition: settings.defaultCondition,
-      price: 0, colors: [], types: [], manaCost: '', isFoil: false, isToken: false,
-      oracleText: '', tags: [], location: '',
+      price: 0, purchasePrice: '', colors: [], types: [], manaCost: '', isFoil: false, isToken: false,
+      oracleText: '', notes: '', tags: [], location: '',
     });
   };
 
@@ -793,6 +796,7 @@ function CollectionView({
       else if (filterSpecial === 'non-tokens') matchesSpecial = !card.isToken;
       else if (filterSpecial === 'foil') matchesSpecial = card.isFoil === true;
       else if (filterSpecial === 'non-foil') matchesSpecial = !card.isFoil;
+      else if (filterSpecial === 'reserved') matchesSpecial = card.reserved === true;
       const matchesRarity = filterRarity === 'all' || card.rarity === filterRarity;
       const matchesTag = filterTag === 'all' || (card.tags?.includes(filterTag));
       const matchesLocation = filterLocation === 'all' || card.location === filterLocation;
@@ -975,6 +979,7 @@ function CollectionView({
               <option value="non-tokens">Non-Tokens Only</option>
               <option value="foil">Foil Only</option>
               <option value="non-foil">Non-Foil Only</option>
+              <option value="reserved">Reserved List</option>
             </select>
 
             <select
@@ -1084,6 +1089,14 @@ function CollectionView({
             >
               <Copy size={14} />
               <span>Find Duplicates</span>
+            </button>
+            <button
+              onClick={() => setShowChangelog(true)}
+              className="flex items-center gap-1 px-3 py-1 bg-white/10 hover:bg-white/20 text-white/70 hover:text-white rounded-lg text-sm transition"
+              title="View collection changelog"
+            >
+              <Clock size={14} />
+              <span>Changelog</span>
             </button>
           </div>
             </div>
@@ -1212,6 +1225,15 @@ function CollectionView({
                 />
               )}
               <input
+                type="number"
+                placeholder="Purchase Price ($) — for P&amp;L tracking"
+                value={formData.purchasePrice}
+                onChange={(e) => setFormData({...formData, purchasePrice: e.target.value === '' ? '' : parseFloat(e.target.value)})}
+                min="0"
+                step="0.01"
+                className="px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />
+              <input
                 type="text"
                 placeholder="Mana Cost (e.g., {2}{U}{U})"
                 value={formData.manaCost}
@@ -1250,6 +1272,14 @@ function CollectionView({
                 <option value="">No Location</option>
                 {uniqueLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
               </select>
+              <textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                placeholder="Personal notes (where you got it, trade story, etc.)"
+                rows={2}
+                maxLength={500}
+                className="px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+              />
             </div>
 
             <div className="mb-4">
@@ -1485,7 +1515,15 @@ function CollectionView({
                         }}
                         onMouseLeave={() => { setHoveredCard(null); setHoveredCardPriceHistory([]); }}
                       >
-                        {card.name}
+                        <div className="flex items-center gap-1.5">
+                          {card.name}
+                          {card.reserved && (
+                            <span className="text-xs px-1 py-0.5 rounded bg-amber-600/30 text-amber-400 font-semibold flex-shrink-0" title="Reserved List — will never be reprinted">RL</span>
+                          )}
+                          {card.notes && (
+                            <span className="text-slate-400 flex-shrink-0" title={card.notes}>📝</span>
+                          )}
+                        </div>
                       </td>
                       {isColumnVisible('set') && <td className="px-6 py-4 text-white/80 text-sm hidden lg:table-cell">{card.set}</td>}
                       {isColumnVisible('setCode') && <td className="px-6 py-4 text-white/80 text-xs hidden xl:table-cell">{card.setCode || '—'}</td>}
@@ -2569,6 +2607,8 @@ function CollectionView({
           onClose={() => setShowDuplicateCleanup(false)}
           onMerged={fetchCards}
         />
+
+        {showChangelog && <CollectionChangelog onClose={() => setShowChangelog(false)} />}
 
         <CollectionFAB
           onAddCard={() => {
