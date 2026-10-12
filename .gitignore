@@ -44,3 +44,7 @@ docs/*.json
 # Caddy binary (install separately)
 caddy_windows_amd64.exe
 caddy
+
+# IP watchdog runtime log and Namecheap DDNS credential file
+ip-watch.log
+.mtg-ip-watch
