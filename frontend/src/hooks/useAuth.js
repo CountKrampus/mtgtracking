@@ -37,7 +37,19 @@ export function useAuth() {
     let attempt = 0;
     while (attempt < maxRetries) {
       try {
-        const response = await fetch(`${API_URL}/auth/status`);
+        // Bound each attempt to a few seconds: without a timeout, a request to
+        // an unreachable host (e.g. the production API URL from a dev machine
+        // where that domain resolves but the connection stalls) hangs for the
+        // full TCP timeout (~8s each), stretching 3 retries to ~25s+ before
+        // serverUnreachable is set - during which AuthGuard renders the
+        // single-user dashboard instead of a login/error screen.
+        const FETCH_TIMEOUT_MS = 5000;
+        const response = await fetch(`${API_URL}/auth/status`, {
+          signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+          // Status is cheap but should never be served from a stale cache once
+          // the server becomes reachable again.
+          cache: 'no-store'
+        });
         const data = await response.json();
         setServerUnreachable(false);
         setIsMultiUserEnabled(data.multiUserEnabled);
