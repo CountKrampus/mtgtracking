@@ -1,7 +1,49 @@
+# Production Caddy config for mtgtracker.store
+#
+# Serves the production build of the frontend (frontend/build) as static
+# files and proxies the API to the backend on port 5000. The prebuilt
+# bundle means `npm start` no longer needs to be running for the public
+# site to work.
+#
+# LIVE: standard HTTPS + HTTP->HTTPS redirect on ports 80/443. Requires the
+# router to forward TCP 80/443 to this machine (192.168.2.115) and the
+# Windows Firewall 'Caddy' inbound allow rules to cover those ports.
+
+{
+    email webmaster@mtgtracker.store
+}
+
+# Local management/testing inlet (unchanged)
+http://localhost:8080, http://127.0.0.1:8080 {
+    root * "D:\Card Tracker\mtg-tracker\frontend\build"
+
+    # ---- route 1: API -> backend (must be first) ----
+    reverse_proxy /api/* localhost:5000
+    @notApi not path /api/*
+    handle @notApi {
+        try_files {path} /index.html
+        file_server
+    }
+}
+
+# LIVE public site: automatic HTTPS (ports 80 redirect + 443 TLS)
 mtgtracker.store {
-    # Proxy API calls to the backend
+    root * "D:\Card Tracker\mtg-tracker\frontend\build"
+
+    # ---- route 1: API -> backend (must be first) ----
     reverse_proxy /api/* localhost:5000
 
-    # Proxy everything else to the React dev server
-    reverse_proxy localhost:3000
+    # ---- route 2: everything else ----
+    # SPA fallback + static file serving:
+    #   - Real files (index.html, /static/js/...) are served directly.
+    #   - Client-side routes (/dashboard, /wishlist...) have no file, so
+    #     fall back to index.html and let the React router take over.
+    #   - /api/* is exempt: route 1 already matched it, and file_server
+    #     never touches it, so no rewrite-to-index.html bug like the old
+    #     blanket try_files version had.
+    @notApi not path /api/*
+    handle @notApi {
+        try_files {path} /index.html
+        file_server
+    }
 }

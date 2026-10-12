@@ -2047,10 +2047,25 @@ setInterval(async () => {
   }
 }, 24 * 60 * 60 * 1000);
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+
+  registerDailySnapshotJob();
+  registerWeeklyHealthReportJob();
+  registerSetReleaseAnnouncerJob();
 });
 
-registerDailySnapshotJob();
-registerWeeklyHealthReportJob();
-registerSetReleaseAnnouncerJob();
+// EADDRINUSE used to crash the process with an unhandled 'error' event when a
+// second backend instance was started (or a stale one was still holding the
+// port) — nodemon then just sat there 'waiting for file changes'. Say what
+// happened and exit with a clear code instead so restarts behave predictably.
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use. Another backend instance is likely running.`);
+    console.error('Stop it first (or set a different PORT in backend/.env), then try again.');
+    process.exit(1);
+  } else {
+    console.error('Server error:', err);
+    process.exit(1);
+  }
+});
