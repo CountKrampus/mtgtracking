@@ -4,7 +4,8 @@
 // (156.34.81.236 as of setup), an ISP reassignment silently breaks the site.
 // This script:
 //   1. Reads the current public IP (ipify).
-//   2. Reads the IP the domain currently resolves to.
+//   2. Reads the IP the domain currently resolves to (via Cloudflare's public
+//      resolver 1.1.1.1, skipping private/resolver IPs from the output).
 //   3. If they differ (and the public IP looks valid), updates the A record
 //      via Namecheap's DDNS API - IF you have created a Dynamic DNS password
 //      in the Namecheap panel and saved it to %USERPROFILE%\.mtg-ip-watch
@@ -67,8 +68,15 @@ function notify(title, msg) {
   // what the domain resolves to right now
   let dnsIp;
   try {
-    dnsIp = execSync(`nslookup ${DOMAIN} 2>nul | findstr /R "Address.*[0-9]" | findstr /V "192.168 127.0"`,
-      { encoding: 'utf8', shell: true }).match(/(\d+\.\d+\.\d+\.\d+)/)?.[1];
+    // Query an external resolver directly - the local router's cached answer
+    // can contain its own address (e.g. 192.168.2.1) or stale records, which
+    // would make this check see a match that isn't real (or miss one that is).
+    const out = execSync(`nslookup ${DOMAIN} 1.1.1.1`, { encoding: 'utf8', timeout: 15000 });
+    // Take the LAST IPv4 in the answer block, skipping any private/loopback
+    // addresses outright (nslookup output includes the resolver's own IP first).
+    const ips = [...out.matchAll(/(\d+\.\d+\.\d+\.\d+)/g)].map(m => m[1])
+      .filter(ip => !/^(10\.|127\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/.test(ip));
+    dnsIp = ips.length ? ips[ips.length - 1] : null;
   } catch (e) { /* DNS down at all -> treat as drift */ }
 
   if (publicIp === dnsIp) {
