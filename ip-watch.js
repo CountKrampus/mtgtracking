@@ -3,6 +3,10 @@
 // Since mtgtracker.store's A record points at this connection's dynamic IP
 // (156.34.81.236 as of setup), an ISP reassignment silently breaks the site.
 // This script:
+//   0. Bails out entirely if a VPN adapter is up (Proton/WireGuard/TAP/etc.) -
+//      while a VPN is on, ipify reports the VPN's exit server IP, and pointing
+//      the domain at it would break the site. Tailscale is excluded (mesh tunnel,
+//      does not change public egress IP).
 //   1. Reads the current public IP (ipify).
 //   2. Reads the IP the domain currently resolves to (via Cloudflare's public
 //      resolver 1.1.1.1, skipping private/resolver IPs from the output).
@@ -33,6 +37,24 @@ const log = (msg) => {
 // so enable "Dynamic DNS for <ip>"-free mode: their API accepts ANY source IP
 // when the password is set? In practice Namecheap whitelists automatically for
 // DDNS calls made with the correct password from any IP once DDNS is enabled.
+// Detect an active commercial-VPN adapter so we never treat the VPN exit
+// server's IP as "your new IP" (updating the A record to it breaks the site
+// for everyone - seen live with ProtonVPN). Tailscale is intentionally NOT
+// treated as a VPN: it's a mesh tunnel that doesn't change your public egress
+// IP, and this machine relies on it for remote access.
+function isVpnActive() {
+  try {
+    const out = execSync(
+      `powershell -Command "Get-NetAdapter | Where-Object { \$_.Status -eq 'Up' -and \$_.InterfaceDescription -match 'VPN|TAP-Windows|WireGuard|NordLynx|OpenVPN' -and \$_.InterfaceDescription -notmatch 'Tailscale' } | Select-Object -ExpandProperty InterfaceDescription"`,
+      { encoding: 'utf8', timeout: 20000 });
+    return out.trim().length > 0;
+  } catch (e) {
+    // Can't determine - do NOT auto-update on uncertainty; drift would be
+    // unverifiable anyway, and a false positive here breaks the site.
+    return true;
+  }
+}
+
 function namecheapUpdate(password, currentIp) {
   const url = `https://dynamicdns.park-your-domain.com/update?host=${HOST}&domain=${DOMAIN}&password=${encodeURIComponent(password)}&ip=${currentIp}`;
   // Namecheap returns HTTP 200 even on auth failure - success is signaled by
@@ -58,6 +80,14 @@ function notify(title, msg) {
 }
 
 (async () => {
+  // VPN active -> public-IP detection is meaningless (it returns the VPN exit
+  // server's address). Skip the whole check silently; the next run with the
+  // VPN off will validate the real home IP.
+  if (isVpnActive()) {
+    log('VPN adapter detected up - skipping IP check (public IP would be the VPN exit server, not yours)');
+    process.exit(0);
+  }
+
   // current public IP
   let publicIp;
   try {
