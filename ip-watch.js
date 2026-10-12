@@ -98,15 +98,16 @@ function notify(title, msg) {
   // what the domain resolves to right now
   let dnsIp;
   try {
-    // Query an external resolver directly - the local router's cached answer
-    // can contain its own address (e.g. 192.168.2.1) or stale records, which
-    // would make this check see a match that isn't real (or miss one that is).
-    const out = execSync(`nslookup ${DOMAIN} 1.1.1.1`, { encoding: 'utf8', timeout: 15000 });
-    // Take the LAST IPv4 in the answer block, skipping any private/loopback
-    // addresses outright (nslookup output includes the resolver's own IP first).
-    const ips = [...out.matchAll(/(\d+\.\d+\.\d+\.\d+)/g)].map(m => m[1])
+    // Query Cloudflare via DNS-over-HTTPS. This network's port-53 path is
+    // proven to forge answers for some domains (facebook.com/kijiji.ca got a
+    // sinkhole IP from every plain-DNS server), so nslookup could report a
+    // fake address. DoH runs inside TLS and cannot be tampered with in transit.
+    const out = execSync(
+      `powershell -Command "(Invoke-RestMethod -Uri 'https://cloudflare-dns.com/dns-query?name=${DOMAIN}&type=A' -Headers @{accept='application/dns-json'} -TimeoutSec 15).Answer.data"`,
+      { encoding: 'utf8', timeout: 30000 });
+    const ips = out.trim().split(/\s+/).map(s => s.trim()).filter(s => /^\d+\.\d+\.\d+\.\d+$/.test(s))
       .filter(ip => !/^(10\.|127\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/.test(ip));
-    dnsIp = ips.length ? ips[ips.length - 1] : null;
+    dnsIp = ips.length ? ips[0] : null;
   } catch (e) { /* DNS down at all -> treat as drift */ }
 
   if (publicIp === dnsIp) {
