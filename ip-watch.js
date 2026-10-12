@@ -34,10 +34,14 @@ const log = (msg) => {
 // DDNS calls made with the correct password from any IP once DDNS is enabled.
 function namecheapUpdate(password, currentIp) {
   const url = `https://dynamicdns.park-your-domain.com/update?host=${HOST}&domain=${DOMAIN}&password=${encodeURIComponent(password)}&ip=${currentIp}`;
+  // Namecheap returns HTTP 200 even on auth failure - success is signaled by
+  // <ErrCount>0</ErrCount> in the XML body, not the status code.
   const r = spawnSync('powershell', ['-Command',
-    `(Invoke-WebRequest -Uri '${url}' -UseBasicParsing -TimeoutSec 20).StatusCode`],
+    `$Response = Invoke-WebRequest -Uri '${url}' -UseBasicParsing -TimeoutSec 20; $Body = $Response.Content; if ($Body -match '<ErrCount>\\s*0\\s*</ErrCount>') { 'DDNS_OK' } else { $Err = [regex]::Match($Body, '<Err1>(.*?)</Err1>').Groups[1].Value; Write-Error "Namecheap DDNS error: $Err"; exit 1 }`],
     { encoding: 'utf8', timeout: 30000 });
-  return r.status === 0 && r.stdout.trim().endsWith('200');
+  if (r.status === 0 && r.stdout.trim() === 'DDNS_OK') return true;
+  log(`Namecheap DDNS rejected update: ${(r.stderr || '').trim() || 'unknown error'}`);
+  return false;
 }
 
 function notify(title, msg) {
