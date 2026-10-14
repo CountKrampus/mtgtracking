@@ -255,6 +255,24 @@ function WarningBanner({ messages }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
+// Translate auth/permission failures from the import API into an actionable
+// message (the raw payload is just "Insufficient permissions").
+function importErrorMessage(error) {
+  const data = error.response?.data;
+  const status = error.response?.status;
+  if (status === 401) {
+    return 'You need to be signed in to import decks.';
+  }
+  if (status === 403) {
+    const role = data?.currentRole || 'your role';
+    const needed = data?.requiredPermissions?.join(', ')
+      || data?.requiredRoles?.join(' or ')
+      || "the 'Create and edit decks' permission";
+    return `Your role (${role}) doesn't have permission to create decks (requires ${needed}). Ask an admin to grant it.`;
+  }
+  return data?.message || error.message;
+}
+
 function DeckImport({ onBack, onImportComplete }) {
   const [mode, setMode] = useState('new');
   const [importData, setImportData] = useState('');
@@ -277,7 +295,7 @@ function DeckImport({ onBack, onImportComplete }) {
       });
       setImportPreview(response.data); // { deckData, statistics, validation }
     } catch (error) {
-      setImportError(error.response?.data?.message || error.message);
+      setImportError(importErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -293,7 +311,7 @@ function DeckImport({ onBack, onImportComplete }) {
       setImportData('');
       onImportComplete();
     } catch (error) {
-      setImportError(error.response?.data?.message || error.message);
+      setImportError(importErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -416,6 +434,12 @@ function DeckImport({ onBack, onImportComplete }) {
                   }
                   className="w-full h-64 px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400 font-mono text-sm"
                 />
+                {mode === 'tappedout' && (
+                  <p className="mt-2 text-amber-300/90 text-xs">
+                    Note: TappedOut currently blocks automated imports (HTTP 403). If the import
+                    fails, export the deck as text from TappedOut and use the Text List tab instead.
+                  </p>
+                )}
               </div>
 
               {importError && <ErrorBanner messages={[importError]} />}

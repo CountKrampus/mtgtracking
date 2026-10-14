@@ -11,9 +11,10 @@ const {
   parseArchidektURL,
   parseArenaText,
   parseTappedOutURL,
-  parseMTGGoldfishURL
+  parseMTGGoldfishURL,
+  httpError
 } = require('../utils/deckHelpers');
-const { requireAuth, requireEditor } = require('../middleware/auth');
+const { requireAuth, requirePermission } = require('../middleware/auth');
 const { buildUserQuery, getUserId } = require('../middleware/multiUser');
 const { activityLoggers } = require('../middleware/activityLogger');
 const { checkAndAwardBadges } = require('../utils/badgeManager');
@@ -196,7 +197,7 @@ router.get('/:id', requireAuth, async (req, res) => {
 });
 
 // Create deck
-router.post('/', requireAuth, requireEditor, activityLoggers.deckCreate, async (req, res) => {
+router.post('/', requireAuth, requirePermission('deck:create'), activityLoggers.deckCreate, async (req, res) => {
   try {
     const userId = getUserId(req);
     const deckData = { ...req.body };
@@ -211,7 +212,7 @@ router.post('/', requireAuth, requireEditor, activityLoggers.deckCreate, async (
 });
 
 // Update deck
-router.put('/:id', requireAuth, requireEditor, activityLoggers.deckUpdate, async (req, res) => {
+router.put('/:id', requireAuth, requirePermission('deck:create'), activityLoggers.deckUpdate, async (req, res) => {
   try {
     const query = buildUserQuery({ _id: req.params.id }, req);
     const deck = await Deck.findOne(query);
@@ -291,7 +292,7 @@ router.put('/:id', requireAuth, requireEditor, activityLoggers.deckUpdate, async
 });
 
 // Delete deck
-router.delete('/:id', requireAuth, requireEditor, activityLoggers.deckDelete, async (req, res) => {
+router.delete('/:id', requireAuth, requirePermission('deck:create'), activityLoggers.deckDelete, async (req, res) => {
   try {
     const query = buildUserQuery({ _id: req.params.id }, req);
     const deck = await Deck.findOne(query);
@@ -304,7 +305,7 @@ router.delete('/:id', requireAuth, requireEditor, activityLoggers.deckDelete, as
 });
 
 // Import deck from text or URL
-router.post('/import', requireAuth, requireEditor, async (req, res) => {
+router.post('/import', requireAuth, requirePermission('deck:create'), async (req, res) => {
   try {
     const { source, data } = req.body;
 
@@ -330,9 +331,26 @@ router.post('/import', requireAuth, requireEditor, async (req, res) => {
     }
 
     // Fetch Scryfall data for commander
-    const commanderData = await axios.get(
-      `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(parsedData.commander)}`
-    );
+    // A name Scryfall can't fuzzy-match used to bubble up as a bare
+    // "Request failed with status code 404" 500 - turn it into an actionable
+    // message that names the card.
+    const fetchNamedCard = async (cardName) => {
+      try {
+        return (await axios.get(
+          `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}`
+        )).data;
+      } catch (err) {
+        if (err.response?.status === 404) {
+          throw httpError(404, `Couldn't find "${cardName}" on Scryfall - check the spelling, or import the deck as a Text List.`);
+        }
+        if (err.response?.status === 429) {
+          throw httpError(429, 'Scryfall rate limit reached - wait a moment and try the import again.');
+        }
+        throw httpError(502, `Scryfall lookup failed for "${cardName}" - try again in a moment.`);
+      }
+    };
+
+    const commanderData = { data: await fetchNamedCard(parsedData.commander) };
     const commander = {
       scryfallId: commanderData.data.id,
       name: commanderData.data.name,
@@ -349,9 +367,7 @@ router.post('/import', requireAuth, requireEditor, async (req, res) => {
     // Partner commander if present
     let partnerCommander = null;
     if (parsedData.partnerCommander) {
-      const partnerData = await axios.get(
-        `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(parsedData.partnerCommander)}`
-      );
+      const partnerData = { data: await fetchNamedCard(parsedData.partnerCommander) };
       partnerCommander = {
         scryfallId: partnerData.data.id,
         name: partnerData.data.name,
@@ -378,9 +394,17 @@ router.post('/import', requireAuth, requireEditor, async (req, res) => {
 
     for (let i = 0; i < identifiers.length; i += batchSize) {
       const batch = identifiers.slice(i, i + batchSize);
-      const batchResponse = await axios.post('https://api.scryfall.com/cards/collection', {
-        identifiers: batch
-      });
+      let batchResponse;
+      try {
+        batchResponse = await axios.post('https://api.scryfall.com/cards/collection', {
+          identifiers: batch
+        });
+      } catch (err) {
+        if (err.response?.status === 429) {
+          throw httpError(429, 'Scryfall rate limit reached - wait a moment and try the import again.');
+        }
+        throw httpError(502, `Scryfall card lookup failed${err.response?.status ? ` (HTTP ${err.response.status})` : ''} - try again in a moment.`);
+      }
       allScryfallCards.push(...batchResponse.data.data);
 
       // Add delay between batches to respect rate limits
@@ -418,10 +442,26 @@ router.post('/import', requireAuth, requireEditor, async (req, res) => {
     // Validate
     const validation = validateDeck(deckData);
 
+    // Cards Scryfall couldn't resolve are dropped from mainDeck silently,
+    // which surfaces only as a confusing card-count error. List them so the
+    // user knows which names to fix (typo, printing-only name, etc.).
+    const resolvedNames = new Set(mainDeck.map(c => c.name.toLowerCase()));
+    const unresolved = [...new Set(
+      parsedData.mainDeck
+        .map(c => c.name)
+        .filter(name => !resolvedNames.has(name.toLowerCase()))
+    )];
+    if (unresolved.length) {
+      const shown = unresolved.slice(0, 8).join(', ');
+      validation.warnings.push(
+        `${unresolved.length} card${unresolved.length === 1 ? '' : 's'} couldn't be resolved on Scryfall and ${unresolved.length === 1 ? 'was' : 'were'} left out: ${shown}${unresolved.length > 8 ? ', ...' : ''}`
+      );
+    }
+
     res.json({ deckData, statistics, validation });
   } catch (error) {
     console.error('Import error:', error);
-    res.status(500).json({ message: error.message });
+    res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
@@ -519,7 +559,7 @@ router.post('/:id/validate', requireAuth, async (req, res) => {
 });
 
 // Add card from collection to deck
-router.post('/:id/add-card', requireAuth, requireEditor, async (req, res) => {
+router.post('/:id/add-card', requireAuth, requirePermission('deck:create'), async (req, res) => {
   try {
     const query = buildUserQuery({ _id: req.params.id }, req);
     const deck = await Deck.findOne(query);
@@ -554,7 +594,7 @@ router.post('/:id/add-card', requireAuth, requireEditor, async (req, res) => {
 });
 
 // Atomically remove one card by name and add a replacement
-router.post('/:id/swap-card', requireAuth, requireEditor, async (req, res) => {
+router.post('/:id/swap-card', requireAuth, requirePermission('deck:create'), async (req, res) => {
   try {
     const query = buildUserQuery({ _id: req.params.id }, req);
     const deck = await Deck.findOne(query);
@@ -1207,7 +1247,7 @@ router.put('/:id/folder', requireAuth, async (req, res) => {
 });
 
 // Toggle deck visibility (public/private)
-router.patch('/:id/visibility', requireAuth, requireEditor, async (req, res) => {
+router.patch('/:id/visibility', requireAuth, requirePermission('deck:create'), async (req, res) => {
   try {
     const query = buildUserQuery({ _id: req.params.id }, req);
     const deck = await Deck.findOne(query);
@@ -1311,7 +1351,7 @@ router.get('/:id/legality', requireAuth, async (req, res) => {
 });
 
 // Share deck (generate share code)
-router.post('/:id/share', requireAuth, requireEditor, async (req, res) => {
+router.post('/:id/share', requireAuth, requirePermission('deck:create'), async (req, res) => {
   try {
     const query = buildUserQuery({ _id: req.params.id }, req);
     const deck = await Deck.findOne(query);
@@ -1338,7 +1378,7 @@ router.post('/:id/share', requireAuth, requireEditor, async (req, res) => {
 
 // POST /api/decks/:id/sync-tags — tag every collection card that appears in this deck
 // with the deck's name. Idempotent: existing tag is skipped. Returns counts.
-router.post('/:id/sync-tags', requireAuth, requireEditor, async (req, res) => {
+router.post('/:id/sync-tags', requireAuth, requirePermission('deck:create'), async (req, res) => {
   try {
     const Card = mongoose.model('Card');
     const query = buildUserQuery({ _id: req.params.id }, req);
@@ -1366,7 +1406,7 @@ router.post('/:id/sync-tags', requireAuth, requireEditor, async (req, res) => {
 });
 
 // DELETE /api/decks/:id/sync-tags — remove this deck's name tag from all collection cards
-router.delete('/:id/sync-tags', requireAuth, requireEditor, async (req, res) => {
+router.delete('/:id/sync-tags', requireAuth, requirePermission('deck:create'), async (req, res) => {
   try {
     const Card = mongoose.model('Card');
     const query = buildUserQuery({ _id: req.params.id }, req);
