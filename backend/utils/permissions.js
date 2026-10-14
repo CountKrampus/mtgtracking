@@ -2,38 +2,53 @@ const Role = require('../models/Role');
 
 // Role → permission strings mapping.
 // These match the labels shown in Phase 2's RoleManagement UI component.
+
+// Base permissions every non-read-only role needs to use the site as a
+// regular user (own collection, own decks, chat). Shared by the built-in
+// `user`/`editor` roles and all staff roles.
+const BASE_USER_PERMISSIONS = ['collection:manage', 'deck:create', 'community:chat'];
+
 const ROLE_PERMISSIONS = {
   admin: [
     'all'
   ],
+  // Staff roles carry the staff permissions below PLUS the standard user
+  // base permissions (collection:manage, deck:create, community:chat):
+  // staff members are also ordinary users of the site and can build their
+  // own decks/collection like anyone else. The base perms are appended via
+  // BASE_USER_PERMISSIONS rather than inlined so the shared list stays DRY.
   moderator: [
     'chat:moderate',
     'comments:moderate',
     'user:warn',
     'user:mute',
-    'content:flag'
+    'content:flag',
+    ...BASE_USER_PERMISSIONS
   ],
   content_manager: [
     'cards:audit',
     'prices:manage',
     'data:export',
-    'content:flag'
+    'content:flag',
+    ...BASE_USER_PERMISSIONS
   ],
   community_manager: [
     'community:events',
     'announcements:manage',
     'feedback:manage',
-    'playgroups:manage'
+    'playgroups:manage',
+    ...BASE_USER_PERMISSIONS
   ],
   support: [
     'user:view',
     'feedback:read',
     'user:mute',
-    'ticket:manage'
+    'ticket:manage',
+    ...BASE_USER_PERMISSIONS
   ],
   // Standard user roles (new and legacy)
-  user:   ['collection:manage', 'deck:create', 'community:chat'],
-  editor: ['collection:manage', 'deck:create', 'community:chat'], // legacy alias for user
+  user:   [...BASE_USER_PERMISSIONS],
+  editor: [...BASE_USER_PERMISSIONS], // legacy alias for user
   viewer: ['collection:view']
 };
 

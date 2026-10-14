@@ -1,5 +1,32 @@
 const axios = require('axios');
 
+// Error carrying an HTTP status that the POST /api/decks/import catch block
+// forwards to the client, so upstream failures surface as a clear 4xx/5xx
+// message instead of a generic 500 ("Request failed with status code 404").
+function httpError(statusCode, message) {
+  const err = new Error(message);
+  err.statusCode = statusCode;
+  return err;
+}
+
+// Map an axios failure from an upstream deck site to a friendly, actionable
+// error. `hint` is source-specific advice appended to the message.
+function upstreamError(source, err, hint = '') {
+  if (err && err.statusCode) return err;
+  const status = err?.response?.status;
+  const suffix = hint ? ` ${hint}` : '';
+  if (status === 404) {
+    return httpError(404, `${source} deck not found. Check the URL - it may have been deleted or made private.${suffix}`);
+  }
+  if (status === 403 || status === 401) {
+    return httpError(502, `${source} refused the request (HTTP ${status}) - automated imports are blocked right now.${suffix}`);
+  }
+  if (err?.code === 'ECONNABORTED' || /timeout/i.test(String(err?.message || ''))) {
+    return httpError(504, `${source} did not respond in time. Try again in a moment.${suffix}`);
+  }
+  return httpError(502, `Could not fetch the deck from ${source}${status ? ` (HTTP ${status})` : ` (${err?.message || 'network error'})`}.${suffix}`);
+}
+
 // Strip set codes like "(MH2) 123" or "(PLST) C18-245" from card names
 function stripSetCode(name) {
   return name.replace(/\s*\([A-Za-z0-9]{2,6}\)\s*[A-Za-z0-9\-]*\s*$/i, '').trim();
@@ -187,7 +214,7 @@ function parseTextList(text) {
 // Parse Moxfield URL
 async function parseMoxfieldURL(url) {
   const deckId = url.match(/moxfield\.com\/decks\/([A-Za-z0-9_-]+)/)?.[1];
-  if (!deckId) throw new Error('Invalid Moxfield URL');
+  if (!deckId) throw httpError(400, 'Invalid Moxfield URL - expected https://moxfield.com/decks/...');
 
   // Use the JSON API directly. Note: Origin/Referer headers trigger their CORS block — omit them.
   try {
@@ -212,28 +239,33 @@ async function parseMoxfieldURL(url) {
       })),
     };
   } catch (err) {
-    throw new Error('Could not fetch Moxfield deck. Make sure the deck is set to Public, or export it as text and use Text List import instead.');
+    throw upstreamError('Moxfield', err, 'Make sure the deck is set to Public, or export it as text and use Text List import instead.');
   }
 }
 
 // Parse Archidekt URL
 async function parseArchidektURL(url) {
   const deckId = url.match(/archidekt\.com\/decks\/(\d+)/)?.[1];
-  if (!deckId) throw new Error('Invalid Archidekt URL');
+  if (!deckId) throw httpError(400, 'Invalid Archidekt URL - expected https://archidekt.com/decks/123456/...');
 
   // Add browser-like headers to bypass potential bot protection
-  const response = await axios.get(`https://archidekt.com/api/decks/${deckId}/`, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-      'Accept': 'application/json, text/plain, */*',
-      'Accept-Language': 'en-US,en;q=0.9',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'Referer': 'https://www.archidekt.com/',
-      'Origin': 'https://www.archidekt.com',
-      'DNT': '1',
-      'Connection': 'keep-alive'
-    }
-  });
+  let response;
+  try {
+    response = await axios.get(`https://archidekt.com/api/decks/${deckId}/`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Referer': 'https://www.archidekt.com/',
+        'Origin': 'https://www.archidekt.com',
+        'DNT': '1',
+        'Connection': 'keep-alive'
+      }
+    });
+  } catch (err) {
+    throw upstreamError('Archidekt', err, 'Check the URL, and make sure the deck is public.');
+  }
   const data = response.data;
 
   // Categories like "Maybeboard" or a user-excluded "Tokens & Extras" are marked
@@ -294,19 +326,27 @@ function parseArenaText(text) {
 // Parse TappedOut URL — uses CSV export to detect the commander correctly
 async function parseTappedOutURL(url) {
   const slug = url.match(/tappedout\.net\/mtg-decks\/([^\/\?]+)/)?.[1];
-  if (!slug) throw new Error('Invalid TappedOut URL — expected https://tappedout.net/mtg-decks/your-deck-name/');
+  if (!slug) throw httpError(400, 'Invalid TappedOut URL - expected https://tappedout.net/mtg-decks/your-deck-name/');
 
-  const response = await axios.get(
-    `https://tappedout.net/mtg-decks/${slug}/?fmt=csv`,
-    {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Referer': 'https://tappedout.net/',
-        'Accept': 'text/plain, */*',
-      },
-      maxRedirects: 5,
-    }
-  );
+  let response;
+  try {
+    response = await axios.get(
+      `https://tappedout.net/mtg-decks/${slug}/?fmt=csv`,
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Referer': 'https://tappedout.net/',
+          'Accept': 'text/plain, */*',
+        },
+        maxRedirects: 5,
+      }
+    );
+  } catch (err) {
+    // TappedOut's CDN returns 403 to non-browser clients, which makes this
+    // source fail for everyone right now - say so explicitly and point at the
+    // working alternative instead of leaking a bare HTTP status.
+    throw upstreamError('TappedOut', err, 'TappedOut is currently blocking automated imports - export the deck as text from TappedOut and use the Text List import instead.');
+  }
 
   // CSV columns: Board,Qty,Name,Printing,Foil,Alter,Signed,Condition,Language,Commander
   const lines = response.data.split('\n');
@@ -352,18 +392,23 @@ async function parseTappedOutURL(url) {
 async function parseMTGGoldfishURL(url) {
   const deckId = url.match(/mtggoldfish\.com\/deck(?:\/download)?\/(\d+)/)?.[1];
   if (!deckId) {
-    throw new Error('Invalid MTGGoldfish URL — expected https://www.mtggoldfish.com/deck/1234567');
+    throw httpError(400, 'Invalid MTGGoldfish URL - expected https://www.mtggoldfish.com/deck/1234567');
   }
 
   const headers = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' };
 
-  const [downloadResponse, pageResponse] = await Promise.all([
-    axios.get(`https://www.mtggoldfish.com/deck/download/${deckId}`, {
-      headers: { ...headers, 'Accept': 'text/plain, */*' },
-      maxRedirects: 5,
-    }),
-    axios.get(`https://www.mtggoldfish.com/deck/${deckId}`, { headers, maxRedirects: 5 }),
-  ]);
+  let downloadResponse, pageResponse;
+  try {
+    [downloadResponse, pageResponse] = await Promise.all([
+      axios.get(`https://www.mtggoldfish.com/deck/download/${deckId}`, {
+        headers: { ...headers, 'Accept': 'text/plain, */*' },
+        maxRedirects: 5,
+      }),
+      axios.get(`https://www.mtggoldfish.com/deck/${deckId}`, { headers, maxRedirects: 5 }),
+    ]);
+  } catch (err) {
+    throw upstreamError('MTGGoldfish', err, 'Check the URL - it should look like https://www.mtggoldfish.com/deck/1234567.');
+  }
 
   const parsed = parseTextList(downloadResponse.data);
 
@@ -387,6 +432,7 @@ async function parseMTGGoldfishURL(url) {
 }
 
 module.exports = {
+  httpError,
   stripSetCode,
   parseCMC,
   extractColorsFromManaCost,

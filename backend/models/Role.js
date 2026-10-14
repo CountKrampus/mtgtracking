@@ -99,6 +99,23 @@ roleSchema.statics.grantMigrationPermissions = async function() {
     { name: 'content_manager' },
     { $addToSet: { permissions: 'prices:force-update' } }
   );
+
+  // Staff roles (moderator, content_manager, community_manager, support) gained
+  // the base user permissions (collection:manage, deck:create, community:chat)
+  // when the deck routes moved from requireEditor (role-name gate that only
+  // ever allowed 'admin'/'editor') to requirePermission('deck:create'). Staff
+  // are ordinary users of the site too — without these they could not create
+  // decks or manage their own collection at all (403 Insufficient permissions).
+  // seedBuiltInRoles() uses $setOnInsert, so it cannot update role docs that
+  // already exist in a live database; this $addToSet covers them.
+  const { ROLE_PERMISSIONS } = require('../utils/permissions');
+  const baseUserPermissions = ROLE_PERMISSIONS.user;
+  for (const name of ['moderator', 'content_manager', 'community_manager', 'support']) {
+    await this.updateOne(
+      { name },
+      { $addToSet: { permissions: { $each: baseUserPermissions } } }
+    );
+  }
 };
 
 module.exports = mongoose.model('Role', roleSchema);
