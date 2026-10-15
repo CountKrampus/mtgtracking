@@ -26,7 +26,13 @@ if errorlevel 1 (
 
 REM --- Caddy (production frontend + api proxy on :8080) ---
 cd /d "%PROJECT_DIR%"
-start "MTG Tracker Caddy" /min cmd /c "caddy_windows_amd64.exe run --config Caddyfile > caddy-boot.log 2>&1"
+netstat -ano | findstr /R "LISTENING" | findstr ":443 " >nul 2>&1
+if errorlevel 1 (
+    echo Starting Caddy...
+    start "MTG Tracker Caddy" /min cmd /c "caddy_windows_amd64.exe run --config Caddyfile > caddy-boot.log 2>&1"
+) else (
+    echo Caddy already running on port 443.
+)
 
 REM --- Backend (port 5000) ---
 timeout /t 2 /nobreak >nul
