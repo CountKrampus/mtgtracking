@@ -21,9 +21,17 @@ export default function ForumView() {
   const [selectedCategoryId, setSelectedCategoryId] = useState(() =>
     localStorage.getItem('forumSelectedCategory') || null
   );
-  const [selectedThreadId, setSelectedThreadId] = useState(() =>
-    localStorage.getItem('forumSelectedThread') || null
-  );
+  const [selectedThreadId, setSelectedThreadId] = useState(() => {
+    // Deep links such as /forum/thread/<id> — used by the Deck of the Week
+    // "Discussion" button, the admin spotlight tab, and profile post links —
+    // must open that exact thread. The URL wins over whatever was last open.
+    const deepLink = window.location.pathname.match(/^\/forum\/thread\/([0-9a-fA-F]{24})$/);
+    if (deepLink) {
+      localStorage.setItem('forumSelectedThread', deepLink[1]);
+      return deepLink[1];
+    }
+    return localStorage.getItem('forumSelectedThread') || null;
+  });
   const [forumRefreshKey, setForumRefreshKey] = useState(0);
   const [cosmeticVersion, setCosmeticVersion] = useState(0);
   const [showForumLeaderboard, setShowForumLeaderboard] = useState(false);
@@ -91,6 +99,11 @@ export default function ForumView() {
             onBack={() => {
               setSelectedThreadId(null);
               localStorage.removeItem('forumSelectedThread');
+              // If we arrived via a /forum/thread/<id> deep link, drop it so a
+              // reload doesn't reopen the thread the user backed out of.
+              if (/^\/forum\/thread\//.test(window.location.pathname)) {
+                navigate('/forum', { replace: true });
+              }
             }}
             onThreadDeleted={() => setForumRefreshKey(k => k + 1)}
             onViewProfile={(username) => {
@@ -122,6 +135,10 @@ export default function ForumView() {
             onSelectCategory={(catId) => {
               setSelectedCategoryId(catId);
               localStorage.setItem('forumSelectedCategory', catId);
+            }}
+            onOpenThread={(threadId) => {
+              setSelectedThreadId(threadId);
+              localStorage.setItem('forumSelectedThread', threadId);
             }}
             onNewThread={() => {}}
             onOpenAdmin={() => {

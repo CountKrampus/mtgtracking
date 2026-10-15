@@ -25,9 +25,12 @@ export default function MessagesPage({ user, onBack }) {
     }
   };
 
-  // Fetch messages for selected conversation
-  const fetchMessages = async (otherUserId) => {
-    setLoading(true);
+  // Fetch messages for selected conversation.
+  // showLoader is true only for the initial open: the 5s background poll
+  // must NOT flip `loading`, or the whole thread is replaced by the
+  // "Loading messages..." placeholder every 5 seconds (visible flicker).
+  const fetchMessages = async (otherUserId, showLoader = false) => {
+    if (showLoader) setLoading(true);
     try {
       const response = await fetch(`${API_URL}/messages/${otherUserId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('mtg_access_token')}` }
@@ -39,7 +42,7 @@ export default function MessagesPage({ user, onBack }) {
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   };
 
@@ -84,7 +87,7 @@ export default function MessagesPage({ user, onBack }) {
 
   useEffect(() => {
     if (selectedConversation) {
-      fetchMessages(selectedConversation.otherUserId);
+      fetchMessages(selectedConversation.otherUserId, true);
       const interval = setInterval(() => fetchMessages(selectedConversation.otherUserId), 5000);
       return () => clearInterval(interval);
     }

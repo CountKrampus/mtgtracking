@@ -1,8 +1,9 @@
 // backend/routes/cards.js
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const axios = require('axios');
-const { verifyToken, requireAuth, requireEditor } = require('../middleware/auth');
+const { verifyToken, requireAuth, requirePermission } = require('../middleware/auth');
 const { buildUserQuery, getUserId } = require('../middleware/multiUser');
 const { activityLoggers } = require('../middleware/activityLogger');
 const { getPriceWithFallback } = require('../utils/pricing');
@@ -87,7 +88,7 @@ router.get('/duplicates', requireAuth, async (req, res) => {
 });
 
 // Merge duplicate rows into a target card, deleting the sources
-router.post('/merge-duplicates', requireAuth, requireEditor, activityLoggers.cardMerge, async (req, res) => {
+router.post('/merge-duplicates', requireAuth, requirePermission('collection:manage'), activityLoggers.cardMerge, async (req, res) => {
   try {
     const { targetId, sourceIds } = req.body;
     if (!targetId || !Array.isArray(sourceIds) || sourceIds.length === 0) {
@@ -139,8 +140,12 @@ router.post('/merge-duplicates', requireAuth, requireEditor, activityLoggers.car
 });
 
 // Get single card
-router.get('/:id', requireAuth, async (req, res) => {
+router.get('/:id', requireAuth, async (req, res, next) => {
   try {
+    // Literal single-segment routes registered further below (e.g.
+    // /acquisitions, /changelog) would otherwise be shadowed by this
+    // parameterized route. Non-ObjectId values fall through to them.
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return next();
     const query = buildUserQuery({ _id: req.params.id }, req);
     const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
@@ -151,7 +156,7 @@ router.get('/:id', requireAuth, async (req, res) => {
 });
 
 // Update prices from Scryfall (with MTGGoldfish backup)
-router.post('/:id/update-price', requireAuth, requireEditor, activityLoggers.priceUpdate, async (req, res) => {
+router.post('/:id/update-price', requireAuth, requirePermission('collection:manage'), activityLoggers.priceUpdate, async (req, res) => {
   try {
     const { force, fullData } = req.query; // Optional: force update, fullData for complete card info
     const query = buildUserQuery({ _id: req.params.id }, req);
@@ -250,7 +255,7 @@ router.post('/:id/update-price', requireAuth, requireEditor, activityLoggers.pri
 });
 
 // Bulk update all prices from Scryfall (with MTGGoldfish backup)
-router.post('/update-all-prices', requireAuth, requireEditor, activityLoggers.priceBulkUpdate, async (req, res) => {
+router.post('/update-all-prices', requireAuth, requirePermission('collection:manage'), activityLoggers.priceBulkUpdate, async (req, res) => {
   try {
     const { force, fullData } = req.query; // Optional: force update, fullData for complete card info
     const cardQuery = buildUserQuery({}, req);
@@ -391,7 +396,7 @@ router.post('/update-all-prices', requireAuth, requireEditor, activityLoggers.pr
 });
 
 // Bulk import cards from list (with offline fallback)
-router.post('/bulk-import', requireAuth, requireEditor, activityLoggers.cardBulkImport, async (req, res) => {
+router.post('/bulk-import', requireAuth, requirePermission('collection:manage'), activityLoggers.cardBulkImport, async (req, res) => {
   try {
     const { cardList, offlineMode } = req.body; // Array of strings like "4 Lightning Bolt" or "Lightning Bolt"
     const userId = getUserId(req);
@@ -525,7 +530,7 @@ router.post('/bulk-import', requireAuth, requireEditor, activityLoggers.cardBulk
 });
 
 // Bulk import full card data (for JSON/CSV imports)
-router.post('/bulk-import-full', requireAuth, requireEditor, activityLoggers.cardBulkImport, async (req, res) => {
+router.post('/bulk-import-full', requireAuth, requirePermission('collection:manage'), activityLoggers.cardBulkImport, async (req, res) => {
   try {
     const { cards } = req.body; // Array of card objects with full data
     const userId = getUserId(req);
@@ -599,7 +604,7 @@ router.post('/bulk-import-full', requireAuth, requireEditor, activityLoggers.car
 });
 
 // Offline-only bulk import (no API calls)
-router.post('/bulk-import-offline', requireAuth, requireEditor, activityLoggers.cardBulkImport, async (req, res) => {
+router.post('/bulk-import-offline', requireAuth, requirePermission('collection:manage'), activityLoggers.cardBulkImport, async (req, res) => {
   try {
     const { cardList } = req.body;
     const userId = getUserId(req);
@@ -676,7 +681,7 @@ router.post('/bulk-import-offline', requireAuth, requireEditor, activityLoggers.
 });
 
 // Create new card (or merge with existing if duplicate)
-router.post('/', requireAuth, requireEditor, activityLoggers.cardCreate, async (req, res) => {
+router.post('/', requireAuth, requirePermission('collection:manage'), activityLoggers.cardCreate, async (req, res) => {
   try {
     const userId = getUserId(req);
     const errors = validateCardPayload(req.body);
@@ -723,7 +728,7 @@ router.post('/', requireAuth, requireEditor, activityLoggers.cardCreate, async (
 });
 
 // Update card
-router.put('/:id', requireAuth, requireEditor, activityLoggers.cardUpdate, async (req, res) => {
+router.put('/:id', requireAuth, requirePermission('collection:manage'), activityLoggers.cardUpdate, async (req, res) => {
   try {
     const userId = getUserId(req);
     const errors = validateCardPayload(req.body, { allowPartial: true });
@@ -766,8 +771,12 @@ router.put('/:id', requireAuth, requireEditor, activityLoggers.cardUpdate, async
 });
 
 // Delete card
-router.delete('/:id', requireAuth, requireEditor, activityLoggers.cardDelete, async (req, res) => {
+router.delete('/:id', requireAuth, requirePermission('collection:manage'), activityLoggers.cardDelete, async (req, res, next) => {
   try {
+    // Literal single-segment routes registered further below (e.g.
+    // /bulk-delete) would otherwise be shadowed by this parameterized
+    // route. Non-ObjectId values fall through to them.
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return next();
     const userId = getUserId(req);
     const query = buildUserQuery({ _id: req.params.id }, req);
     const card = await Card.findOne(query);
@@ -815,7 +824,7 @@ router.get('/:id/price-history', requireAuth, async (req, res) => {
 });
 
 // Update a card's finance fields (buylist/sell values, price alert)
-router.put('/:id/finance', requireAuth, requireEditor, async (req, res) => {
+router.put('/:id/finance', requireAuth, requirePermission('collection:manage'), async (req, res) => {
   try {
     const { buylistValue, sellValue, priceAlert } = req.body;
     const userId = getUserId(req);
@@ -839,7 +848,7 @@ router.put('/:id/finance', requireAuth, requireEditor, async (req, res) => {
 });
 
 // Add tag to a card
-router.post('/:id/tags', requireAuth, requireEditor, async (req, res) => {
+router.post('/:id/tags', requireAuth, requirePermission('collection:manage'), async (req, res) => {
   try {
     const { tag } = req.body;
     if (!tag || typeof tag !== 'string') {
@@ -867,7 +876,7 @@ router.post('/:id/tags', requireAuth, requireEditor, async (req, res) => {
 });
 
 // Remove tag from a card
-router.delete('/:id/tags/:tag', requireAuth, requireEditor, async (req, res) => {
+router.delete('/:id/tags/:tag', requireAuth, requirePermission('collection:manage'), async (req, res) => {
   try {
     const query = buildUserQuery({ _id: req.params.id }, req);
     const card = await Card.findOne(query);
@@ -885,7 +894,7 @@ router.delete('/:id/tags/:tag', requireAuth, requireEditor, async (req, res) => 
 });
 
 // Bulk update oracle text for existing cards (one-time migration/backfill)
-router.post('/update-all-oracle-text', requireAuth, requireEditor, async (req, res) => {
+router.post('/update-all-oracle-text', requireAuth, requirePermission('collection:manage'), async (req, res) => {
   try {
     const cardQuery = buildUserQuery({}, req);
     const cards = await Card.find(cardQuery);
@@ -925,7 +934,7 @@ router.post('/update-all-oracle-text', requireAuth, requireEditor, async (req, r
 });
 
 // Migrate existing cards to use cached images
-router.post('/migrate-images-to-cache', requireAuth, requireEditor, async (req, res) => {
+router.post('/migrate-images-to-cache', requireAuth, requirePermission('collection:manage'), async (req, res) => {
   try {
     const query = buildUserQuery({ scryfallId: { $ne: null } }, req);
     const cards = await Card.find(query);
@@ -981,7 +990,7 @@ router.post('/migrate-images-to-cache', requireAuth, requireEditor, async (req, 
 });
 
 // Bulk update multiple cards
-router.post('/bulk-update', requireAuth, requireEditor, activityLoggers.cardBulkUpdate, async (req, res) => {
+router.post('/bulk-update', requireAuth, requirePermission('collection:manage'), activityLoggers.cardBulkUpdate, async (req, res) => {
   try {
     const userId = getUserId(req);
     const errors = validateBulkUpdatePayload(req.body);
@@ -1080,7 +1089,7 @@ router.get('/acquisitions', requireAuth, async (req, res) => {
 });
 
 // Bulk delete multiple cards
-router.delete('/bulk-delete', requireAuth, requireEditor, activityLoggers.cardBulkDelete, async (req, res) => {
+router.delete('/bulk-delete', requireAuth, requirePermission('collection:manage'), activityLoggers.cardBulkDelete, async (req, res) => {
   try {
     const userId = getUserId(req);
     const { cardIds } = req.body;
@@ -1161,7 +1170,7 @@ router.get('/changelog', requireAuth, async (req, res) => {
           $gte: [{ $abs: { $divide: [{ $subtract: ['$lastPrice', '$firstPrice'] }, { $max: ['$firstPrice', 0.01] }] } }, threshold]
         }}},
         { $lookup: { from: 'cards', localField: '_id', foreignField: '_id', as: 'card' } },
-        { $unwind: { path: '$card', preserveNullAndEmpty: true } },
+        { $unwind: { path: '$card', preserveNullAndEmptyArrays: true } },
         { $project: { name: '$card.name', set: '$card.set', firstPrice: 1, lastPrice: 1 } }
       ])
     ]);
