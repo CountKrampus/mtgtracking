@@ -221,7 +221,11 @@ const Dashboard = ({
         card.colors.forEach(c => {
           if (counts[c] !== undefined) counts[c] += card.quantity;
         });
-      } else {
+      } else if (!(card.types || []).includes('Land')) {
+        // Colorless (empty colors) excludes lands — they'd otherwise make
+        // "Colorless" mostly basic/dual lands; lands have their own Type
+        // distribution below. Same rule as the colorless challenge counting
+        // in backend/utils/challengeProgress.js and /api/stats — keep in sync.
         counts.C += card.quantity;
       }
     });
@@ -319,7 +323,9 @@ const Dashboard = ({
       const val = (card.price || 0) * (card.quantity || 1);
       if (card.colors && card.colors.length > 0) {
         card.colors.forEach(c => { if (out[c] !== undefined) out[c] += val; });
-      } else {
+      } else if (!(card.types || []).includes('Land')) {
+        // Colorless value excludes lands, matching the colorless count above
+        // and backend/utils/challengeProgress.js — keep in sync.
         out.C += val;
       }
     });

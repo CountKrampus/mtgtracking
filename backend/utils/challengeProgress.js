@@ -59,12 +59,28 @@ async function computeProgress(challenge, userId, monthStart, monthEnd, Card) {
       return cards.reduce((sum, c) => sum + (c.price || 0), 0);
     }
 
-    case 'color_added':
-      // Colors are stored as single uppercase Scryfall letters (W/U/B/R/G/C)
+    case 'color_added': {
+      // Colors are stored as single uppercase Scryfall letters (W/U/B/R/G).
+      // Scryfall stores colorless cards as an EMPTY colors array — never the
+      // letter 'C' — so a plain letter match always returned 0 for a
+      // colorless challenge (the "colorless not working" bug). Colorless
+      // counts empty-color nonlands: lands are excluded because the W/U/B/R/G
+      // challenges never count lands either, and allowing them would let
+      // basic lands alone complete a colorless challenge.
+      const color = (params.color || '').trim().toLowerCase();
+      if (color === 'c' || color === 'colorless') {
+        return Card.countDocuments(userFilter(userId, {
+          $or: [{ colors: [] }, { colors: null }],
+          types: { $ne: 'Land' },
+          createdAt: { $gte: monthStart, $lte: monthEnd }
+        }));
+      }
+      // Other colors: single uppercase Scryfall letter (W/U/B/R/G)
       return Card.countDocuments(userFilter(userId, {
         colors: (params.color || '').toUpperCase(),
         createdAt: { $gte: monthStart, $lte: monthEnd }
       }));
+    }
 
     case 'rarity_added':
       // Rarity is stored as a single uppercase letter (C/U/R/M)

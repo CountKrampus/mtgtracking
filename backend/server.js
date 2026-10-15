@@ -17,6 +17,7 @@ const rolesRoutes = require('./routes/roles');
 const forumRouter = require('./routes/forum');
 const notificationsRouter = require('./routes/notifications');
 const messagesRouter = require('./routes/messages');
+const imagesRouter = require('./routes/images');
 const { cachedApiCall } = require('./utils/apiCache');
 const { getFromCache, setInCache, clearCache } = require('./utils/statsCache');
 const { CACHE_DIR, cacheCardImage, resolveCachedFilepath } = require('./utils/imageCache');
@@ -522,7 +523,12 @@ app.get('/api/stats', requireAuth, async (req, res) => {
           colorStats[color] = (colorStats[color] || 0) + card.quantity;
           valueByColor[color] = (valueByColor[color] || 0) + cardValue;
         });
-        if (!card.colors.length) {
+        // Colorless bucket excludes lands: they're colorless objects, but
+        // counting them made "Colorless" mostly dual/basic lands (lands are
+        // already reported under typeStats below). Same rule as the colorless
+        // color_added challenge counting in utils/challengeProgress.js and the
+        // frontend Dashboard — keep in sync.
+        if (!card.colors.length && !(card.types || []).includes('Land')) {
           colorStats['C'] = (colorStats['C'] || 0) + card.quantity;
           valueByColor['C'] = (valueByColor['C'] || 0) + cardValue;
         }
@@ -865,6 +871,11 @@ app.delete('/api/tags/:name', requireAuth, requireEditor, activityLoggers.tagDel
     res.status(500).json({ message: error.message });
   }
 });
+
+// Local image lookup by name (registered before /:scryfallId so "lookup"
+// isn't captured as an id — it resolves names to already-cached images
+// without touching Scryfall; see routes/images.js)
+app.use('/api/images', imagesRouter);
 
 // Serve cached images
 app.get('/api/images/:scryfallId', (req, res) => {
@@ -2047,8 +2058,14 @@ setInterval(async () => {
   }
 }, 24 * 60 * 60 * 1000);
 
+// Commander Spellbook combo index for power/bracket combo detection:
+// loads the local snapshot instantly and refreshes in the background when
+// stale (see utils/comboDatabase.js).
+const comboDatabase = require('./utils/comboDatabase');
+
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  comboDatabase.prime();
 
   registerDailySnapshotJob();
   registerWeeklyHealthReportJob();

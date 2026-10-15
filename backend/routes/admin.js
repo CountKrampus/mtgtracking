@@ -2805,6 +2805,58 @@ router.delete('/challenges/proposals/:id', requireAdmin, async (req, res) => {
 });
 
 /**
+ * GET /api/admin/challenges - All non-draft challenges (active + closed) so
+ * admins can still manage challenges after they leave the public active list.
+ */
+router.get('/challenges', requireAdmin, async (req, res) => {
+  try {
+    const challenges = await Challenge.find({ status: { $ne: 'draft' } })
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .lean();
+    res.json({ challenges });
+  } catch (err) {
+    res.status(500).json({ message: 'Error listing challenges', error: err.message });
+  }
+});
+
+/**
+ * PUT /api/admin/challenges/:id/close - Stop a challenge: it disappears from
+ * the public active list but stays listed here (Closed) so it can be
+ * deleted later.
+ */
+router.put('/challenges/:id/close', requireAdmin, async (req, res) => {
+  try {
+    const challenge = await Challenge.findById(req.params.id);
+    if (!challenge) return res.status(404).json({ message: 'Challenge not found' });
+    if (challenge.status === 'closed') {
+      return res.status(400).json({ message: 'Challenge is already closed' });
+    }
+    challenge.status = 'closed';
+    await challenge.save();
+    res.json(challenge);
+  } catch (err) {
+    res.status(500).json({ message: 'Error closing challenge', error: err.message });
+  }
+});
+
+/**
+ * DELETE /api/admin/challenges/:id - Permanently delete a challenge and all
+ * of its participation/progress rows.
+ */
+router.delete('/challenges/:id', requireAdmin, async (req, res) => {
+  try {
+    const challenge = await Challenge.findById(req.params.id);
+    if (!challenge) return res.status(404).json({ message: 'Challenge not found' });
+    await challenge.deleteOne();
+    const { deletedCount } = await ChallengeParticipation.deleteMany({ challengeId: challenge._id });
+    res.json({ message: 'Challenge deleted', participationsDeleted: deletedCount });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting challenge', error: err.message });
+  }
+});
+
+/**
  * PUT /api/admin/challenges/:id/verify-manual - Verify a user's manual (custom-metric) submission
  */
 router.put('/challenges/:id/verify-manual', requireModerator(), async (req, res) => {

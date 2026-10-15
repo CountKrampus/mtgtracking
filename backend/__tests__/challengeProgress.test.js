@@ -13,6 +13,7 @@ const cardSchema = new mongoose.Schema({
   set: String,
   setCode: String,
   colors: [String],
+  types: [String],
   rarity: String,
   isFoil: { type: Boolean, default: false },
   price: { type: Number, default: 0 },
@@ -91,6 +92,26 @@ describe('computeProgress', () => {
 
     const progress = await computeProgress({ metric: 'color_added', params: { color: 'u' } }, userId, monthStart, monthEnd, Card);
     expect(progress).toBe(1);
+  });
+
+  it('color_added for colorless (C) counts empty-color nonland cards, never lands', async () => {
+    await Card.create({ userId, name: 'Sol Ring', colors: [], types: ['Artifact'], createdAt: new Date('2026-06-05') });
+    await Card.create({ userId, name: 'Offline artifact', types: ['Artifact'], createdAt: new Date('2026-06-06') }); // colors field missing entirely
+    await Card.create({ userId, name: 'Wastes', colors: [], types: ['Land'], createdAt: new Date('2026-06-07') });
+    await Card.create({ userId, name: 'Forest', colors: [], types: ['Land'], createdAt: new Date('2026-06-08') });
+    await Card.create({ userId, name: 'Green card', colors: ['G'], types: ['Creature'], createdAt: new Date('2026-06-09') });
+    await Card.create({ userId, name: 'Old colorless', colors: [], types: ['Artifact'], createdAt: outsideMonth });
+
+    const progress = await computeProgress({ metric: 'color_added', params: { color: 'C' } }, userId, monthStart, monthEnd, Card);
+    expect(progress).toBe(2); // the two colorless artifacts — no lands, no colored cards, nothing outside the month
+  });
+
+  it('color_added colorless ignores a month made entirely of lands', async () => {
+    await Card.create({ userId, name: 'Mountain', colors: [], types: ['Land'], createdAt: new Date('2026-06-05') });
+    await Card.create({ userId, name: 'Island', colors: [], types: ['Land'], createdAt: new Date('2026-06-11') });
+
+    const progress = await computeProgress({ metric: 'color_added', params: { color: 'colorless' } }, userId, monthStart, monthEnd, Card);
+    expect(progress).toBe(0);
   });
 
   it('rarity_added matches uppercase rarity letters', async () => {

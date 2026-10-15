@@ -1,4 +1,5 @@
 const { calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore, COLOR_SOURCES } = require('../utils/deckAnalysis');
+const { __setTestIndex } = require('../utils/comboDatabase');
 
 describe('calculateSaltScore', () => {
   test('sums salt values for salty cards in mainDeck and commander', () => {
@@ -65,6 +66,138 @@ describe('estimatePowerLevel', () => {
 
   test('handles a deck with no mainDeck', () => {
     expect(estimatePowerLevel({}, 0)).toEqual({ level: 1, breakdown: {} });
+  });
+
+  test('detects a fully present infinite combo and reports it in the breakdown', () => {
+    const deck = {
+      mainDeck: [{ name: 'Scurry Oak' }, { name: 'Ivy Lane Denizen' }],
+      statistics: { avgManaCost: 3.5 }
+    };
+    const result = estimatePowerLevel(deck, 0);
+    expect(result.breakdown.combos).toEqual(['Scurry Oak + Ivy Lane Denizen']);
+    // A pure combo deck must clear the Casual band (levels 3-4)
+    expect(result.level).toBeGreaterThanOrEqual(5);
+  });
+
+  test('combo requires its outlet group: Chatterfang + Plunderer alone is not counted', () => {
+    const deck = {
+      mainDeck: [{ name: 'Pitiless Plunderer' }],
+      commander: { name: 'Chatterfang, Squirrel General' },
+      statistics: { avgManaCost: 3.5 }
+    };
+    const result = estimatePowerLevel(deck, 0);
+    expect(result.breakdown.combos).toEqual([]);
+  });
+
+  test('Chatterfang deck with multiple infinites (Plunderer + Tower, Scurry Oak pair, Sprout Swarm) lands in Optimized at worst, never Casual', () => {
+    const deck = {
+      mainDeck: [
+        { name: 'Scurry Oak' }, { name: 'Ivy Lane Denizen' },
+        { name: 'Pitiless Plunderer' }, { name: 'Phyrexian Tower' },
+        { name: 'Sprout Swarm' }, { name: 'Sol Ring' },
+        { name: 'Diabolic Intent' }, { name: 'Doubling Season' },
+      ],
+      commander: { name: 'Chatterfang, Squirrel General' },
+      statistics: { avgManaCost: 3.0 }
+    };
+    const result = estimatePowerLevel(deck, 195);
+    expect(result.breakdown.combos).toHaveLength(3);
+    expect(result.breakdown.combos).toContain('Chatterfang + Pitiless Plunderer + free outlet');
+    expect(result.level).toBeGreaterThanOrEqual(5);
+    expect(result.level).toBeLessThanOrEqual(6);
+  });
+
+  test('a deck with no combos keeps combos: [] in its breakdown', () => {
+    const deck = {
+      mainDeck: [{ name: 'Forest' }, { name: 'Grizzly Bears' }],
+      statistics: { avgManaCost: 3.5 }
+    };
+    const result = estimatePowerLevel(deck, 0);
+    expect(result.breakdown.combos).toEqual([]);
+    expect(result.level).toBe(3);
+  });
+
+  test('detects combos from the Commander Spellbook index that are not in the curated table', () => {
+    const restore = __setTestIndex([
+      { id: 'v-niv', cards: ['Niv-Mizzet, Parun', 'Curiosity'] },
+    ]);
+    try {
+      const deck = {
+        mainDeck: [{ name: 'Niv-Mizzet, Parun' }, { name: 'Curiosity' }],
+        statistics: { avgManaCost: 3.5 }
+      };
+      const result = estimatePowerLevel(deck, 0);
+      expect(result.breakdown.combos).toEqual(['Niv-Mizzet, Parun + Curiosity']);
+      expect(result.level).toBeGreaterThanOrEqual(5);
+    } finally {
+      restore();
+    }
+  });
+
+  test('dedupes identical combos across sources and duplicate index entries', () => {
+    const restore = __setTestIndex([
+      { id: 'dup-1', cards: ['Scurry Oak', 'Ivy Lane Denizen'] },
+      { id: 'dup-2', cards: ['Scurry Oak', 'Ivy Lane Denizen'] },
+    ]);
+    try {
+      const deck = {
+        mainDeck: [{ name: 'Scurry Oak' }, { name: 'Ivy Lane Denizen' }],
+        statistics: { avgManaCost: 3.5 }
+      };
+      const result = estimatePowerLevel(deck, 0);
+      // Curated label wins once; both duplicate index entries are suppressed
+      expect(result.breakdown.combos).toEqual(['Scurry Oak + Ivy Lane Denizen']);
+    } finally {
+      restore();
+    }
+  });
+
+  test('ignores Spellbook combos with 4+ cards (not compact bracket signal)', () => {
+    const restore = __setTestIndex([
+      { id: 'v-long', cards: ['Card Alpha', 'Card Beta', 'Card Gamma', 'Card Delta'] },
+    ]);
+    try {
+      const deck = {
+        mainDeck: [
+          { name: 'Card Alpha' }, { name: 'Card Beta' },
+          { name: 'Card Gamma' }, { name: 'Card Delta' },
+        ],
+        statistics: { avgManaCost: 3.5 }
+      };
+      const result = estimatePowerLevel(deck, 0);
+      expect(result.breakdown.combos).toEqual([]);
+      expect(result.level).toBe(3);
+    } finally {
+      restore();
+    }
+  });
+
+  test('combo score caps at +2.5 so a Spellbook flood cannot skew the label', () => {
+    const restore = __setTestIndex([
+      { id: 'f1', cards: ['Alpha One', 'Beta One'] },
+      { id: 'f2', cards: ['Alpha Two', 'Beta Two'] },
+      { id: 'f3', cards: ['Alpha Three', 'Beta Three'] },
+      { id: 'f4', cards: ['Alpha Four', 'Beta Four'] },
+      { id: 'f5', cards: ['Alpha Five', 'Beta Five'] },
+    ]);
+    try {
+      const deck = {
+        mainDeck: [
+          { name: 'Alpha One' }, { name: 'Beta One' },
+          { name: 'Alpha Two' }, { name: 'Beta Two' },
+          { name: 'Alpha Three' }, { name: 'Beta Three' },
+          { name: 'Alpha Four' }, { name: 'Beta Four' },
+          { name: 'Alpha Five' }, { name: 'Beta Five' },
+        ],
+        statistics: { avgManaCost: 3.5 }
+      };
+      const result = estimatePowerLevel(deck, 0);
+      expect(result.breakdown.combos).toHaveLength(5);
+      // baseline 3 + capped combo bonus 2.5 = 5.5 -> rounds to 6, not higher
+      expect(result.level).toBeLessThanOrEqual(6);
+    } finally {
+      restore();
+    }
   });
 });
 
