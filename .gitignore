@@ -48,3 +48,11 @@ caddy
 # IP watchdog runtime log and Namecheap DDNS credential file
 ip-watch.log
 .mtg-ip-watch
+
+# Runtime boot logs (created by mtg-tracker-autostart.bat / manual runs)
+/caddy-boot.log
+/caddy-run.log
+/frontend/frontend-boot.log
+
+# Local development env override (templates are .env.local / .env.cloud)
+frontend/.env.development.local
