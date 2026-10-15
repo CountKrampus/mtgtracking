@@ -2074,10 +2074,33 @@ router.get('/feed', verifyToken, async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
+    // Map to the shape the feed UI expects: string `id` on every item (the
+    // frontend reads item.id, which lean docs don't provide), reply counts
+    // for threads, and for replies the parent thread's id/title (threadId
+    // comes back populated from the query above).
+    const replyCounts = threads.length === 0 ? [] : await ForumPost.aggregate([
+      { $match: { threadId: { $in: threads.map(t => t._id) }, isHidden: { $ne: true } } },
+      { $group: { _id: '$threadId', count: { $sum: 1 } } }
+    ]);
+    const replyCountByThread = Object.fromEntries(replyCounts.map(r => [r._id.toString(), r.count]));
+
     // Merge and sort by creation date
     const feedItems = [
-      ...threads.map(t => ({ ...t, type: 'thread' })),
-      ...posts.map(p => ({ ...p, type: 'post' }))
+      ...threads.map(t => ({
+        ...t,
+        id: t._id.toString(),
+        type: 'thread',
+        snippet: typeof t.content === 'string' ? t.content.substring(0, 150) : '',
+        postCount: replyCountByThread[t._id.toString()] || 0
+      })),
+      ...posts.map(p => ({
+        ...p,
+        id: p._id.toString(),
+        threadId: p.threadId && p.threadId._id ? p.threadId._id.toString() : (p.threadId ? p.threadId.toString() : null),
+        threadTitle: p.threadId && p.threadId.title ? p.threadId.title : null,
+        type: 'post',
+        snippet: typeof p.body === 'string' ? p.body.substring(0, 150) : ''
+      }))
     ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     // Apply pagination

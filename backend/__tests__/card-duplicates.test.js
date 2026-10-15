@@ -27,6 +27,17 @@ function tokenFor(user) {
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   await mongoose.connect(mongoServer.getUri());
+  // This suite tests the /duplicates endpoint against LEGACY duplicate rows
+  // that predate the Card model's DB-level unique index (the index itself is
+  // covered by card-unique-index.test.js). Wait for the index build to
+  // finish, then drop it so the duplicate fixtures insert deterministically
+  // instead of racing mongoose's async autoIndex.
+  await Card.init();
+  try {
+    await Card.collection.dropIndex('userId_1_name_1_set_1_condition_1_isFoil_1_collectorNumber_1');
+  } catch (err) {
+    // index absent — nothing to drop
+  }
   app = buildApp();
 });
 

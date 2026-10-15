@@ -1,113 +1,117 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Package, Users, Clock, MapPin, Star, Award, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Calendar, Package, Users, Clock, MapPin, Star, Award, ExternalLink, Loader2 } from 'lucide-react';
+import axios from 'axios';
+
+// Scryfall set types that aren't playable sets (same exclusions as backend/utils/scryfallSets.js)
+const EXCLUDED_SET_TYPES = new Set(['token', 'memorabilia', 'art_series', 'promo']);
+
+const TYPE_LABELS = {
+  expansion: 'Standard Set',
+  core: 'Standard Set',
+  commander: 'Commander Set',
+  duel_commander: 'Commander Set',
+  masters: 'Masters Set',
+  draft_innovation: 'Draft Innovation Set',
+  eternal: 'Eternal Set',
+  box: 'Box Set',
+  masterpiece: 'Masterpiece Series',
+  funny: 'Un-Set / Humor',
+  starter: 'Starter Set',
+  spellbook: 'Spellbook Series',
+  duel_deck: 'Duel Deck',
+  from_the_vault: 'From the Vault',
+  planechase: 'Planechase',
+  premium_deck: 'Premium Deck',
+  archenemy: 'Archenemy',
+  minigame: 'Minigame',
+  arsenal: 'Arsenal',
+  vanguard: 'Vanguard'
+};
+
+const humanizeType = (type) => type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+const typeLabel = (type) => TYPE_LABELS[type] || humanizeType(type);
+
+const categoryFor = (type) => {
+  if (type === 'expansion' || type === 'core') return 'standard';
+  if (type === 'commander' || type === 'duel_commander') return 'commander';
+  return 'other';
+};
+
+// Scryfall doesn't publish prerelease dates; prerelease weekend is
+// traditionally one week before release day, so derive that offset.
+const prereleaseDateFor = (releaseDate) => {
+  const d = new Date(`${releaseDate}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - 7);
+  return d.toISOString().slice(0, 10);
+};
 
 const SetReleaseCalendar = () => {
-  const [sets, setSets] = useState([
-    {
-      id: 1,
-      name: 'Duskmourn: House of Horror',
-      code: 'DMU',
-      type: 'Standard Set',
-      releaseDate: '2024-09-20',
-      prereleaseDate: '2024-09-14',
-      cardCount: 275,
-      theme: 'Horror, Dungeons',
-      keywords: ['Dungeon', 'Disturb'],
-      estimatedCards: 101,
-      rareMythicSplit: '1:3.75',
-      hasPromos: true,
-      hasTokens: true,
-      hasArtSeries: true
-    },
-    {
-      id: 2,
-      name: 'Murders at Karlov Manor',
-      code: 'MKM',
-      type: 'Standard Set',
-      releaseDate: '2024-01-26',
-      prereleaseDate: '2024-01-20',
-      cardCount: 276,
-      theme: 'Detective, Gothic',
-      keywords: ['Investigate', 'Crew'],
-      estimatedCards: 101,
-      rareMythicSplit: '1:3.75',
-      hasPromos: true,
-      hasTokens: true,
-      hasArtSeries: false
-    },
-    {
-      id: 3,
-      name: 'Outlaws of Thunder Junction',
-      code: 'OTJ',
-      type: 'Standard Set',
-      releaseDate: '2024-04-19',
-      prereleaseDate: '2024-04-13',
-      cardCount: 274,
-      theme: 'Wild West, Outlaws',
-      keywords: ['Town', 'Raider'],
-      estimatedCards: 101,
-      rareMythicSplit: '1:3.75',
-      hasPromos: true,
-      hasTokens: true,
-      hasArtSeries: false
-    },
-    {
-      id: 4,
-      name: 'Modern Horizons 3',
-      code: 'MH3',
-      type: 'Non-Standard Set',
-      releaseDate: '2024-06-14',
-      prereleaseDate: '2024-06-08',
-      cardCount: 513,
-      theme: 'Modern-legal reimaginings',
-      keywords: ['Casualty', 'Escape'],
-      estimatedCards: 200,
-      rareMythicSplit: '1:3.75',
-      hasPromos: true,
-      hasTokens: true,
-      hasArtSeries: true
-    },
-    {
-      id: 5,
-      name: 'Bloomburrow',
-      code: 'BLB',
-      type: 'Standard Set',
-      releaseDate: '2024-07-19',
-      prereleaseDate: '2024-07-13',
-      cardCount: 275,
-      theme: 'Anthropomorphic Animals',
-      keywords: ['Buckle', 'Gnaw'],
-      estimatedCards: 101,
-      rareMythicSplit: '1:3.75',
-      hasPromos: true,
-      hasTokens: true,
-      hasArtSeries: false
-    },
-    {
-      id: 6,
-      name: 'Thunder Junction: Big Score',
-      code: 'TJK',
-      type: 'Universes Beyond',
-      releaseDate: '2024-08-23',
-      prereleaseDate: '2024-08-17',
-      cardCount: 165,
-      theme: 'Heist, Western',
-      keywords: ['Job', 'Score'],
-      estimatedCards: 63,
-      rareMythicSplit: '1:3.75',
-      hasPromos: true,
-      hasTokens: true,
-      hasArtSeries: false
-    }
-  ]);
-
+  const [sets, setSets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filterType, setFilterType] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'calendar'
 
+  const loadSets = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await axios.get('https://api.scryfall.com/sets');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const recentCutoff = new Date(today);
+      recentCutoff.setDate(recentCutoff.getDate() - 120);
+
+      const usable = (data?.data || []).filter(
+        (s) => !s.digital && s.released_at && !EXCLUDED_SET_TYPES.has(s.set_type)
+      );
+
+      // Upcoming sets first (soonest first), then what released recently so
+      // the "Released" status still has something to show.
+      const upcoming = usable
+        .filter((s) => new Date(s.released_at) >= today)
+        .sort((a, b) => a.released_at.localeCompare(b.released_at));
+      const recentlyReleased = usable
+        .filter((s) => {
+          const d = new Date(s.released_at);
+          return d < today && d >= recentCutoff;
+        })
+        .sort((a, b) => b.released_at.localeCompare(a.released_at));
+
+      setSets(
+        [...upcoming, ...recentlyReleased].map((s) => ({
+          id: s.code,
+          name: s.name,
+          code: s.code.toUpperCase(),
+          type: typeLabel(s.set_type),
+          category: categoryFor(s.set_type),
+          releaseDate: s.released_at,
+          prereleaseDate: prereleaseDateFor(s.released_at),
+          cardCount: s.card_count,
+          icon: s.icon_svg_uri,
+          scryfallUrl: s.scryfall_uri
+        }))
+      );
+    } catch (err) {
+      setError(
+        err.response?.status === 429
+          ? 'Scryfall is rate-limiting requests right now — wait a minute and try again.'
+          : 'Could not reach Scryfall. Check your connection and try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSets();
+  }, [loadSets]);
+
   const filteredSets = sets.filter(set => {
-    const matchesType = filterType === 'all' || set.type.toLowerCase().includes(filterType.toLowerCase());
-    const matchesSearch = set.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesType = filterType === 'all' || set.category === filterType;
+    const matchesSearch = set.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          set.code.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesType && matchesSearch;
   });
@@ -115,7 +119,7 @@ const SetReleaseCalendar = () => {
   const getStatus = (releaseDate) => {
     const today = new Date();
     const release = new Date(releaseDate);
-    
+
     if (release < today) return 'released';
     if (release.getTime() - today.getTime() < 7 * 24 * 60 * 60 * 1000) return 'soon';
     return 'upcoming';
@@ -151,7 +155,7 @@ const SetReleaseCalendar = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Set Release Calendar</h1>
         <p className="text-gray-400">
-          Upcoming MTG set releases with prerelease dates and card information
+          Upcoming MTG set releases with prerelease dates and card information — live from Scryfall
         </p>
       </div>
 
@@ -159,7 +163,7 @@ const SetReleaseCalendar = () => {
         <div className="lg:col-span-1">
           <div className="bg-white/5 rounded-lg p-6 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4">Filters</h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Set Type</label>
@@ -170,8 +174,8 @@ const SetReleaseCalendar = () => {
                 >
                   <option value="all">All Types</option>
                   <option value="standard">Standard Sets</option>
-                  <option value="non-standard">Non-Standard Sets</option>
-                  <option value="universes">Universes Beyond</option>
+                  <option value="commander">Commander Sets</option>
+                  <option value="other">Other Sets</option>
                 </select>
               </div>
 
@@ -219,7 +223,7 @@ const SetReleaseCalendar = () => {
                 <div>
                   <h3 className="text-sm font-medium text-blue-400">Pro Tip</h3>
                   <p className="text-xs text-gray-400 mt-1">
-                    Prerelease events are typically held a week before the official release date.
+                    Prerelease events are typically held a week before the official release date. Prerelease dates shown are that typical offset — Scryfall only publishes the release date.
                   </p>
                 </div>
               </div>
@@ -236,88 +240,101 @@ const SetReleaseCalendar = () => {
               </div>
             </div>
 
-            <div className="space-y-4">
-              {filteredSets.map((set) => {
-                const status = getStatus(set.releaseDate);
-                const days = daysUntilRelease(set.releaseDate);
-                
-                return (
-                  <div key={set.id} className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                          {set.name}
-                          <span className="text-xs bg-gray-600/30 text-gray-300 px-2 py-1 rounded">
-                            {set.code}
+            {loading ? (
+              <div className="flex items-center justify-center gap-2 py-12 text-gray-400">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <p>Loading set calendar from Scryfall...</p>
+              </div>
+            ) : error ? (
+              <div className="py-12 text-center">
+                <p className="text-red-400 mb-4">{error}</p>
+                <button
+                  onClick={loadSets}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : filteredSets.length === 0 ? (
+              <div className="py-12 text-center text-gray-400">
+                <p>No sets match your filters.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredSets.map((set) => {
+                  const status = getStatus(set.releaseDate);
+                  const days = daysUntilRelease(set.releaseDate);
+
+                  return (
+                    <div key={set.id} className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                            {set.icon && (
+                              <img src={set.icon} alt="" className="w-6 h-6" />
+                            )}
+                            {set.name}
+                            <span className="text-xs bg-gray-600/30 text-gray-300 px-2 py-1 rounded">
+                              {set.code}
+                            </span>
+                          </h3>
+                          <p className="text-gray-400 text-sm">{set.type}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
+                            {status === 'released' ? <Package className="w-3 h-3" /> :
+                             status === 'soon' ? <Clock className="w-3 h-3" /> :
+                             <Calendar className="w-3 h-3" />}
+                            {status.charAt(0).toUpperCase() + status.slice(1)}
                           </span>
-                        </h3>
-                        <p className="text-gray-400 text-sm">{set.type}</p>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
-                          {status === 'released' ? <Package className="w-3 h-3" /> :
-                           status === 'soon' ? <Clock className="w-3 h-3" /> :
-                           <Calendar className="w-3 h-3" />}
-                          {status.charAt(0).toUpperCase() + status.slice(1)}
-                        </span>
-                      </div>
-                    </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-gray-400" />
-                        <div>
-                          <span className="text-gray-400">Release:</span>
-                          <div className="text-white">{formatDate(set.releaseDate)}</div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-4">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-gray-400" />
+                          <div>
+                            <span className="text-gray-400">Release:</span>
+                            <div className="text-white">{formatDate(set.releaseDate)}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-gray-400" />
+                          <div>
+                            <span className="text-gray-400">Prerelease (typ.):</span>
+                            <div className="text-white">{formatDate(set.prereleaseDate)}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Package className="w-4 h-4 text-gray-400" />
+                          <div>
+                            <span className="text-gray-400">Cards:</span>
+                            <div className="text-white">{set.cardCount}</div>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-gray-400" />
-                        <div>
-                          <span className="text-gray-400">Prerelease:</span>
-                          <div className="text-white">{formatDate(set.prereleaseDate)}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Package className="w-4 h-4 text-gray-400" />
-                        <div>
-                          <span className="text-gray-400">Cards:</span>
-                          <div className="text-white">{set.cardCount}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4 text-gray-400" />
-                        <div>
-                          <span className="text-gray-400">Est. Commons:</span>
-                          <div className="text-white">{set.estimatedCards}</div>
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {set.keywords.map((keyword, idx) => (
-                        <span key={idx} className="px-2 py-1 bg-purple-600/20 text-purple-300 text-xs rounded">
-                          {keyword}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-white/10">
-                      <div className="text-sm text-gray-400">
-                        {status === 'released' && 'Released'}
-                        {status === 'soon' && `Releases in ${days} days`}
-                        {status === 'upcoming' && `Releases in ${days} days`}
-                      </div>
-                      <div className="flex gap-2">
-                        {set.hasPromos && <span className="text-xs bg-yellow-600/20 text-yellow-300 px-2 py-1 rounded">Promos</span>}
-                        {set.hasTokens && <span className="text-xs bg-green-600/20 text-green-300 px-2 py-1 rounded">Tokens</span>}
-                        {set.hasArtSeries && <span className="text-xs bg-blue-600/20 text-blue-300 px-2 py-1 rounded">Art Series</span>}
+                      <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                        <div className="text-sm text-gray-400">
+                          {status === 'released' && 'Released'}
+                          {status === 'soon' && `Releases in ${days} days`}
+                          {status === 'upcoming' && `Releases in ${days} days`}
+                        </div>
+                        <a
+                          href={set.scryfallUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-xs bg-purple-600/20 text-purple-300 hover:bg-purple-600/40 hover:text-purple-200 px-2 py-1 rounded transition"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          View on Scryfall
+                        </a>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>

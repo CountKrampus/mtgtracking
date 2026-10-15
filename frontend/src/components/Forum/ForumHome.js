@@ -7,7 +7,7 @@ import ForumFeed from './ForumFeed';
 import ForumShop from './ForumShop';
 import { API_URL } from '../../config';
 
-export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, authUser, onForumProfile, onLeaderboard, refreshKey = 0 }) {
+export default function ForumHome({ onSelectCategory, onOpenThread, onNewThread, onOpenAdmin, authUser, onForumProfile, onLeaderboard, refreshKey = 0 }) {
   const [showThreadComposer, setShowThreadComposer] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showShop, setShowShop] = useState(false);
@@ -217,8 +217,8 @@ export default function ForumHome({ onSelectCategory, onNewThread, onOpenAdmin, 
             </>
           ) : activeTab === 'feed' ? (
             <ForumFeed
-              onSelectThread={onSelectCategory}
-              onSelectPost={(threadId) => onSelectCategory(threadId)}
+              onSelectThread={onOpenThread || onSelectCategory}
+              onSelectPost={(threadId) => (onOpenThread || onSelectCategory)(threadId)}
             />
           ) : null}
         </div>
