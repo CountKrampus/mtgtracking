@@ -191,3 +191,135 @@ describe('PUT /api/admin/challenges/:id/verify-manual', () => {
       .expect(400);
   });
 });
+
+describe('PUT /api/admin/challenges/:id/close', () => {
+  it('closes an active challenge', async () => {
+    const admin = await createAdmin();
+    const challenge = await Challenge.create({
+      title: 'T', description: 'D', metric: 'cards_added', target: 5, month: currentMonth(), status: 'active',
+    });
+
+    const app = buildApp();
+    const res = await request(app)
+      .put(`/api/admin/challenges/${challenge._id}/close`)
+      .set('Authorization', `Bearer ${makeToken(admin._id, 'admin')}`)
+      .expect(200);
+
+    expect(res.body.status).toBe('closed');
+    const inDb = await Challenge.findById(challenge._id);
+    expect(inDb.status).toBe('closed');
+  });
+
+  it('rejects closing an already closed challenge', async () => {
+    const admin = await createAdmin();
+    const challenge = await Challenge.create({
+      title: 'T', description: 'D', metric: 'cards_added', target: 5, month: currentMonth(), status: 'closed',
+    });
+
+    const app = buildApp();
+    await request(app)
+      .put(`/api/admin/challenges/${challenge._id}/close`)
+      .set('Authorization', `Bearer ${makeToken(admin._id, 'admin')}`)
+      .expect(400);
+  });
+
+  it('rejects a non-admin', async () => {
+    const editor = await createUser();
+    const challenge = await Challenge.create({
+      title: 'T', description: 'D', metric: 'cards_added', target: 5, month: currentMonth(), status: 'active',
+    });
+
+    const app = buildApp();
+    await request(app)
+      .put(`/api/admin/challenges/${challenge._id}/close`)
+      .set('Authorization', `Bearer ${makeToken(editor._id, 'editor')}`)
+      .expect(403);
+  });
+
+  it('404s for an unknown id', async () => {
+    const admin = await createAdmin();
+    const app = buildApp();
+    await request(app)
+      .put(`/api/admin/challenges/${new mongoose.Types.ObjectId()}/close`)
+      .set('Authorization', `Bearer ${makeToken(admin._id, 'admin')}`)
+      .expect(404);
+  });
+});
+
+describe('DELETE /api/admin/challenges/:id', () => {
+  it('deletes the challenge and all of its participations', async () => {
+    const admin = await createAdmin();
+    const user = await createUser();
+    const challenge = await Challenge.create({
+      title: 'T', description: 'D', metric: 'cards_added', target: 5, month: currentMonth(), status: 'active',
+    });
+    await ChallengeParticipation.create({ userId: user._id, challengeId: challenge._id, progress: 3 });
+
+    const app = buildApp();
+    const res = await request(app)
+      .delete(`/api/admin/challenges/${challenge._id}`)
+      .set('Authorization', `Bearer ${makeToken(admin._id, 'admin')}`)
+      .expect(200);
+
+    expect(res.body.participationsDeleted).toBe(1);
+    expect(await Challenge.findById(challenge._id)).toBeNull();
+    expect(await ChallengeParticipation.countDocuments({ challengeId: challenge._id })).toBe(0);
+  });
+
+  it('rejects a non-admin', async () => {
+    const editor = await createUser();
+    const challenge = await Challenge.create({
+      title: 'T', description: 'D', metric: 'cards_added', target: 5, month: currentMonth(), status: 'active',
+    });
+
+    const app = buildApp();
+    await request(app)
+      .delete(`/api/admin/challenges/${challenge._id}`)
+      .set('Authorization', `Bearer ${makeToken(editor._id, 'editor')}`)
+      .expect(403);
+
+    expect(await Challenge.findById(challenge._id)).not.toBeNull();
+  });
+
+  it('404s for an unknown id', async () => {
+    const admin = await createAdmin();
+    const app = buildApp();
+    await request(app)
+      .delete(`/api/admin/challenges/${new mongoose.Types.ObjectId()}`)
+      .set('Authorization', `Bearer ${makeToken(admin._id, 'admin')}`)
+      .expect(404);
+  });
+});
+
+describe('GET /api/admin/challenges', () => {
+  it('lists active and closed challenges but excludes draft proposals', async () => {
+    const admin = await createAdmin();
+    const proposer = await createUser();
+    await Challenge.create({ title: 'Live One', description: 'D', metric: 'cards_added', target: 5, month: currentMonth(), status: 'active' });
+    await Challenge.create({ title: 'Stopped One', description: 'D', metric: 'cards_added', target: 5, month: currentMonth(), status: 'closed' });
+    await Challenge.create({
+      title: 'Draft One', description: 'D', metric: 'cards_added', target: 5, month: currentMonth(),
+      status: 'draft', isProposal: true, proposedBy: proposer._id,
+    });
+
+    const app = buildApp();
+    const res = await request(app)
+      .get('/api/admin/challenges')
+      .set('Authorization', `Bearer ${makeToken(admin._id, 'admin')}`)
+      .expect(200);
+
+    const titles = res.body.challenges.map(c => c.title);
+    expect(titles).toHaveLength(2);
+    expect(titles).toEqual(expect.arrayContaining(['Live One', 'Stopped One']));
+    expect(titles).not.toContain('Draft One');
+  });
+
+  it('rejects a non-admin', async () => {
+    const editor = await createUser();
+    const app = buildApp();
+    await request(app)
+      .get('/api/admin/challenges')
+      .set('Authorization', `Bearer ${makeToken(editor._id, 'editor')}`)
+      .expect(403);
+  });
+});

@@ -1,4 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import axios from 'axios';
+import { API_URL } from '../config';
 
 // ── Card lists ────────────────────────────────────────────────────────────────
 const SPOT_REMOVAL = [
@@ -102,6 +104,45 @@ function statusFor(count, good, warn) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 function DeckAnalysis({ deck }) {
+  const [hoveredStaple, setHoveredStaple] = useState(null);
+  // name -> { status: 'loading' | 'ok' | 'fail', scryfallId, imageUrl }.
+  // Missing staples aren't in this deck (or necessarily the collection), so
+  // there's no image data client-side. Fetch order: first the local lookup
+  // (/api/images/lookup — resolves the name against the requester's
+  // collection/decks/wishlist and the on-disk image cache, no Scryfall call,
+  // works offline), then fall back to /api/scryfall/search (24h server-side
+  // card cache; the image is cached locally, so a preview once fetched keeps
+  // working offline). Results are memoized per session; failures are NOT
+  // cached — leaving the chip clears them so the next hover retries.
+  const [staplePreviews, setStaplePreviews] = useState({});
+
+  const fetchStaplePreview = (name) => {
+    if (staplePreviews[name]) return;
+    setStaplePreviews(prev => ({ ...prev, [name]: { status: 'loading' } }));
+    axios.get(`${API_URL}/images/lookup?name=${encodeURIComponent(name)}`)
+      .catch(() => axios.get(`${API_URL}/scryfall/search?name=${encodeURIComponent(name)}`))
+      .then(({ data }) => {
+        setStaplePreviews(prev => ({
+          ...prev,
+          [name]: { status: 'ok', scryfallId: data.scryfallId, imageUrl: data.imageUrl }
+        }));
+      })
+      .catch(() => {
+        setStaplePreviews(prev => ({ ...prev, [name]: { status: 'fail' } }));
+      });
+  };
+
+  const handleStapleLeave = (name) => {
+    setHoveredStaple(cur => (cur === name ? null : cur));
+    // Allow a failed lookup to retry on the next hover
+    setStaplePreviews(prev => {
+      if (prev[name]?.status !== 'fail') return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+  };
+
   const allCards = useMemo(() => [
     ...(deck.mainDeck || []),
     deck.commander,
@@ -139,6 +180,8 @@ function DeckAnalysis({ deck }) {
   }, [allCards]);
 
   const totalPips = Object.values(pipDist).reduce((s, v) => s + v, 0);
+
+  const hoveredPreview = hoveredStaple ? staplePreviews[hoveredStaple] : null;
 
   const landCount = useMemo(
     () => (deck.mainDeck || []).filter(c => (c.types || []).includes('Land')).length,
@@ -196,7 +239,12 @@ function DeckAnalysis({ deck }) {
             <div className="text-white/50 text-xs mb-2">Consider adding:</div>
             <div className="flex flex-wrap gap-2">
               {missingStaples.map((s, i) => (
-                <span key={i} className="px-2 py-1 bg-white/10 border border-white/20 rounded text-xs text-white/80">
+                <span
+                  key={i}
+                  onMouseEnter={() => { setHoveredStaple(s.name); fetchStaplePreview(s.name); }}
+                  onMouseLeave={() => handleStapleLeave(s.name)}
+                  className="px-2 py-1 bg-white/10 border border-white/20 rounded text-xs text-white/80 hover:bg-white/20 hover:border-purple-400/60 hover:text-white transition"
+                >
                   {s.name}
                 </span>
               ))}
@@ -204,6 +252,43 @@ function DeckAnalysis({ deck }) {
           </>
         )}
       </div>
+
+      {/* Missing staple hover preview — same fixed centered style as the
+          collection table's card preview (CollectionView.js) */}
+      {hoveredStaple && (
+        <div
+          className="fixed z-50 pointer-events-none"
+          style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
+        >
+          {(!hoveredPreview || hoveredPreview.status === 'loading') && (
+            <div className="bg-gray-900/90 rounded-xl px-4 py-3 border border-purple-500/50 text-sm text-slate-300">
+              Loading {hoveredStaple}…
+            </div>
+          )}
+          {hoveredPreview?.status === 'ok' && (hoveredPreview.scryfallId || hoveredPreview.imageUrl) && (
+            <img
+              src={hoveredPreview.scryfallId
+                ? `${API_URL}/images/${hoveredPreview.scryfallId}`
+                : hoveredPreview.imageUrl}
+              alt={hoveredStaple}
+              className="w-80 rounded-xl shadow-2xl border-4 border-purple-500 bg-gray-900"
+              onError={(e) => {
+                // Fall back to the imageUrl from search (one shot — avoids an
+                // error loop if that URL is broken too)
+                if (hoveredPreview.imageUrl && !e.target.dataset.fallbackTried) {
+                  e.target.dataset.fallbackTried = '1';
+                  e.target.src = hoveredPreview.imageUrl;
+                }
+              }}
+            />
+          )}
+          {hoveredPreview?.status === 'fail' && (
+            <div className="bg-gray-900/90 rounded-xl px-4 py-3 border border-red-500/50 text-sm text-slate-300">
+              Preview unavailable for {hoveredStaple}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Mana pip distribution + land count */}
       <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30">

@@ -157,6 +157,55 @@ const POWER_INDICATORS = {
          'Windfall', 'Faithless Looting', 'Guardian Project'],
 };
 
+// Known compact and infinite combos — port of backend/utils/deckAnalysis.js
+// INFINITE_COMBOS; keep in sync (same convention as SALTY_CARDS/POWER_INDICATORS).
+// A combo counts when every card in `cards` is present (commander included)
+// and at least one card from EACH `anyOf` group is present too.
+const INFINITE_COMBOS = [
+  // Laboratory win conditions
+  { label: "Thassa's Oracle + Demonic Consultation", cards: ["Thassa's Oracle", 'Demonic Consultation'] },
+  { label: "Thassa's Oracle + Tainted Pact", cards: ["Thassa's Oracle", 'Tainted Pact'] },
+  { label: 'Laboratory Maniac + Demonic Consultation', cards: ['Laboratory Maniac', 'Demonic Consultation'] },
+  { label: 'Laboratory Maniac + Tainted Pact', cards: ['Laboratory Maniac', 'Tainted Pact'] },
+  { label: 'Jace, Wielder of Mysteries + Demonic Consultation', cards: ['Jace, Wielder of Mysteries', 'Demonic Consultation'] },
+  { label: 'Jace, Wielder of Mysteries + Tainted Pact', cards: ['Jace, Wielder of Mysteries', 'Tainted Pact'] },
+  { label: "Doomsday + Thassa's Oracle", cards: ['Doomsday', "Thassa's Oracle"] },
+  // Infinite mana / untap engines
+  { label: 'Isochron Scepter + Dramatic Reversal', cards: ['Isochron Scepter', 'Dramatic Reversal'] },
+  { label: 'Basalt Monolith + Rings of Brighthearth', cards: ['Basalt Monolith', 'Rings of Brighthearth'] },
+  { label: 'Power Artifact + Basalt Monolith', cards: ['Power Artifact', 'Basalt Monolith'] },
+  { label: 'Power Artifact + Rings of Brighthearth', cards: ['Power Artifact', 'Rings of Brighthearth'] },
+  { label: 'Devoted Druid + Vizier of Remedies', cards: ['Devoted Druid', 'Vizier of Remedies'] },
+  { label: 'Deadeye Navigator + Palinchron', cards: ['Deadeye Navigator', 'Palinchron'] },
+  { label: 'Palinchron + Phantasmal Image', cards: ['Palinchron', 'Phantasmal Image'] },
+  { label: 'Dockside Extortionist + Temur Sabertooth', cards: ['Dockside Extortionist', 'Temur Sabertooth'] },
+  { label: 'Food Chain + Eternal Scourge', cards: ['Food Chain', 'Eternal Scourge'] },
+  { label: 'Food Chain + Squee, the Immortal', cards: ['Food Chain', 'Squee, the Immortal'] },
+  // Infinite damage / creature combos
+  { label: 'Heliod, Sun-Crowned + Walking Ballista', cards: ['Heliod, Sun-Crowned', 'Walking Ballista'] },
+  { label: 'Walking Ballista + Mikaeus, the Unhallowed', cards: ['Walking Ballista', 'Mikaeus, the Unhallowed'] },
+  { label: 'Triskelion + Mikaeus, the Unhallowed', cards: ['Triskelion', 'Mikaeus, the Unhallowed'] },
+  { label: 'Kiki-Jiki combo', cards: ['Kiki-Jiki, Mirror Breaker'], anyOf: [['Zealous Conscripts', 'Pestermite', 'Deceiver Exarch', 'Village Bell-Ringer']] },
+  { label: 'Splinter Twin combo', cards: ['Splinter Twin'], anyOf: [['Deceiver Exarch', 'Pestermite', 'Zealous Conscripts', 'Village Bell-Ringer']] },
+  { label: 'Spike Feeder + Archangel of Thune', cards: ['Spike Feeder', 'Archangel of Thune'] },
+  { label: "Painter's Servant + Grindstone", cards: ["Painter's Servant", 'Grindstone'] },
+  // Token combos (Chatterfang/squirrel builds and friends)
+  { label: 'Scurry Oak + Ivy Lane Denizen', cards: ['Scurry Oak', 'Ivy Lane Denizen'] },
+  { label: 'Chatterfang + Pitiless Plunderer + free outlet', cards: ['Chatterfang, Squirrel General', 'Pitiless Plunderer'], anyOf: [['Phyrexian Tower', 'Viscera Seer', 'Carrion Feeder', 'Yawgmoth, Thran Physician', "Ashnod's Altar", 'Phyrexian Altar', 'Altar of Dementia', 'Goblin Bombardment', 'Blasting Station']] },
+  { label: 'Sprout Swarm (infinite tokens with mana)', cards: ['Sprout Swarm'] },
+];
+
+function detectCombos(cardNames) {
+  const present = new Set(cardNames);
+  const found = [];
+  for (const combo of INFINITE_COMBOS) {
+    if (!combo.cards.every(name => present.has(name))) continue;
+    if (combo.anyOf && !combo.anyOf.every(group => group.some(name => present.has(name)))) continue;
+    found.push(combo.label);
+  }
+  return found;
+}
+
 // ── Manabase / Deck Health score helpers (ported from backend/utils/deckAnalysis.js;
 // kept in sync per the existing SALTY_CARDS/POWER_INDICATORS duplication convention) ──
 const BASIC_LAND_COLORS = { Plains: 'W', Island: 'U', Swamp: 'B', Mountain: 'R', Forest: 'G' };
@@ -511,6 +560,7 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
     let score = 0;
     const breakdown = {
       fastMana: 0, tutors: 0, comboPieces: 0, efficientRemoval: 0, powerhouses: 0,
+      combos: detectCombos(allCards),
       avgCmc: deck.statistics?.avgManaCost || 3.5,
       deckValue: ownership?.summary?.totalValue || 0,
     };
@@ -526,6 +576,12 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
     score += Math.min(breakdown.comboPieces * 0.6, 2);
     score += Math.min(breakdown.efficientRemoval * 0.3, 1);
     score += Math.min(breakdown.powerhouses * 0.3, 1.5);
+    // First detected infinite combo alone clears the Casual band — matches
+    // backend/utils/deckAnalysis.js, keep in sync (cap at +2.5 so 3+ combos
+    // can't skew labels; backend's Spellbook data floods above that).
+    if (breakdown.combos.length > 0) {
+      score += Math.min(1.5 + (breakdown.combos.length - 1) * 0.5, 2.5);
+    }
     if (breakdown.avgCmc < 2.5) score += 1;
     else if (breakdown.avgCmc < 3) score += 0.5;
     if (breakdown.deckValue > 1000) score += 0.5;
@@ -575,6 +631,7 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
       ...selectedCards.map(c => c.name),
     ].filter(Boolean);
     const bd = { fastMana: 0, tutors: 0, comboPieces: 0, efficientRemoval: 0, powerhouses: 0,
+      combos: detectCombos(allNames),
       avgCmc: powerLevel.breakdown.avgCmc, deckValue: powerLevel.breakdown.deckValue };
     allNames.forEach(n => {
       if (POWER_INDICATORS.fastMana.includes(n)) bd.fastMana++;
@@ -586,6 +643,7 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
     let s = Math.min(bd.fastMana * 0.5, 2) + Math.min(bd.tutors * 0.4, 2)
            + Math.min(bd.comboPieces * 0.6, 2) + Math.min(bd.efficientRemoval * 0.3, 1)
            + Math.min(bd.powerhouses * 0.3, 1.5);
+    if (bd.combos.length > 0) s += Math.min(1.5 + (bd.combos.length - 1) * 0.5, 2.5);
     if (bd.avgCmc < 2.5) s += 1; else if (bd.avgCmc < 3) s += 0.5;
     if (bd.deckValue > 1000) s += 0.5;
     if (bd.deckValue > 2500) s += 0.5;

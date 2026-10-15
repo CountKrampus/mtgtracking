@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { Plus, Check, X, Trophy } from 'lucide-react';
+import { Plus, Check, X, Trophy, Square, Trash2 } from 'lucide-react';
 import { API_URL } from '../../../config';
 
 const METRIC_OPTIONS = [
@@ -105,10 +105,12 @@ function ChallengesTab() {
 
   const fetchActive = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_URL}/challenges`);
+      // Admin endpoint: active + closed, so stopped challenges stay
+      // manageable (and deletable) after leaving the public list.
+      const res = await axios.get(`${API_URL}/admin/challenges`);
       setActiveChallenges(res.data.challenges);
     } catch (err) {
-      setError('Failed to load active challenges');
+      setError('Failed to load challenges');
     }
   }, []);
 
@@ -143,6 +145,26 @@ function ChallengesTab() {
     }
   };
 
+  const handleClose = async (id) => {
+    if (!window.confirm('Stop this challenge? It disappears from the public list but stays here as Closed.')) return;
+    try {
+      await axios.put(`${API_URL}/admin/challenges/${id}/close`);
+      fetchActive();
+    } catch (err) {
+      setError('Failed to stop challenge');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Permanently delete this challenge and all of its progress entries? This cannot be undone.')) return;
+    try {
+      await axios.delete(`${API_URL}/admin/challenges/${id}`);
+      fetchActive();
+    } catch (err) {
+      setError('Failed to delete challenge');
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -170,7 +192,7 @@ function ChallengesTab() {
           onClick={() => setSubTab('active')}
           className={`px-3 py-1.5 rounded-lg text-sm font-medium ${subTab === 'active' ? 'bg-purple-600 text-white' : 'text-slate-300 hover:text-white'}`}
         >
-          Active Challenges ({activeChallenges.length})
+          All Challenges ({activeChallenges.length})
         </button>
         <button
           onClick={() => setSubTab('proposals')}
@@ -183,11 +205,40 @@ function ChallengesTab() {
       {subTab === 'active' && (
         <div className="space-y-2">
           {activeChallenges.length === 0 ? (
-            <p className="text-slate-400 text-sm">No active challenges this month.</p>
+            <p className="text-slate-400 text-sm">No challenges yet.</p>
           ) : activeChallenges.map(c => (
-            <div key={c._id} className="bg-slate-800/60 rounded-lg p-3">
-              <p className="text-white font-medium">{c.title}</p>
-              <p className="text-slate-400 text-sm">{c.metric} · target {c.target} · {c.month}</p>
+            <div key={c._id} className="bg-slate-800/60 rounded-lg p-3 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-white font-medium truncate">
+                  {c.title}{''}
+                  <span className={`ml-2 text-xs px-1.5 py-0.5 rounded ${
+                    c.status === 'active'
+                      ? 'bg-green-600/20 text-green-300'
+                      : 'bg-slate-600/40 text-slate-300'
+                  }`}>
+                    {c.status}
+                  </span>
+                </p>
+                <p className="text-slate-400 text-sm">{c.metric} · target {c.target} · {c.month}</p>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                {c.status === 'active' && (
+                  <button
+                    onClick={() => handleClose(c._id)}
+                    className="p-1.5 bg-amber-600/80 hover:bg-amber-600 text-white rounded"
+                    title="Stop challenge (close)"
+                  >
+                    <Square size={14} />
+                  </button>
+                )}
+                <button
+                  onClick={() => handleDelete(c._id)}
+                  className="p-1.5 bg-red-600/80 hover:bg-red-600 text-white rounded"
+                  title="Delete challenge permanently"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
             </div>
           ))}
         </div>

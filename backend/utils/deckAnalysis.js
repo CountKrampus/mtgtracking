@@ -1,4 +1,5 @@
 const { parseCMC } = require('./deckHelpers');
+const { peekComboIndex } = require('./comboDatabase');
 
 // Ported verbatim from frontend/src/components/DeckDetail.js:107-127.
 // Keep both tables in sync if MTG's meta/salt consensus changes.
@@ -41,10 +42,7 @@ const POWER_INDICATORS = {
                 'Kiki-Jiki, Mirror Breaker', 'Splinter Twin', 'Zealous Conscripts'],
   efficientRemoval: ['Swords to Plowshares', 'Path to Exile', 'Abrupt Decay',
                      "Assassin's Trophy", 'Force of Will', 'Pact of Negation',
-                     'Fierce Guardianship', 'Deflecting Swat', 'Mana Drain'],
-  powerhouses: ['Rhystic Study', 'Smothering Tithe', 'Dockside Extortionist',
-                'Consecrated Sphinx', 'Necropotence', 'Ad Nauseam', 'Sylvan Library',
-                'Mystic Remora', 'Esper Sentinel', 'Seedborn Muse', 'Prophet of Kruphix'],
+                     'Fierce Guardianship', 'Deflecting Swat', 'Mana Drain'],  powerhouses: ['Rhystic Study', 'Smothering Tithe', 'Dockside Extortionist', 'Consecrated Sphinx', 'Necropotence', 'Ad Nauseam', 'Sylvan Library', 'Mystic Remora', 'Esper Sentinel', 'Seedborn Muse', 'Prophet of Kruphix'],
   ramp: ['Rampant Growth', 'Cultivate', 'Kodama\'s Reach', 'Farseek', 'Nature\'s Lore',
          'Three Visits', 'Sakura-Tribe Elder', 'Llanowar Elves', 'Elvish Mystic',
          'Birds of Paradise', 'Arbor Elf', 'Wood Elves', 'Skyshroud Claim',
@@ -54,6 +52,99 @@ const POWER_INDICATORS = {
          'Sign in Blood', 'Read the Bones', 'Divination', 'Concentrate',
          'Windfall', 'Faithless Looting', 'Guardian Project'],
 };
+
+// Known compact and infinite combos. A combo counts as present when every
+// card in `cards` is in the deck (commander included) and at least one card
+// from EACH array in `anyOf` is present too. Single-card entries go infinite
+// with mana alone. Detection is name-exact to avoid false positives; extend
+// alongside the existing tables. Keep in sync with the frontend copy in
+// src/components/DeckDetail.js (same convention as SALTY_CARDS/POWER_INDICATORS).
+const INFINITE_COMBOS = [
+  // Laboratory win conditions
+  { label: "Thassa's Oracle + Demonic Consultation", cards: ["Thassa's Oracle", 'Demonic Consultation'] },
+  { label: "Thassa's Oracle + Tainted Pact", cards: ["Thassa's Oracle", 'Tainted Pact'] },
+  { label: 'Laboratory Maniac + Demonic Consultation', cards: ['Laboratory Maniac', 'Demonic Consultation'] },
+  { label: 'Laboratory Maniac + Tainted Pact', cards: ['Laboratory Maniac', 'Tainted Pact'] },
+  { label: 'Jace, Wielder of Mysteries + Demonic Consultation', cards: ['Jace, Wielder of Mysteries', 'Demonic Consultation'] },
+  { label: 'Jace, Wielder of Mysteries + Tainted Pact', cards: ['Jace, Wielder of Mysteries', 'Tainted Pact'] },
+  { label: "Doomsday + Thassa's Oracle", cards: ['Doomsday', "Thassa's Oracle"] },
+  // Infinite mana / untap engines
+  { label: 'Isochron Scepter + Dramatic Reversal', cards: ['Isochron Scepter', 'Dramatic Reversal'] },
+  { label: 'Basalt Monolith + Rings of Brighthearth', cards: ['Basalt Monolith', 'Rings of Brighthearth'] },
+  { label: 'Power Artifact + Basalt Monolith', cards: ['Power Artifact', 'Basalt Monolith'] },
+  { label: 'Power Artifact + Rings of Brighthearth', cards: ['Power Artifact', 'Rings of Brighthearth'] },
+  { label: 'Devoted Druid + Vizier of Remedies', cards: ['Devoted Druid', 'Vizier of Remedies'] },
+  { label: 'Deadeye Navigator + Palinchron', cards: ['Deadeye Navigator', 'Palinchron'] },
+  { label: 'Palinchron + Phantasmal Image', cards: ['Palinchron', 'Phantasmal Image'] },
+  { label: 'Dockside Extortionist + Temur Sabertooth', cards: ['Dockside Extortionist', 'Temur Sabertooth'] },
+  { label: 'Food Chain + Eternal Scourge', cards: ['Food Chain', 'Eternal Scourge'] },
+  { label: 'Food Chain + Squee, the Immortal', cards: ['Food Chain', 'Squee, the Immortal'] },
+  // Infinite damage / creature combos
+  { label: 'Heliod, Sun-Crowned + Walking Ballista', cards: ['Heliod, Sun-Crowned', 'Walking Ballista'] },
+  { label: 'Walking Ballista + Mikaeus, the Unhallowed', cards: ['Walking Ballista', 'Mikaeus, the Unhallowed'] },
+  { label: 'Triskelion + Mikaeus, the Unhallowed', cards: ['Triskelion', 'Mikaeus, the Unhallowed'] },
+  { label: 'Kiki-Jiki combo', cards: ['Kiki-Jiki, Mirror Breaker'], anyOf: [['Zealous Conscripts', 'Pestermite', 'Deceiver Exarch', 'Village Bell-Ringer']] },
+  { label: 'Splinter Twin combo', cards: ['Splinter Twin'], anyOf: [['Deceiver Exarch', 'Pestermite', 'Zealous Conscripts', 'Village Bell-Ringer']] },
+  { label: 'Spike Feeder + Archangel of Thune', cards: ['Spike Feeder', 'Archangel of Thune'] },
+  { label: "Painter's Servant + Grindstone", cards: ["Painter's Servant", 'Grindstone'] },
+  // Token combos (Chatterfang/squirrel builds and friends)
+  { label: 'Scurry Oak + Ivy Lane Denizen', cards: ['Scurry Oak', 'Ivy Lane Denizen'] },
+  { label: 'Chatterfang + Pitiless Plunderer + free outlet', cards: ['Chatterfang, Squirrel General', 'Pitiless Plunderer'], anyOf: [['Phyrexian Tower', 'Viscera Seer', 'Carrion Feeder', 'Yawgmoth, Thran Physician', "Ashnod's Altar", 'Phyrexian Altar', 'Altar of Dementia', 'Goblin Bombardment', 'Blasting Station']] },
+  { label: 'Sprout Swarm (infinite tokens with mana)', cards: ['Sprout Swarm'] },
+];
+
+// Returns the labels of every combo fully present in the given card names.
+// Combines the curated fallback table with the Commander Spellbook index
+// when available (utils/comboDatabase.js) so bracket detection stays fresh
+// without hand-maintenance. Deduplicated by matched-card signature so the
+// same line coming from both sources (or many near-identical Spellbook
+// variants) counts once; Spellbook matches are limited to compact 2-3 card
+// combos — longer convoluted lines are real but shouldn't shift a bracket.
+function detectCombos(cardNames) {
+  const present = new Set();
+  for (const name of cardNames) {
+    // Guard nameless entries (fixtures / offline-imported cards) — they can
+    // never match a combo, but they must not crash the whole estimation.
+    if (name) present.add(name.toLowerCase());
+  }
+  const found = [];
+  const seen = new Set();
+  const signature = (lowerNames) => [...lowerNames].sort().join('|');
+
+  for (const combo of INFINITE_COMBOS) {
+    if (!combo.cards.every(name => present.has(name.toLowerCase()))) continue;
+    if (combo.anyOf && !combo.anyOf.every(group => group.some(name => present.has(name.toLowerCase())))) continue;
+    // Matched outlets join the signature so the curated entry dedupes against
+    // the equivalent Spellbook variant (Chatterfang + Plunderer + Tower)
+    // instead of double-counting the same infinite.
+    const matched = [...combo.cards];
+    if (combo.anyOf) {
+      for (const group of combo.anyOf) {
+        const hit = group.find(name => present.has(name.toLowerCase()));
+        if (hit) matched.push(hit);
+      }
+    }
+    const sig = signature(matched.map(name => name.toLowerCase()));
+    if (seen.has(sig)) continue;
+    seen.add(sig);
+    found.push(combo.label);
+  }
+
+  const spellbook = peekComboIndex();
+  if (spellbook) {
+    for (const variant of spellbook) {
+      const cards = variant.cards;
+      if (cards.length < 2 || cards.length > 3) continue;
+      if (!cards.every(name => present.has(name.toLowerCase()))) continue;
+      const sig = signature(cards.map(name => name.toLowerCase()));
+      if (seen.has(sig)) continue;
+      seen.add(sig);
+      found.push(cards.join(' + '));
+    }
+  }
+
+  return found;
+}
 
 const BASIC_LAND_COLORS = { Plains: 'W', Island: 'U', Swamp: 'B', Mountain: 'R', Forest: 'G' };
 
@@ -229,6 +320,7 @@ function estimatePowerLevel(deck, deckValue) {
   let score = 0;
   const breakdown = {
     fastMana: 0, tutors: 0, comboPieces: 0, efficientRemoval: 0, powerhouses: 0,
+    combos: detectCombos(allCards),
     avgCmc: deck.statistics?.avgManaCost || 3.5,
     deckValue: deckValue || 0,
   };
@@ -244,6 +336,14 @@ function estimatePowerLevel(deck, deckValue) {
   score += Math.min(breakdown.comboPieces * 0.6, 2);
   score += Math.min(breakdown.efficientRemoval * 0.3, 1);
   score += Math.min(breakdown.powerhouses * 0.3, 1.5);
+  // First detected infinite combo alone clears the Casual band (Optimized=5);
+  // +0.5 per extra combo, capped at +2.5 (3+ combos). The cap keeps a flood
+  // of near-identical Commander Spellbook variants from skewing labels and
+  // keeps backend (Spellbook-backed) and frontend (curated-only) estimates
+  // aligned on the same level for the same deck.
+  if (breakdown.combos.length > 0) {
+    score += Math.min(1.5 + (breakdown.combos.length - 1) * 0.5, 2.5);
+  }
   if (breakdown.avgCmc < 2.5) score += 1;
   else if (breakdown.avgCmc < 3) score += 0.5;
   if (breakdown.deckValue > 1000) score += 0.5;
@@ -330,5 +430,6 @@ function calculateGlobalScore(powerLevel, saltScore, manabaseScore, healthScore)
 
 module.exports = {
   calculateSaltScore, estimatePowerLevel, calculateManabaseScore, calculateDeckHealthScore, calculateGlobalScore,
-  SALTY_CARDS, POWER_INDICATORS, COLOR_SOURCES, NONBASIC_LAND_NAMES
+  SALTY_CARDS, POWER_INDICATORS, COLOR_SOURCES, NONBASIC_LAND_NAMES,
+  INFINITE_COMBOS, detectCombos
 };

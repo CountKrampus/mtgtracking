@@ -787,7 +787,15 @@ function CollectionView({
         if (card.tags?.some(tag => tag.includes(sl))) matchesSearch = true;
       } else { matchesSearch = true; }
       const matchesCondition = filterCondition === 'all' || card.condition === filterCondition;
-      const matchesColor = filterColor === 'all' || (card.colors?.includes(filterColor));
+      // Scryfall never stores the letter 'C' in colors — colorless cards have
+      // an EMPTY colors array — so a plain includes('C') matched nothing.
+      // Colorless = empty colors, nonland: same rule as the colorless color_added
+      // challenge (backend/utils/challengeProgress.js) and the Dashboard /
+      // /api/stats colorless buckets — keep in sync. Lands stay findable via
+      // the Type filter.
+      const matchesColorless = (!(card.colors && card.colors.length) && !(card.types || []).includes('Land'));
+      const matchesColor = filterColor === 'all'
+        || (filterColor === 'C' ? matchesColorless : card.colors?.includes(filterColor));
       const matchesSet = filterSet === 'all' || card.set === filterSet;
       let matchesType = true;
       if (filterType !== 'all') matchesType = card.types?.length > 0 ? card.types.join(' ') === filterType : false;
