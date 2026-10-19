@@ -356,38 +356,30 @@ function PlayerAdvancedControls({
                         <div className="text-white/60 text-[10px]">Damage Taken</div>
                       </div>
 
-                      {/* Commander Damage by Source */}
+                      {/* Commander Damage by Source — read-only summary.
+                          Editing lives in "Add Commander Damage" below; the
+                          duplicate +/- buttons here were removed (reported as
+                          two copies of the same control). Entries at 0 are
+                          hidden since the map keeps keys after removal. */}
                       <div className="space-y-1">
-                        {Object.entries(player.commanderDamage || {}).map(([sourceId, damage]) => {
-                          // Find the source player name
-                          const sourcePlayer = players.find(p => p.id === sourceId);
-                          const sourceName = sourcePlayer ? sourcePlayer.name : `Player ${sourceId}`;
+                        {Object.entries(player.commanderDamage || {})
+                          .filter(([, damage]) => damage > 0)
+                          .map(([sourceId, damage]) => {
+                            // Object.entries keys are strings — compare as
+                            // strings so custom player names resolve correctly
+                            const sourcePlayer = players.find(p => String(p.id) === sourceId);
+                            const sourceName = sourcePlayer ? sourcePlayer.name : `Player ${sourceId}`;
 
-                          return (
-                            <div key={sourceId} className="flex items-center justify-between bg-white/5 rounded p-1">
-                              <span className="text-white/80 text-[10px]">{sourceName.substring(0, 8)}</span>
-                              <div className="flex items-center gap-1">
-                                <button
-                                  onClick={() => onCommanderDamageChange(player.id, sourceId, -1)}
-                                  disabled={damage <= 0}
-                                  className="w-4 h-4 flex items-center justify-center bg-red-600/80 hover:bg-red-600 rounded text-white text-[10px] disabled:opacity-30"
-                                >
-                                  <Minus size={8} />
-                                </button>
+                            return (
+                              <div key={sourceId} className="flex items-center justify-between bg-white/5 rounded p-1">
+                                <span className="text-white/80 text-[10px]">{sourceName.substring(0, 8)}</span>
                                 <span className="text-orange-400 font-bold w-4 text-center text-[10px]">{damage}</span>
-                                <button
-                                  onClick={() => onCommanderDamageChange(player.id, sourceId, 1)}
-                                  className="w-4 h-4 flex items-center justify-center bg-green-600/80 hover:bg-green-600 rounded text-white text-[10px]"
-                                >
-                                  <Plus size={8} />
-                                </button>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
                       </div>
 
-                      {Object.keys(player.commanderDamage || {}).length === 0 && (
+                      {Object.values(player.commanderDamage || {}).every(d => d <= 0) && (
                         <div className="text-center text-white/40 py-1 text-[10px]">
                           None
                         </div>

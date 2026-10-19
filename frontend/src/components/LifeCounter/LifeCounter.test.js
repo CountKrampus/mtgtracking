@@ -431,6 +431,19 @@ describe('LifeCounter game flow', () => {
     const [, addOne] = [...sourceRow.querySelectorAll('button')];
     await click(addOne);
     expect(lifeOf(2)).toBe('39'); // damage applied AND life reduced
+
+    // The Total Commander Damage section is a read-only summary: after
+    // damage exists it lists the source, but with NO +/- buttons — the
+    // only editing controls are in "Add Commander Damage" (reported as
+    // two copies of the same add/subtract controls)
+    const totalHeading = [...document.querySelectorAll('h4')]
+      .find(h => h.textContent.includes('Total Commander Damage'));
+    const totalSection = totalHeading.parentElement;
+    const summaryRow = [...totalSection.querySelectorAll('div[class*="rounded"]')]
+      .find(d => d.textContent.trim().startsWith('Player 1'));
+    expect(summaryRow).toBeTruthy(); // source listed in the summary
+    expect(summaryRow.textContent).toContain('1');
+    expect(summaryRow.querySelectorAll('button')).toHaveLength(0); // read-only
   });
 
   test('compact mode (6 players) always shows a tappable commander damage chip', async () => {
