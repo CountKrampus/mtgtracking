@@ -378,6 +378,13 @@ const Dashboard = ({
 
   return (
     <div className="space-y-6">
+      {/* Slogan */}
+      <div className="bg-white/10 backdrop-blur-md rounded-lg px-4 py-3 shadow-xl border border-white/10 text-center">
+        <p className="text-sm italic text-purple-300/90">
+          &ldquo;OH fuck, you're gonna make me pay the 1&rdquo;
+        </p>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 shadow-xl">

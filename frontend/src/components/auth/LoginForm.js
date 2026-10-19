@@ -37,6 +37,9 @@ export function LoginForm({ onLogin, onSwitchToRegister, error: externalError })
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">MTG Tracker</h1>
           <p className="text-gray-300">Sign in to your collection</p>
+          <p className="mt-3 text-sm italic text-purple-300/90">
+            &ldquo;OH fuck, you're gonna make me pay the 1&rdquo;
+          </p>
         </div>
 
         {displayError && (
