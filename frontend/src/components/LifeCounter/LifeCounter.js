@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ArrowLeft, RotateCcw, Clock, Undo2, Redo2, ChevronDown, ChevronUp, Sparkles,
          Wrench, Settings, History, BarChart3, Share2, Users, Trophy, Maximize, Bell } from 'lucide-react';
 import GameSetup from './GameSetup';
@@ -15,6 +15,7 @@ import ShareGame from './ShareGame';
 import TwoPlayerLandscape from './layouts/TwoPlayerLandscape';
 import TriggerReminders from './TriggerReminders';
 import Toast, { useToast } from './Toast';
+import PlayersContext from './PlayersContext';
 import useGameState from './hooks/useGameState';
 import useTurnTracking from './hooks/useTurnTracking';
 import useFullscreen from './hooks/useFullscreen';
@@ -26,6 +27,9 @@ const STORAGE_KEY = 'mtg-life-counter';
 const SAVE_EXPIRY_HOURS = 24;
 const SNAPSHOTS_KEY = 'mtg-life-counter-snapshots';
 const MAX_SNAPSHOTS = 10;
+
+// Storm count milestones that trigger a toast + log entry + sound
+const STORM_MILESTONES = [5, 10, 15, 20, 25];
 
 function loadSnapshots() {
   try {
@@ -47,6 +51,9 @@ function LifeCounter({ onBack }) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [savedGame, setSavedGame] = useState(null);
   const [setupGameFormat, setSetupGameFormat] = useState('commander');
+  // Custom starting life + per-player handicaps (Game Setup screen)
+  const [setupStartingLife, setSetupStartingLife] = useState(40);
+  const [setupHandicaps, setSetupHandicaps] = useState(() => Array(6).fill(''));
   const [showTurnTracker, setShowTurnTracker] = useState(true);
   const [showGameMechanics, setShowGameMechanics] = useState(false);
   const [monarch, setMonarch] = useState(null); // player id or null
@@ -90,9 +97,11 @@ function LifeCounter({ onBack }) {
     players,
     gameFormat,
     changeLife,
+    setLife,
     changePoison,
     changeCommanderDamage,
     changeCounter,
+    removeCounter,
     changeMana,
     updatePlayer,
     resetGame,
@@ -106,7 +115,8 @@ function LifeCounter({ onBack }) {
     canUndo,
     canRedo,
     initializePlayers,
-    loadGameState
+    loadGameState,
+    startingLife
   } = useGameState('commander');
 
   // Use turn tracking hook
@@ -126,6 +136,15 @@ function LifeCounter({ onBack }) {
     setPhase,
     restoreTurnState
   } = useTurnTracking(playerCount);
+
+  // Live mirrors of the values handlers read most often. Keeping them in
+  // refs lets those handlers have stable identities (constant useCallback
+  // deps), which is what allows React.memo(PlayerCard) to skip re-rendering
+  // every card on every life change.
+  const playersRef = useRef(players);
+  playersRef.current = players;
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
 
   // Check for saved game on mount
   useEffect(() => {
@@ -148,21 +167,62 @@ function LifeCounter({ onBack }) {
     }
   }, []);
 
-  // Auto-save game state
-  useEffect(() => {
-    if (gamePhase === 'game' && players.length > 0) {
-      const saveData = {
-        players,
-        gameFormat,
-        playerCount,
-        turnNumber,
-        currentPlayerIndex,
-        stormCount,
-        savedAt: Date.now()
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+  // Auto-save game state — debounced so rapid life taps don't do a
+  // synchronous localStorage write on every change, with a flush whenever the
+  // tab is hidden/closed or the screen unmounts so no latest state is lost.
+  const pendingSaveRef = useRef(null);
+  const saveTimerRef = useRef(null);
+
+  const flushSave = useCallback(() => {
+    if (saveTimerRef.current !== null) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
     }
-  }, [players, gameFormat, playerCount, gamePhase, turnNumber, currentPlayerIndex, stormCount]);
+    if (pendingSaveRef.current) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(pendingSaveRef.current));
+      pendingSaveRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (gamePhase !== 'game' || players.length === 0) return undefined;
+    pendingSaveRef.current = {
+      players,
+      gameFormat,
+      playerCount,
+      turnNumber,
+      currentPlayerIndex,
+      stormCount,
+      startingLife,
+      savedAt: Date.now()
+    };
+    if (saveTimerRef.current !== null) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      saveTimerRef.current = null;
+      flushSave();
+    }, 400);
+    return () => {
+      if (saveTimerRef.current !== null) {
+        clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = null;
+      }
+    };
+  }, [players, gameFormat, playerCount, gamePhase, turnNumber, currentPlayerIndex, stormCount, startingLife, flushSave]);
+
+  // Flush pending auto-save on tab hide/close and on unmount (leaving the
+  // game screen) so the resume prompt always sees the latest state.
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') flushSave();
+    };
+    window.addEventListener('pagehide', flushSave);
+    document.addEventListener('visibilitychange', onHide);
+    return () => {
+      window.removeEventListener('pagehide', flushSave);
+      document.removeEventListener('visibilitychange', onHide);
+      flushSave();
+    };
+  }, [flushSave]);
 
   // Add log entry helper
   const addLogEntry = useCallback((entry) => {
@@ -173,10 +233,23 @@ function LifeCounter({ onBack }) {
     setGameLog(prev => [...prev, { id: Date.now() + Math.random(), ...entry }]);
   }, []);
 
+  const changeSetupFormat = useCallback((format) => {
+    setSetupGameFormat(format);
+    // Keep the starting-life field in step with the format's default until
+    // the user overrides it
+    setSetupStartingLife(format === 'commander' ? 40 : 20);
+  }, []);
+
   // Handle starting a new game
   const handleStartGame = useCallback((playerDecks = []) => {
     playerDecksRef.current = playerDecks;
-    initializePlayers(playerCount, playerNames, setupGameFormat);
+    initializePlayers(playerCount, playerNames, setupGameFormat, {
+      startingLife: setupStartingLife,
+      handicaps: setupHandicaps.map(v => {
+        const n = parseInt(v, 10);
+        return Number.isNaN(n) ? null : n;
+      })
+    });
     resetTurnTracking();
     setGameStartTime(Date.now());
     setGameLog([LogCreators.gameStart(setupGameFormat, playerCount)]);
@@ -187,7 +260,7 @@ function LifeCounter({ onBack }) {
     gameEndedRef.current = false;
     setGamePhase('game');
     if (settings.soundEnabled) playSound('success');
-  }, [playerCount, playerNames, setupGameFormat, initializePlayers, resetTurnTracking, settings.soundEnabled, playSound]);
+  }, [playerCount, playerNames, setupGameFormat, setupStartingLife, setupHandicaps, initializePlayers, resetTurnTracking, settings.soundEnabled, playSound]);
 
   // Resume saved game
   const handleResume = () => {
@@ -206,20 +279,29 @@ function LifeCounter({ onBack }) {
     setGamePhase('setup');
   };
 
-  // Handle life change
-  const handleLifeChange = (playerId, amount) => {
+  // Handle life change — stable identity: reads players/settings through
+  // refs so memoized PlayerCards can skip re-renders on unrelated changes.
+  const handleLifeChange = useCallback((playerId, amount) => {
     changeLife(playerId, amount);
-    const player = players.find(p => p.id === playerId);
+    const player = playersRef.current.find(p => p.id === playerId);
     if (player) {
       addLogEntry(LogCreators.lifeChange(player.name, player.life, player.life + amount));
     }
-    if (settings.soundEnabled) {
+    if (settingsRef.current.soundEnabled) {
       playSound(amount > 0 ? 'lifeGain' : 'lifeLoss');
     }
-  };
+  }, [changeLife, addLogEntry, playSound]);
 
-  // Storm count milestones that trigger a toast + log entry + sound
-  const STORM_MILESTONES = [5, 10, 15, 20, 25];
+  // Set an exact life total from the direct entry pad on the life number
+  const handleSetLife = useCallback((playerId, value) => {
+    const player = playersRef.current.find(p => p.id === playerId);
+    if (!player || player.life === value) return;
+    setLife(playerId, value);
+    addLogEntry(LogCreators.lifeChange(player.name, player.life, value));
+    if (settingsRef.current.soundEnabled) {
+      playSound(value > player.life ? 'lifeGain' : 'lifeLoss');
+    }
+  }, [setLife, addLogEntry, playSound]);
 
   const handleIncrementStorm = () => {
     const newCount = stormCount + 1;
@@ -239,39 +321,44 @@ function LifeCounter({ onBack }) {
   };
 
   // Handle poison change
-  const handlePoisonChange = (playerId, amount) => {
+  const handlePoisonChange = useCallback((playerId, amount) => {
     changePoison(playerId, amount);
-    const player = players.find(p => p.id === playerId);
+    const player = playersRef.current.find(p => p.id === playerId);
     if (player) {
-      addLogEntry(LogCreators.poison(player.name, player.poison + amount));
+      // Mirror the reducer's 0-10 clamp so the log can't print impossible
+      // values (the old entry used the raw, unclamped sum)
+      const newPoison = Math.max(0, Math.min(10, player.poison + amount));
+      addLogEntry(LogCreators.poison(player.name, newPoison));
     }
-    if (settings.soundEnabled) {
+    if (settingsRef.current.soundEnabled) {
       playSound('poison');
     }
-  };
+  }, [changePoison, addLogEntry, playSound]);
 
   // Handle commander damage change
-  const handleCommanderDamageChange = (targetPlayerId, sourcePlayerId, amount) => {
+  const handleCommanderDamageChange = useCallback((targetPlayerId, sourcePlayerId, amount) => {
     changeCommanderDamage(targetPlayerId, sourcePlayerId, amount);
-    const target = players.find(p => p.id === targetPlayerId);
-    const source = players.find(p => p.id === sourcePlayerId);
+    const target = playersRef.current.find(p => p.id === targetPlayerId);
+    const source = playersRef.current.find(p => p.id === sourcePlayerId);
     if (target && source) {
       const currentDamage = target.commanderDamage?.[sourcePlayerId] || 0;
       const newTotal = currentDamage + amount;
       addLogEntry(LogCreators.commanderDamage(target.name, source.name, amount, newTotal));
     }
-    if (settings.soundEnabled) {
+    if (settingsRef.current.soundEnabled) {
       playSound('damage');
     }
-  };
+  }, [changeCommanderDamage, addLogEntry, playSound]);
 
   // Handle counters change
-  const handleCountersChange = (playerId, counterType, amount) => {
+  const handleCountersChange = useCallback((playerId, counterType, amount) => {
     // Special handling for removal (-9999 signals removal)
     if (amount === -9999) {
-      // For custom counters, we'll just set to 0 for now
-      changeCounter(playerId, counterType, 0);
-      const player = players.find(p => p.id === playerId);
+      // Actually delete the counter. (The old code dispatched a +0 change,
+      // which the reducer clamps — a no-op — so the counter never cleared
+      // even though the log claimed it did.)
+      removeCounter(playerId, counterType);
+      const player = playersRef.current.find(p => p.id === playerId);
       if (player) {
         addLogEntry(LogCreators.counterChange(player.name, counterType, 0, `Counter '${counterType}' removed`));
       }
@@ -280,36 +367,36 @@ function LifeCounter({ onBack }) {
 
     // Normal counter change
     changeCounter(playerId, counterType, amount);
-    const player = players.find(p => p.id === playerId);
+    const player = playersRef.current.find(p => p.id === playerId);
     if (player) {
-      const currentCount = player.counters?.[counterType] || 0;
+      const currentCount = player.counters?.[counterType] ?? player.counters?.custom?.[counterType] ?? 0;
       const newCount = Math.max(0, currentCount + amount); // Prevent negative counters
       addLogEntry(LogCreators.counterChange(player.name, counterType, newCount, `${amount > 0 ? '+' : ''}${amount}`));
     }
-    if (settings.soundEnabled) {
+    if (settingsRef.current.soundEnabled) {
       playSound(amount > 0 ? 'counterAdd' : 'counterRemove');
     }
-  };
+  }, [removeCounter, changeCounter, addLogEntry, playSound]);
 
   // Handle adding a planeswalker
-  const handlePlaneswalkerAdd = (playerId, planeswalker) => {
+  const handlePlaneswalkerAdd = useCallback((playerId, planeswalker) => {
     addPlaneswalker(playerId, planeswalker);
-    const player = players.find(p => p.id === playerId);
+    const player = playersRef.current.find(p => p.id === playerId);
     if (player) {
       addLogEntry(LogCreators.planeswalkerAdded(player.name, planeswalker.name, planeswalker.loyalty));
     }
-  };
+  }, [addPlaneswalker, addLogEntry]);
 
   // Handle planeswalker loyalty change (auto-destroys at 0 loyalty)
-  const handlePlaneswalkerLoyaltyChange = (playerId, planeswalkerId, amount) => {
-    const player = players.find(p => p.id === playerId);
+  const handlePlaneswalkerLoyaltyChange = useCallback((playerId, planeswalkerId, amount) => {
+    const player = playersRef.current.find(p => p.id === playerId);
     const pw = player?.planeswalkers?.find(p => p.id === planeswalkerId);
     if (!player || !pw) return;
 
     const newLoyalty = pw.loyalty + amount;
     changePlaneswalkerLoyalty(playerId, planeswalkerId, amount);
     addLogEntry(LogCreators.planeswalkerLoyalty(player.name, pw.name, pw.loyalty, newLoyalty));
-    if (settings.soundEnabled) {
+    if (settingsRef.current.soundEnabled) {
       playSound(amount > 0 ? 'lifeGain' : 'lifeLoss');
     }
 
@@ -322,19 +409,19 @@ function LifeCounter({ onBack }) {
         message: `${player.name}'s ${pw.name} was destroyed (loyalty reached 0).`,
         duration: 5000
       });
-      if (settings.soundEnabled) playSound('elimination');
+      if (settingsRef.current.soundEnabled) playSound('elimination');
     }
-  };
+  }, [changePlaneswalkerLoyalty, removePlaneswalker, addLogEntry, addToast, playSound]);
 
   // Handle removing a planeswalker manually
-  const handlePlaneswalkerRemove = (playerId, planeswalkerId) => {
-    const player = players.find(p => p.id === playerId);
+  const handlePlaneswalkerRemove = useCallback((playerId, planeswalkerId) => {
+    const player = playersRef.current.find(p => p.id === playerId);
     const pw = player?.planeswalkers?.find(p => p.id === planeswalkerId);
     removePlaneswalker(playerId, planeswalkerId);
     if (player && pw) {
       addLogEntry(LogCreators.planeswalkerRemoved(player.name, pw.name));
     }
-  };
+  }, [removePlaneswalker, addLogEntry]);
 
   // Handle saving a manual game snapshot (checkpoint) — complements the
   // continuous single-slot auto-save with multiple named, restorable points.
@@ -349,6 +436,7 @@ function LifeCounter({ onBack }) {
       turnNumber,
       currentPlayerIndex,
       stormCount,
+      startingLife,
     };
     setSnapshots(prev => {
       const next = [...prev, snapshot].slice(-MAX_SNAPSHOTS);
@@ -382,18 +470,18 @@ function LifeCounter({ onBack }) {
   };
 
   // Handle mana change
-  const handleManaChange = (playerId, color, amount) => {
+  const handleManaChange = useCallback((playerId, color, amount) => {
     changeMana(playerId, color, amount);
-    const player = players.find(p => p.id === playerId);
+    const player = playersRef.current.find(p => p.id === playerId);
     if (player) {
       const currentMana = player.manaPool?.[color] || 0;
       const newMana = Math.max(0, currentMana + amount); // Prevent negative mana
       addLogEntry(LogCreators.manaChange(player.name, color, newMana, `${amount > 0 ? '+' : ''}${amount}`));
     }
-    if (settings.soundEnabled) {
+    if (settingsRef.current.soundEnabled) {
       playSound(amount > 0 ? 'manaAdd' : 'manaRemove');
     }
-  };
+  }, [changeMana, addLogEntry, playSound]);
 
   // Handle player status change
   const handleSetPlayerStatus = (playerId, statusType, value) => {
@@ -452,7 +540,6 @@ function LifeCounter({ onBack }) {
 
   // Reset game
   const handleReset = () => {
-    const startingLife = gameFormat === 'commander' ? 40 : 20;
     resetGame(startingLife);
     resetTurnTracking();
     setGameLog([LogCreators.gameStart(gameFormat, playerCount)]);
@@ -640,6 +727,26 @@ function LifeCounter({ onBack }) {
     handlePhaseChange(phase);
   }, [setPhase, handlePhaseChange]);
 
+  // Stable per-player callback set: identities depend only on the stable
+  // handlers above, so React.memo(PlayerCard) can skip untouched cards on
+  // every life change instead of re-rendering the whole grid.
+  const playerCallbacks = useMemo(() => {
+    const map = {};
+    for (let id = 1; id <= 6; id++) {
+      map[id] = {
+        onLifeChange: (amount) => handleLifeChange(id, amount),
+        onPoisonChange: (amount) => handlePoisonChange(id, amount),
+        onSetLife: (value) => handleSetLife(id, value),
+        onCommanderDamageClick: () => setCommanderDamageModal(id)
+      };
+    }
+    return map;
+  }, [handleLifeChange, handlePoisonChange, handleSetLife]);
+
+  // Stable () => players[] getter for memoized children (commander damage
+  // grid) — reading through the ref keeps its identity constant.
+  const getPlayers = useCallback(() => playersRef.current, []);
+
   // Get grid classes based on player count
   const getGridClasses = () => {
     switch (playerCount) {
@@ -716,7 +823,7 @@ function LifeCounter({ onBack }) {
         </button>
         <GameSetup
           gameFormat={setupGameFormat}
-          setGameFormat={setSetupGameFormat}
+          setGameFormat={changeSetupFormat}
           playerCount={playerCount}
           setPlayerCount={setPlayerCount}
           playerNames={playerNames}
@@ -725,6 +832,10 @@ function LifeCounter({ onBack }) {
           setPlayerColors={setPlayerColors}
           playerBackgrounds={playerBackgrounds}
           setPlayerBackgrounds={setPlayerBackgrounds}
+          startingLife={setupStartingLife}
+          setStartingLife={setSetupStartingLife}
+          handicaps={setupHandicaps}
+          setHandicaps={setSetupHandicaps}
           onStartGame={handleStartGame}
         />
       </div>
@@ -752,6 +863,7 @@ function LifeCounter({ onBack }) {
 
   // Game screen
   return (
+    <PlayersContext.Provider value={players}>
     <div>
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
@@ -938,28 +1050,32 @@ function LifeCounter({ onBack }) {
 
       {/* Player Grid */}
       <div className={`grid ${getGridClasses()} gap-4`}>
-        {players.map((player, index) => (
-          <PlayerCard
-            key={player.id}
-            player={player}
-            gameFormat={gameFormat}
-            players={players}
-            onLifeChange={(amount) => handleLifeChange(player.id, amount)}
-            onPoisonChange={(amount) => handlePoisonChange(player.id, amount)}
-            onCommanderDamageClick={() => setCommanderDamageModal(player.id)}
-            onCountersChange={(playerId, counterType, amount) => handleCountersChange(playerId, counterType, amount)}
-            onManaChange={(playerId, color, amount) => handleManaChange(playerId, color, amount)}
-            onCommanderDamageChange={(targetPlayerId, sourcePlayerId, amount) => handleCommanderDamageChange(targetPlayerId, sourcePlayerId, amount)}
-            onPlaneswalkerAdd={handlePlaneswalkerAdd}
-            onPlaneswalkerLoyaltyChange={handlePlaneswalkerLoyaltyChange}
-            onPlaneswalkerRemove={handlePlaneswalkerRemove}
-            compact={playerCount > 4}
-            isCurrentPlayer={index === currentPlayerIndex}
-            isMonarch={monarch === player.id}
-            hasInitiative={initiative === player.id}
-            backgroundImage={playerBackgrounds[index] || null}
-          />
-        ))}
+        {players.map((player, index) => {
+          const cb = playerCallbacks[player.id];
+          return (
+            <PlayerCard
+              key={player.id}
+              player={player}
+              gameFormat={gameFormat}
+              getPlayers={getPlayers}
+              onLifeChange={cb.onLifeChange}
+              onPoisonChange={cb.onPoisonChange}
+              onCommanderDamageClick={cb.onCommanderDamageClick}
+              onSetLife={cb.onSetLife}
+              onCountersChange={handleCountersChange}
+              onManaChange={handleManaChange}
+              onCommanderDamageChange={handleCommanderDamageChange}
+              onPlaneswalkerAdd={handlePlaneswalkerAdd}
+              onPlaneswalkerLoyaltyChange={handlePlaneswalkerLoyaltyChange}
+              onPlaneswalkerRemove={handlePlaneswalkerRemove}
+              compact={playerCount > 4}
+              isCurrentPlayer={index === currentPlayerIndex}
+              isMonarch={monarch === player.id}
+              hasInitiative={initiative === player.id}
+              backgroundImage={playerBackgrounds[index] || null}
+            />
+          );
+        })}
       </div>
 
       {/* Commander Damage Modal */}
@@ -1135,6 +1251,7 @@ function LifeCounter({ onBack }) {
         onLoadGame={handleLoadSharedGame}
       />
     </div>
+    </PlayersContext.Provider>
   );
 }
 

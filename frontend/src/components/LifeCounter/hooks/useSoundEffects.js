@@ -113,6 +113,33 @@ function useSoundEffects(externalEnabled, externalVolume) {
       setTimeout(() => playTone(440, 0.1, 'square'), 150);
     },
 
+    // Counter add/remove blips
+    counterAdd: () => {
+      playTone(880, 0.05, 'square');
+    },
+
+    counterRemove: () => {
+      playTone(660, 0.05, 'square');
+    },
+
+    // Mana pool add/remove
+    manaAdd: () => {
+      playTone(1046, 0.05, 'sine'); // C6
+    },
+
+    manaRemove: () => {
+      playTone(523, 0.05, 'sine'); // C5
+    },
+
+    // Player status gains/losses
+    statusGain: () => {
+      playTone(784, 0.08, 'triangle'); // G5
+    },
+
+    statusLost: () => {
+      playTone(392, 0.08, 'triangle'); // G4
+    },
+
     // Timer tick
     tick: () => {
       playTone(1200, 0.02, 'sine');

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Play, Shield, Swords, User, Palette } from 'lucide-react';
+import { Users, Play, Shield, Swords, User, Palette, Bookmark } from 'lucide-react';
 import PlayerProfiles, { PLAYER_COLORS } from './PlayerProfiles';
+import useLineups from './hooks/useLineups';
 import { API_URL } from '../../config';
 import { getAuthHeaders } from '../../utils/auth';
 
@@ -15,6 +16,10 @@ function GameSetup({
   setPlayerColors,
   playerBackgrounds,
   setPlayerBackgrounds,
+  startingLife = 40,
+  setStartingLife = () => {},
+  handicaps = [],
+  setHandicaps = () => {},
   onStartGame
 }) {
   const [showProfiles, setShowProfiles] = useState(false);
@@ -23,6 +28,9 @@ function GameSetup({
   const [showColorPicker, setShowColorPicker] = useState(null);
   const [availableDecks, setAvailableDecks] = useState([]);
   const [playerDecks, setPlayerDecks] = useState([null, null, null, null, null, null]);
+
+  // Saved lineups (names/colors/backgrounds) for one-tap pod setup
+  const { lineups, saveLineup, deleteLineup } = useLineups();
 
   // Initialize player colors if not set
   useEffect(() => {
@@ -92,6 +100,12 @@ function GameSetup({
     setPlayerBackgrounds(newBackgrounds);
   };
 
+  const handleHandicapChange = (index, value) => {
+    const next = Array.from({ length: 6 }, (_, i) => (handicaps && handicaps[i]) || '');
+    next[index] = value;
+    setHandicaps(next);
+  };
+
   const handleSelectProfile = (profile) => {
     if (selectedSlot !== null) {
       handleNameChange(selectedSlot, profile.name);
@@ -128,7 +142,7 @@ function GameSetup({
             >
               <Swords size={28} />
               <span>Commander</span>
-              <span className="text-sm opacity-70">40 Life</span>
+              <span className="text-sm opacity-70">{gameFormat === 'commander' ? startingLife : 40} Life</span>
             </button>
             <button
               onClick={() => setGameFormat('standard')}
@@ -140,9 +154,34 @@ function GameSetup({
             >
               <Shield size={28} />
               <span>Standard</span>
-              <span className="text-sm opacity-70">20 Life</span>
+              <span className="text-sm opacity-70">{gameFormat === 'standard' ? startingLife : 20} Life</span>
             </button>
           </div>
+        </div>
+
+        {/* Custom Starting Life */}
+        <div className="mb-8">
+          <label className="block text-white/80 mb-3 font-semibold" htmlFor="starting-life">
+            Starting Life
+          </label>
+          <input
+            id="starting-life"
+            type="number"
+            min="1"
+            max="999"
+            value={startingLife}
+            onChange={(e) => {
+              const v = parseInt(e.target.value, 10);
+              if (Number.isNaN(v)) {
+                setStartingLife('');
+              } else {
+                setStartingLife(Math.max(1, Math.min(999, v)));
+              }
+            }}
+            className="w-32 bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white text-xl font-bold text-center focus:outline-none focus:ring-2 focus:ring-purple-500"
+            data-testid="starting-life-input"
+            title="Starting life for every player without a per-player override"
+          />
         </div>
 
         {/* Player Count Selection */}
@@ -229,6 +268,21 @@ function GameSetup({
                   />
                 </div>
 
+                {/* Per-player starting life (handicap) */}
+                <div className="flex items-center gap-2">
+                  <span className="text-white/50 text-xs whitespace-nowrap">Start life</span>
+                  <input
+                    type="number"
+                    min="1"
+                    value={(handicaps && handicaps[i]) || ''}
+                    onChange={(e) => handleHandicapChange(i, e.target.value)}
+                    placeholder={String(startingLife || '')}
+                    className="w-24 bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    data-testid={`handicap-input-${i}`}
+                    title={`Optional starting life override for Player ${i + 1} (defaults to ${startingLife || 'the starting life above'})`}
+                  />
+                </div>
+
                 {/* Deck Selector */}
                 {availableDecks.length > 0 && (
                   <select
@@ -277,6 +331,60 @@ function GameSetup({
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Saved Lineups */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-white/80 font-semibold flex items-center gap-2">
+              <Bookmark size={18} /> Lineups
+            </label>
+            <button
+              onClick={() => saveLineup({ names: playerNames, colors: playerColors, backgrounds: playerBackgrounds, playerCount })}
+              className="px-3 py-1 bg-indigo-600/80 hover:bg-indigo-600 text-white rounded-lg text-sm font-medium transition"
+              data-testid="save-lineup"
+            >
+              Save current lineup
+            </button>
+          </div>
+          {lineups.length === 0 ? (
+            <p className="text-white/40 text-sm">
+              Save this lineup to reload all names, colors, and backgrounds with one tap next game.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {lineups.map(lineup => (
+                <div key={lineup.id} className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
+                  <div className="min-w-0">
+                    <div className="text-white font-semibold text-sm truncate">{lineup.name}</div>
+                    <div className="text-white/50 text-xs">
+                      {lineup.playerCount} players · {new Date(lineup.savedAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => {
+                        setPlayerCount(lineup.playerCount);
+                        setPlayerNames(lineup.names);
+                        if (lineup.colors.some(Boolean)) setPlayerColors(lineup.colors);
+                        setPlayerBackgrounds(lineup.backgrounds);
+                      }}
+                      className="px-3 py-1 bg-green-600/80 hover:bg-green-600 text-white rounded text-sm font-medium transition"
+                    >
+                      Load
+                    </button>
+                    <button
+                      onClick={() => deleteLineup(lineup.id)}
+                      className="px-2 py-1 bg-red-600/60 hover:bg-red-600 text-white rounded text-sm transition"
+                      title="Delete lineup"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Start Game Button */}

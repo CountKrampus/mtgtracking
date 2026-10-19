@@ -1,27 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-function AnimatedLifeChange({ currentLife, onChange }) {
-  const [displayLife, setDisplayLife] = useState(currentLife);
-  const [animationClass, setAnimationClass] = useState('');
+function AnimatedLifeChange({ currentLife }) {
+  const [anim, setAnim] = useState(null); // { dir: 'gain' | 'loss', seq: number } | null
+  const prevLifeRef = useRef(currentLife);
+  const seqRef = useRef(0);
 
   useEffect(() => {
-    if (currentLife !== displayLife) {
-      const difference = currentLife - displayLife;
-      setAnimationClass(difference > 0 ? 'animate-life-gain' : 'animate-life-loss');
-      
-      // Update the display life after a short delay to show animation
-      const timer = setTimeout(() => {
-        setDisplayLife(currentLife);
-        setAnimationClass('');
-      }, 300);
+    const prev = prevLifeRef.current;
+    if (currentLife === prev) return undefined;
+    prevLifeRef.current = currentLife;
 
-      return () => clearTimeout(timer);
-    }
-  }, [currentLife, displayLife]);
+    // The number itself renders straight from `currentLife`, so the new total
+    // is visible on this very render. (The old implementation delayed
+    // `displayLife` by 300ms after the LAST change, which froze the number
+    // while the player tapped repeatedly.)
+    seqRef.current += 1;
+    setAnim({ dir: currentLife > prev ? 'gain' : 'loss', seq: seqRef.current });
+
+    const timer = setTimeout(() => setAnim(null), 300);
+    return () => clearTimeout(timer);
+  }, [currentLife]);
 
   return (
-    <div className={`transition-all duration-300 ${animationClass}`}>
-      {displayLife}
+    // Keyed remount per change so the CSS animation retriggers on every tap
+    // (re-applying the same class name alone would not restart it).
+    <div
+      key={anim ? anim.seq : 'static'}
+      className={`transition-all duration-300 ${anim ? `animate-life-${anim.dir}` : ''}`}
+    >
+      {currentLife}
     </div>
   );
 }
@@ -34,17 +41,17 @@ style.textContent = `
     50% { transform: scale(1.3); color: #10b981; }
     100% { transform: scale(1); color: inherit; }
   }
-  
+
   @keyframes lifeLoss {
     0% { transform: scale(1); color: inherit; }
     50% { transform: scale(0.8); color: #ef4444; }
     100% { transform: scale(1); color: inherit; }
   }
-  
+
   .animate-life-gain {
     animation: lifeGain 0.3s ease-in-out;
   }
-  
+
   .animate-life-loss {
     animation: lifeLoss 0.3s ease-in-out;
   }

@@ -11,6 +11,7 @@ export const ACTIONS = {
   CHANGE_COMMANDER_DAMAGE: 'CHANGE_COMMANDER_DAMAGE',
   SET_COUNTER: 'SET_COUNTER',
   CHANGE_COUNTER: 'CHANGE_COUNTER',
+  REMOVE_COUNTER: 'REMOVE_COUNTER',
   SET_MANA: 'SET_MANA',
   CHANGE_MANA: 'CHANGE_MANA',
   CLEAR_MANA_POOL: 'CLEAR_MANA_POOL',
@@ -39,6 +40,7 @@ export const createDefaultPlayer = (id, name, startingLife = 40, color = '#6366f
   counters: {
     energy: 0,
     experience: 0,
+    radiation: 0,
     custom: {}
   },
   manaPool: {
@@ -72,7 +74,7 @@ export const PLAYER_COLORS = [
 ];
 
 // Reducer function for game state
-function gameReducer(state, action) {
+export function gameReducer(state, action) {
   const { players, gameFormat } = state;
 
   switch (action.type) {
@@ -182,7 +184,7 @@ function gameReducer(state, action) {
         ...state,
         players: players.map(p => {
           if (p.id === playerId) {
-            if (counterType === 'energy' || counterType === 'experience') {
+            if (counterType === 'energy' || counterType === 'experience' || counterType === 'radiation') {
               return {
                 ...p,
                 counters: {
@@ -215,7 +217,7 @@ function gameReducer(state, action) {
         ...state,
         players: players.map(p => {
           if (p.id === playerId) {
-            if (counterType === 'energy' || counterType === 'experience') {
+            if (counterType === 'energy' || counterType === 'experience' || counterType === 'radiation') {
               return {
                 ...p,
                 counters: {
@@ -237,6 +239,26 @@ function gameReducer(state, action) {
             }
           }
           return p;
+        })
+      };
+    }
+
+    case ACTIONS.REMOVE_COUNTER: {
+      const { playerId, counterType } = action.payload;
+      return {
+        ...state,
+        players: players.map(p => {
+          if (p.id !== playerId) return p;
+          if (counterType === 'energy' || counterType === 'experience' || counterType === 'radiation') {
+            return {
+              ...p,
+              counters: { ...p.counters, [counterType]: 0 }
+            };
+          }
+          // Custom counters are deleted outright so the row disappears
+          const custom = { ...(p.counters?.custom || {}) };
+          delete custom[counterType];
+          return { ...p, counters: { ...p.counters, custom } };
         })
       };
     }
@@ -415,9 +437,9 @@ function gameReducer(state, action) {
           commanderDamage: {},
           isEliminated: false,
           eliminationReason: null,
-          counters: { energy: 0, experience: 0, custom: {} },
-          manaPool: { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 },
-          ringProgress: 0,
+      counters: { energy: 0, experience: 0, radiation: 0, custom: {} },
+      manaPool: { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 },
+      ringProgress: 0,
           citysBlessing: false,
           planeswalkers: []
         }))
@@ -455,6 +477,20 @@ function checkElimination(player, gameFormat) {
   return player;
 }
 
+// Migrate saved player counters to the current shape. Radiation used to be
+// stored inside `custom` (the reducer treated it as a custom counter), so
+// promote it to the top-level slot once.
+export function migrateCounters(counters) {
+  const base = { energy: 0, experience: 0, radiation: 0, custom: {}, ...(counters || {}) };
+  if (base.custom && typeof base.custom.radiation === 'number') {
+    base.radiation = Math.max(Number(base.radiation) || 0, base.custom.radiation);
+    const { radiation, ...rest } = base.custom;
+    base.custom = rest;
+  }
+  if (!base.custom || typeof base.custom !== 'object') base.custom = {};
+  return base;
+}
+
 /**
  * Custom hook for managing game state with undo/redo capability
  */
@@ -481,20 +517,28 @@ function useGameState(initialGameFormat = 'commander') {
   }, [setState]);
 
   // Initialize players
-  const initializePlayers = useCallback((playerCount, playerNames, gameFormat) => {
-    const startingLife = gameFormat === 'commander' ? 40 : 20;
-    const newPlayers = Array.from({ length: playerCount }, (_, i) =>
-      createDefaultPlayer(
+  const initializePlayers = useCallback((playerCount, playerNames, gameFormat, options = {}) => {
+    const formatDefault = gameFormat === 'commander' ? 40 : 20;
+    // Optional custom starting life; per-player handicaps (options.handicaps)
+    // override it for individual seats.
+    const startingLife = Number.isFinite(options.startingLife) && options.startingLife > 0
+      ? options.startingLife
+      : formatDefault;
+    const handicaps = options.handicaps || [];
+    const newPlayers = Array.from({ length: playerCount }, (_, i) => {
+      const handicap = Number.isFinite(handicaps[i]) && handicaps[i] > 0 ? handicaps[i] : null;
+      return createDefaultPlayer(
         i + 1,
         playerNames[i] || `Player ${i + 1}`,
-        startingLife,
+        handicap !== null ? handicap : startingLife,
         PLAYER_COLORS[i % PLAYER_COLORS.length].value
-      )
-    );
+      );
+    });
 
     resetHistory({
       players: newPlayers,
-      gameFormat
+      gameFormat,
+      startingLife
     });
   }, [resetHistory]);
 
@@ -504,7 +548,7 @@ function useGameState(initialGameFormat = 'commander') {
     const migratedPlayers = savedState.players.map(p => ({
       ...createDefaultPlayer(p.id, p.name, p.life),
       ...p,
-      counters: p.counters || { energy: 0, experience: 0, custom: {} },
+      counters: migrateCounters(p.counters),
       manaPool: p.manaPool || { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 },
       ringProgress: p.ringProgress || 0,
       citysBlessing: p.citysBlessing || false,
@@ -514,7 +558,9 @@ function useGameState(initialGameFormat = 'commander') {
 
     resetHistory({
       players: migratedPlayers,
-      gameFormat: savedState.gameFormat
+      gameFormat: savedState.gameFormat,
+      // Older saves have no startingLife — derive the format default
+      startingLife: savedState.startingLife ?? (savedState.gameFormat === 'commander' ? 40 : 20)
     });
   }, [resetHistory]);
 
@@ -551,6 +597,10 @@ function useGameState(initialGameFormat = 'commander') {
     setCounter: (playerId, counterType, value) => dispatch({
       type: ACTIONS.SET_COUNTER,
       payload: { playerId, counterType, value }
+    }),
+    removeCounter: (playerId, counterType) => dispatch({
+      type: ACTIONS.REMOVE_COUNTER,
+      payload: { playerId, counterType }
     }),
     changeMana: (playerId, manaType, amount) => dispatch({
       type: ACTIONS.CHANGE_MANA,
@@ -606,6 +656,8 @@ function useGameState(initialGameFormat = 'commander') {
     // State
     players: state.players,
     gameFormat: state.gameFormat,
+    // Life totals reset to on a full game reset (custom or format default)
+    startingLife: state.startingLife ?? (state.gameFormat === 'commander' ? 40 : 20),
 
     // Actions
     ...actions,

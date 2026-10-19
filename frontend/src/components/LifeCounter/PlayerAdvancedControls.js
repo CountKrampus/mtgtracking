@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { usePlayers } from './PlayersContext';
+import useHoldRepeat from './hooks/useHoldRepeat';
 import {
   X,
   Plus,
@@ -14,7 +16,8 @@ import {
 function PlayerAdvancedControls({
   player,
   gameFormat,
-  players = [],
+  // players is read from PlayersContext below — keeping it out of props
+  // lets PlayerCard memoize without re-rendering on every state change,
   onLifeChange,
   onPoisonChange,
   onCountersChange,
@@ -25,6 +28,18 @@ function PlayerAdvancedControls({
   onClose
 }) {
   const [activeTab, setActiveTab] = useState('quick');
+
+  const players = usePlayers();
+
+  // Hold-to-repeat: press fires once immediately, holding auto-repeats
+  const holdQuickLife = {
+    '-1': useHoldRepeat(() => onLifeChange(-1)),
+    '-5': useHoldRepeat(() => onLifeChange(-5)),
+    '1': useHoldRepeat(() => onLifeChange(1)),
+    '5': useHoldRepeat(() => onLifeChange(5))
+  };
+  const holdPoisonDown = useHoldRepeat(() => onPoisonChange(-1));
+  const holdPoisonUp = useHoldRepeat(() => onPoisonChange(1));
 
   // The panel is w-72 h-96 (288x384) and centered on `position` via
   // translate(-50%,-50%) - position is the tapped player card's own center
@@ -116,7 +131,7 @@ function PlayerAdvancedControls({
                     {quickChanges.map((change, index) => (
                       <button
                         key={index}
-                        onClick={() => onLifeChange(change.value)}
+                        {...holdQuickLife[change.value]}
                         className={`py-2 rounded-lg font-bold transition ${change.color} text-white`}
                       >
                         {change.label}
@@ -416,7 +431,7 @@ function PlayerAdvancedControls({
                   <div className="bg-black/20 rounded-lg p-2">
                     <div className="flex items-center justify-center gap-2">
                       <button
-                        onClick={() => onPoisonChange(-1)}
+                        {...holdPoisonDown}
                         disabled={player.poison <= 0}
                         className="p-1 bg-purple-600/80 hover:bg-purple-600 text-white rounded transition disabled:opacity-30 disabled:cursor-not-allowed"
                       >
@@ -437,7 +452,7 @@ function PlayerAdvancedControls({
                         </span>
                       </div>
                       <button
-                        onClick={() => onPoisonChange(1)}
+                        {...holdPoisonUp}
                         className="p-1 bg-purple-600/80 hover:bg-purple-600 text-white rounded transition"
                       >
                         <Plus size={12} />

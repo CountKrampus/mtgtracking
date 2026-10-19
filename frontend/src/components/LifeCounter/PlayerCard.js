@@ -16,14 +16,24 @@ import PlaneswalkersPanel from './PlaneswalkersPanel';
 import PlayerStatusIndicators from './PlayerStatusIndicators';
 import AnimatedLifeChange from './AnimatedLifeChange';
 import PlayerAdvancedControls from './PlayerAdvancedControls';
+import useHoldRepeat from './hooks/useHoldRepeat';
+
+const shortName = (name) => {
+  const n = name || '';
+  return n.length > 9 ? `${n.slice(0, 8)}\u2026` : n;
+};
 
 function PlayerCard({
   player,
   gameFormat,
-  players = [],
-  onLifeChange,
-  onPoisonChange,
-  onCommanderDamageClick,
+  // Stable () => players[] getter (LifeCounter backs it with a ref). Needed
+  // for the on-card commander damage grid; a plain `players` prop would
+  // change identity on every state change and defeat React.memo here.
+  getPlayers,
+  onLifeChange,        // (amount) => void
+  onPoisonChange,      // (amount) => void
+  onCommanderDamageClick, // () => void — opens this player's damage modal
+  onSetLife,           // (value) => void — direct life entry pad
   onCountersChange,
   onManaChange,
   onCommanderDamageChange,
@@ -38,6 +48,17 @@ function PlayerCard({
 }) {
   const playerCardRef = useRef(null);
   const [showAdvancedControls, setShowAdvancedControls] = useState({ show: false, position: null });
+  const [showLifeEntry, setShowLifeEntry] = useState(false);
+  const [lifeInput, setLifeInput] = useState('');
+
+  // Hold-to-repeat on the life buttons: tap fires once, holding auto-repeats.
+  // The reducer ignores changes for eliminated players, so the guards below
+  // only keep the held repeat from doing pointless work.
+  const holdDown5 = useHoldRepeat(() => { if (!player.isEliminated) onLifeChange(-5); });
+  const holdDown1 = useHoldRepeat(() => { if (!player.isEliminated) onLifeChange(-1); });
+  const holdUp1 = useHoldRepeat(() => { if (!player.isEliminated) onLifeChange(1); });
+  const holdUp5 = useHoldRepeat(() => { if (!player.isEliminated) onLifeChange(5); });
+
   // Determine visual state based on life and poison
   const getVisualState = () => {
     if (player.isEliminated) return 'eliminated';
@@ -93,10 +114,31 @@ function PlayerCard({
     }
   };
 
-  // Get total commander damage taken
+  const openLifeEntry = () => {
+    if (player.isEliminated) return;
+    setLifeInput(String(player.life));
+    setShowLifeEntry(true);
+  };
+
+  const submitLifeEntry = () => {
+    const value = parseInt(lifeInput, 10);
+    if (!Number.isNaN(value)) onSetLife(value);
+    setShowLifeEntry(false);
+  };
+
+  // Opponents for the on-card commander damage grid
+  const opponents = gameFormat === 'commander' && getPlayers
+    ? getPlayers().filter(p => p.id !== player.id)
+    : [];
+  const damageMap = player.commanderDamage || {};
+  // In compact mode (5-6 players) only show sources that have dealt damage,
+  // to keep the card readable.
+  const visibleSources = compact
+    ? opponents.filter(o => (damageMap[o.id] || 0) > 0)
+    : opponents;
 
   return (
-    <div ref={playerCardRef} className={getContainerClasses()}>
+    <div ref={playerCardRef} className={getContainerClasses()} data-testid={`player-card-${player.id}`}>
       {/* Background Image */}
       {backgroundImage && !player.isEliminated && (
         <div className="absolute inset-0 z-0">
@@ -156,48 +198,85 @@ function PlayerCard({
         </div>
       )}
 
-      {/* Life Total */}
+      {/* Life Total — tap to enter an exact total directly */}
       <div className="text-center mb-4 relative z-[1]">
-        <div
-          className={getLifeTextClasses()}
-          onClick={() => !player.isEliminated && onLifeChange(1)}
-          style={{ cursor: player.isEliminated ? 'default' : 'pointer' }}
+        <button
+          type="button"
+          onClick={openLifeEntry}
+          disabled={player.isEliminated}
+          className={`${getLifeTextClasses()} w-full bg-transparent touch-manipulation select-none disabled:cursor-default`}
+          aria-label={`Set exact life total for ${player.name}`}
+          data-testid={`life-total-${player.id}`}
         >
           <AnimatedLifeChange currentLife={player.life} />
-        </div>
+        </button>
       </div>
 
-      {/* Life Adjustment Buttons */}
+      {/* Life Adjustment Buttons (hold to repeat) */}
       <div className={`flex justify-center gap-2 mb-4 relative z-[1] ${player.isEliminated ? 'opacity-30' : ''}`}>
         <button
-          onClick={() => onLifeChange(-5)}
+          {...holdDown5}
           disabled={player.isEliminated}
-          className="px-3 py-2 bg-red-600/80 hover:bg-red-600 text-white rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 py-2 bg-red-600/80 hover:bg-red-600 text-white rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation select-none active:scale-95"
+          aria-label={`Remove 5 life from ${player.name}`}
         >
           -5
         </button>
         <button
-          onClick={() => onLifeChange(-1)}
+          {...holdDown1}
           disabled={player.isEliminated}
-          className="px-4 py-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation select-none active:scale-95"
+          aria-label={`Remove 1 life from ${player.name}`}
         >
           <Minus size={18} />
         </button>
         <button
-          onClick={() => onLifeChange(1)}
+          {...holdUp1}
           disabled={player.isEliminated}
-          className="px-4 py-2 bg-green-500/80 hover:bg-green-500 text-white rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 bg-green-500/80 hover:bg-green-500 text-white rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation select-none active:scale-95"
+          aria-label={`Add 1 life to ${player.name}`}
         >
           <Plus size={18} />
         </button>
         <button
-          onClick={() => onLifeChange(5)}
+          {...holdUp5}
           disabled={player.isEliminated}
-          className="px-3 py-2 bg-green-600/80 hover:bg-green-600 text-white rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 py-2 bg-green-600/80 hover:bg-green-600 text-white rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation select-none active:scale-95"
+          aria-label={`Add 5 life to ${player.name}`}
         >
           +5
         </button>
       </div>
+
+      {/* Commander Damage Grid (Commander format, on-card) */}
+      {gameFormat === 'commander' && !player.isEliminated && visibleSources.length > 0 && (
+        <div
+          className="flex items-center justify-center gap-1 flex-wrap mb-3 relative z-[1]"
+          data-testid={`commander-damage-grid-${player.id}`}
+        >
+          {visibleSources.map(opp => {
+            const dealt = damageMap[opp.id] || 0;
+            const danger = dealt >= 14;
+            return (
+              <button
+                key={opp.id}
+                type="button"
+                onClick={() => onCommanderDamageClick()}
+                className={`px-1.5 py-0.5 rounded border text-[10px] font-bold text-white/80 hover:brightness-125 transition touch-manipulation select-none ${
+                  danger ? 'border-red-500' : dealt > 0 ? 'border-orange-500' : 'border-white/20'
+                }`}
+                style={{ backgroundColor: `${opp.color || '#6366f1'}22` }}
+                title={`${opp.name} has dealt ${dealt}/21 commander damage to ${player.name} — tap to manage`}
+              >
+                {shortName(opp.name)}{' '}
+                <span className={danger ? 'text-red-300' : dealt > 0 ? 'text-orange-300' : 'text-white/50'}>
+                  {dealt}/21
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Counters Panel */}
       <CountersPanel
@@ -239,7 +318,7 @@ function PlayerCard({
             });
           }
         }}
-        className="w-full mt-2 py-2 bg-purple-600/80 hover:bg-purple-600 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2"
+        className="w-full mt-2 py-2 bg-purple-600/80 hover:bg-purple-600 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2 touch-manipulation"
       >
         <Settings size={16} />
         Advanced Controls
@@ -250,9 +329,8 @@ function PlayerCard({
         <PlayerAdvancedControls
           player={player}
           gameFormat={gameFormat}
-          players={players}
-          onLifeChange={(amount) => onLifeChange(amount)}
-          onPoisonChange={(amount) => onPoisonChange(amount)}
+          onLifeChange={onLifeChange}
+          onPoisonChange={onPoisonChange}
           onCountersChange={onCountersChange}
           onManaChange={onManaChange}
           onCommanderDamageClick={onCommanderDamageClick}
@@ -261,8 +339,66 @@ function PlayerCard({
           onClose={() => setShowAdvancedControls({ show: false, position: null })}
         />
       )}
+
+      {/* Direct Life Entry Pad */}
+      {showLifeEntry && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+          data-testid={`life-entry-${player.id}`}
+        >
+          <div className="bg-gray-900 rounded-2xl p-6 w-full max-w-xs shadow-2xl border border-white/20">
+            <h4 className="text-white font-bold mb-1">Set {player.name}'s life</h4>
+            <p className="text-white/50 text-xs mb-4">Enter an exact total.</p>
+            <input
+              type="number"
+              inputMode="numeric"
+              autoFocus
+              value={lifeInput}
+              onChange={(e) => setLifeInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') submitLifeEntry();
+                if (e.key === 'Escape') setShowLifeEntry(false);
+              }}
+              className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white text-2xl font-bold text-center focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
+              data-testid={`life-entry-input-${player.id}`}
+            />
+            <div className="flex gap-2 mb-2">
+              <button
+                type="button"
+                onClick={() => setLifeInput(v => String((parseInt(v, 10) || 0) - 1))}
+                className="flex-1 py-2 bg-red-600/80 hover:bg-red-600 text-white rounded-lg font-bold transition touch-manipulation select-none active:scale-95"
+              >
+                -1
+              </button>
+              <button
+                type="button"
+                onClick={() => setLifeInput(v => String((parseInt(v, 10) || 0) + 1))}
+                className="flex-1 py-2 bg-green-600/80 hover:bg-green-600 text-white rounded-lg font-bold transition touch-manipulation select-none active:scale-95"
+              >
+                +1
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowLifeEntry(false)}
+                className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitLifeEntry}
+                className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold transition"
+              >
+                Set
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-export default PlayerCard;
+export default React.memo(PlayerCard);
