@@ -46,7 +46,11 @@ const lifeOf = (id) =>
   document.querySelector(`[data-testid="life-total-${id}"]`).textContent.trim();
 const cardOf = (id) => document.querySelector(`[data-testid="player-card-${id}"]`);
 
-beforeAll(() => {
+// CRA's jest config sets resetMocks: true, which clears jest.fn
+// implementations before every test — so these must be (re)installed in
+// beforeEach, not beforeAll, or every test after the first runs against
+// undefined-returning stubs.
+const installStubs = () => {
   global.fetch = jest.fn(() =>
     Promise.resolve({ ok: false, json: () => Promise.resolve([]) })
   );
@@ -73,7 +77,7 @@ beforeAll(() => {
       }
     })
   }));
-});
+};
 
 let container = null;
 let root = null;
@@ -174,6 +178,7 @@ describe('LifeCounter game flow', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     localStorage.clear();
+    installStubs();
   });
 
   test('starts a commander game at 40 life; +1 tap reflects immediately', async () => {
@@ -289,6 +294,95 @@ describe('LifeCounter game flow', () => {
     const chips = [...grid.querySelectorAll('button')];
     expect(chips).toHaveLength(3); // 4-player game → 3 opponents
     chips.forEach(c => expect(c.textContent).toMatch(/0\/21/));
+  });
+
+  test('commander damage can be added from the on-card grid modal', async () => {
+    await mount();
+    await startGame();
+
+    const chip = document.querySelector('[data-testid="commander-damage-grid-1"] button');
+    expect(chip.textContent).toMatch(/Player 2/);
+    await click(chip); // opens the Commander Damage modal
+
+    // One row per opponent: "X more to lethal" + [minus, plus]
+    const row = [...document.querySelectorAll('div[class*="rounded-xl"]')]
+      .find(el => el.textContent.includes('Player 2') && el.textContent.includes('more to lethal'));
+    expect(row).toBeTruthy();
+    const [, plus] = [...row.querySelectorAll('button')];
+    await click(plus);
+
+    await click(findButton(document, 'Done'));
+    const chipAfter = document.querySelector('[data-testid="commander-damage-grid-1"] button');
+    expect(chipAfter.textContent).toMatch(/1\/21/);
+  });
+
+  test('commander damage can be added from Advanced Controls (Damage tab)', async () => {
+    await mount();
+    await startGame();
+
+    await click(findButton(cardOf(1), 'Advanced Controls'));
+    await click(findButton(document, 'Damage'));
+
+    // "Add Commander Damage" lists every opponent via the players context
+    const addHeading = [...document.querySelectorAll('h4')]
+      .find(h => h.textContent.includes('Add Commander Damage'));
+    expect(addHeading).toBeTruthy();
+    const sourceRow = [...addHeading.parentElement.querySelectorAll('div[class*="rounded"]')]
+      .find(d => d.textContent.trim().startsWith('Player 2'));
+    expect(sourceRow).toBeTruthy(); // context reached the panel — opponents listed
+    const [, addOne] = [...sourceRow.querySelectorAll('button')]; // [minus, +1 zap, +5]
+    await click(addOne);
+
+    const chip = document.querySelector('[data-testid="commander-damage-grid-1"] button');
+    expect(chip.textContent).toMatch(/1\/21/);
+  });
+
+  test('compact mode (6 players) always shows a tappable commander damage chip', async () => {
+    await mount();
+    await click(findButton(document, '6')); // 6 players → compact cards
+    await startGame();
+
+    const grid = document.querySelector('[data-testid="commander-damage-grid-1"]');
+    expect(grid).toBeTruthy(); // visible even with zero damage
+    const chips = [...grid.querySelectorAll('button')];
+    expect(chips).toHaveLength(1);
+    expect(chips[0].textContent).toMatch(/0\/21/);
+
+    await click(chips[0]); // opens the damage modal
+    expect(findButton(document, 'Done')).toBeTruthy();
+  });
+
+  test('landscape head-to-head: CMD opens damage modal and Reset asks to confirm', async () => {
+    await mount();
+    await click(findButton(document, '2')); // 2 players
+    await startGame();
+    await click(document.querySelector('button[title="Landscape Layout"]'));
+
+    // CMD button on each side opens the Commander Damage modal (previously
+    // the landscape early-return rendered neither modal, so the button
+    // set state with no visible UI consuming it)
+    const cmdButtons = [...document.querySelectorAll('button')]
+      .filter(b => b.textContent.trim() === 'CMD');
+    expect(cmdButtons).toHaveLength(2);
+    await click(cmdButtons[0]);
+
+    const row = [...document.querySelectorAll('div[class*="rounded-xl"]')]
+      .find(el => el.textContent.includes('Player 2') && el.textContent.includes('more to lethal'));
+    expect(row).toBeTruthy(); // modal is actually visible in landscape
+    const [, plus] = [...row.querySelectorAll('button')];
+    await click(plus);
+    const indicator = [...row.querySelectorAll('div')]
+      .find(d => d.className.includes('min-w-[3rem]'));
+    expect(indicator.textContent).toBe('1');
+    await click(findButton(document, 'Done'));
+
+    // Reset asks for confirmation instead of silently doing nothing
+    await click(document.querySelector('button[title="Reset"]'));
+    const isConfirmOpen = () =>
+      [...document.querySelectorAll('h3')].some(h => h.textContent.includes('Reset Game?'));
+    expect(isConfirmOpen()).toBe(true);
+    await click(findButton(document, 'Reset'));
+    expect(isConfirmOpen()).toBe(false);
   });
 
   test('auto-save is debounced, then flushed immediately on pagehide', async () => {

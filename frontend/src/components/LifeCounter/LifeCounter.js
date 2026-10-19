@@ -764,6 +764,44 @@ function LifeCounter({ onBack }) {
     }
   };
 
+  // Modals rendered by BOTH the landscape and grid layouts. The landscape
+  // early-return previously rendered neither, so its CMD and Reset buttons
+  // silently set state with no visible UI consuming it.
+  const commanderDamageModalEl = commanderDamageModal !== null && (
+    <CommanderDamage
+      player={players.find(p => p.id === commanderDamageModal)}
+      allPlayers={players}
+      onDamageChange={handleCommanderDamageChange}
+      onClose={() => setCommanderDamageModal(null)}
+    />
+  );
+
+  const resetConfirmModalEl = showResetConfirm && (
+    <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
+      <div className="bg-gray-900 rounded-t-2xl sm:rounded-2xl p-6 sm:max-w-sm w-full shadow-2xl border border-white/20 max-h-[90vh] overflow-y-auto">
+        <h3 className="text-xl font-bold text-white mb-4">Reset Game?</h3>
+        <p className="text-white/60 mb-6">
+          This will reset all life totals, poison counters, commander damage, and turn tracking.
+          Player names will be preserved.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowResetConfirm(false)}
+            className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleReset}
+            className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-semibold transition"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   // Resume prompt screen
   if (gamePhase === 'resume' && savedGame) {
     const savedAt = new Date(savedGame.savedAt);
@@ -845,19 +883,23 @@ function LifeCounter({ onBack }) {
   // Use landscape layout for 2 players if enabled
   if (useLandscapeLayout && playerCount === 2 && players.length === 2) {
     return (
-      <TwoPlayerLandscape
-        players={players}
-        gameFormat={gameFormat}
-        onLifeChange={handleLifeChange}
-        onPoisonChange={handlePoisonChange}
-        onCommanderDamageClick={(playerId) => setCommanderDamageModal(playerId)}
-        currentPlayerIndex={currentPlayerIndex}
-        monarch={monarch}
-        initiative={initiative}
-        onBack={onBack}
-        onReset={() => setShowResetConfirm(true)}
-        onToggleLayout={() => setUseLandscapeLayout(false)}
-      />
+      <>
+        <TwoPlayerLandscape
+          players={players}
+          gameFormat={gameFormat}
+          onLifeChange={handleLifeChange}
+          onPoisonChange={handlePoisonChange}
+          onCommanderDamageClick={(playerId) => setCommanderDamageModal(playerId)}
+          currentPlayerIndex={currentPlayerIndex}
+          monarch={monarch}
+          initiative={initiative}
+          onBack={onBack}
+          onReset={() => setShowResetConfirm(true)}
+          onToggleLayout={() => setUseLandscapeLayout(false)}
+        />
+        {commanderDamageModalEl}
+        {resetConfirmModalEl}
+      </>
     );
   }
 
@@ -1079,41 +1121,10 @@ function LifeCounter({ onBack }) {
       </div>
 
       {/* Commander Damage Modal */}
-      {commanderDamageModal !== null && (
-        <CommanderDamage
-          player={players.find(p => p.id === commanderDamageModal)}
-          allPlayers={players}
-          onDamageChange={handleCommanderDamageChange}
-          onClose={() => setCommanderDamageModal(null)}
-        />
-      )}
+      {commanderDamageModalEl}
 
       {/* Reset Confirmation Modal */}
-      {showResetConfirm && (
-        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
-          <div className="bg-gray-900 rounded-t-2xl sm:rounded-2xl p-6 sm:max-w-sm w-full shadow-2xl border border-white/20 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold text-white mb-4">Reset Game?</h3>
-            <p className="text-white/60 mb-6">
-              This will reset all life totals, poison counters, commander damage, and turn tracking.
-              Player names will be preserved.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowResetConfirm(false)}
-                className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleReset}
-                className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-semibold transition"
-              >
-                Reset
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {resetConfirmModalEl}
 
       {/* End Game Modal */}
       {showEndGameModal && (

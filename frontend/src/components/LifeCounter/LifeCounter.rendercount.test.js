@@ -38,7 +38,8 @@ jest.mock('./PlayerCard', () => {
 import LifeCounter from './LifeCounter';
 import PlayerCardStub from './PlayerCard';
 
-beforeAll(() => {
+// CRA jest uses resetMocks:true — stubs must be reinstalled per test
+const installStubs = () => {
   global.fetch = jest.fn(() =>
     Promise.resolve({ ok: false, json: () => Promise.resolve([]) })
   );
@@ -62,7 +63,7 @@ beforeAll(() => {
       }
     })
   }));
-});
+};
 
 let container = null;
 let root = null;
@@ -70,6 +71,7 @@ let root = null;
 beforeEach(() => {
   jest.useFakeTimers();
   localStorage.clear();
+  installStubs();
 });
 
 afterEach(() => {

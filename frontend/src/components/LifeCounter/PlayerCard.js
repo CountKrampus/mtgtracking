@@ -131,11 +131,11 @@ function PlayerCard({
     ? getPlayers().filter(p => p.id !== player.id)
     : [];
   const damageMap = player.commanderDamage || {};
-  // In compact mode (5-6 players) only show sources that have dealt damage,
-  // to keep the card readable.
-  const visibleSources = compact
-    ? opponents.filter(o => (damageMap[o.id] || 0) > 0)
-    : opponents;
+  // Highest single-source commander damage (the 21-from-one-commander rule)
+  const maxCommanderDamage = opponents.reduce(
+    (max, o) => Math.max(max, damageMap[o.id] || 0),
+    0
+  );
 
   return (
     <div ref={playerCardRef} className={getContainerClasses()} data-testid={`player-card-${player.id}`}>
@@ -248,33 +248,59 @@ function PlayerCard({
         </button>
       </div>
 
-      {/* Commander Damage Grid (Commander format, on-card) */}
-      {gameFormat === 'commander' && !player.isEliminated && visibleSources.length > 0 && (
+      {/* Commander Damage (Commander format, on-card) */}
+      {gameFormat === 'commander' && !player.isEliminated && (
         <div
-          className="flex items-center justify-center gap-1 flex-wrap mb-3 relative z-[1]"
+          className="mb-3 relative z-[1]"
           data-testid={`commander-damage-grid-${player.id}`}
         >
-          {visibleSources.map(opp => {
-            const dealt = damageMap[opp.id] || 0;
-            const danger = dealt >= 14;
-            return (
+          <div className="text-[10px] text-white/40 text-center font-semibold mb-1 uppercase tracking-wide">
+            Commander Damage
+          </div>
+          {compact ? (
+            /* Compact (5-6 players): one chip showing the highest single-source
+               damage; always visible so damage can be added from anywhere */
+            <div className="flex justify-center">
               <button
-                key={opp.id}
                 type="button"
                 onClick={() => onCommanderDamageClick()}
-                className={`px-1.5 py-0.5 rounded border text-[10px] font-bold text-white/80 hover:brightness-125 transition touch-manipulation select-none ${
-                  danger ? 'border-red-500' : dealt > 0 ? 'border-orange-500' : 'border-white/20'
+                className={`px-2 py-0.5 rounded border text-[10px] font-bold touch-manipulation select-none hover:brightness-125 transition ${
+                  maxCommanderDamage >= 14
+                    ? 'bg-red-900/60 border-red-500 text-red-200'
+                    : maxCommanderDamage > 0
+                      ? 'bg-orange-900/50 border-orange-500 text-orange-200'
+                      : 'bg-black/30 border-white/20 text-white/60'
                 }`}
-                style={{ backgroundColor: `${opp.color || '#6366f1'}22` }}
-                title={`${opp.name} has dealt ${dealt}/21 commander damage to ${player.name} — tap to manage`}
+                title={`Manage commander damage to ${player.name} — tap to open`}
               >
-                {shortName(opp.name)}{' '}
-                <span className={danger ? 'text-red-300' : dealt > 0 ? 'text-orange-300' : 'text-white/50'}>
-                  {dealt}/21
-                </span>
+                ⚔ {maxCommanderDamage}/21
               </button>
-            );
-          })}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-1 flex-wrap">
+              {opponents.map(opp => {
+                const dealt = damageMap[opp.id] || 0;
+                const danger = dealt >= 14;
+                return (
+                  <button
+                    key={opp.id}
+                    type="button"
+                    onClick={() => onCommanderDamageClick()}
+                    className={`px-1.5 py-0.5 rounded border text-[10px] font-bold text-white/80 hover:brightness-125 transition touch-manipulation select-none ${
+                      danger ? 'border-red-500' : dealt > 0 ? 'border-orange-500' : 'border-white/20'
+                    }`}
+                    style={{ backgroundColor: `${opp.color || '#6366f1'}22` }}
+                    title={`${opp.name} has dealt ${dealt}/21 commander damage to ${player.name} — tap to manage`}
+                  >
+                    {shortName(opp.name)}{' '}
+                    <span className={danger ? 'text-red-300' : dealt > 0 ? 'text-orange-300' : 'text-white/50'}>
+                      {dealt}/21
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
