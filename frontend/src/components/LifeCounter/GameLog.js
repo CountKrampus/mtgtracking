@@ -170,8 +170,9 @@ export const LogCreators = {
     return createLogEntry('poison', message);
   },
 
-  commanderDamage: (targetName, sourceName, damage, total) => {
-    const message = `${targetName} took ${damage} commander damage from ${sourceName} (${total}/21)`;
+  commanderDamage: (targetName, sourceName, damage, total, newLife) => {
+    const lifeNote = typeof newLife === 'number' ? ` — life now ${newLife}` : '';
+    const message = `${targetName} took ${damage} commander damage from ${sourceName} (${total}/21)${lifeNote}`;
     return createLogEntry('commander_damage', message);
   },
 

@@ -342,7 +342,10 @@ function PlayerAdvancedControls({
 
             {activeTab === 'commander' && (
               <div className="space-y-2">
-                <div className="max-h-32 overflow-y-auto">
+                {/* No inner scroll region here: the tab content container
+                    already scrolls, and a nested max-h-32 clipped the
+                    "Add Commander Damage" opponent rows right below the
+                    fold — the heading showed with an empty list under it. */}
                   <div className="mb-2">
                     <h4 className="text-white/60 text-xs font-semibold mb-1">Total Commander Damage</h4>
                     <div className="bg-black/20 rounded-lg p-2">
@@ -424,7 +427,6 @@ function PlayerAdvancedControls({
                       ))}
                     </div>
                   </div>
-                </div>
 
                 <div>
                   <h4 className="text-white/60 text-xs font-semibold mb-1">Poison Counter</h4>

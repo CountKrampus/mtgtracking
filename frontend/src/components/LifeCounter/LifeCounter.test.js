@@ -163,6 +163,58 @@ describe('useGameState reducer', () => {
     expect(s2.players[0].poison).toBe(0);
   });
 
+  test('commander damage is real damage: it reduces life too', () => {
+    let state = fresh();
+    state = {
+      ...state,
+      players: [createDefaultPlayer(1, 'P1', 40), createDefaultPlayer(2, 'P2', 40)]
+    };
+
+    state = gameReducer(state, {
+      type: ACTIONS.CHANGE_COMMANDER_DAMAGE,
+      payload: { targetPlayerId: 2, sourcePlayerId: 1, amount: 5 }
+    });
+    expect(state.players[1].commanderDamage[1]).toBe(5);
+    expect(state.players[1].life).toBe(35); // the fix: damage came off life
+
+    // Removing damage gives the life back...
+    state = gameReducer(state, {
+      type: ACTIONS.CHANGE_COMMANDER_DAMAGE,
+      payload: { targetPlayerId: 2, sourcePlayerId: 1, amount: -2 }
+    });
+    expect(state.players[1].commanderDamage[1]).toBe(3);
+    expect(state.players[1].life).toBe(37);
+
+    // ...but only for damage that actually existed (0-floor clamp): -5 on
+    // 3 damage restores the 3 that were there (37 → 40), not 5 (which
+    // would overshoot to 42)
+    state = gameReducer(state, {
+      type: ACTIONS.CHANGE_COMMANDER_DAMAGE,
+      payload: { targetPlayerId: 2, sourcePlayerId: 1, amount: -5 }
+    });
+    expect(state.players[1].commanderDamage[1]).toBe(0);
+    expect(state.players[1].life).toBe(40);
+  });
+
+  test('SET_COMMANDER_DAMAGE adjusts life by the delta', () => {
+    let state = {
+      ...fresh(),
+      players: [createDefaultPlayer(1, 'P1', 40), createDefaultPlayer(2, 'P2', 40)]
+    };
+
+    state = gameReducer(state, {
+      type: ACTIONS.SET_COMMANDER_DAMAGE,
+      payload: { targetPlayerId: 2, sourcePlayerId: 1, value: 8 }
+    });
+    expect(state.players[1].life).toBe(32);
+
+    state = gameReducer(state, {
+      type: ACTIONS.SET_COMMANDER_DAMAGE,
+      payload: { targetPlayerId: 2, sourcePlayerId: 1, value: 10 }
+    });
+    expect(state.players[1].life).toBe(30);
+  });
+
   test('migrateCounters promotes legacy custom.radiation', () => {
     const migrated = migrateCounters({
       energy: 1,
@@ -335,6 +387,50 @@ describe('LifeCounter game flow', () => {
 
     const chip = document.querySelector('[data-testid="commander-damage-grid-1"] button');
     expect(chip.textContent).toMatch(/1\/21/);
+  });
+
+  test('commander damage from the modal reduces the life total on screen', async () => {
+    await mount();
+    await startGame();
+
+    const chip = document.querySelector('[data-testid="commander-damage-grid-1"] button');
+    await click(chip); // opens the Commander Damage modal: damage TO Player 1
+
+    const row = [...document.querySelectorAll('div[class*="rounded-xl"]')]
+      .find(el => el.textContent.includes('Player 2') && el.textContent.includes('more to lethal'));
+    const [, plus] = [...row.querySelectorAll('button')];
+    await click(plus); // Player 2's commander hits Player 1 for 1
+    await click(findButton(document, 'Done'));
+
+    // +1 commander damage → 40 - 1 = 39 life on the target
+    expect(lifeOf(1)).toBe('39');
+  });
+
+  test('Damage tab lists opponents without an inner scroll clip (regression: empty "Add Commander Damage")', async () => {
+    await mount();
+    await click(findButton(document, '2')); // 2-player game, like the report
+    await startGame();
+
+    await click(findButton(cardOf(2), 'Advanced Controls'));
+    await click(findButton(document, 'Damage'));
+
+    // The "Add Commander Damage" rows used to sit inside a nested
+    // max-h-32 scroll region, so on a phone the heading showed with an
+    // empty list under it. The rows must be reachable in the tab's own
+    // scroll container without a smaller nested one.
+    const addHeading = [...document.querySelectorAll('h4')]
+      .find(h => h.textContent.includes('Add Commander Damage'));
+    expect(addHeading).toBeTruthy();
+    const sourceRow = [...addHeading.parentElement.querySelectorAll('div[class*="rounded"]')]
+      .find(d => d.textContent.trim().startsWith('Player 1'));
+    expect(sourceRow).toBeTruthy(); // opponent listed in a 2-player game
+
+    const nestedScroller = addHeading.closest('div[class*="max-h-32"]');
+    expect(nestedScroller).toBeNull(); // no clipped scroll region around it
+
+    const [, addOne] = [...sourceRow.querySelectorAll('button')];
+    await click(addOne);
+    expect(lifeOf(2)).toBe('39'); // damage applied AND life reduced
   });
 
   test('compact mode (6 players) always shows a tappable commander damage chip', async () => {

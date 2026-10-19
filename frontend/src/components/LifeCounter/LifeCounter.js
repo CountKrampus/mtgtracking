@@ -342,8 +342,12 @@ function LifeCounter({ onBack }) {
     const source = playersRef.current.find(p => p.id === sourcePlayerId);
     if (target && source) {
       const currentDamage = target.commanderDamage?.[sourcePlayerId] || 0;
-      const newTotal = currentDamage + amount;
-      addLogEntry(LogCreators.commanderDamage(target.name, source.name, amount, newTotal));
+      // Mirror the reducer's 0-floor clamp so the log can't print a negative
+      // total, and report the life the reducer will land on (commander
+      // damage is real damage — it reduces life too)
+      const newTotal = Math.max(0, currentDamage + amount);
+      const newLife = target.life - (newTotal - currentDamage);
+      addLogEntry(LogCreators.commanderDamage(target.name, source.name, amount, newTotal, newLife));
     }
     if (settingsRef.current.soundEnabled) {
       playSound('damage');

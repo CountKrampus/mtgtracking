@@ -144,8 +144,13 @@ export function gameReducer(state, action) {
           if (p.id === targetPlayerId && !p.isEliminated) {
             const currentDamage = p.commanderDamage?.[sourcePlayerId] || 0;
             const newDamage = Math.max(0, currentDamage + amount);
+            // Commander damage is real damage: it reduces life in addition to
+            // counting toward the 21-from-one-commander loss. Use the clamped
+            // delta so a removal that would go below 0 grants no life back.
+            const lifeDelta = newDamage - currentDamage;
             const updated = {
               ...p,
+              life: p.life - lifeDelta,
               commanderDamage: {
                 ...p.commanderDamage,
                 [sourcePlayerId]: newDamage
@@ -164,11 +169,16 @@ export function gameReducer(state, action) {
         ...state,
         players: players.map(p => {
           if (p.id === targetPlayerId) {
+            const currentDamage = p.commanderDamage?.[sourcePlayerId] || 0;
+            const newDamage = Math.max(0, value);
+            // Setting damage adjusts life by the same delta (see CHANGE above)
+            const lifeDelta = newDamage - currentDamage;
             const updated = {
               ...p,
+              life: p.life - lifeDelta,
               commanderDamage: {
                 ...p.commanderDamage,
-                [sourcePlayerId]: Math.max(0, value)
+                [sourcePlayerId]: newDamage
               }
             };
             return checkElimination(updated, gameFormat);
