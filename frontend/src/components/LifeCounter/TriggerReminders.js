@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Plus, Bell, Volume2, VolumeX, Mic, Trash2, Clock } from 'lucide-react';
 
 // Common trigger presets organized by phase

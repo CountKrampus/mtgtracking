@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, BarChart3, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 import SetMissingCardsModal from './SetMissingCardsModal';

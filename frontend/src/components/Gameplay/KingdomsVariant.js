@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { Crown, Sword, Shield, Users, RotateCcw, Play, Pause, Zap, Heart } from 'lucide-react';
+import {
+  Crown,
+  Users,
+  RotateCcw,
+  Play,
+  Zap,
+  Heart
+} from 'lucide-react';
 
 const KingdomsVariant = () => {
   const [players, setPlayers] = useState([
@@ -12,7 +19,7 @@ const KingdomsVariant = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [currentTurn, setCurrentTurn] = useState(1);
   const [gameLog, setGameLog] = useState([]);
-  const [kingdomCards, setKingdomCards] = useState([
+  const [kingdomCards, ] = useState([
     { id: 1, name: 'Royal Castle', type: 'Fortress', effect: 'King gains +2 life per turn', rarity: 'Rare', role: 'King' },
     { id: 2, name: 'Knight\'s Barracks', type: 'Military', effect: 'Knights gain +1/+1', rarity: 'Uncommon', role: 'Knight' },
     { id: 3, name: 'Bandit\'s Hideout', type: 'Stealth', effect: 'Bandits can steal resources', rarity: 'Uncommon', role: 'Bandit' },
@@ -23,7 +30,6 @@ const KingdomsVariant = () => {
     { id: 8, name: 'Healing Spring', type: 'Support', effect: 'All players heal', rarity: 'Uncommon', role: 'All' }
   ]);
   const [claimedKingdoms, setClaimedKingdoms] = useState({});
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   const roles = [
     { name: 'King', color: '#FFD700', description: 'Leader of the kingdom, receives special benefits', health: 25, abilities: ['+2 life per turn', 'Extra card draw', 'Immunity to certain effects'] },
@@ -182,7 +188,6 @@ const KingdomsVariant = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {players.map(player => {
-              const roleInfo = getRoleInfo(player.role);
               return (
                 <div 
                   key={player.id} 

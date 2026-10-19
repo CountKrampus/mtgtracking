@@ -720,6 +720,9 @@ router.post('/', requireAuth, requirePermission('collection:manage'), activityLo
     if (newCard.userId) {
       const { checkCollectionMilestones } = require('../utils/milestoneAwards');
       checkCollectionMilestones(newCard.userId, Card).catch(() => {});
+      // Non-blocking referral qualification check (counts real cards)
+      const { checkQualification } = require('../utils/referralRewards');
+      checkQualification(newCard.userId, Card).catch(() => {});
     }
     res.status(201).json(newCard);
   } catch (error) {

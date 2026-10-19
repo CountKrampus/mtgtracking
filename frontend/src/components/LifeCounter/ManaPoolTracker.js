@@ -1,5 +1,9 @@
-﻿import React, { useState } from 'react';
-import { Plus, Minus, X, RotateCcw } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  Plus,
+  Minus,
+  RotateCcw
+} from 'lucide-react';
 
 const COLORS = ['W', 'U', 'B', 'R', 'G', 'C']; // White, Blue, Black, Red, Green, Colorless
 const COLOR_NAMES = {

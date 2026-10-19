@@ -84,13 +84,17 @@ async function generateHealthReportForUser(userId, models) {
   const valueChange = computeValueChange(weekAgoSnapshot?.value, latestSnapshot?.value);
 
   const priceWeekAgoByCardId = new Map();
-  for (const card of cards) {
-    const snap = await CardPriceSnapshot.findOne({
-      cardId: card._id,
-      createdAt: { $lte: weekAgo }
-    }).sort({ createdAt: -1 }).lean();
-    if (snap) {
-      priceWeekAgoByCardId.set(card._id.toString(), snap.price);
+  if (cards.length > 0) {
+    // One aggregation instead of one findOne per card: match on this user's
+    // card ids (covered by the { cardId, createdAt } index), sort newest-first,
+    // and keep the latest snapshot at/before weekAgo for each card.
+    const weekAgoSnapshots = await CardPriceSnapshot.aggregate([
+      { $match: { cardId: { $in: cards.map(c => c._id) }, createdAt: { $lte: weekAgo } } },
+      { $sort: { createdAt: -1 } },
+      { $group: { _id: '$cardId', price: { $first: '$price' } } }
+    ]);
+    for (const snap of weekAgoSnapshots) {
+      priceWeekAgoByCardId.set(snap._id.toString(), snap.price);
     }
   }
 

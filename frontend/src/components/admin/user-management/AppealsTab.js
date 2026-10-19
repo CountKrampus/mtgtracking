@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Check, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuthContext } from '../../../contexts/AuthContext';
 import { API_URL } from '../../../config';

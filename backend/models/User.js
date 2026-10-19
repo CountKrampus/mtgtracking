@@ -104,12 +104,33 @@ const userSchema = new mongoose.Schema({
   avatarUrl: {
     type: String,
     default: ''
+  },
+  // Referral tracking: who invited this user, and how many they've invited.
+  // referralCount is a denormalized counter kept in sync by the referral
+  // award path (backend/utils/referralRewards.js) so the Referrals page can
+  // read it without a join.
+  referredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  referralCount: {
+    type: Number,
+    min: 0,
+    default: 0
+  },
+  // Last seen IP, updated on login/registration. Used only to flag referral
+  // self-signups (same-IP similarity) for admin review — never to block.
+  lastSeenIp: {
+    type: String,
+    default: ''
   }
 });
 
 // Indexes (email and username already indexed via unique: true)
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
+userSchema.index({ referredBy: 1 });
 
 // Pre-save middleware to update timestamp
 userSchema.pre('save', function(next) {
@@ -140,7 +161,8 @@ userSchema.methods.toSafeObject = function() {
     reputation: this.reputation,
     badges: this.badges,
     notificationPreferences: this.notificationPreferences,
-    avatarUrl: this.avatarUrl
+    avatarUrl: this.avatarUrl,
+    referralCount: this.referralCount
   };
 };
 

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback } from 'react';
 import { Gavel, Trash2, Plus, Eye, Check, X } from 'lucide-react';
 
 const getMuteLevelColor = (level) => {
@@ -39,7 +39,7 @@ export default function MuteManager({ apiUrl = 'http://localhost:5000/api', isOp
   const [rejectingId, setRejectingId] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
 
-  const fetchMutes = async () => {
+  const fetchMutes = useCallback(async () => {
     setMutesLoading(true);
     try {
       const response = await fetch(`${apiUrl}/admin/mutes`);
@@ -52,9 +52,9 @@ export default function MuteManager({ apiUrl = 'http://localhost:5000/api', isOp
     } finally {
       setMutesLoading(false);
     }
-  };
+  }, [apiUrl]);
 
-  const fetchAppeals = async () => {
+  const fetchAppeals = useCallback(async () => {
     setAppealsLoading(true);
     try {
       const response = await fetch(`${apiUrl}/admin/appeals`);
@@ -67,12 +67,12 @@ export default function MuteManager({ apiUrl = 'http://localhost:5000/api', isOp
     } finally {
       setAppealsLoading(false);
     }
-  };
+  }, [apiUrl]);
 
   useEffect(() => {
     fetchMutes();
     fetchAppeals();
-  }, [apiUrl]);
+  }, [fetchMutes, fetchAppeals]);
 
   const handleUnmute = async (muteUserId) => {
     try {

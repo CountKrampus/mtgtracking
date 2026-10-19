@@ -63,7 +63,7 @@ export default function SpamFilterAdmin({ apiUrl = API_URL }) {
 
     fetchConfig();
     fetchFlaggedPosts();
-  }, [apiUrl]);
+  }, [apiUrl, authFetch]);
 
   const handleSaveConfig = async () => {
     setSaveMessage(null);

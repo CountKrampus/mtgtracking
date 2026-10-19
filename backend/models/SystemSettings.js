@@ -10,7 +10,12 @@ const systemSettingsSchema = new mongoose.Schema({
       'registrationEnabled',
       'defaultUserRole',
       'sessionTimeout',
-      'maxSessionsPerUser'
+      'maxSessionsPerUser',
+      'referralsEnabled',
+      'referralSignupRep',
+      'referralQualificationRep',
+      'referralReferredRep',
+      'referralQualificationThreshold'
     ]
   },
   value: {
@@ -93,6 +98,31 @@ systemSettingsSchema.statics.initializeDefaults = async function() {
       key: 'maxSessionsPerUser',
       value: 10,
       description: 'Maximum number of active sessions per user'
+    },
+    {
+      key: 'referralsEnabled',
+      value: true,
+      description: 'When disabled, the referral program is turned off end-to-end'
+    },
+    {
+      key: 'referralSignupRep',
+      value: 10,
+      description: 'Reputation awarded to the referrer when a referred user signs up'
+    },
+    {
+      key: 'referralQualificationRep',
+      value: 50,
+      description: 'Reputation awarded to the referrer when a referred user activates'
+    },
+    {
+      key: 'referralReferredRep',
+      value: 10,
+      description: 'Reputation awarded to the referred user when they activate'
+    },
+    {
+      key: 'referralQualificationThreshold',
+      value: 20,
+      description: 'Number of cards a referred user must own to count as activated'
     }
   ];
 

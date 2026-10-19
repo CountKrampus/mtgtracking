@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { BrowserRouter, useNavigate, useLocation } from 'react-router-dom';
 import { Search, Plus, Download, RefreshCw, DollarSign, Upload, Camera, Settings, Heart, Layers, Zap, Crown, BarChart3, Users, Home, BookOpen, Trophy, User, MessageSquare } from 'lucide-react';
@@ -296,7 +296,7 @@ function App() {
       { id: 'tool-commanders', label: 'Commander Recommendations', icon: Crown, category: 'Tools', action: () => navigate('/collection?tool=commanderRecs'), feature: 'commanderRecs' },
       { id: 'tool-sets', label: 'Set Completion Tracker', icon: BarChart3, category: 'Tools', action: () => navigate('/collection?tool=setCompletion'), feature: 'setCompletion' },
       { id: 'tool-combos', label: 'Find Combos', icon: Zap, category: 'Tools', action: () => navigate('/collection?tool=comboFinder'), feature: 'comboFinder' },
-      { id: 'tool-camera', label: 'Scan Card with Camera', icon: Camera, category: 'Tools', action: () => navigate('/collection') },
+      { id: 'tool-camera', label: 'Scan Card with Camera', icon: Camera, category: 'Tools', action: () => navigate('/collection?tool=camera') },
       // Learning
       { id: 'learn-rulings', label: 'Card Rulings Browser', icon: BookOpen, category: 'Learning', action: () => navigate('/learn/card-rulings') },
       { id: 'learn-interactions', label: 'Interaction Checker', icon: Zap, category: 'Learning', action: () => navigate('/learn/interaction-checker') },
@@ -353,7 +353,7 @@ function App() {
         onCombos={() => navigate('/collection?tool=comboFinder')}
         onFinance={() => navigate('/collection?tool=finance')}
         onOpenSettings={() => navigate('/settings')}
-        onOpenCamera={() => navigate('/collection')}
+        onOpenCamera={() => navigate('/collection?tool=camera')}
         onCommandPalette={() => setShowCommandPalette(true)}
         fileInputRef={fileInputRef}
         isImporting={isImporting}

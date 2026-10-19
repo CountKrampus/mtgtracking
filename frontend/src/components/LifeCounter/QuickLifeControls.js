@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Minus, RotateCcw } from 'lucide-react';
+import {} from 'lucide-react';
 
 function QuickLifeControls({ 
   currentLife, 

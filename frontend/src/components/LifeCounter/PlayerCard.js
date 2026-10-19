@@ -1,10 +1,19 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Minus, Skull, Droplets, Swords, Crown, Building2, Circle, Zap, Star, Tag, Heart, Activity, Shield, Sword, Settings } from 'lucide-react';
+import React, {
+  useState,
+  useRef
+} from 'react';
+import {
+  Plus,
+  Minus,
+  Skull,
+  Crown,
+  Building2,
+  Circle,
+  Settings
+} from 'lucide-react';
 import CountersPanel from './CountersPanel';
 import PlaneswalkersPanel from './PlaneswalkersPanel';
-import ManaPoolTracker from './ManaPoolTracker';
 import PlayerStatusIndicators from './PlayerStatusIndicators';
-import QuickLifeControls from './QuickLifeControls';
 import AnimatedLifeChange from './AnimatedLifeChange';
 import PlayerAdvancedControls from './PlayerAdvancedControls';
 
@@ -85,9 +94,6 @@ function PlayerCard({
   };
 
   // Get total commander damage taken
-  const getTotalCommanderDamage = () => {
-    return Object.values(player.commanderDamage || {}).reduce((sum, dmg) => sum + dmg, 0);
-  };
 
   return (
     <div ref={playerCardRef} className={getContainerClasses()}>

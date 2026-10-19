@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Wrench, X, Dices, Shuffle, Clock, ScrollText, Swords, Camera } from 'lucide-react';
 import DiceRoller from './DiceRoller';
 import RandomPicker from './RandomPicker';

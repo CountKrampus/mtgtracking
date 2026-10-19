@@ -3,7 +3,7 @@ import { AlertCircle } from 'lucide-react';
 
 export default function DuplicateThreadWarning({ duplicates, onSelect, onContinue }) {
   const [selectedId, setSelectedId] = useState(null);
-  const [reason, setReason] = useState('');
+  const [reason] = useState('');
 
   return (
     <div className="bg-yellow-900 border-l-4 border-yellow-600 p-4 mb-6 rounded">

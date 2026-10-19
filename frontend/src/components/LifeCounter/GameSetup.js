@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Play, Shield, Swords, User, Palette } from 'lucide-react';
 import PlayerProfiles, { PLAYER_COLORS } from './PlayerProfiles';
 import { API_URL } from '../../config';
+import { getAuthHeaders } from '../../utils/auth';
 
 function GameSetup({
   gameFormat,
@@ -50,8 +51,9 @@ function GameSetup({
 
   const fetchDecks = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      // 'authToken' is never written; getAuthHeaders() reads the real key
+      // (mtg_access_token) so the deck list isn't empty in multi-user mode.
+      const headers = getAuthHeaders();
       const response = await fetch(`${API_URL}/decks`, { headers });
       if (response.ok) {
         const data = await response.json();

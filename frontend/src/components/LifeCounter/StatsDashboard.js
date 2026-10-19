@@ -1,5 +1,13 @@
-﻿import React, { useState, useEffect } from 'react';
-import { BarChart3, Trophy, Clock, Users, Percent, X, TrendingUp, Layers } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+  BarChart3,
+  Trophy,
+  Users,
+  Percent,
+  X,
+  TrendingUp,
+  Layers
+} from 'lucide-react';
 import useBackendSync from './hooks/useBackendSync';
 
 function StatsDashboard({ isOpen, onClose }) {
@@ -7,15 +15,15 @@ function StatsDashboard({ isOpen, onClose }) {
   const { fetchStats, loading, error } = useBackendSync();
 
   useEffect(() => {
-    if (isOpen) {
-      loadStats();
-    }
-  }, [isOpen]);
+    if (!isOpen) return undefined;
+    let cancelled = false;
+    (async () => {
+      const data = await fetchStats();
+      if (!cancelled) setStats(data);
+    })();
+    return () => { cancelled = true; };
+  }, [isOpen, fetchStats]);
 
-  const loadStats = async () => {
-    const data = await fetchStats();
-    setStats(data);
-  };
 
   const formatDuration = (seconds) => {
     if (!seconds) return '--';

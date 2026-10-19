@@ -1,5 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Users, Star, Target, Shield, RotateCcw, Play, Pause, MapPin, Zap, Heart, Crown, ShieldOff } from 'lucide-react';
+import React, {
+  useState
+} from 'react';
+import {
+  Users,
+  Star,
+  Target,
+  Shield,
+  RotateCcw,
+  Play,
+  Heart
+} from 'lucide-react';
 
 const StarVariant = () => {
   const [players, setPlayers] = useState([
@@ -12,7 +22,6 @@ const StarVariant = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [currentTurn, setCurrentTurn] = useState(1);
   const [gameLog, setGameLog] = useState([]);
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [showPositionDiagram, setShowPositionDiagram] = useState(true);
 
   const positions = [

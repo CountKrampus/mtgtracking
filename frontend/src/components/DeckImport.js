@@ -277,7 +277,7 @@ function DeckImport({ onBack, onImportComplete }) {
   const [mode, setMode] = useState('new');
   const [importData, setImportData] = useState('');
   const [loading, setLoading] = useState(false);
-  const [validationErrors, setValidationErrors] = useState([]);
+  const [, setValidationErrors] = useState([]);
   const [validationWarnings, setValidationWarnings] = useState([]);
   const [importPreview, setImportPreview] = useState(null); // { deckData, statistics, validation }
   const [importError, setImportError] = useState('');

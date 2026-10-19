@@ -1,4 +1,8 @@
-﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useMemo
+} from 'react';
 import { Upload, Plus, X } from 'lucide-react';
 import DeckShellExtractor from './DeckShellExtractor';
 import DeckShoppingList from './DeckShoppingList';
@@ -17,7 +21,8 @@ function getFolderPath(folders, folderId) {
   let current = folders.find(f => String(f._id) === String(folderId));
   while (current) {
     path.unshift(current);
-    current = folders.find(f => String(f._id) === String(current.parentId));
+    const parentId = current.parentId;
+    current = folders.find(f => String(f._id) === String(parentId));
   }
   return path;
 }
@@ -64,7 +69,7 @@ function FolderTreeNode({ folder, depth, activeFolderId, onSelect, deckCountByFo
 function DeckList({ decks, onViewDeck, onDeleteDeck, onImportClick, onCreateDeck, folders = [], onFolderCreate, onDeckMoveToFolder }) {
   const [newDeckName, setNewDeckName] = useState('');
   const [newDeckFormat, setNewDeckFormat] = useState('commander');
-  const [showSleeveCalc, setShowSleeveCalc] = useState(false);
+  const [, setShowSleeveCalc] = useState(false);
   const [showStaples, setShowStaples] = useState(false);
   const [showShoppingList, setShowShoppingList] = useState(false);
   const [showComparison, setShowComparison] = useState(false);

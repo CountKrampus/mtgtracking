@@ -1,5 +1,11 @@
-﻿import React, { useState, useEffect } from 'react';
-import { History, Trophy, Clock, Users, ChevronRight, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+  History,
+  Trophy,
+  Clock,
+  Users,
+  X
+} from 'lucide-react';
 import useBackendSync from './hooks/useBackendSync';
 
 function GameHistory({ isOpen, onClose }) {
@@ -7,15 +13,15 @@ function GameHistory({ isOpen, onClose }) {
   const { fetchGames, loading, error } = useBackendSync();
 
   useEffect(() => {
-    if (isOpen) {
-      loadGames();
-    }
-  }, [isOpen]);
+    if (!isOpen) return undefined;
+    let cancelled = false;
+    (async () => {
+      const data = await fetchGames(50);
+      if (!cancelled) setGames(data || []);
+    })();
+    return () => { cancelled = true; };
+  }, [isOpen, fetchGames]);
 
-  const loadGames = async () => {
-    const data = await fetchGames(50);
-    setGames(data || []);
-  };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Activity, TrendingUp, AlertTriangle } from 'lucide-react';
 import { useAuthContext } from '../../../contexts/AuthContext';
 import { API_URL } from '../../../config';
@@ -25,9 +25,7 @@ export function PriceSourceHealthTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => { fetchData(); }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -40,8 +38,10 @@ export function PriceSourceHealthTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [authFetch]);
+useEffect(() => { fetchData(); }, [fetchData]);
 
+  
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">

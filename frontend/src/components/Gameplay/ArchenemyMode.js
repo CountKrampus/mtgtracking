@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, {
+  useState
+} from 'react';
 import { Shield, Zap, BookOpen, Plus, Trash2, Edit2, Save, X, Search, RotateCcw, Play, Pause } from 'lucide-react';
 
 const ArchenemyMode = () => {
@@ -30,7 +32,7 @@ const ArchenemyMode = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRarity, setSelectedRarity] = useState('all');
   const [selectedColor, setSelectedColor] = useState('all');
-  const [selectedExpansion, setSelectedExpansion] = useState('all');
+  const [selectedExpansion, ] = useState('all');
   const [showAddForm, setShowAddForm] = useState(false);
   const [gameActive, setGameActive] = useState(false);
   const [archenemyPlayer, setArchenemyPlayer] = useState(null);
@@ -111,23 +113,7 @@ const ArchenemyMode = () => {
     addToGameLog('Archenemy game reset');
   };
 
-  const assignArchenemy = (playerName) => {
-    if (heroPlayers.includes(playerName)) {
-      setHeroPlayers(heroPlayers.filter(name => name !== playerName));
-    }
-    setArchenemyPlayer(playerName);
-    addToGameLog(`${playerName} assigned as Archenemy`);
-  };
 
-  const assignHero = (playerName) => {
-    if (archenemyPlayer === playerName) {
-      setArchenemyPlayer(null);
-    }
-    if (!heroPlayers.includes(playerName)) {
-      setHeroPlayers([...heroPlayers, playerName]);
-      addToGameLog(`${playerName} assigned as Hero`);
-    }
-  };
 
   const removeHero = (playerName) => {
     setHeroPlayers(heroPlayers.filter(name => name !== playerName));

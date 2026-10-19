@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Zap, Heart, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../../config';

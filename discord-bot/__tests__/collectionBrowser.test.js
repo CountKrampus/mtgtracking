@@ -203,7 +203,7 @@ describe('browseCollection', () => {
 
     const result = await browseCollection(interaction, api);
 
-    expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array), ephemeral: true }));
+    expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) }));
     expect(setSelectInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) }));
     expect(cardSelectInteraction.update).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Counterspell'), components: [] }));
     expect(result).toEqual({ status: 'found', card: CARDS[2] });

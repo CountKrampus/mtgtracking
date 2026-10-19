@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, {
+  useState
+} from 'react';
 import { Calendar, TrendingDown, AlertTriangle, Eye, Clock, DollarSign } from 'lucide-react';
 
 const ReprintTracker = () => {
-  const [reprints, setReprints] = useState([
+  const [reprints] = useState([
     {
       id: 1,
       cardName: 'Black Lotus',

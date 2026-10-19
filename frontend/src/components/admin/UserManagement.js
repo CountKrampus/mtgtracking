@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback } from 'react';
 import { Search, UserCog, Shield, Eye, Edit2, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { API_URL } from '../../config';
@@ -11,11 +11,7 @@ export function UserManagement() {
   const [search, setSearch] = useState('');
   const [editingUser, setEditingUser] = useState(null);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await authFetch(`${API_URL}/admin/users?limit=100`);
       const data = await response.json();
@@ -29,8 +25,12 @@ export function UserManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [authFetch]);
+useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
+  
   const updateUser = async (userId, updates) => {
     try {
       const response = await authFetch(`${API_URL}/admin/users/${userId}`, {

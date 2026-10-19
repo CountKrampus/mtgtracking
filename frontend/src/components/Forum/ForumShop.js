@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ShoppingCart, Coins, Check, X, Search, Palette, Shield, Sparkles
 } from 'lucide-react';
@@ -18,23 +18,7 @@ function renderItemIcon(icon) {
   return <span style={{ fontSize: 22, lineHeight: 1 }}>{icon}</span>;
 }
 
-const COSMETICS_CATALOG = [
-  // Title Colors
-  { id: 'titleColor_gold', name: 'Gold Title Color', category: 'titleColor', cost: 500, color: '#FFD700', description: 'Golden color for your forum title', rarity: 'uncommon' },
-  { id: 'titleColor_purple', name: 'Purple Title Color', category: 'titleColor', cost: 300, color: '#9B59B6', description: 'Purple color for your forum title', rarity: 'common' },
-  { id: 'titleColor_red', name: 'Crimson Title Color', category: 'titleColor', cost: 400, color: '#E74C3C', description: 'Crimson color for your forum title', rarity: 'common' },
-  { id: 'titleColor_teal', name: 'Teal Title Color', category: 'titleColor', cost: 350, color: '#1ABC9C', description: 'Teal color for your forum title', rarity: 'common' },
-  { id: 'titleColor_rainbow', name: 'Rainbow Title', category: 'titleColor', cost: 2000, color: 'rainbow', description: 'Animated rainbow color for your title', rarity: 'legendary' },
-  // Avatar Borders
-  { id: 'avatarBorder_gold', name: 'Gold Avatar Border', category: 'avatarBorder', cost: 600, color: '#FFD700', description: 'Gold border around your avatar', rarity: 'uncommon' },
-  { id: 'avatarBorder_silver', name: 'Silver Avatar Border', category: 'avatarBorder', cost: 400, color: '#C0C0C0', description: 'Silver border around your avatar', rarity: 'common' },
-  { id: 'avatarBorder_diamond', name: 'Diamond Avatar Border', category: 'avatarBorder', cost: 2500, color: '#B9F2FF', description: 'Sparkling diamond border', rarity: 'legendary' },
-  { id: 'avatarBorder_fire', name: 'Flame Avatar Border', category: 'avatarBorder', cost: 1500, color: '#FF6B35', description: 'Animated flame border', rarity: 'rare' },
-  // Profile Border Colors
-  { id: 'profileBorderColor_gold', name: 'Gold Profile Border', category: 'profileBorderColor', cost: 700, color: '#FFD700', description: 'Gold border for your profile', rarity: 'uncommon' },
-  { id: 'profileBorderColor_neon', name: 'Neon Profile Border', category: 'profileBorderColor', cost: 1000, color: '#39FF14', description: 'Neon green profile border', rarity: 'rare' },
-  { id: 'profileBorderColor_royal', name: 'Royal Blue Profile Border', category: 'profileBorderColor', cost: 800, color: '#4169E1', description: 'Royal blue profile border', rarity: 'uncommon' },
-];
+
 
 const GROUP_TABS = [
   { id: 'all',         label: 'All',            icon: ShoppingCart },
@@ -100,13 +84,7 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
   const [alert, setAlert] = useState(null); // { type: 'success'|'error', message }
   const [loadingId, setLoadingId] = useState(null);
 
-  useEffect(() => {
-    if (isOpen && user) {
-      fetchShopData();
-    }
-  }, [isOpen, user]);
-
-  const fetchShopData = async () => {
+  const fetchShopData = useCallback(async () => {
     try {
       const token = localStorage.getItem('mtg_access_token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -134,7 +112,13 @@ export default function ForumShop({ apiUrl, user, isOpen, onClose, onEquip }) {
     } catch (error) {
       console.error('Error fetching shop data:', error);
     }
-  };
+  }, [apiUrl]);
+
+  useEffect(() => {
+    if (isOpen && user) {
+      fetchShopData();
+    }
+  }, [isOpen, user, fetchShopData]);
 
   const showAlert = (type, message) => {
     setAlert({ type, message });

@@ -44,6 +44,74 @@ describe('/deck view', () => {
     ]);
   });
 
+  test('shows the full decklist after the summary, grouped by card type with the sideboard last', async () => {
+    const api = {
+      get: jest.fn()
+        .mockResolvedValueOnce({ status: 200, data: [{ _id: 'd1', name: 'My Deck' }] })
+        .mockResolvedValueOnce({
+          status: 200,
+          data: {
+            name: 'My Deck', format: 'commander',
+            commander: { name: 'Krenko, Mob Boss' },
+            statistics: { totalCards: 10 },
+            mainDeck: [
+              { name: 'Sol Ring', quantity: 2, types: ['Artifact'] },
+              { name: 'Goblin Instigator', quantity: 1, types: ['Creature'] },
+              { name: 'Lightning Bolt', quantity: 1, types: ['Instant'] },
+              { name: 'Mountain', quantity: 6, types: ['Land'] }
+            ],
+            sideboard: [{ name: 'Commandeer', quantity: 1, types: ['Instant'] }]
+          }
+        })
+    };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('view', { name: 'My Deck' });
+    // The fixture's decklist runs past one page, so the pager waits for a
+    // button press: simulate the user clicking Next, then timing out.
+    const nextButton = { customId: 'pager:next', update: jest.fn().mockResolvedValue(undefined) };
+    interaction.channel.awaitMessageComponent
+      .mockResolvedValueOnce(nextButton)
+      .mockRejectedValueOnce(new Error('timeout'));
+    await deckCommand.execute(interaction);
+
+    // Second followUp is the decklist; the first is the summary embed.
+    const decklistCall = interaction.followUp.mock.calls[1][0];
+    expect(decklistCall.embeds[0].title).toBe('My Deck — Decklist');
+    const desc = decklistCall.embeds[0].description;
+    expect(desc).toContain('**Commander:** Krenko, Mob Boss');
+    expect(desc).toContain('**__Creatures__**');
+    expect(desc).toContain('Goblin Instigator');
+    expect(desc).toContain('**__Instants__**');
+    expect(desc).toContain('**__Artifacts__**');
+    expect(desc).toContain('2× Sol Ring');
+    expect(desc).toContain('**__Lands__**');
+    expect(desc).toContain('6× Mountain');
+    expect(desc).toContain('**__Sideboard__**');
+    // The last sideboard card overflowed to page 2 — reached via the Next button.
+    expect(nextButton.update).toHaveBeenCalledTimes(1);
+    expect(nextButton.update.mock.calls[0][0].embeds[0].description).toContain('Commandeer');
+    expect(decklistCall.embeds[0].footer.text).toContain('10 cards');
+  });
+
+  test('omits the decklist entirely for a deck with no cards (summary only)', async () => {
+    const api = {
+      get: jest.fn()
+        .mockResolvedValueOnce({ status: 200, data: [{ _id: 'd1', name: 'Empty Deck' }] })
+        .mockResolvedValueOnce({
+          status: 200,
+          data: { name: 'Empty Deck', format: 'commander', statistics: { totalCards: 0 }, mainDeck: [] }
+        })
+    };
+    client.mockReturnValue(api);
+
+    const interaction = mockInteraction('view', { name: 'Empty Deck' });
+    await deckCommand.execute(interaction);
+
+    // Only the summary embed went out — no empty decklist message.
+    expect(interaction.followUp).toHaveBeenCalledTimes(1);
+  });
+
   test('reports no matching deck', async () => {
     const api = { get: jest.fn().mockResolvedValue({ status: 200, data: [] }) };
     client.mockReturnValue(api);

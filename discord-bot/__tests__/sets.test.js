@@ -24,7 +24,7 @@ function mockInteraction() {
 describe('/sets', () => {
   afterEach(() => jest.clearAllMocks());
 
-  test('shows the top 10 sets by completion percentage', async () => {
+  test('renders each set as a progress line with a bar and X/Y (pct%)', async () => {
     const api = {
       get: jest.fn().mockResolvedValue({
         status: 200,
@@ -39,8 +39,11 @@ describe('/sets', () => {
     expect(api.get).toHaveBeenCalledWith('/sets/completion');
     const embed = interaction.followUp.mock.calls[0][0].embeds[0];
     expect(embed.title).toBe('Set Completion');
-    expect(embed.fields[0].value).toContain('2/10');
-    expect(embed.fields[0].value).toContain('20%');
+    expect(embed.description).toContain('LEB');
+    expect(embed.description).toContain('2/10');
+    expect(embed.description).toContain('20%');
+    expect(embed.description).toContain('█'); // progress bar
+    expect(embed.footer.text).toContain('1 set tracked');
   });
 
   test('replies not-linked on 401', async () => {

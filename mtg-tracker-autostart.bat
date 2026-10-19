@@ -56,4 +56,30 @@ if errorlevel 1 (
     echo Frontend already running on port 3000.
 )
 
+REM --- Discord bot (no port: it's an outbound WebSocket client to Discord,
+REM     so the netstat guard used above can't detect it. Guard on the process
+REM     instead - wmic matches any running node whose command line contains
+REM     "discord-bot\src". If wmic is unavailable the guard fails OPEN (the
+REM     bot is (re)started), which is the same behaviour as the other
+REM     components when their probe can't run.)
+REM     Requires discord-bot\.env to be filled in (see .env.example):
+REM       DISCORD_BOT_TOKEN, DISCORD_CLIENT_ID, DISCORD_GUILD_ID,
+REM       DISCORD_BOT_SERVICE_TOKEN (must match backend\.env), API_BASE_URL
+REM     Needs MULTI_USER_ENABLED=true in backend\.env - linking is rejected
+REM     in single-user mode.)
+timeout /t 2 /nobreak >nul
+wmic process where "name='node.exe'" get CommandLine 2>nul | findstr /I /C:"discord-bot\src" >nul 2>&1
+if errorlevel 1 (
+    echo Starting Discord bot...
+    cd /d "%PROJECT_DIR%\discord-bot"
+    REM Run npm directly rather than via "start": "start ... cmd /c" silently
+    REM fails to launch this bot in some shells (verified - it writes no log
+    REM and leaves no process, while the plain cmd /c chain runs fine). The
+    REM window stays open for the bot's lifetime, which is fine for a boot
+    REM script.
+    cmd /c "npm start > discord-bot-boot.log 2>&1"
+) else (
+    echo Discord bot already running.
+)
+
 exit

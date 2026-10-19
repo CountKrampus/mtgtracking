@@ -1,5 +1,17 @@
-﻿import React, { useState, useEffect } from 'react';
-import { User, Mail, Lock, Save, AlertCircle, CheckCircle, LogOut, Trash2, Shield, Camera, Link2, Unlink, Copy } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+  Lock,
+  Save,
+  AlertCircle,
+  CheckCircle,
+  LogOut,
+  Trash2,
+  Shield,
+  Camera,
+  Link2,
+  Unlink,
+  Copy
+} from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { SessionManager } from './SessionManager';
 import { API_URL } from '../../config';

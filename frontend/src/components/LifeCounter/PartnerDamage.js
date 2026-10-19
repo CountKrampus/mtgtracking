@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { X, Plus, Minus, Users } from 'lucide-react';
 
 /**

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {} from 'react';
 import { WifiOff } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
 import LoginForm from './LoginForm';

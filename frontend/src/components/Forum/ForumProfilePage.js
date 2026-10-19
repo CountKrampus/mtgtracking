@@ -1,7 +1,7 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback } from 'react';
 import { Trophy, Coins, Zap, MessageSquare, Share2 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
-import { API_URL } from '../../config';
+import {} from '../../config';
 import UserAvatar from '../avatars/UserAvatar';
 
 function renderBadgeIcon(iconStr) {
@@ -37,11 +37,7 @@ export default function ForumProfilePage({ user, apiUrl }) {
   const [commanderSearch, setCommanderSearch] = useState('');
   const [commanderPreview, setCommanderPreview] = useState(null);
 
-  useEffect(() => {
-    fetchProfileData();
-  }, [user]);
-
-  const fetchProfileData = async () => {
+  const fetchProfileData = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('mtg_access_token');
@@ -76,8 +72,12 @@ export default function ForumProfilePage({ user, apiUrl }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl, user]);
+useEffect(() => {
+    fetchProfileData();
+  }, [user, fetchProfileData]);
 
+  
   const saveMemberTitle = async () => {
     const token = localStorage.getItem('mtg_access_token');
     await fetch(`${apiUrl}/forum/level/member-title`, {

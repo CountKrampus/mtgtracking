@@ -154,6 +154,7 @@ app.use('/api/health-report', require('./routes/healthReport'));
 app.use('/api/trades', require('./routes/trades'));
 app.use('/api/webhooks', require('./routes/webhooks'));
 app.use('/api/challenges', require('./routes/challenges'));
+app.use('/api/referrals', require('./routes/referrals'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/cards', require('./routes/cards'));
 app.use('/api/cards', require('./routes/priceFlags'));
@@ -357,7 +358,14 @@ app.get('/api/scryfall/search', async (req, res) => {
       manaCost: cardData.mana_cost || '',
       scryfallId: cardData.id,
       imageUrl: cachedImageUrl,
-      oracleText: cardData.oracle_text || '',
+      oracleText: cardData.oracle_text ||
+        (cardData.card_faces || []).map(f => f.oracle_text).filter(Boolean).join('\n//\n'),
+      // Face metadata so the scan flow can offer both faces of DFC /
+      // adventure / split cards (frontend CameraModal + CollectionView)
+      layout: cardData.layout || 'normal',
+      cardFaces: (cardData.card_faces || [])
+        .filter(f => f && f.name)
+        .map(f => ({ name: f.name })),
       prices: {
         usd: priceData.usd,
         cad: priceData.cad,
@@ -469,6 +477,31 @@ app.get('/api/export/csv', requireAuth, activityLoggers.exportCsv, async (req, r
 });
 
 // Get collection statistics
+// Recursive readdir over the image cache (37k+ files) is too slow to run on
+// every /api/stats cache miss, so memoize the count for 5 minutes. Images are
+// only ever added/removed by slow user actions, so staleness is invisible.
+let cachedImageCountValue = null;
+let cachedImageCountAt = 0;
+const IMAGE_COUNT_TTL_MS = 5 * 60 * 1000;
+function getCachedImageCount() {
+  const now = Date.now();
+  if (cachedImageCountValue !== null && now - cachedImageCountAt < IMAGE_COUNT_TTL_MS) {
+    return cachedImageCountValue;
+  }
+  let count = 0;
+  try {
+    if (fs.existsSync(CACHE_DIR)) {
+      const files = fs.readdirSync(CACHE_DIR, { recursive: true });
+      count = files.filter(f => f.endsWith('.jpg') || f.endsWith('.png')).length;
+    }
+  } catch {
+    // ignore errors counting cache — return last known value
+  }
+  cachedImageCountValue = count;
+  cachedImageCountAt = now;
+  return count;
+}
+
 app.get('/api/stats', requireAuth, async (req, res) => {
   try {
     const userId = getUserId(req);
@@ -480,7 +513,9 @@ app.get('/api/stats', requireAuth, async (req, res) => {
     }
 
     const cardQuery = buildUserQuery({}, req);
-    const cards = await Card.find(cardQuery);
+    // lean(): stats only reads fields — skipping mongoose doc hydration
+    // noticeably cuts time-to-first-byte on large collections.
+    const cards = await Card.find(cardQuery).lean();
 
     // Get locations and tags with ignorePrice set (scoped to user)
     const locationQuery = buildUserQuery({ ignorePrice: true }, req);
@@ -546,16 +581,9 @@ app.get('/api/stats', requireAuth, async (req, res) => {
       }
     });
 
-    // Count cached images
-    let cachedImageCount = 0;
-    try {
-      if (fs.existsSync(CACHE_DIR)) {
-        const files = fs.readdirSync(CACHE_DIR, { recursive: true });
-        cachedImageCount = files.filter(f => f.endsWith('.jpg') || f.endsWith('.png')).length;
-      }
-    } catch {
-      // ignore errors counting cache
-    }
+    // Count cached images (module-level cache: readdirSync over a 37k+ file
+    // cache dir is too expensive to repeat on every stats cache miss)
+    let cachedImageCount = getCachedImageCount();
 
     // Save daily value snapshot (once per day per user)
     try {
@@ -647,13 +675,24 @@ app.get('/api/stats/value-history', requireAuth, async (req, res) => {
 // Create an on-demand collection value snapshot
 app.post('/api/value-snapshot', requireAuth, async (req, res) => {
   try {
-    const cards = await Card.find(buildUserQuery({}, req));
-    const totalValue = cards.reduce((sum, card) => sum + ((card.price || 0) * card.quantity), 0);
+    // Single aggregation instead of loading every card document just to sum
+    const [agg] = await Card.aggregate([
+      { $match: buildUserQuery({}, req) },
+      {
+        $group: {
+          _id: null,
+          totalValue: { $sum: { $multiply: [{ $ifNull: ['$price', 0] }, { $ifNull: ['$quantity', 1] }] } },
+          cardCount: { $sum: 1 }
+        }
+      }
+    ]);
+    const totalValue = agg ? agg.totalValue : 0;
+    const cardCount = agg ? agg.cardCount : 0;
 
     const snapshot = await CardValueSnapshot.create({
       userId: getUserId(req),
       totalValue,
-      cardCount: cards.length
+      cardCount
     });
 
     res.json(snapshot);
@@ -687,20 +726,37 @@ app.get('/api/stats/price-changes', requireAuth, async (req, res) => {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const cardQuery = buildUserQuery({}, req);
-    const cards = await Card.find(cardQuery).select('_id name scryfallId price');
+    const cards = await Card.find(cardQuery).select('_id name scryfallId price').lean();
+
+    // One aggregation instead of one query per card (the old loop issued a
+    // CardPriceSnapshot.find for EVERY card — thousands of round trips on each
+    // Dashboard load for a large collection). Match on the user's card ids so
+    // the { cardId, createdAt } index covers the whole pipeline, sort once,
+    // then take the first/last snapshot per card in the same $group.
+    const perCardSnapshots = cards.length === 0 ? [] : await CardPriceSnapshot.aggregate([
+      { $match: { cardId: { $in: cards.map(c => c._id) }, createdAt: { $gte: thirtyDaysAgo } } },
+      { $sort: { createdAt: 1 } },
+      {
+        $group: {
+          _id: '$cardId',
+          oldPrice: { $first: '$price' },
+          newPrice: { $last: '$price' },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const cardById = new Map(cards.map(c => [c._id.toString(), c]));
 
     const results = [];
-    for (const card of cards) {
-      // Get earliest and latest snapshot in last 30 days
-      const snapshots = await CardPriceSnapshot.find({
-        cardId: card._id,
-        createdAt: { $gte: thirtyDaysAgo }
-      }).sort({ createdAt: 1 });
+    for (const snap of perCardSnapshots) {
+      if (snap.count < 2) continue;
 
-      if (snapshots.length < 2) continue;
+      const card = cardById.get(snap._id.toString());
+      if (!card) continue;
 
-      const oldPrice = snapshots[0].price;
-      const newPrice = snapshots[snapshots.length - 1].price;
+      const oldPrice = snap.oldPrice;
+      const newPrice = snap.newPrice;
       if (oldPrice <= 0) continue;
 
       const changeAbs = newPrice - oldPrice;
@@ -717,7 +773,10 @@ app.get('/api/stats/price-changes', requireAuth, async (req, res) => {
       });
     }
 
-    results.sort((a, b) => b.changePct - a.changePct);
+    // Deterministic ranking: among identical changePct values (common with
+    // tied percentage moves), order by name so the endpoint returns the same
+    // top-5 on every call instead of depending on DB emission order.
+    results.sort((a, b) => b.changePct - a.changePct || a.name.localeCompare(b.name));
     const gainers = results.filter(r => r.changePct > 0).slice(0, 5);
     const losers = results.filter(r => r.changePct < 0).slice(-5).reverse();
 
@@ -754,15 +813,10 @@ app.get('/api/finance', requireAuth, async (req, res) => {
 // Get all tags (combines tags from cards with Tag model metadata)
 app.get('/api/tags', requireAuth, async (req, res) => {
   try {
-    // Get all unique tags from cards (scoped to user)
+    // Get all unique tags from cards (scoped to user) — distinct() instead of
+    // hydrating every card document just to read its tags array
     const cardQuery = buildUserQuery({}, req);
-    const cards = await Card.find(cardQuery);
-    const cardTags = new Set();
-    cards.forEach(card => {
-      if (card.tags) {
-        card.tags.forEach(tag => cardTags.add(tag));
-      }
-    });
+    const cardTags = await Card.distinct('tags', cardQuery);
 
     // Get all Tag documents (for metadata like ignorePrice) scoped to user
     const tagQuery = buildUserQuery({}, req);
@@ -1191,37 +1245,52 @@ app.post('/api/wishlist/update-all-prices', requireAuth, requireEditor, async (r
 // ============================================
 
 // Cache for image hashes
+const IMAGE_HASH_VERSION = 2; // v1: 64-bit aHash (too weak — see below)
 let imageHashCache = {
-  hashes: new Map(), // scryfallId -> { hash, cardName }
+  hashes: new Map(), // scryfallId -> { aHash, dHash, cardName, setCode }
   lastBuild: 0,
-  isBuilding: false
+  isBuilding: false,
+  version: IMAGE_HASH_VERSION
 };
 
-// Compute perceptual hash (average hash) of an image
+// Perceptual hash ensemble: 8x8 average hash + 9x8 difference hash
+// (128 bits total). A bare aHash is useless for MTG cards — they all share
+// one layout (name bar / art / text box), so v1 matched ANY indexed card
+// to ANY photo at ~77-85% "confidence" (e.g. a Final Fantasy Saga photo
+// "matched" Elephant Grass at 80%). Calibration with real card images:
+// same-card distance <= 5, cross-card >= 27 — a wide, reliable gap.
 async function computeImageHash(imageBuffer) {
   if (!sharp) {
     throw new Error('Sharp not available');
   }
 
   try {
-    // Resize to 8x8 grayscale
-    const { data } = await sharp(imageBuffer)
+    const { data: aData } = await sharp(imageBuffer)
       .resize(8, 8, { fit: 'fill' })
       .grayscale()
       .raw()
       .toBuffer({ resolveWithObject: true });
+    const { data: dData } = await sharp(imageBuffer)
+      .resize(9, 8, { fit: 'fill' })
+      .grayscale()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
 
-    // Calculate average pixel value
-    const pixels = [...data];
-    const avg = pixels.reduce((sum, val) => sum + val, 0) / pixels.length;
-
-    // Generate hash: 1 if pixel > average, 0 otherwise
-    let hash = '';
-    for (const pixel of pixels) {
-      hash += pixel > avg ? '1' : '0';
+    const avg = [...aData].reduce((sum, val) => sum + val, 0) / aData.length;
+    let aHash = '';
+    for (const pixel of aData) {
+      aHash += pixel > avg ? '1' : '0';
     }
 
-    return hash;
+    // dHash: brightness of each pixel vs its right neighbour
+    let dHash = '';
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        dHash += dData[row * 9 + col] > dData[row * 9 + col + 1] ? '1' : '0';
+      }
+    }
+
+    return { aHash, dHash };
   } catch (error) {
     console.error('Error computing hash:', error);
     throw error;
@@ -1266,7 +1335,8 @@ async function buildHashIndex() {
           const imageBuffer = fs.readFileSync(imagePath);
           const hash = await computeImageHash(imageBuffer);
           imageHashCache.hashes.set(card.scryfallId, {
-            hash,
+            aHash: hash.aHash,
+            dHash: hash.dHash,
             cardName: card.name,
             setCode: card.setCode
           });
@@ -1302,10 +1372,23 @@ app.post('/api/image-match', requireAuth, express.json({ limit: '10mb' }), async
       return res.status(400).json({ message: 'No image data provided' });
     }
 
-    // Build index if empty or stale (older than 1 hour)
+    // Stale hash format (v1 stored a single 64-bit hash) is unusable —
+    // clear it and rebuild lazily below.
+    if (imageHashCache.version !== IMAGE_HASH_VERSION) {
+      imageHashCache.hashes.clear();
+      imageHashCache.version = IMAGE_HASH_VERSION;
+      imageHashCache.lastBuild = 0;
+    }
+
+    // Build index if empty or stale (older than 1 hour) — fire-and-forget:
+    // awaiting here blocked the first scan of the session for the entire
+    // build (frontend timed out at 10s and image match silently never
+    // worked). Respond immediately; matches stay empty until the index is
+    // ready, and the isBuilding guard prevents overlapping builds.
     if (imageHashCache.hashes.size === 0 ||
         Date.now() - imageHashCache.lastBuild > 3600000) {
-      await buildHashIndex();
+      buildHashIndex().catch(err =>
+        console.error('Image hash index build failed:', err.message));
     }
 
     // Convert base64 to buffer
@@ -1315,19 +1398,24 @@ app.post('/api/image-match', requireAuth, express.json({ limit: '10mb' }), async
     // Compute hash of uploaded image
     const uploadedHash = await computeImageHash(imageBuffer);
 
-    // Find matches by Hamming distance
+    // Find matches by combined Hamming distance (128 bits: aHash + dHash).
+    // Calibration: same card <= 5, different cards >= 27 (measured on real
+    // Scryfall images + phone photos), so 24 keeps every cross-card pair
+    // out while leaving headroom for photo variance on a true match.
     const matches = [];
-    const THRESHOLD = 15; // Max hamming distance for a match (out of 64 bits)
+    const THRESHOLD = 24;
 
     for (const [scryfallId, data] of imageHashCache.hashes) {
-      const distance = hammingDistance(uploadedHash, data.hash);
+      if (!data.aHash) continue; // leftover v1 entry
+      const distance = hammingDistance(uploadedHash.aHash, data.aHash) +
+        hammingDistance(uploadedHash.dHash, data.dHash);
       if (distance <= THRESHOLD) {
         matches.push({
           scryfallId,
           cardName: data.cardName,
           setCode: data.setCode,
           distance,
-          confidence: Math.round((1 - distance / 64) * 100)
+          confidence: Math.round((1 - distance / 128) * 100)
         });
       }
     }
@@ -1338,7 +1426,8 @@ app.post('/api/image-match', requireAuth, express.json({ limit: '10mb' }), async
     res.json({
       matches: matches.slice(0, 5), // Return top 5 matches
       hashesIndexed: imageHashCache.hashes.size,
-      uploadedHash: uploadedHash.substring(0, 16) + '...' // First 16 bits for debugging
+      indexBuilding: !!imageHashCache.isBuilding,
+      uploadedHash: uploadedHash.aHash.substring(0, 16) + '...' // For debugging
     });
 
   } catch (error) {
@@ -1373,6 +1462,64 @@ app.get('/api/image-match/status', requireAuth, (req, res) => {
     lastBuild: imageHashCache.lastBuild,
     isBuilding: imageHashCache.isBuilding
   });
+});
+
+// Compare a scanned card photo against ARBITRARY cards fetched live from
+// Scryfall. The cached-image index only knows cards already in the
+// collection, so a scan of a card you don't own yet could never be
+// art-verified. The caller (scan flow) supplies a short list of candidate
+// names from the rules-text search; we hash each candidate's official art
+// and return distances. Same calibration as /api/image-match: same card
+// <= 5, different cards >= 27 (128 bits: aHash + dHash).
+app.post('/api/image-match/candidates', requireAuth, express.json({ limit: '10mb' }), async (req, res) => {
+  if (!sharp) {
+    return res.status(503).json({ message: 'Image matching not available (sharp not installed)', matches: [] });
+  }
+
+  try {
+    const { imageData, names } = req.body;
+    if (!imageData || !Array.isArray(names) || names.length === 0) {
+      return res.status(400).json({ message: 'imageData and names (1-10) required', matches: [] });
+    }
+    if (names.length > 10) {
+      return res.status(400).json({ message: 'Too many candidates (max 10)', matches: [] });
+    }
+
+    const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
+    const uploadedHash = await computeImageHash(Buffer.from(base64Data, 'base64'));
+
+    const matches = [];
+    for (const name of names) {
+      try {
+        await new Promise((r) => setTimeout(r, 110)); // Scryfall rate limit
+        const { data: card } = await axios.get(
+          `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(name)}`,
+          { timeout: 6000 }
+        );
+        const url =
+          (card.image_uris && (card.image_uris.small || card.image_uris.normal)) ||
+          (card.card_faces && card.card_faces[0].image_uris && card.card_faces[0].image_uris.small);
+        if (!url) continue;
+        const imgRes = await axios.get(url, { responseType: 'arraybuffer', timeout: 8000 });
+        const official = await computeImageHash(Buffer.from(imgRes.data));
+        const distance = hammingDistance(uploadedHash.aHash, official.aHash) +
+          hammingDistance(uploadedHash.dHash, official.dHash);
+        matches.push({
+          name: card.name,
+          distance,
+          confidence: Math.round((1 - distance / 128) * 100)
+        });
+      } catch (e) {
+        matches.push({ name, distance: Infinity, confidence: 0, error: e.message });
+      }
+    }
+
+    matches.sort((a, b) => a.distance - b.distance);
+    res.json({ matches });
+  } catch (error) {
+    console.error('Candidate image match error:', error);
+    res.status(500).json({ message: 'Candidate image match failed', error: error.message, matches: [] });
+  }
 });
 
 // ============================================

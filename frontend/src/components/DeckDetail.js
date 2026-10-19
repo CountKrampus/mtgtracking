@@ -1,9 +1,10 @@
-﻿import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import axios from 'axios';
 import ManaCurveChart from './ManaCurveChart';
 import DeckAnalysis from './DeckAnalysis';
 import DeckHandSimulator from './DeckHandSimulator';
 import { API_URL } from '../config';
+import { getAuthHeaders } from '../utils/auth';
 import { useWishlist } from '../contexts/WishlistContext';
 
 // ── CMC helpers ───────────────────────────────────────────────────────────────
@@ -474,9 +475,8 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
   const handleSyncTags = async () => {
     setSyncTagsStatus('loading');
     try {
-      const token = localStorage.getItem('authToken');
       const res = await axios.post(`${API_URL}/decks/${deck._id}/sync-tags`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders()
       });
       setSyncTagsStatus(res.data);
       setTimeout(() => setSyncTagsStatus(null), 4000);
@@ -496,12 +496,14 @@ function DeckDetail({ deck, ownership, validation, loading, onBack, onRefresh, o
   useEffect(() => {
     setShareCode(deck.shareCode || null);
     setIsPublic(deck.isPublic || false);
-  }, [deck._id]);
+  }, [deck._id, deck.shareCode, deck.isPublic]);
 
   useEffect(() => {
     if (!deck._id) return;
-    const token = localStorage.getItem('authToken');
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    // Real token key (mtg_access_token) via utils/auth — reading 'authToken'
+    // (never written) sent no valid Authorization header and 401'd these
+    // fetches in multi-user mode, leaving stats/history/changelog blank.
+    const headers = getAuthHeaders();
 
     fetch(`${API_URL}/decks/${deck._id}/stats`, { headers })
       .then(r => r.ok ? r.json() : null)

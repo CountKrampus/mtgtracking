@@ -39,7 +39,8 @@ describe('/trades browse', () => {
     await tradesCommand.execute(interaction);
 
     expect(api.get).toHaveBeenCalledWith('/trades', { params: {} });
-    const embed = interaction.reply.mock.calls[0][0].embeds[0];
+    const embed = interaction.followUp.mock.calls[0][0].embeds[0];
+    expect(interaction.deferReply).toHaveBeenCalledWith();
     expect(embed.description).toContain('Sol Ring');
     expect(embed.description).toContain('alice');
   });
@@ -61,7 +62,7 @@ describe('/trades browse', () => {
     const interaction = mockInteraction('browse', {});
     await tradesCommand.execute(interaction);
 
-    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('No active listings') }));
+    expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('No active listings') }));
   });
 });
 
@@ -76,18 +77,19 @@ describe('/trades my-listings', () => {
     await tradesCommand.execute(interaction);
 
     expect(api.get).toHaveBeenCalledWith('/trades/my-listings');
-    const embed = interaction.reply.mock.calls[0][0].embeds[0];
+    const embed = interaction.followUp.mock.calls[0][0].embeds[0];
     expect(embed.description).toContain('Sol Ring');
   });
 
-  test('replies not-linked on 401', async () => {
+  test('reports not-linked via editReply on 401 (already deferred)', async () => {
     const api = { get: jest.fn().mockResolvedValue({ status: 401 }) };
     client.mockReturnValue(api);
 
     const interaction = mockInteraction('my-listings', {});
     await tradesCommand.execute(interaction);
 
-    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('link') }));
+    expect(interaction.deferReply).toHaveBeenCalledWith();
+    expect(interaction.editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('link') }));
   });
 });
 
@@ -382,7 +384,7 @@ describe('/trades received', () => {
     await tradesCommand.execute(interaction);
 
     expect(api.get).toHaveBeenCalledWith('/trades/offers/received');
-    const call = interaction.reply.mock.calls[0][0];
+    const call = interaction.followUp.mock.calls[0][0];
     expect(call.embeds[0].description).toContain('bob');
     expect(call.embeds[0].description).toContain('• Mana Crypt x1');
     const button = call.components[0].components[0].data;
@@ -396,17 +398,18 @@ describe('/trades received', () => {
     const interaction = mockInteraction('received', {});
     await tradesCommand.execute(interaction);
 
-    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('No pending') }));
+    expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('No pending') }));
   });
 
-  test('replies not-linked on 401', async () => {
+  test('reports not-linked via editReply on 401 (already deferred)', async () => {
     const api = { get: jest.fn().mockResolvedValue({ status: 401 }) };
     client.mockReturnValue(api);
 
     const interaction = mockInteraction('received', {});
     await tradesCommand.execute(interaction);
 
-    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('link') }));
+    expect(interaction.deferReply).toHaveBeenCalledWith();
+    expect(interaction.editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('link') }));
   });
 });
 
@@ -425,12 +428,15 @@ describe('/trades sent', () => {
     const interaction = mockInteraction('sent', {});
     await tradesCommand.execute(interaction);
 
-    const call = interaction.reply.mock.calls[0][0];
-    expect(call.embeds[0].description).toContain('carol');
-    expect(call.components).toBeUndefined();
+    expect(interaction.deferReply).toHaveBeenCalledWith();
+    const allCalls = interaction.followUp.mock.calls.map(c => c[0]);
+    // First followUp is the embed itself; later ones carry Cancel buttons.
+    const embedCall = allCalls.find(p => p.embeds);
+    expect(embedCall.embeds[0].description).toContain('carol');
+    expect(embedCall.components).toBeUndefined();
 
-    const followUpCall = interaction.followUp.mock.calls[0][0];
-    const button = followUpCall.components[0].components[0].data;
+    const buttonCall = allCalls.find(p => p.components);
+    const button = buttonCall.components[0].components[0].data;
     expect(button.custom_id).toBe('trade-cancel:offer-2');
   });
 
@@ -446,7 +452,10 @@ describe('/trades sent', () => {
     const interaction = mockInteraction('sent', {});
     await tradesCommand.execute(interaction);
 
-    expect(interaction.followUp).not.toHaveBeenCalled();
+    // The embed itself is posted as a followUp now — only that one message,
+    // with no components attached.
+    expect(interaction.followUp).toHaveBeenCalledTimes(1);
+    expect(interaction.followUp.mock.calls[0][0].components).toBeUndefined();
   });
 
   test('gives a non-first pending offer its own Cancel button', async () => {
@@ -470,14 +479,15 @@ describe('/trades sent', () => {
     expect(allButtons.some(b => b.custom_id === 'trade-cancel:offer-b')).toBe(true);
   });
 
-  test('replies not-linked on 401', async () => {
+  test('reports not-linked via editReply on 401 (already deferred)', async () => {
     const api = { get: jest.fn().mockResolvedValue({ status: 401 }) };
     client.mockReturnValue(api);
 
     const interaction = mockInteraction('sent', {});
     await tradesCommand.execute(interaction);
 
-    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('link') }));
+    expect(interaction.deferReply).toHaveBeenCalledWith();
+    expect(interaction.editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('link') }));
   });
 });
 

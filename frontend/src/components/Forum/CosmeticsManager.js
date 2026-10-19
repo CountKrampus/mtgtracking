@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useState, useEffect, useRef, useCallback } from 'react';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { API_URL } from '../../config';
@@ -269,7 +269,6 @@ const COLOR_CATEGORIES = ['titleColor', 'profileBorderColor', 'flairIcon', 'post
 const BORDER_ANIMATION_CATEGORIES = ['avatarBorder', 'titleColor'];
 const CSS_GRADIENT_CATEGORIES = ['profileBackground', 'profileTheme', 'postFrame', 'nameplateBackground'];
 const BANNER_CATEGORIES = ['profileBanner'];
-const UNLOCK_CATEGORIES = ['memberTitle', 'signature', 'achievementShowcase', 'favoriteCardsShowcase', 'deckShowcase', 'collectionStatsWidget', 'wishlistPreview', 'aboutMe', 'personalLinks'];
 
 const defaultForm = {
   name: '', category: 'titleColor', cost: 0, description: '',
@@ -310,11 +309,7 @@ export default function CosmeticsManager() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
 
-  useEffect(() => {
-    fetchCosmetics();
-  }, []);
-
-  const fetchCosmetics = async () => {
+  const fetchCosmetics = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -333,8 +328,12 @@ export default function CosmeticsManager() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [authFetch]);
+useEffect(() => {
+    fetchCosmetics();
+  }, [fetchCosmetics]);
 
+  
   // Derived visibility flags based on selected category
   const showColorPicker = COLOR_CATEGORIES.includes(formData.category) || BORDER_ANIMATION_CATEGORIES.includes(formData.category);
   const showRainbowToggle = formData.category === 'titleColor';

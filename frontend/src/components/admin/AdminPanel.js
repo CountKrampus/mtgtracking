@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Users, Activity, Server, Database, MessageSquare, Settings, ChevronDown, ChevronRight, Shield, AlertTriangle, BarChart2, FileText, Archive, Trash2, Award, Trophy, Flag } from 'lucide-react';
+import { X, Users, Activity, Server, Database, MessageSquare, Settings, ChevronDown, ChevronRight, Shield, AlertTriangle, BarChart2, FileText, Archive, Trash2, Award, Trophy, Flag, UserPlus } from 'lucide-react';
 
 import UsersTab from './user-management/UsersTab';
 import RoleManagement from './RoleManagement';
@@ -20,6 +20,7 @@ import ContentModerationTab from './community/ContentModerationTab';
 import FeedbackTab from './community/FeedbackTab';
 import BadgesTab from './community/BadgesTab';
 import ChallengesTab from './community/ChallengesTab';
+import ReferralsTab from './community/ReferralsTab';
 import DeckSpotlightTab from './community/DeckSpotlightTab';
 
 import ActivityLogTab from './system/ActivityLogTab';
@@ -67,7 +68,8 @@ const groups = [
       { id: 'feedback', label: 'Feedback', icon: MessageSquare, requiresRole: 'support' },
       { id: 'badges', label: 'Badges', icon: Award, requiresRole: 'admin' },
       { id: 'challenges', label: 'Challenges', icon: Trophy, requiresRole: 'admin' },
-      { id: 'deck-spotlight', label: 'Deck Spotlight', icon: Award, requiresRole: 'admin' }
+      { id: 'deck-spotlight', label: 'Deck Spotlight', icon: Award, requiresRole: 'admin' },
+      { id: 'referrals', label: 'Referrals', icon: UserPlus, requiresPermission: 'referrals:manage' }
     ]
   },
   {
@@ -115,6 +117,7 @@ function renderContent(activeTab) {
     case 'badges':     return <BadgesTab />;
     case 'challenges': return <ChallengesTab />;
     case 'deck-spotlight': return <DeckSpotlightTab />;
+    case 'referrals':     return <ReferralsTab />;
     case 'activity':     return <ActivityLogTab />;
     case 'settings':     return <SettingsTab />;
     case 'sessions':     return <SessionsTab />;
@@ -158,7 +161,7 @@ export function AdminPanel({ onClose, user }) {
     if (allVisibleTabs.length > 0 && !allVisibleTabs.find(t => t.id === activeTab)) {
       setActiveTab(allVisibleTabs[0].id);
     }
-  }, [user]);
+  }, [user, activeTab]);
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">

@@ -1,5 +1,10 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { AlertTriangle, Search, X, Plus, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  AlertTriangle,
+  Search,
+  X,
+  Plus
+} from 'lucide-react';
 import { useAuthContext } from '../../../contexts/AuthContext';
 import { API_URL } from '../../../config';
 

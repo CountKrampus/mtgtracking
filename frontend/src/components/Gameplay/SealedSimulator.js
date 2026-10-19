@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Plus, Shuffle, Play, RotateCcw, Download, Upload, Search, Filter, Trophy, Zap, Star, Users, Pause, Volume2, VolumeX, Gamepad2, Heart, RefreshCw } from 'lucide-react';
+import {
+  Package,
+  Play,
+  RotateCcw,
+  Search,
+  Zap,
+  Star,
+  Pause
+} from 'lucide-react';
 
 const SealedSimulator = () => {
-  const [sets, setSets] = useState([
+  const [sets] = useState([
     { id: 'lea', name: 'Alpha', releaseDate: '1993-08-05', cardCount: 295, type: 'Core Set' },
     { id: 'leb', name: 'Beta', releaseDate: '1993-10-04', cardCount: 302, type: 'Core Set' },
     { id: '2ed', name: 'Unlimited', releaseDate: '1993-12-14', cardCount: 302, type: 'Core Set' },

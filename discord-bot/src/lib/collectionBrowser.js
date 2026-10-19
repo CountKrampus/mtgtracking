@@ -126,7 +126,6 @@ async function browseCollection(interaction, api) {
   await interaction.followUp({
     content: 'Browse your collection — filter by set/color/type, then pick a card to list:',
     components: initial.rows,
-    ephemeral: true
   });
 
   while (true) {

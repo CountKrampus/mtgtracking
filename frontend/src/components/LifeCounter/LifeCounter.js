@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ArrowLeft, RotateCcw, Clock, Undo2, Redo2, ChevronDown, ChevronUp, Sparkles,
          Wrench, Settings, History, BarChart3, Share2, Users, Trophy, Maximize, Bell } from 'lucide-react';
 import GameSetup from './GameSetup';
@@ -115,7 +115,6 @@ function LifeCounter({ onBack }) {
     turnNumber,
     stormCount,
     currentPhase,
-    nextTurn,
     previousTurn,
     setCurrentPlayer,
     incrementStorm,
@@ -508,7 +507,7 @@ function LifeCounter({ onBack }) {
 
     if (settings.soundEnabled) playSound('success');
     setShowEndGameModal(false);
-  }, [players, gameFormat, turnNumber, gameLog, gameStartTime, saveGame, addLogEntry, settings.soundEnabled, playSound]);
+  }, [players, gameFormat, turnNumber, gameLog, gameStartTime, saveGame, addLogEntry, settings.soundEnabled, playSound, playerNames]);
 
   // Handle partner damage change
   const handlePartnerDamageChange = useCallback((targetPlayerId, sourcePlayerId, partnerId, amount) => {

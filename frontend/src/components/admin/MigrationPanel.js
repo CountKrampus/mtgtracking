@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback } from 'react';
 import { Database, AlertTriangle, CheckCircle, ArrowRight } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { API_URL } from '../../config';
@@ -11,11 +11,7 @@ export function MigrationPanel() {
   const [result, setResult] = useState(null);
   const [health, setHealth] = useState(null);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [usersRes, healthRes] = await Promise.all([
         authFetch(`${API_URL}/admin/users?limit=100`),
@@ -36,8 +32,12 @@ export function MigrationPanel() {
     } catch (err) {
       console.error('Failed to fetch data:', err);
     }
-  };
+  }, [user, authFetch]);
+useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
+  
   const runMigration = async () => {
     if (!targetUser) {
       alert('Please select a target user');

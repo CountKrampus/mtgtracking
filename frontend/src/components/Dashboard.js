@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Upload, RefreshCw, BookOpen, Star, Layers, TrendingUp, TrendingDown } from 'lucide-react';
 import { API_URL } from '../config';
+import { getAuthHeaders } from '../utils/auth';
 import AchievementsGrid from './AchievementsGrid';
 
 // Reusable horizontal bar component
@@ -177,8 +178,10 @@ const Dashboard = ({
   const [plSort, setPLSort] = useState('gain');
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const headers = { Authorization: `Bearer ${token}` };
+    // getAuthHeaders reads the real token key (mtg_access_token); reading
+    // 'authToken' (never written) sent "Bearer null" and silently 401'd every
+    // panel on this dashboard in multi-user mode.
+    const headers = getAuthHeaders();
 
     fetch(`${API_URL}/stats/value-history`, { headers })
       .then(r => r.ok ? r.json() : [])

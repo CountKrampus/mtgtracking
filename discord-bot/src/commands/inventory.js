@@ -4,18 +4,18 @@ const { replyNotLinked } = require('../lib/notLinked');
 module.exports = {
   name: 'inventory',
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply();
 
     const api = client(interaction.user.id);
     const res = await api.get('/locations/stats');
     if (res.status === 401) return replyNotLinked(interaction);
     if (res.status !== 200) {
-      return interaction.followUp({ content: `❌ Something went wrong (${res.status}).`, ephemeral: true });
+      return interaction.followUp({ content: `❌ Something went wrong (${res.status}).` });
     }
 
     const locations = res.data;
     if (!locations.length) {
-      return interaction.followUp({ content: 'You have no storage locations set up yet.', ephemeral: true });
+      return interaction.followUp({ content: 'You have no storage locations set up yet.' });
     }
 
     const lines = locations.map(loc => {
@@ -41,7 +41,6 @@ module.exports = {
         color: 0x14b8a6,
         footer: { text: '⚠️ = over capacity  ⚡ = nearly full' },
       }],
-      ephemeral: true,
     });
   }
 };

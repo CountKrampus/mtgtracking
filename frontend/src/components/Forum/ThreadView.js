@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Trash2, History, Lock, Unlock, RefreshCw, X, Flag, Pin, PinOff, Bookmark } from 'lucide-react';
+import {
+  Edit2,
+  Trash2,
+  History,
+  Lock,
+  Unlock,
+  RefreshCw,
+  Flag,
+  Pin,
+  PinOff,
+  Bookmark
+} from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import PostComposer from './PostComposer';
 import PostEditHistory from './PostEditHistory';
@@ -564,26 +575,6 @@ export default function ThreadView({ threadId, apiUrl, user, onBack, onThreadDel
     }
   };
 
-  const handleTogglePin = async () => {
-    try {
-      const token = localStorage.getItem('mtg_access_token');
-      const response = await fetch(`${apiUrl}/forum/threads/${threadId}/pin`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({})
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setThread(data.thread);
-      } else {
-        const data = await response.json();
-        alert(data.message || 'Failed to pin/unpin thread');
-      }
-    } catch (error) {
-      alert('Failed to pin/unpin thread');
-    }
-  };
 
   const handleDeletePost = async (postId) => {
     if (!window.confirm('Are you sure you want to delete this post?')) {

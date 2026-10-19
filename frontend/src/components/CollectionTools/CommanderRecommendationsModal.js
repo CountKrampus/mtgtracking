@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { X, Crown, Search, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../../config';

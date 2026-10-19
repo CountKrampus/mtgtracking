@@ -1,14 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Bell, X, Eye, Trash2 } from 'lucide-react';
+import {
+  Bell,
+  Eye,
+  Trash2
+} from 'lucide-react';
 
 export default function NotificationBell({ apiUrl, user, openPanel, setOpenPanel }) {
   const buttonRef = useRef(null);
   const [panelStyle, setPanelStyle] = useState({});
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(false);
 
   const isOpen = openPanel === 'notifications';
   const navigate = useNavigate();
@@ -23,7 +26,7 @@ export default function NotificationBell({ apiUrl, user, openPanel, setOpenPanel
     price_flag_resolved: '🏳️'
   };
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!user) return;
     try {
       const response = await fetch(`${apiUrl}/notifications`, {
@@ -37,7 +40,7 @@ export default function NotificationBell({ apiUrl, user, openPanel, setOpenPanel
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
-  };
+  }, [apiUrl, user]);
 
   // Calculate panel position when opened
   useEffect(() => {
@@ -68,7 +71,7 @@ export default function NotificationBell({ apiUrl, user, openPanel, setOpenPanel
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, [fetchNotifications]);
 
   const handleMarkAsRead = async (notificationId) => {
     try {

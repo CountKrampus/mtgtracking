@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import axios from 'axios';
 import { useToast } from './ToastContext';
 import { useCardCollection } from './CardCollectionContext';
@@ -43,21 +43,36 @@ export function WishlistProvider({ children }) {
     }
   };
 
-  const handleWishlistNameChange = async (value) => {
+  // Debounced autocomplete (see CollectionView's handleCardNameChange): one
+  // request per pause in typing instead of one per keystroke, plus a seq guard
+  // so an in-flight older response can't clobber newer results.
+  const wishlistAutocompleteDebounceRef = useRef(null);
+  const wishlistAutocompleteSeqRef = useRef(0);
+
+  const handleWishlistNameChange = (value) => {
     setWishlistFormData(prev => ({...prev, name: value}));
 
-    if (value.length >= 2) {
-      setShowWishlistAutocomplete(true);
-      try {
-        const response = await axios.get(`${API_URL}/scryfall/autocomplete?q=${value}`);
-        setWishlistAutocompleteResults(response.data);
-      } catch (error) {
-        console.error('Error searching Scryfall:', error);
-      }
-    } else {
+    clearTimeout(wishlistAutocompleteDebounceRef.current);
+    const seq = ++wishlistAutocompleteSeqRef.current;
+
+    if (value.length < 2) {
       setShowWishlistAutocomplete(false);
       setWishlistAutocompleteResults([]);
+      return;
     }
+
+    setShowWishlistAutocomplete(true);
+    wishlistAutocompleteDebounceRef.current = setTimeout(async () => {
+      try {
+        const response = await axios.get(`${API_URL}/scryfall/autocomplete?q=${encodeURIComponent(value)}`);
+        if (seq !== wishlistAutocompleteSeqRef.current) return; // stale response
+        setWishlistAutocompleteResults(response.data);
+      } catch (error) {
+        if (seq === wishlistAutocompleteSeqRef.current) {
+          console.error('Error searching Scryfall:', error);
+        }
+      }
+    }, 300);
   };
 
   const selectWishlistAutocompleteCard = async (cardName) => {

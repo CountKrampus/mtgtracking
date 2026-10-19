@@ -1,8 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { Dice6, Globe, Shuffle, Play, RotateCcw, Users, Zap, Star, Crown, Map } from 'lucide-react';
+import React, {
+  useState
+} from 'react';
+import {
+  Dice6,
+  Globe,
+  Play,
+  RotateCcw,
+  Users,
+  Zap
+} from 'lucide-react';
 
 const PlanechaseMode = () => {
-  const [planes, setPlanes] = useState([
+  const [planes] = useState([
     { id: 1, name: "Agrithea, Farmstead of Heroes", plane: "Agrithea", effect: "Players can't gain life.", chaos: false },
     { id: 2, name: "Akiro's Heaven", plane: "Akiro's Heaven", effect: "Players can't lose the game.", chaos: false },
     { id: 3, name: "Anarchist's Paradise", plane: "Anarchist's Paradise", effect: "Players can't play artifacts.", chaos: false },
@@ -137,14 +146,6 @@ const PlanechaseMode = () => {
     addToGameLog("Planechase game ended.");
   };
 
-  const resetGame = () => {
-    setGameActive(false);
-    setCurrentPlane(null);
-    setUsedPlanes([]);
-    setPlayers(players.map(p => ({ ...p, planarDiceRolled: false })));
-    setGameLog([]);
-    addToGameLog("Game reset to initial state.");
-  };
 
   const togglePlayerActive = (playerId) => {
     setPlayers(players.map(p => 

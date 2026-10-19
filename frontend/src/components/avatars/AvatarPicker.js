@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { X, Upload } from 'lucide-react';
 import { AVATAR_PRESETS } from './presets';
 import UserAvatar from './UserAvatar';

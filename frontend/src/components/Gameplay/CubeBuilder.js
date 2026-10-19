@@ -1,5 +1,19 @@
-﻿import React, { useState, useEffect } from 'react';
-import { Package, Plus, Trash2, Edit2, Save, X, Search, Filter, Download, Upload, Shuffle, Play, RotateCcw, Users, Zap, Star, Trophy, Layers, Target, PackagePlus, PackageCheck } from 'lucide-react';
+import React, {
+  useState
+} from 'react';
+import {
+  Package,
+  Plus,
+  Trash2,
+  Edit2,
+  X,
+  Search,
+  Download,
+  Upload,
+  Shuffle,
+  Star,
+  Trophy
+} from 'lucide-react';
 
 const CubeBuilder = () => {
   const [cubes, setCubes] = useState([
@@ -50,11 +64,8 @@ const CubeBuilder = () => {
   const [filterRarity, setFilterRarity] = useState('all');
   const [filterType, setFilterType] = useState('all');
   const [activeTab, setActiveTab] = useState('cubes');
-  const [numBoosters, setNumBoosters] = useState(6);
-  const [deck, setDeck] = useState([]);
-  const [sideboard, setSideboard] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [gameLog, setGameLog] = useState([]);
+  const [, setGameLog] = useState([]);
 
   const mockCards = [
     { id: 101, name: 'Lightning Bolt', set: 'LEA', cmc: 1, type: 'Instant', color: 'Red', rarity: 'Common', power: null, toughness: null },
@@ -175,20 +186,7 @@ const CubeBuilder = () => {
     }
   };
 
-  const addToDeck = (card) => {
-    if (deck.length < 40) { // Minimum cube deck size
-      setDeck([...deck, card]);
-      addToGameLog(`Added ${card.name} to deck`);
-    }
-  };
 
-  const removeFromDeck = (cardId) => {
-    const card = deck.find(c => c.id === cardId);
-    if (card) {
-      setDeck(deck.filter(c => c.id !== cardId));
-      addToGameLog(`Removed ${card?.name} from deck`);
-    }
-  };
 
   const startDraft = (cubeId) => {
     const cube = cubes.find(c => c.id === cubeId);

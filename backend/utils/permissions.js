@@ -148,6 +148,9 @@ const PERMISSIONS_CATALOG = {
   'System': [
     { key: 'system:settings:manage', label: 'Manage system settings & maintenance mode' }
   ],
+  'Referrals': [
+    { key: 'referrals:manage', label: 'Review, flag, and reject referrals' }
+  ],
   'Collection & Decks': [
     { key: 'collection:manage', label: 'Add/edit/delete own collection cards' },
     { key: 'collection:view', label: 'View own collection (read-only)' },

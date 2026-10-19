@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Share2, Copy, Check, Link2, X, Download } from 'lucide-react';
 import useBackendSync from './hooks/useBackendSync';
 

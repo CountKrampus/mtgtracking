@@ -34,11 +34,10 @@ describe('/achievements', () => {
     const interaction = mockInteraction();
     await achievementsCommand.execute(interaction);
 
-    expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+    expect(interaction.deferReply).toHaveBeenCalledWith();
     expect(api.get).toHaveBeenCalledWith('/achievements');
 
     const call = interaction.followUp.mock.calls[0][0];
-    expect(call.ephemeral).toBe(true);
     const embed = call.embeds[0];
     expect(embed.title).toBe('Achievements (2/3)');
     expect(embed.description).toContain('🎴 **First Card**');
@@ -46,7 +45,7 @@ describe('/achievements', () => {
     expect(embed.description).not.toContain('Big Spender');
   });
 
-  test('replies with a plain ephemeral message when none are earned', async () => {
+  test('replies with a plain message when none are earned', async () => {
     const api = {
       get: jest.fn().mockResolvedValue({
         status: 200,
@@ -61,7 +60,7 @@ describe('/achievements', () => {
     await achievementsCommand.execute(interaction);
 
     expect(interaction.followUp).toHaveBeenCalledWith(
-      expect.objectContaining({ content: expect.stringContaining("haven't earned any achievements yet"), ephemeral: true })
+      expect.objectContaining({ content: expect.stringContaining("haven't earned any achievements yet") })
     );
     const call = interaction.followUp.mock.calls[0][0];
     expect(call.embeds).toBeUndefined();
@@ -87,7 +86,7 @@ describe('/achievements', () => {
     await achievementsCommand.execute(interaction);
 
     expect(interaction.followUp).toHaveBeenCalledWith(
-      expect.objectContaining({ content: expect.stringContaining('500'), ephemeral: true })
+      expect.objectContaining({ content: expect.stringContaining('500') })
     );
   });
 });

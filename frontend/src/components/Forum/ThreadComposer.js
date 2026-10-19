@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Loader } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../../config';

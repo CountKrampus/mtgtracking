@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import ForumCategoriesTab from './ForumCategoriesTab';
 import SpamFilterAdmin from './SpamFilterAdmin';
@@ -18,7 +18,7 @@ export default function ForumAdminPanel({ isOpen, onClose }) {
     if (isOpen && !loadedTabs[activeTab]) {
       setLoadedTabs(prev => ({ ...prev, [activeTab]: true }));
     }
-  }, [isOpen, activeTab]); // loadedTabs intentionally omitted: reading it inside the effect is correct via closure, including it would cause a re-render loop
+  }, [isOpen, activeTab, loadedTabs]); // loadedTabs is safe here: the guard means the effect stops after marking the tab loaded
 
   if (!isOpen) return null;
 

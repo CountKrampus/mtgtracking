@@ -41,7 +41,9 @@ const commands = [
       .addStringOption(o => o.setName('name').setDescription('Card name').setRequired(true)))
     .addSubcommand(sub => sub.setName('remove').setDescription('Remove a card from your wishlist')
       .addStringOption(o => o.setName('name').setDescription('Card name').setRequired(true)))
-    .addSubcommand(sub => sub.setName('deals').setDescription('Show wishlist items at or below your target price')),
+    .addSubcommand(sub => sub.setName('deals').setDescription('Show wishlist items at or below your target price'))
+    .addSubcommand(sub => sub.setName('acquire').setDescription('Move a wishlist card into your collection')
+      .addStringOption(o => o.setName('name').setDescription('Card name').setRequired(true))),
 
   new SlashCommandBuilder().setName('decks').setDescription('List your decks'),
 
@@ -105,6 +107,17 @@ const commands = [
   new SlashCommandBuilder().setName('search').setDescription('Search your collection by card name or tag')
     .addStringOption(o => o.setName('query').setDescription('Search term').setRequired(true)),
 
+  new SlashCommandBuilder().setName('rulings').setDescription('Official rulings for a card (no linking required)')
+    .addStringOption(o => o.setName('card').setDescription('Card name').setRequired(true)),
+
+  new SlashCommandBuilder().setName('value').setDescription('Show your collection value over time')
+    .addIntegerOption(o => o.setName('days').setDescription('How many days back (default 30, max 365)').setMinValue(1).setMaxValue(365)),
+
+  new SlashCommandBuilder().setName('movers').setDescription('Top price gainers and losers in your collection (30 days)'),
+
+  new SlashCommandBuilder().setName('combo').setDescription('Find infinite combos involving a card (Commander Spellbook)')
+    .addStringOption(o => o.setName('card').setDescription('Card name').setRequired(true)),
+
   new SlashCommandBuilder().setName('inventory').setDescription('Show card count and value per storage location'),
 
   new SlashCommandBuilder().setName('trades').setDescription('Trading commands')
@@ -127,13 +140,26 @@ const commands = [
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
 
+// DISCORD_GUILD_ID may hold several guild IDs separated by commas, so the
+// bot's commands work in every server it has been added to.
+const guildIds = String(process.env.DISCORD_GUILD_ID || '')
+  .split(',')
+  .map(id => id.trim())
+  .filter(Boolean);
+
 (async () => {
+  if (guildIds.length === 0) {
+    console.error('DISCORD_GUILD_ID is not set — nothing to register to.');
+    process.exit(1);
+  }
   try {
-    await rest.put(
-      Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, process.env.DISCORD_GUILD_ID),
-      { body: commands }
-    );
-    console.log(`Registered ${commands.length} slash commands to guild ${process.env.DISCORD_GUILD_ID}.`);
+    for (const guildId of guildIds) {
+      await rest.put(
+        Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, guildId),
+        { body: commands }
+      );
+      console.log(`Registered ${commands.length} slash commands to guild ${guildId}.`);
+    }
   } catch (error) {
     console.error('Failed to register commands:', error);
     process.exit(1);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Users, Database, Activity, Settings, AlertTriangle } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { API_URL } from '../../config';
@@ -10,11 +10,7 @@ export function SystemHealth() {
   const [error, setError] = useState(null);
   const [maintenanceLoading, setMaintenanceLoading] = useState(false);
 
-  useEffect(() => {
-    fetchHealth();
-  }, []);
-
-  const fetchHealth = async () => {
+  const fetchHealth = useCallback(async () => {
     setLoading(true);
     try {
       const response = await authFetch(`${API_URL}/admin/health`);
@@ -30,8 +26,12 @@ export function SystemHealth() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [authFetch]);
+useEffect(() => {
+    fetchHealth();
+  }, [fetchHealth]);
 
+  
   const toggleMaintenance = async () => {
     setMaintenanceLoading(true);
     try {

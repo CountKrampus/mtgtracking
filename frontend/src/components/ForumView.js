@@ -17,7 +17,7 @@ export default function ForumView() {
   const { user: authUser } = useAuthContext() || {};
   const navigate = useNavigate();
 
-  const [forumCategories, setForumCategories] = useState([]);
+  const [, setForumCategories] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState(() =>
     localStorage.getItem('forumSelectedCategory') || null
   );
@@ -38,7 +38,7 @@ export default function ForumView() {
   const [showSpamFilterAdmin, setShowSpamFilterAdmin] = useState(false);
   const [showMuteManager, setShowMuteManager] = useState(false);
   const [selectedForumProfileUsername, setSelectedForumProfileUsername] = useState(null);
-  const [loadingForumCategories, setLoadingForumCategories] = useState(false);
+  const [, setLoadingForumCategories] = useState(false);
   const [showForumShop, setShowForumShop] = useState(false);
   // forumProfileView: 'none' | 'own' | 'other'
   const [forumProfileView, setForumProfileView] = useState('none');

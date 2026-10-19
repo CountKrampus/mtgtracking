@@ -1,4 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, {
+  useState,
+  useCallback
+} from 'react';
 import { X, Bell, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 
 // Toast types with their styling
@@ -81,6 +84,10 @@ function Toast({ toasts, removeToast }) {
 export function useToast() {
   const [toasts, setToasts] = useState([]);
 
+  const removeToast = useCallback((id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
   const addToast = useCallback((toast) => {
     const id = Date.now() + Math.random();
     const newToast = {
@@ -100,11 +107,8 @@ export function useToast() {
     }
 
     return id;
-  }, []);
+  }, [removeToast]);
 
-  const removeToast = useCallback((id) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
-  }, []);
 
   const clearToasts = useCallback(() => {
     setToasts([]);

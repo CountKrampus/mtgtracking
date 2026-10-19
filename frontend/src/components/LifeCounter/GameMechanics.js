@@ -1,5 +1,13 @@
 import React from 'react';
-import { Crown, Sparkles, Sun, Moon, Circle, Building2, X, Heart } from 'lucide-react';
+import {
+  Crown,
+  Sparkles,
+  Sun,
+  Moon,
+  Circle,
+  Building2,
+  Heart
+} from 'lucide-react';
 
 // Ring tempts you abilities
 const RING_ABILITIES = [

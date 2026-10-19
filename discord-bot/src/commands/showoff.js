@@ -14,12 +14,12 @@ module.exports = {
       const res = await api.get(`/cards?sortBy=price&sortOrder=desc&limit=${count}`);
       if (res.status === 401) return replyNotLinked(interaction);
       if (res.status !== 200) {
-        return interaction.followUp({ content: `❌ Something went wrong (${res.status}).`, ephemeral: true });
+        return interaction.followUp({ content: `❌ Something went wrong (${res.status}).` });
       }
 
       const cards = res.data.cards || [];
       if (cards.length === 0) {
-        return interaction.followUp({ content: 'No cards in your collection yet.', ephemeral: true });
+        return interaction.followUp({ content: 'No cards in your collection yet.' });
       }
 
       const description = cards
@@ -27,7 +27,7 @@ module.exports = {
         .join('\n');
 
       return interaction.followUp({
-        embeds: [{ title: `💎 Top ${cards.length} Most Valuable Cards`, description }],
+        embeds: [{ title: `💎 Top ${cards.length} Most Valuable Cards`, description, color: 0xf59e0b }],
       });
     }
 
@@ -36,16 +36,16 @@ module.exports = {
       const listRes = await api.get('/decks');
       if (listRes.status === 401) return replyNotLinked(interaction);
       if (listRes.status !== 200) {
-        return interaction.followUp({ content: `❌ Something went wrong (${listRes.status}).`, ephemeral: true });
+        return interaction.followUp({ content: `❌ Something went wrong (${listRes.status}).` });
       }
       const match = listRes.data.find(d => d.name.toLowerCase() === name.toLowerCase());
       if (!match) {
-        return interaction.followUp({ content: `❌ No deck named "${name}".`, ephemeral: true });
+        return interaction.followUp({ content: `❌ No deck named "${name}".` });
       }
 
       const deckRes = await api.get(`/decks/${match._id}`);
       if (deckRes.status !== 200) {
-        return interaction.followUp({ content: `❌ Something went wrong (${deckRes.status}).`, ephemeral: true });
+        return interaction.followUp({ content: `❌ Something went wrong (${deckRes.status}).` });
       }
 
       const deck = deckRes.data;
@@ -58,6 +58,7 @@ module.exports = {
 
       const embed = {
         title: `🃏 ${deck.name}`,
+        color: 0xf59e0b,
         thumbnail: thumbnailUrl ? { url: thumbnailUrl } : undefined,
         fields: [
           { name: 'Commander', value: deck.commander?.name || 'None', inline: true },
@@ -71,6 +72,6 @@ module.exports = {
       return interaction.followUp({ embeds: [embed] });
     }
 
-    return interaction.followUp({ content: 'Unknown subcommand.', ephemeral: true });
+    return interaction.followUp({ content: 'Unknown subcommand.' });
   }
 };

@@ -1,4 +1,8 @@
-import React, { createContext, useContext, useEffect, useCallback, useMemo } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useMemo
+} from 'react';
 import { useAuth } from '../hooks/useAuth';
 
 const AuthContext = createContext(null);
@@ -73,7 +77,7 @@ export function useAuthContext() {
 
 // HOC for protecting routes
 export function withAuth(Component, options = {}) {
-  const { requiredRole = null, redirectTo = '/login' } = options;
+  const { requiredRole = null } = options;
 
   return function AuthenticatedComponent(props) {
     const { isAuthenticated, isLoading, user, isMultiUserEnabled } = useAuthContext();

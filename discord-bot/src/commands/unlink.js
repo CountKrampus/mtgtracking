@@ -5,15 +5,19 @@ const { replyNotLinked } = require('../lib/notLinked');
 module.exports = {
   name: 'unlink',
   async execute(interaction) {
+    // Defer before the backend round-trip (replyNotLinked below detects the
+    // deferral and uses editReply).
+    await interaction.deferReply();
+
     const api = client(interaction.user.id);
     const res = await api.delete('/discord/link');
 
     if (res.status === 200) {
-      return interaction.reply({ content: '✅ Unlinked your MTG Tracker account.', ephemeral: true });
+      return interaction.followUp({ content: '✅ Unlinked your MTG Tracker account.' });
     }
     if (res.status === 401) {
       return replyNotLinked(interaction);
     }
-    return interaction.reply({ content: `❌ Something went wrong (${res.status}).`, ephemeral: true });
+    return interaction.followUp({ content: `❌ Something went wrong (${res.status}).` });
   }
 };

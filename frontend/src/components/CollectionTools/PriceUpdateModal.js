@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 
 export default function PriceUpdateModal({ isOpen, onClose, updateAllPrices }) {

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback, useDeferredValue, Suspense } from 'react';
 import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -250,9 +250,14 @@ function CollectionView({
     // once more with tool now absent, so it self-terminates without looping.
     const tool = searchParams.get('tool');
     if (!tool) return;
-    const validTools = ['priceUpdate', 'commanderRecs', 'setCompletion', 'comboFinder', 'finance'];
-    if (validTools.includes(tool)) {
-      setActiveTool(tool);
+    if (tool === 'camera') {
+      // Q2: Sidebar / command palette "Scan Card" opens the camera directly
+      setShowCameraModal(true);
+    } else {
+      const validTools = ['priceUpdate', 'commanderRecs', 'setCompletion', 'comboFinder', 'finance'];
+      if (validTools.includes(tool)) {
+        setActiveTool(tool);
+      }
     }
     // Strip 'tool' even when it's not a recognized value, so a mistyped or
     // stale query param doesn't linger in the URL forever.
@@ -279,11 +284,11 @@ function CollectionView({
   const { user: currentUser } = useAuthContext() || {};
 
   const {
-    cards, loading, setLoading, editingId, setEditingId, fetchCards,
-    handleSubmit, handleDelete, updateCardPrice, updateAllPrices, updateAllOracleText,
+    cards, setLoading, editingId, setEditingId, fetchCards,
+    handleSubmit, handleDelete, updateCardPrice, updateAllPrices,
     handleAddTag, handleRemoveTag, handleCardHover, handlePriceCellEnter, handlePriceCellLeave,
-    handleBulkImport, hoveredCard, setHoveredCard, hoveredCardPriceHistory,
-    setHoveredCardPriceHistory, detailCard, setDetailCard,
+    hoveredCard, setHoveredCard, hoveredCardPriceHistory,
+    setHoveredCardPriceHistory, setDetailCard,
     isShowingCachedCards, cacheAge,
   } = useCardCollection();
   const { locations, locationStats, availableTags, fetchAvailableTags } = useLocationTag();
@@ -320,6 +325,17 @@ function CollectionView({
   const [showTagInput, setShowTagInput] = useState(null);
   const [newTag, setNewTag] = useState('');
   const [showCameraModal, setShowCameraModal] = useState(false);
+  // Bulk scan: rows queued by the camera modal, reviewed in a table before
+  // anything is saved (the confirm step, Q4)
+  const [scanBatch, setScanBatch] = useState([]);
+  const [batchSaving, setBatchSaving] = useState(false);
+  const [batchProgress, setBatchProgress] = useState(null);
+  // Last single-scan result: offers other destinations (Q9) and other faces (Q10)
+  const [scanResult, setScanResult] = useState(null);
+  const [showDeckPicker, setShowDeckPicker] = useState(false);
+  const [deckPickerList, setDeckPickerList] = useState(null); // null = loading
+  // Q7: condition/foil/location of the last NEW card entry, reused as defaults
+  const [lastEntryDefaults, setLastEntryDefaults] = useState(null);
   const [showDuplicateCleanup, setShowDuplicateCleanup] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
   const [formData, setFormData] = useState({
@@ -419,16 +435,36 @@ function CollectionView({
     return Array.from(locs).sort();
   }, [cards, locations]);
 
-  const handleCardNameChange = async (value) => {
+  // Debounced Scryfall autocomplete: without this, every keystroke fired an
+  // API request, which both lagged the input and burned the backend's strict
+  // /api/scryfall rate limit (30/min) while typing a card name. The seq ref
+  // drops stale responses so an older request can't overwrite newer results.
+  const autocompleteDebounceRef = useRef(null);
+  const autocompleteSeqRef = useRef(0);
+
+  const handleCardNameChange = (value) => {
     setFormData({ ...formData, name: value });
     if (manualEntry) { setShowAutocomplete(false); return; }
-    if (value.length >= 2) {
-      setShowAutocomplete(true);
+
+    clearTimeout(autocompleteDebounceRef.current);
+    const seq = ++autocompleteSeqRef.current;
+
+    if (value.length < 2) {
+      setShowAutocomplete(false);
+      setAutocompleteResults([]);
+      return;
+    }
+
+    setShowAutocomplete(true);
+    autocompleteDebounceRef.current = setTimeout(async () => {
       try {
-        const response = await axios.get(`${API_URL}/scryfall/autocomplete?q=${value}`);
+        const response = await axios.get(`${API_URL}/scryfall/autocomplete?q=${encodeURIComponent(value)}`);
+        if (seq !== autocompleteSeqRef.current) return; // stale response
         setAutocompleteResults(response.data);
-      } catch (error) { console.error('Error searching Scryfall:', error); }
-    } else { setShowAutocomplete(false); setAutocompleteResults([]); }
+      } catch (error) {
+        if (seq === autocompleteSeqRef.current) console.error('Error searching Scryfall:', error);
+      }
+    }, 300);
   };
 
   const selectAutocompleteCard = async (cardName) => {
@@ -446,9 +482,12 @@ function CollectionView({
       });
       setTypesInputValue(cardData.types ? cardData.types.join(', ') : '');
       setTagsInputValue(''); setShowAutocomplete(false); setAutocompleteResults([]);
+      // Returned so callers (scan flow) get layout/cardFaces + full data
+      return cardData;
     } catch (error) {
       console.error('Error fetching card details:', error);
       addToast('Card not found on Scryfall', 'error');
+      return null;
     } finally { setLoading(false); }
   };
 
@@ -460,27 +499,195 @@ function CollectionView({
   const handleOpenCamera = () => setShowCameraModal(true);
   const handleCameraClose = () => setShowCameraModal(false);
 
-  const handleCardExtracted = async (extractedData) => {
-    setShowCameraModal(false);
+  // Q3: after a scan fills the form, make sure the user actually sees it —
+  // force the Add form open, scroll to it, and focus Save.
+  const focusSaveButton = () => {
+    setShowAddForm(true);
+    setTimeout(() => {
+      const el = document.getElementById('add-card-save-btn');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus({ preventScroll: true });
+      }
+    }, 200);
+  };
+
+  const handleCardExtracted = async (extractedData, meta = { batch: false, close: true }) => {
     if (!extractedData.name) {
+      if (meta.close) setShowCameraModal(false);
       addToast('No card name extracted. Please try again or use manual entry.', 'warning');
       return;
     }
+
+    // Bulk scan path: queue the row for the review table instead of the
+    // single-card form — the review table IS the confirm step (Q4).
+    if (meta.batch) {
+      setScanBatch(prev => [...prev, {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: extractedData.name,
+        confidence: extractedData.confidence || 0,
+        quantity: 1,
+        condition: settings.defaultCondition,
+      }]);
+      if (meta.close) setShowCameraModal(false);
+      return;
+    }
+
+    setShowCameraModal(false);
+    setScanResult(null);
+
     if (offlineMode) {
+      // Q8: fill everything possible without internet — full data from the
+      // local collection if we already own this card, else the local image,
+      // else name-only (original behavior).
+      const local = (cards || []).find(
+        c => c.name.toLowerCase() === extractedData.name.toLowerCase()
+      );
+      if (local) {
+        setFormData({
+          ...formData, name: local.name, set: local.set || '', setCode: local.setCode || '',
+          collectorNumber: local.collectorNumber || '', rarity: local.rarity || '',
+          colors: local.colors || [], types: local.types || [], manaCost: local.manaCost || '',
+          scryfallId: local.scryfallId || '', imageUrl: local.imageUrl || '',
+          price: local.price || 0, oracleText: local.oracleText || '', tags: [],
+        });
+        addToast(`Filled from local collection: ${local.name}`, 'success');
+        focusSaveButton();
+        return;
+      }
+      try {
+        const r = await axios.get(`${API_URL}/images/lookup?name=${encodeURIComponent(extractedData.name)}`, { timeout: 4000 });
+        setFormData({
+          ...formData, name: extractedData.name,
+          scryfallId: r.data.scryfallId, imageUrl: r.data.imageUrl, tags: [],
+        });
+        addToast(`${extractedData.name} — image from local cache; other details need internet`, 'info');
+        focusSaveButton();
+        return;
+      } catch {
+        // Fall through to name-only below
+      }
       setFormData({ ...formData, name: extractedData.name });
       addToast(`Card name extracted: ${extractedData.name} (Offline mode - please fill in other details manually)`, 'info');
       return;
     }
+
     try {
       setLoading(true);
-      await selectAutocompleteCard(extractedData.name);
+      const cardData = await selectAutocompleteCard(extractedData.name);
       const ct = extractedData.confidence ? ` (${Math.round(extractedData.confidence)}% confidence)` : '';
       addToast(`Card found: ${extractedData.name}${ct}`, 'success');
+      focusSaveButton();
+
+      // Q9 + Q10: result strip with other destinations and other faces
+      if (cardData) {
+        const faces = (cardData.cardFaces || [])
+          .map(f => f.name)
+          .filter(n => n && n.toLowerCase() !== (cardData.name || '').toLowerCase());
+        setScanResult({
+          name: cardData.name,
+          cardData,
+          faces,
+          wishlisted: false,
+          deckAdded: false,
+        });
+      }
     } catch (error) {
       setFormData({ ...formData, name: extractedData.name });
       const ct = extractedData.confidence ? ` (${Math.round(extractedData.confidence)}% confidence)` : '';
       addToast(`Card name extracted: ${extractedData.name}${ct} — could not find on Scryfall, please verify and search manually.`, 'warning');
     } finally { setLoading(false); }
+  };
+
+  // Q9: other destinations for a scan result
+  const addScanResultToWishlist = async () => {
+    if (!scanResult) return;
+    try {
+      const c = scanResult.cardData;
+      await axios.post(`${API_URL}/wishlist`, {
+        name: c.name, set: c.set, setCode: c.setCode, scryfallId: c.scryfallId,
+        imageUrl: c.imageUrl, colors: c.colors || [], types: c.types || [],
+        manaCost: c.manaCost || '', rarity: c.rarity || '',
+        currentPrice: c.prices?.usd || 0, targetPrice: 0, priority: 'medium',
+      });
+      setScanResult(prev => ({ ...prev, wishlisted: true }));
+      addToast(`${c.name} added to wishlist`, 'success');
+    } catch (e) {
+      addToast(e.response?.data?.message || 'Failed to add to wishlist', 'error');
+    }
+  };
+
+  const openDeckPicker = async () => {
+    setShowDeckPicker(true);
+    setDeckPickerList(null);
+    try {
+      const res = await axios.get(`${API_URL}/decks`);
+      setDeckPickerList(Array.isArray(res.data) ? res.data : (res.data?.decks || []));
+    } catch {
+      setDeckPickerList([]);
+      addToast('Could not load decks', 'error');
+    }
+  };
+
+  const addScanResultToDeck = async (deckId, deckName) => {
+    const c = scanResult?.cardData;
+    if (!c) return;
+    try {
+      await axios.post(`${API_URL}/decks/${deckId}/add-card`, {
+        scryfallId: c.scryfallId, name: c.name, manaCost: c.manaCost || '',
+        types: c.types || [], colors: c.colors || [], imageUrl: c.imageUrl,
+      });
+      setScanResult(prev => ({ ...prev, deckAdded: true }));
+      setShowDeckPicker(false);
+      addToast(`${c.name} added to ${deckName}`, 'success');
+    } catch (e) {
+      addToast(e.response?.data?.message || 'Failed to add to deck', 'error');
+    }
+  };
+
+  // Bulk scan save: full data per row via the Scryfall search + POST /cards
+  // (auto-merge applies), paced gently; failures stay in the list for retry.
+  const saveScanBatch = async () => {
+    if (batchSaving || scanBatch.length === 0) return;
+    setBatchSaving(true);
+    const total = scanBatch.length;
+    let added = 0, merged = 0;
+    const stillFailed = [];
+    try {
+      for (let i = 0; i < total; i++) {
+        const item = scanBatch[i];
+        setBatchProgress({ done: i, total, added, merged, failed: stillFailed.length });
+        try {
+          const r = await axios.get(`${API_URL}/scryfall/search?name=${encodeURIComponent(item.name)}`);
+          const c = r.data;
+          const res = await axios.post(`${API_URL}/cards`, {
+            name: c.name, set: c.set, setCode: c.setCode, collectorNumber: c.collectorNumber,
+            rarity: c.rarity, colors: c.colors, types: c.types, manaCost: c.manaCost,
+            scryfallId: c.scryfallId, imageUrl: c.imageUrl, price: c.prices?.usd || 0,
+            oracleText: c.oracleText, tags: [],
+            quantity: Math.max(1, Number(item.quantity) || 1),
+            condition: item.condition, isFoil: false,
+          });
+          if (res.data?.merged) merged++; else added++;
+        } catch {
+          stillFailed.push(item);
+        }
+        await new Promise(resolve => setTimeout(resolve, 150)); // gentle pacing
+      }
+      setBatchProgress({ done: total, total, added, merged, failed: stillFailed.length });
+      fetchCards();
+      if (stillFailed.length === 0) {
+        setScanBatch([]);
+        setBatchProgress(null);
+        addToast(`Scan batch saved: ${added} added, ${merged} merged`, 'success');
+      } else {
+        setScanBatch(stillFailed);
+        addToast(`${stillFailed.length} of ${total} failed — kept in the list so you can retry`, 'warning');
+        setTimeout(() => setBatchProgress(null), 1500);
+      }
+    } finally {
+      setBatchSaving(false);
+    }
   };
 
   const handleEdit = (card) => {
@@ -500,9 +707,17 @@ function CollectionView({
   const handleCancel = () => {
     setEditingId(null); setShowAutocomplete(false); setTypesInputValue(''); setTagsInputValue('');
     setFormData({
-      name: '', set: '', quantity: 1, condition: settings.defaultCondition,
-      price: 0, purchasePrice: '', colors: [], types: [], manaCost: '', isFoil: false, isToken: false,
-      oracleText: '', notes: '', tags: [], location: '',
+      name: '', set: '', quantity: 1,
+      // Q7: reuse the last NEW entry's condition/foil/location as defaults
+      // (falls back to the user's configured default condition)
+      condition: lastEntryDefaults?.condition || settings.defaultCondition,
+      price: 0, purchasePrice: '', colors: [], types: [], manaCost: '',
+      isFoil: lastEntryDefaults?.isFoil || false, isToken: false,
+      oracleText: '', notes: '', tags: [],
+      location: lastEntryDefaults?.location || '',
+      // Clear EVERY data field — previously setCode/collectorNumber/rarity/
+      // scryfallId/imageUrl survived a clear and could submit a stale id
+      setCode: '', collectorNumber: '', rarity: '', scryfallId: '', imageUrl: '',
     });
   };
 
@@ -772,16 +987,22 @@ function CollectionView({
     minMatchCharLength: 2,
   }), [cards]);
 
+  // Typing stays instant: the input keeps the urgent `searchTerm`, while the
+  // expensive fuzzy match + full collection filter/sort run on a deferred
+  // value that React can interrupt. On large collections the old synchronous
+  // path re-ran on every keystroke and made the input feel sticky.
+  const deferredSearchTerm = useDeferredValue(searchTerm);
+
   const fuzzyMatchedIds = useMemo(() => {
-    if (!searchTerm || searchTerm.length < 2) return null;
-    return new Set(fuse.search(searchTerm).map(r => r.item._id));
-  }, [fuse, searchTerm]);
+    if (!deferredSearchTerm || deferredSearchTerm.length < 2) return null;
+    return new Set(fuse.search(deferredSearchTerm).map(r => r.item._id));
+  }, [fuse, deferredSearchTerm]);
 
   const filteredAndSortedCards = useMemo(() => {
     let filtered = cards.filter(card => {
       let matchesSearch = false;
-      if (searchTerm) {
-        const sl = searchTerm.toLowerCase();
+      if (deferredSearchTerm) {
+        const sl = deferredSearchTerm.toLowerCase();
         matchesSearch = (fuzzyMatchedIds ? fuzzyMatchedIds.has(card._id) : card.name.toLowerCase().includes(sl)) || card.set.toLowerCase().includes(sl);
         if (searchIncludesOracleText && card.oracleText) matchesSearch = matchesSearch || card.oracleText.toLowerCase().includes(sl);
         if (card.tags?.some(tag => tag.includes(sl))) matchesSearch = true;
@@ -826,7 +1047,7 @@ function CollectionView({
       }
       return 0;
     });
-  }, [cards, searchTerm, filterCondition, filterColor, filterSet, filterType, filterSpecial, filterRarity, filterTag, filterLocation, searchIncludesOracleText, sortBy]);
+  }, [cards, deferredSearchTerm, filterCondition, filterColor, filterSet, filterType, filterSpecial, filterRarity, filterTag, filterLocation, searchIncludesOracleText, sortBy, fuzzyMatchedIds]);
 
   const totalPages = Math.ceil(filteredAndSortedCards.length / pageSize);
 
@@ -1121,6 +1342,54 @@ function CollectionView({
           </button>
           {showAddForm && (
           <div className="px-6 pb-6">
+            {/* Scan result strip: other destinations (Q9) + other faces (Q10) */}
+            {scanResult && (
+              <div className="mb-3 bg-purple-500/15 border border-purple-400/40 rounded-lg px-3 py-2">
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="text-purple-200 font-semibold">Scanned: {scanResult.name}</span>
+                  {scanResult.faces.map(face => (
+                    <button
+                      key={face}
+                      onClick={async () => {
+                        const ok = await selectAutocompleteCard(face);
+                        if (ok) addToast(`Form filled with ${face} — save to add it`, 'info');
+                      }}
+                      className="px-2 py-0.5 bg-indigo-600/60 hover:bg-indigo-500 text-white rounded text-xs font-medium"
+                      title="This card has another face — tap to load it into the form"
+                    >
+                      + {face}
+                    </button>
+                  ))}
+                  <span className="flex-1" />
+                  <button
+                    onClick={addScanResultToWishlist}
+                    disabled={scanResult.wishlisted}
+                    className="px-2 py-0.5 bg-pink-600/60 hover:bg-pink-500 disabled:opacity-50 text-white rounded text-xs font-medium"
+                  >
+                    {scanResult.wishlisted ? '✓ In wishlist' : 'Add to Wishlist'}
+                  </button>
+                  <button
+                    onClick={openDeckPicker}
+                    disabled={scanResult.deckAdded}
+                    className="px-2 py-0.5 bg-purple-600/60 hover:bg-purple-500 disabled:opacity-50 text-white rounded text-xs font-medium"
+                  >
+                    {scanResult.deckAdded ? '✓ In deck' : 'Add to Deck…'}
+                  </button>
+                  <button
+                    onClick={() => setScanResult(null)}
+                    className="text-white/50 hover:text-white p-0.5"
+                    title="Dismiss"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+                {scanResult.faces.length > 0 && (
+                  <p className="text-white/50 text-xs mt-1">
+                    Double-faced / adventure card — tap a face to load it, then Save (repeat for each face).
+                  </p>
+                )}
+              </div>
+            )}
             <div className="flex justify-end items-center mb-4">
               <label className="flex items-center gap-2 text-white/90 text-sm cursor-pointer bg-white/10 px-4 py-1 rounded-lg hover:bg-white/20 transition">
                 <input
@@ -1361,7 +1630,19 @@ function CollectionView({
 
             <div className="flex gap-2">
               <button
-                onClick={() => handleSubmit(formData, handleCancel)}
+                id="add-card-save-btn"
+                onClick={() => {
+                  // Q7: remember this entry's condition/foil/location for the
+                  // next card (batch binder entry); applied on form reset
+                  if (!editingId) {
+                    setLastEntryDefaults({
+                      condition: formData.condition,
+                      isFoil: formData.isFoil,
+                      location: formData.location,
+                    });
+                  }
+                  handleSubmit(formData, handleCancel);
+                }}
                 className="flex-1 px-4 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition"
               >
                 <Save size={18} /> {editingId ? 'Update' : 'Save'}
@@ -2599,6 +2880,113 @@ function CollectionView({
           locationStats={locationStats}
           formatPrice={formatPrice}
         />
+        {/* Bulk scan review — the confirm step for batch scans (Q4) */}
+        {scanBatch.length > 0 && (
+          <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+            <div className="bg-gray-900 border border-purple-500/50 rounded-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white text-lg font-bold">
+                  Scan batch — {scanBatch.length} card{scanBatch.length !== 1 ? 's' : ''}
+                </h3>
+                <span className="text-white/50 text-xs">review &amp; confirm before saving</span>
+              </div>
+              <div className="space-y-2">
+                {scanBatch.map((row, idx) => (
+                  <div key={row.id} className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm truncate">{row.name}</p>
+                      <p className={`text-xs ${row.confidence >= 70 ? 'text-green-400' : 'text-yellow-400'}`}>
+                        {Math.round(row.confidence)}% confidence
+                      </p>
+                    </div>
+                    <input
+                      type="number" min="1" value={row.quantity}
+                      onChange={(e) => setScanBatch(prev => prev.map((r, i) => i === idx ? { ...r, quantity: e.target.value } : r))}
+                      className="w-16 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm"
+                      aria-label={`Quantity for ${row.name}`}
+                    />
+                    <select
+                      value={row.condition}
+                      onChange={(e) => setScanBatch(prev => prev.map((r, i) => i === idx ? { ...r, condition: e.target.value } : r))}
+                      className="px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm"
+                      aria-label={`Condition for ${row.name}`}
+                    >
+                      {['NM', 'LP', 'MP', 'HP', 'DMG'].map(c => (
+                        <option key={c} value={c} className="text-black">{c}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => setScanBatch(prev => prev.filter((_, i) => i !== idx))}
+                      title="Remove from batch"
+                      className="text-red-400 hover:text-red-300 p-1"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {batchProgress && (
+                <p className="text-white/60 text-sm mt-3">
+                  Saving {batchProgress.done}/{batchProgress.total}… {batchProgress.added} added,{' '}
+                  {batchProgress.merged} merged{batchProgress.failed ? `, ${batchProgress.failed} failed` : ''}
+                </p>
+              )}
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={saveScanBatch}
+                  disabled={batchSaving}
+                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg font-semibold transition"
+                >
+                  {batchSaving ? 'Saving…' : `Add ${scanBatch.length} to collection`}
+                </button>
+                <button
+                  onClick={() => {
+                    if (window.confirm(`Discard ${scanBatch.length} scanned card(s)?`)) {
+                      setScanBatch([]);
+                      setBatchProgress(null);
+                    }
+                  }}
+                  disabled={batchSaving}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg font-semibold transition"
+                >
+                  Discard
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Deck picker for "Add to Deck" (Q9) */}
+        {showDeckPicker && scanResult && (
+          <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+            <div className="bg-gray-900 border border-purple-500/50 rounded-xl w-full max-w-md p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-white font-bold">Add {scanResult.name} to deck</h3>
+                <button onClick={() => setShowDeckPicker(false)} className="text-white/60 hover:text-white" title="Close">
+                  <X size={18} />
+                </button>
+              </div>
+              {deckPickerList === null ? (
+                <p className="text-white/60 text-sm">Loading decks…</p>
+              ) : deckPickerList.length === 0 ? (
+                <p className="text-white/60 text-sm">No decks yet — create one in the Deck Builder first.</p>
+              ) : (
+                <div className="space-y-1 max-h-64 overflow-y-auto">
+                  {deckPickerList.map(d => (
+                    <button
+                      key={d._id}
+                      onClick={() => addScanResultToDeck(d._id, d.name)}
+                      className="w-full text-left px-3 py-2 bg-white/5 hover:bg-purple-600/40 rounded-lg text-white text-sm transition"
+                    >
+                      {d.name} <span className="text-white/40 text-xs">({d.format || 'commander'})</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Camera OCR Modal */}
         {showCameraModal && (
           <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 text-white/50">Loading camera...</div>}>

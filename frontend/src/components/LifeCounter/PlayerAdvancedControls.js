@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { Settings, X, Plus, Minus, Zap, Star, Tag, RotateCcw, Heart, Activity, Shield, Sword, Droplets } from 'lucide-react';
+import {
+  X,
+  Plus,
+  Minus,
+  Zap,
+  Star,
+  Tag,
+  RotateCcw,
+  Heart,
+  Droplets
+} from 'lucide-react';
 
 function PlayerAdvancedControls({
   player,
@@ -44,14 +54,6 @@ function PlayerAdvancedControls({
   ];
 
   const COLORS = ['W', 'U', 'B', 'R', 'G', 'C'];
-  const COLOR_NAMES = {
-    'W': 'White',
-    'U': 'Blue',
-    'B': 'Black',
-    'R': 'Red',
-    'G': 'Green',
-    'C': 'Colorless'
-  };
 
   return (
     <div className="fixed inset-0 bg-black/70 z-[100] p-4">

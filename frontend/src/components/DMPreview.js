@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { MessageCircle } from 'lucide-react';
 
@@ -10,7 +10,7 @@ export default function DMPreview({ apiUrl, user, openPanel, setOpenPanel }) {
 
   const isOpen = openPanel === 'dms';
 
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     if (!user) return;
     try {
       const response = await fetch(`${apiUrl}/messages`, {
@@ -24,7 +24,7 @@ export default function DMPreview({ apiUrl, user, openPanel, setOpenPanel }) {
     } catch (error) {
       console.error('Error fetching conversations:', error);
     }
-  };
+  }, [apiUrl, user]);
 
   // Calculate panel position when opened
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function DMPreview({ apiUrl, user, openPanel, setOpenPanel }) {
     fetchConversations();
     const interval = setInterval(fetchConversations, 30000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, [fetchConversations]);
 
   if (!user) return null;
 

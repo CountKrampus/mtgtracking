@@ -62,7 +62,8 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    const { email, username, password, displayName } = req.body;
+    const { email, username, password, displayName, referralCode } = req.body;
+    const signupIp = getClientIp(req);
 
     // Validate required fields
     if (!email || !username || !password) {
@@ -113,10 +114,19 @@ router.post('/register', async (req, res) => {
       username: username.toLowerCase(),
       passwordHash,
       displayName: displayName || username,
-      role
+      role,
+      lastSeenIp: signupIp
     });
 
     await user.save();
+
+    // Attach referral (if a code was provided) and pay the signup reward.
+    // Fire-and-forget: a referral failure must never fail the registration
+    // that already succeeded. claimReferral is defined in routes/referrals.js.
+    if (referralCode) {
+      const { claimReferral } = require('./referrals');
+      claimReferral(referralCode, user, signupIp).catch(() => {});
+    }
 
     // Generate tokens
     const accessToken = generateAccessToken(user);

@@ -32,6 +32,10 @@ const commands = new Map([
   require('./commands/trend'),
   require('./commands/search'),
   require('./commands/inventory'),
+  require('./commands/rulings'),
+  require('./commands/value'),
+  require('./commands/movers'),
+  require('./commands/combo'),
 ].map(cmd => [cmd.name, cmd]));
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -71,7 +75,7 @@ client.on(Events.InteractionCreate, async interaction => {
 // failure must not escape uncaught - discord.js emits it as an unhandled
 // 'error' event on the Client, which crashes the whole process.
 async function safeErrorReply(interaction) {
-  const payload = { content: '❌ Something went wrong running that command.', ephemeral: true };
+  const payload = { content: '❌ Something went wrong running that command.' };
   try {
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp(payload);

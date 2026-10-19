@@ -1,5 +1,7 @@
 import React from 'react';
-import { Zap, User } from 'lucide-react';
+import {
+  Zap
+} from 'lucide-react';
 
 function PriorityIndicator({ 
   hasPriority, 

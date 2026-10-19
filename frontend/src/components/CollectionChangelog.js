@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
-import { X, Plus, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
+import {
+  Plus,
+  Trash2,
+  TrendingUp,
+  TrendingDown
+} from 'lucide-react';
 import { API_URL } from '../config';
+import { getAuthHeaders } from '../utils/auth';
 
 const fp = v => `$${(v || 0).toFixed(2)}`;
 
@@ -18,10 +24,11 @@ function CollectionChangelog({ onClose }) {
   const load = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('authToken');
+      // 'authToken' is never written; getAuthHeaders() reads the real key
+      // (mtg_access_token), otherwise this fetch 401'd in multi-user mode.
       const res = await fetch(
         `${API_URL}/cards/changelog?from=${from}&to=${to}&priceThresholdPct=${threshold}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: getAuthHeaders() }
       );
       setData(await res.json());
       setTab('added');

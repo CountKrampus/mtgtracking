@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
@@ -21,7 +21,7 @@ function renderBadgeIcon(iconStr) {
 
 export default function MyProfile({ user, onBack }) {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState(user);
+  const [profile, ] = useState(user);
   const [linkCopied, setLinkCopied] = useState(false);
 
   const handleCopyProfileLink = () => {
@@ -46,9 +46,23 @@ export default function MyProfile({ user, onBack }) {
   const [bookmarkedThreads, setBookmarkedThreads] = useState(null);
 
   useEffect(() => {
-    if (user?.username) {
-      fetchForumActivity();
-    }
+    if (!user?.username) return undefined;
+    let cancelled = false;
+    (async () => {
+      const response = await fetch(`${API_URL}/forum/users/${user.username}/activity`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('mtg_access_token')}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (!cancelled) {
+          setForumActivity(data);
+          if (Array.isArray(data?.pinnedCards) && data.pinnedCards.length > 0) {
+            setPinnedCards(prev => (prev.length === 0 ? data.pinnedCards : prev));
+          }
+        }
+      }
+    })().catch((error) => console.error('Error fetching forum activity:', error));
+    return () => { cancelled = true; };
   }, [user]);
 
   useEffect(() => {
@@ -97,22 +111,6 @@ export default function MyProfile({ user, onBack }) {
       .catch(() => setBookmarkedThreads([]));
   }, []);
 
-  const fetchForumActivity = async () => {
-    try {
-      const response = await fetch(`${API_URL}/forum/users/${user.username}/activity`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('mtg_access_token')}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setForumActivity(data);
-        if (Array.isArray(data?.pinnedCards) && data.pinnedCards.length > 0 && pinnedCards.length === 0) {
-          setPinnedCards(data.pinnedCards);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching forum activity:', error);
-    }
-  };
 
   const savePinnedCards = async () => {
     const token = localStorage.getItem('mtg_access_token');

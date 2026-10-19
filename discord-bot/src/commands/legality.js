@@ -11,7 +11,7 @@ const STATUS_LABELS = {
 module.exports = {
   name: 'legality',
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply();
 
     const name = interaction.options.getString('name', true);
     const api = client(interaction.user.id);
@@ -19,17 +19,17 @@ module.exports = {
     const listRes = await api.get('/decks');
     if (listRes.status === 401) return replyNotLinked(interaction);
     if (listRes.status !== 200) {
-      return interaction.followUp({ content: `❌ Something went wrong (${listRes.status}).`, ephemeral: true });
+      return interaction.followUp({ content: `❌ Something went wrong (${listRes.status}).` });
     }
 
     const match = listRes.data.find(d => d.name.toLowerCase() === name.toLowerCase());
     if (!match) {
-      return interaction.followUp({ content: `❌ No deck named "${name}".`, ephemeral: true });
+      return interaction.followUp({ content: `❌ No deck named "${name}".` });
     }
 
     const legalRes = await api.get(`/decks/${match._id}/legality`);
     if (legalRes.status !== 200) {
-      return interaction.followUp({ content: `❌ Couldn't check legality (${legalRes.status}).`, ephemeral: true });
+      return interaction.followUp({ content: `❌ Couldn't check legality (${legalRes.status}).` });
     }
 
     const { format, violations, checked } = legalRes.data;
@@ -42,7 +42,6 @@ module.exports = {
           description: `All ${checked} checked cards are legal in **${formatLabel}**.`,
           color: 0x22c55e,
         }],
-        ephemeral: true,
       });
     }
 
@@ -59,7 +58,6 @@ module.exports = {
         color: 0xef4444,
         footer: { text: `${checked} cards checked` },
       }],
-      ephemeral: true,
     });
   }
 };

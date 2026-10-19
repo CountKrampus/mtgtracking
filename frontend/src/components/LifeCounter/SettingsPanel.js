@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Settings, X, Volume2, VolumeX, Maximize, Minimize, Palette, Clock, Crown } from 'lucide-react';
 
 function SettingsPanel({

@@ -1,4 +1,9 @@
-jest.mock('../src/apiClient');
+// The automock would make resolveImageUrl return undefined and silently drop
+// embed thumbnails, so give it the real behavior for absolute URLs.
+jest.mock('../src/apiClient', () => ({
+  client: jest.fn(),
+  resolveImageUrl: (url) => (url ? url : null),
+}));
 const { client } = require('../src/apiClient');
 const showoffCommand = require('../src/commands/showoff');
 
@@ -65,7 +70,6 @@ describe('/showoff', () => {
 
       expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({
         content: expect.stringContaining('link'),
-        ephemeral: true,
       }));
     });
   });
@@ -107,7 +111,6 @@ describe('/showoff', () => {
 
       expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({
         content: expect.stringContaining('No deck named'),
-        ephemeral: true,
       }));
     });
   });

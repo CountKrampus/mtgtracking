@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Settings, Plus, Trash2, Edit2, Save, X, Search, Filter, BookOpen, Users, Zap, Shield, Package, Layers, Target, Ban, RotateCcw } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings, Plus, Trash2, Edit2, X, Search, BookOpen, Zap, Shield, Layers } from 'lucide-react';
 
 const CustomFormatBuilder = () => {
   const [formats, setFormats] = useState([
@@ -83,37 +83,12 @@ const CustomFormatBuilder = () => {
   });
 
   const [editingFormat, setEditingFormat] = useState(null);
-  const [selectedFormat, setSelectedFormat] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [activeTab, setActiveTab] = useState('formats');
-  const [gameLog, setGameLog] = useState([]);
+  const [, setGameLog] = useState([]);
 
-  const allSets = [
-    'Alpha', 'Beta', 'Unlimited', 'Revised', 'Fourth Edition', 'Fifth Edition', 'Classic Sixth Edition',
-    'Mirage', 'Visions', 'Weatherlight', 'Tempest', 'Stronghold', 'Exodus', 'Unglued', 'Urza\'s Saga',
-    'Urza\'s Legacy', 'Urza\'s Destiny', 'Mercadian Masques', 'Nemesis', 'Prophecy', 'Invasion',
-    'Planeshift', 'Apocalypse', 'Odyssey', 'Torment', 'Judgment', 'Onslaught', 'Legions', 'Scourge',
-    'Mirrodin', 'Darksteel', 'Fifth Dawn', 'Champions of Kamigawa', 'Betrayers of Kamigawa', 'Saviors of Kamigawa',
-    'Ravnica: City of Guilds', 'Guildpact', 'Dissension', 'Coldsnap', 'Time Spiral', 'Planar Chaos', 'Future Sight',
-    'Lorwyn', 'Morningtide', 'Shadowmoor', 'Eventide', 'Shards of Alara', 'Conflux', 'Alara Reborn',
-    'Zendikar', 'Worldwake', 'Rise of the Eldrazi', 'Magic 2010', 'Zendikar Expeditions', 'World Championship Decks',
-    'Magic 2011', 'Scars of Mirrodin', 'Mirrodin Besieged', 'New Phyrexia', 'Magic 2012', 'Innistrad', 'Dark Ascension',
-    'Avacyn Restored', 'Magic 2013', 'Return to Ravnica', 'Gatecrash', 'Dragon\'s Maze', 'Magic 2014 Core Set',
-    'Theros', 'Born of the Gods', 'Journey into Nyx', 'Magic 2015', 'Khans of Tarkir', 'Fate Reforged', 'Dragons of Tarkir',
-    'Magic Origins', 'Battle for Zendikar', 'Oath of the Gatewatch', 'Welcome Deck 2016', 'Shadows over Innistrad', 'Eldritch Moon',
-    'Kaladesh', 'Aether Revolt', 'Magic 2017', 'Hour of Devastation', 'Ixalan', 'Rivals of Ixalan', 'Magic 2018',
-    'Dominaria', 'Core Set 2019', 'Guilds of Ravnica', 'Ravnica Allegiance', 'War of the Spark', 'Core Set 2020',
-    'Throne of Eldraine', 'Theros Beyond Death', 'Ikoria: Lair of Behemoths', 'Jumpstart', 'Core Set 2021',
-    'Zendikar Rising', 'Kaldheim', 'Strixhaven: School of Mages', 'Modern Horizons 2', 'Forgotten Realms',
-    'Innistrad: Crimson Vow', 'Kamigawa: Neon Dynasty', 'Streets of New Capenna', 'Commander Legends', 'Adventure in the Forgotten Realms',
-    'Innistrad: Midnight Hunt', 'Innistrad: Double Feature', 'The Brothers\' War', 'Phyrexia: All Will Be One', 'March of the Machine',
-    'March of the Machine: The Aftermath', 'The Lord of the Rings: Tales of Middle-earth', 'Wilds of Eldraine', 'The Lost Caverns of Ixalan',
-    'Murders at Karlov Manor', 'Outlaws of Thunder Junction', 'Modern Horizons 3', 'Duskmourn: House of Horror', 'Bloomburrow', 'Thunder Junction: Reloaded',
-    'Planechase Anthology', 'Commander 2013 Edition', 'Commander 2014 Edition', 'Commander 2015 Edition', 'Commander 2016 Edition',
-    'Commander 2017 Edition', 'Commander 2018 Edition', 'Commander 2019 Edition', 'Commander 2020 Edition', 'Commander Legends: Battle for Baldur\'s Gate',
-    'Commander Masters', 'Archenemy', 'Duel Decks Anthology', 'Premium Deck Series', 'From the Vault', 'Mystery Booster', 'Unfinity'
-  ];
+  
 
   const mulliganOptions = [
     { value: 'regular', label: 'Regular Mulligan (until 6 or keep)' },

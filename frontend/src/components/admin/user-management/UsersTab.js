@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback } from 'react';
 import { Search, UserCog, Shield, Eye, Edit2, Trash2, CheckCircle, XCircle, Mail, Award } from 'lucide-react';
 import { useAuthContext } from '../../../contexts/AuthContext';
 import { API_URL } from '../../../config';
@@ -23,18 +23,7 @@ export function UsersTab() {
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [show2FAModal, setShow2FAModal] = useState(false);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  useEffect(() => {
-    authFetch(`${API_URL}/admin/badges`)
-      .then(r => r.json())
-      .then(d => setAvailableBadges(d.badges || []))
-      .catch(() => {});
-  }, []);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await authFetch(`${API_URL}/admin/users?limit=100`);
       const data = await response.json();
@@ -48,8 +37,19 @@ export function UsersTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [authFetch]);
+useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
+  useEffect(() => {
+    authFetch(`${API_URL}/admin/badges`)
+      .then(r => r.json())
+      .then(d => setAvailableBadges(d.badges || []))
+      .catch(() => {});
+  }, [authFetch]);
+
+  
   const updateUser = async (userId, updates) => {
     try {
       const response = await authFetch(`${API_URL}/admin/users/${userId}`, {

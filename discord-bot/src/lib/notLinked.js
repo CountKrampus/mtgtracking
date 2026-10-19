@@ -7,7 +7,7 @@ const NOT_LINKED_MESSAGE =
 // resolveCard, which may take multiple round-trips) - discord.js requires
 // editReply instead of reply once an interaction is already deferred/replied.
 function replyNotLinked(interaction) {
-  const payload = { content: NOT_LINKED_MESSAGE, ephemeral: true };
+  const payload = { content: NOT_LINKED_MESSAGE };
   return (interaction.deferred || interaction.replied)
     ? interaction.editReply(payload)
     : interaction.reply(payload);

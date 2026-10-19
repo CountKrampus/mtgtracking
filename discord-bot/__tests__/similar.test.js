@@ -35,7 +35,7 @@ describe('/similar', () => {
     const interaction = mockInteraction();
     await similarCommand.execute(interaction);
 
-    expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+    expect(interaction.deferReply).toHaveBeenCalledWith();
     expect(api.get).toHaveBeenCalledWith('/cards/card-1/similar');
     expect(interaction.followUp).toHaveBeenCalledWith(expect.objectContaining({
       embeds: [expect.objectContaining({ title: 'Similar to Grizzly Bears' })]

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import * as LucideIcons from 'lucide-react';
 import { API_URL } from '../../../config';
 import ConfirmModal from '../../shared/ConfirmModal';
@@ -197,15 +197,9 @@ function BadgesTab() {
   const [search, setSearch] = useState('');
 
   const token = localStorage.getItem('mtg_access_token');
-  const authHeaders = { Authorization: `Bearer ${token}` };
+  const authHeaders = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
 
-  // Fetch badges on mount and sync icons into existing user badge entries
-  useEffect(() => {
-    fetchBadges();
-    fetch(`${API_URL}/admin/badges/sync-icons`, { method: 'POST', headers: authHeaders }).catch(() => {});
-  }, []);
-
-  async function fetchBadges() {
+  const fetchBadges = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -218,7 +212,13 @@ function BadgesTab() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [authHeaders]);
+
+  // Fetch badges on mount and sync icons into existing user badge entries
+  useEffect(() => {
+    fetchBadges();
+    fetch(`${API_URL}/admin/badges/sync-icons`, { method: 'POST', headers: authHeaders }).catch(() => {});
+  }, [fetchBadges, authHeaders]);
 
   function openCreate() {
     setEditingBadge(null);

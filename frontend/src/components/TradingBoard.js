@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ArrowLeftRight, Plus, X, Check, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTrades } from '../contexts/TradesContext';
 import { useAuthContext } from '../contexts/AuthContext';
@@ -70,16 +70,33 @@ function CreateListingModal({ onClose, onCreate }) {
   const [autocomplete, setAutocomplete] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
-  const handleNameChange = async (val) => {
+  // Debounced autocomplete: one request per pause in typing rather than one
+  // per keystroke (the backend rate-limits /api/scryfall to 30/min), with a
+  // seq guard so a slow older response can't overwrite newer results.
+  const autocompleteDebounceRef = useRef(null);
+  const autocompleteSeqRef = useRef(0);
+
+  const handleNameChange = (val) => {
     setForm(f => ({ ...f, cardName: val }));
-    if (val.length >= 2) {
+
+    clearTimeout(autocompleteDebounceRef.current);
+    const seq = ++autocompleteSeqRef.current;
+
+    if (val.length < 2) {
+      setAutocomplete([]);
+      return;
+    }
+
+    autocompleteDebounceRef.current = setTimeout(async () => {
       try {
         const res = await fetch(`${API_URL}/scryfall/autocomplete?q=${encodeURIComponent(val)}`);
-        setAutocomplete(await res.json());
-      } catch { setAutocomplete([]); }
-    } else {
-      setAutocomplete([]);
-    }
+        const data = await res.json();
+        if (seq !== autocompleteSeqRef.current) return; // stale response
+        setAutocomplete(data);
+      } catch {
+        if (seq === autocompleteSeqRef.current) setAutocomplete([]);
+      }
+    }, 300);
   };
 
   const selectCard = async (name) => {

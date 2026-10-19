@@ -11,7 +11,7 @@ function bar(value, max) {
 module.exports = {
   name: 'trend',
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply();
 
     const days = interaction.options.getInteger('days') || 30;
     const api = client(interaction.user.id);
@@ -19,14 +19,13 @@ module.exports = {
     const res = await api.get('/cards/acquisitions', { params: { days } });
     if (res.status === 401) return replyNotLinked(interaction);
     if (res.status !== 200) {
-      return interaction.followUp({ content: `❌ Something went wrong (${res.status}).`, ephemeral: true });
+      return interaction.followUp({ content: `❌ Something went wrong (${res.status}).` });
     }
 
     const data = res.data.data || [];
     if (data.length === 0) {
       return interaction.followUp({
         content: `No cards were added in the last ${days} days.`,
-        ephemeral: true,
       });
     }
 
@@ -40,6 +39,11 @@ module.exports = {
       return `\`${dateLabel}\` ${bar(d.cardsAdded, maxCards)} ${d.cardsAdded}`;
     });
 
+    // Omit the footer entirely (undefined key) when nothing was cut off;
+    // `footer: { text: undefined }` would serialize as an empty footer and
+    // fail Discord's embed validation.
+    const footer = data.length > 14 ? { text: `Bar chart shows the ${rows.length} most recent active days` } : undefined;
+
     return interaction.followUp({
       embeds: [{
         title: `📈 Acquisition Trend — Last ${days} Days`,
@@ -49,9 +53,9 @@ module.exports = {
           { name: 'Value Added', value: `$${totalValue.toFixed(2)}`, inline: true },
           { name: 'Active Days', value: String(data.length), inline: true },
         ],
+        footer,
         color: 0x8b5cf6,
       }],
-      ephemeral: true,
     });
   }
 };

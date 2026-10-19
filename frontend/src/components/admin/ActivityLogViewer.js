@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Filter } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { API_URL } from '../../config';
@@ -11,11 +11,7 @@ export function ActivityLogViewer() {
   const [category, setCategory] = useState('');
   const [limit, setLimit] = useState(50);
 
-  useEffect(() => {
-    fetchActivity();
-  }, [category, limit]);
-
-  const fetchActivity = async () => {
+  const fetchActivity = useCallback(async () => {
     setLoading(true);
     try {
       let url = `${API_URL}/admin/activity?limit=${limit}`;
@@ -34,8 +30,12 @@ export function ActivityLogViewer() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [category, limit, authFetch]);
+useEffect(() => {
+    fetchActivity();
+  }, [fetchActivity]);
 
+  
   const formatAction = (action) => {
     return action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };

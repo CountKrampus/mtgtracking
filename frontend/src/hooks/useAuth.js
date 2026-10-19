@@ -1,4 +1,4 @@
-﻿import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { API_URL } from '../config';
 
 // Token storage keys
@@ -63,7 +63,8 @@ export function useAuth() {
         console.warn(`checkSystemStatus attempt ${attempt} failed:`, err.message || err);
         // Small delay before retrying
         if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, retryDelayMs * attempt));
+          const delayMs = retryDelayMs * attempt;
+          await new Promise(resolve => setTimeout(resolve, delayMs));
           continue;
         }
         console.error('Failed to check system status after retries:', err);
@@ -161,7 +162,7 @@ export function useAuth() {
     }
   }, []);
 
-  const register = useCallback(async (email, username, password, displayName) => {
+  const register = useCallback(async (email, username, password, displayName, referralCode) => {
     setError(null);
     setIsLoading(true);
 
@@ -171,7 +172,7 @@ export function useAuth() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email, username, password, displayName })
+        body: JSON.stringify({ email, username, password, displayName, referralCode })
       });
 
       const data = await response.json();

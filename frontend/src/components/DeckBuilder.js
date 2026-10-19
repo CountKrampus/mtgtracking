@@ -5,6 +5,7 @@ import DeckDetail from './DeckDetail';
 import DeckImport from './DeckImport';
 import DeckEditor from './DeckEditor';
 import { API_URL } from '../config';
+import { getAuthHeaders } from '../utils/auth';
 
 function DeckBuilder() {
   const [decks, setDecks] = useState([]);
@@ -52,8 +53,9 @@ function DeckBuilder() {
 
   const fetchLifecounterStats = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      // 'authToken' is never written; getAuthHeaders() reads the real key
+      // (mtg_access_token) so this doesn't 401 in multi-user mode.
+      const headers = getAuthHeaders();
       const response = await fetch(`${API_URL}/lifecounter/stats`, { headers });
       if (response.ok) {
         const data = await response.json();

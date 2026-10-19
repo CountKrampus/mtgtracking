@@ -29,15 +29,20 @@ module.exports = {
   name: 'notifications',
   async execute(interaction) {
     const sub = interaction.options.getSubcommand();
+
+    // Defer before any backend call - preference reads/writes are two
+    // round-trips in the 'toggle' branch and must not race the 3s window.
+    await interaction.deferReply();
+
     const api = client(interaction.user.id);
 
     if (sub === 'list') {
       const res = await api.get('/discord/link/prefs');
       if (res.status === 401 || res.status === 404) {
-        return interaction.reply({ content: NOT_LINKED_MSG, ephemeral: true });
+        return interaction.followUp({ content: NOT_LINKED_MSG });
       }
       if (res.status !== 200) {
-        return interaction.reply({ content: `❌ Something went wrong (${res.status}).`, ephemeral: true });
+        return interaction.followUp({ content: `❌ Something went wrong (${res.status}).` });
       }
 
       const prefs = res.data;
@@ -49,9 +54,8 @@ module.exports = {
         inline: false,
       }));
 
-      return interaction.reply({
+      return interaction.followUp({
         embeds: [{ title: '🔔 Discord Notification Preferences', fields }],
-        ephemeral: true,
       });
     }
 
@@ -60,10 +64,10 @@ module.exports = {
 
       const getRes = await api.get('/discord/link/prefs');
       if (getRes.status === 401 || getRes.status === 404) {
-        return interaction.reply({ content: NOT_LINKED_MSG, ephemeral: true });
+        return interaction.followUp({ content: NOT_LINKED_MSG });
       }
       if (getRes.status !== 200) {
-        return interaction.reply({ content: `❌ Something went wrong (${getRes.status}).`, ephemeral: true });
+        return interaction.followUp({ content: `❌ Something went wrong (${getRes.status}).` });
       }
 
       const currentVal = getRes.data[type] ?? false;
@@ -71,18 +75,17 @@ module.exports = {
 
       const patchRes = await api.patch('/discord/link/prefs', { [type]: newVal });
       if (patchRes.status !== 200) {
-        return interaction.reply({ content: `❌ Failed to update preferences (${patchRes.status}).`, ephemeral: true });
+        return interaction.followUp({ content: `❌ Failed to update preferences (${patchRes.status}).` });
       }
 
       const label = DISPLAY_NAMES[type] ?? type;
       const stateStr = newVal ? 'enabled' : 'disabled';
       const icon = newVal ? '✅' : '❌';
-      return interaction.reply({
+      return interaction.followUp({
         content: `${icon} **${label}** notifications ${stateStr}.`,
-        ephemeral: true,
       });
     }
 
-    return interaction.reply({ content: 'Unknown subcommand.', ephemeral: true });
+    return interaction.followUp({ content: 'Unknown subcommand.' });
   }
 };

@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { UserPlus, Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react';
+import { UserPlus, Mail, Lock, User, AlertCircle, CheckCircle, Ticket } from 'lucide-react';
+
+// Pre-fill the referral field from a ?ref=CODE query param so shared invite
+// links work without the visitor having to type anything.
+function getInitialReferralCode() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return (params.get('ref') || '').toUpperCase().slice(0, 12);
+  } catch {
+    return '';
+  }
+}
 
 export function RegisterForm({ onRegister, onSwitchToLogin, error: externalError }) {
   const [email, setEmail] = useState('');
@@ -7,6 +18,7 @@ export function RegisterForm({ onRegister, onSwitchToLogin, error: externalError
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [referralCode, setReferralCode] = useState(getInitialReferralCode);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -31,7 +43,13 @@ export function RegisterForm({ onRegister, onSwitchToLogin, error: externalError
     setIsLoading(true);
 
     try {
-      const result = await onRegister(email, username, password, displayName || username);
+      const result = await onRegister(
+        email,
+        username,
+        password,
+        displayName || username,
+        referralCode.trim() ? referralCode.trim().toUpperCase() : undefined
+      );
       if (!result.success) {
         setError(result.error);
       }
@@ -166,6 +184,23 @@ export function RegisterForm({ onRegister, onSwitchToLogin, error: externalError
               {confirmPassword && password === confirmPassword && (
                 <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-green-400" size={18} />
               )}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Referral Code (optional)
+            </label>
+            <div className="relative">
+              <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent uppercase tracking-wider"
+                placeholder="e.g. K7M2QXPD"
+                maxLength={12}
+              />
             </div>
           </div>
 

@@ -84,6 +84,6 @@ describe('/add', () => {
     const interaction = mockInteraction();
     await addCommand.execute(interaction);
 
-    expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+    expect(interaction.deferReply).toHaveBeenCalledWith();
   });
 });

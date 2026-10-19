@@ -39,7 +39,6 @@ async function resolveCard(interaction, api, searchName) {
   await interaction.followUp({
     content: `Found ${matches.length} matches for "${searchName}":`,
     components: [row],
-    ephemeral: true
   });
 
   let selectInteraction;

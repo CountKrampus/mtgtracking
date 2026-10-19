@@ -60,3 +60,6 @@ ip-watch.log
 
 # Local development env override (templates are .env.local / .env.cloud)
 frontend/.env.development.local
+
+# Transient scan/OCR/pid scratch files (tmp-* at any depth)
+tmp-*

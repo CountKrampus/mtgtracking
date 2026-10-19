@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X, Layers } from 'lucide-react';
 
 // Finds cards that appear across multiple of the user's decks — staples

@@ -16,16 +16,14 @@ function ChessClock({
 
   // Initialize timers when players change
   useEffect(() => {
-    const initialTimers = {};
-    players.forEach(player => {
-      if (!timers[player.id]) {
-        initialTimers[player.id] = timePerPlayer;
-      } else {
-        initialTimers[player.id] = timers[player.id];
-      }
+    setTimers(prev => {
+      const initialTimers = {};
+      players.forEach(player => {
+        initialTimers[player.id] = prev[player.id] || timePerPlayer;
+      });
+      return initialTimers;
     });
-    setTimers(initialTimers);
-  }, [players.length]);
+  }, [players, timePerPlayer]);
 
   // Timer countdown logic
   useEffect(() => {
