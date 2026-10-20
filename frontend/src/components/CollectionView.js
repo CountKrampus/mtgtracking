@@ -4,7 +4,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Search, Trash2, Edit2, Save, X, RefreshCw, DollarSign, Camera, Settings,
   CheckSquare, Square, MapPin, Layers, Zap, Plus, SlidersHorizontal, Bookmark,
-  Upload, PlusCircle, ExternalLink, Mic, Bell, WifiOff, Flag, Copy, Clock
+  Upload, PlusCircle, ExternalLink, Mic, Bell, WifiOff, Flag, Copy, Clock,
+  ArrowUpDown, ArrowUp, ArrowDown
 } from 'lucide-react';
 import { standardTypes } from '../constants';
 import { buildScryfallSearchUrl } from '../utils/scryfallDeeplink';
@@ -37,6 +38,106 @@ import { API_URL } from '../config';
 import Fuse from 'fuse.js';
 
 const CameraModal = React.lazy(() => import('./CameraModal'));
+
+// ─── Tap-to-sort column headers ───────────────────────────────────────────────
+// Default direction per sort key, matching the long-standing dropdown
+// semantics (names A→Z, numbers high→low) so header taps and the dropdown
+// never disagree about which way "price" sorts.
+const SORT_DEFAULT_DIR = {
+  name: 'asc',
+  price: 'desc',
+  quantity: 'desc',
+  totalValue: 'desc',
+  type: 'asc',
+  color: 'asc',
+  set: 'asc',
+  setCode: 'asc',
+  collectorNumber: 'asc',
+  rarity: 'asc',
+  manaCost: 'asc',
+  location: 'asc',
+  condition: 'asc',
+  tags: 'asc',
+  foil: 'desc',
+  token: 'desc',
+  buylistValue: 'desc',
+  sellValue: 'desc'
+};
+
+const CONDITION_SORT_ORDER = ['NM', 'LP', 'MP', 'HP', 'DMG'];
+// Rarity is stored as its first letter (C/U/R/M…); alphabetical would put
+// Mythic between Common and Uncommon, so rank explicitly. Unknown letters
+// sort after the standard four.
+const RARITY_SORT_RANK = { C: 0, U: 1, R: 2, M: 3 };
+
+// Rough converted-mana-cost from a mana string like "{2}{U}{U}" → 4.
+// Hybrid counts as 1, X counts as 0 — good enough for sorting.
+function manaCostValue(manaCost) {
+  if (!manaCost) return 0;
+  const numbers = (manaCost.match(/\d+/g) || []).reduce((s, n) => s + parseInt(n, 10), 0);
+  const pips = (manaCost.match(/[A-Z]/g) || []).filter((c) => c !== 'X').length;
+  return numbers + pips;
+}
+
+// Single source of truth for what each sortable column's value is.
+// Returns a string or number; the comparator knows how to compare both.
+function sortValue(key, card) {
+  switch (key) {
+    case 'name': return card.name || '';
+    case 'set': return card.set || '';
+    case 'setCode': return card.setCode || '';
+    case 'collectorNumber': return String(card.collectorNumber || '');
+    case 'rarity': {
+      const r = (card.rarity || '').toUpperCase();
+      return r in RARITY_SORT_RANK ? RARITY_SORT_RANK[r] : 9;
+    }
+    case 'manaCost': return manaCostValue(card.manaCost);
+    case 'color': {
+      const colors = card.colors || [];
+      return !colors.length ? 'Z' : colors.length === 1 ? colors[0] : 'M' + [...colors].sort().join('');
+    }
+    case 'type': return card.types?.length > 0 ? card.types.join(' ') : 'zzz';
+    case 'location': return card.location || '';
+    case 'foil': return card.isFoil ? 1 : 0;
+    case 'token': return card.isToken ? 1 : 0;
+    case 'tags': return (card.tags || []).join(', ');
+    case 'quantity': return card.quantity || 0;
+    case 'condition': {
+      const idx = CONDITION_SORT_ORDER.indexOf(card.condition);
+      return idx === -1 ? CONDITION_SORT_ORDER.length : idx;
+    }
+    case 'price': return card.price || 0;
+    case 'buylistValue': return card.buylistValue || 0;
+    case 'sellValue': return card.sellValue || 0;
+    case 'totalValue': return (card.price || 0) * (card.quantity || 0);
+    default: return card.name || '';
+  }
+}
+
+// Clickable table header: tap to sort by that column, tap again to flip
+// ascending ↔ descending. Shows the current direction on the active column.
+function SortableTh({ label, sortKey, sortBy, sortDir, onSort, className = '' }) {
+  const active = sortBy === sortKey;
+  const Icon = !active ? ArrowUpDown : sortDir === 'asc' ? ArrowUp : ArrowDown;
+  return (
+    <th
+      className={`px-6 py-3 text-left text-white font-semibold ${className}`}
+      aria-sort={active ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        title={active ? `${label}: ${sortDir === 'asc' ? 'ascending' : 'descending'} — tap to flip` : `Sort by ${label}`}
+        className={`group inline-flex items-center gap-1 transition ${
+          active ? 'text-purple-300' : 'text-inherit hover:text-purple-300'
+        }`}
+      >
+        {label}
+        <Icon size={12} className={active ? 'opacity-100' : 'opacity-30 group-hover:opacity-70'} />
+      </button>
+    </th>
+  );
+}
 
 const PRESETS_STORAGE_KEY = 'mtg-filter-presets';
 
@@ -311,6 +412,7 @@ function CollectionView({
   const [filterLocation, setFilterLocation] = useState('all');
   const [showPresets, setShowPresets] = useState(false);
   const [sortBy, setSortBy] = useState(settings.defaultSort);
+  const [sortDir, setSortDir] = useState(SORT_DEFAULT_DIR[settings.defaultSort] || 'asc');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = settings.pageSize;
   const [showAddForm, setShowAddForm] = useState(true);
@@ -340,7 +442,7 @@ function CollectionView({
   const [showChangelog, setShowChangelog] = useState(false);
   const [formData, setFormData] = useState({
     name: '', set: '', setCode: '', collectorNumber: '', rarity: '',
-    quantity: 1, condition: settings.defaultCondition, price: 0, purchasePrice: '',
+    quantity: 1, condition: settings.defaultCondition, price: 0, priceCad: 0, purchasePrice: '',
     colors: [], types: [], manaCost: '', scryfallId: '', imageUrl: '',
     isFoil: false, isToken: false, oracleText: '', notes: '', tags: [], location: '',
   });
@@ -478,6 +580,7 @@ function CollectionView({
         rarity: cardData.rarity || '', colors: cardData.colors, types: cardData.types,
         manaCost: cardData.manaCost || '', scryfallId: cardData.scryfallId,
         imageUrl: cardData.imageUrl, price: cardData.prices.usd || 0,
+        priceCad: cardData.prices?.cad || 0,
         oracleText: cardData.oracleText || '', tags: [],
       });
       setTypesInputValue(cardData.types ? cardData.types.join(', ') : '');
@@ -549,7 +652,7 @@ function CollectionView({
           collectorNumber: local.collectorNumber || '', rarity: local.rarity || '',
           colors: local.colors || [], types: local.types || [], manaCost: local.manaCost || '',
           scryfallId: local.scryfallId || '', imageUrl: local.imageUrl || '',
-          price: local.price || 0, oracleText: local.oracleText || '', tags: [],
+          price: local.price || 0, priceCad: local.priceCad || 0, oracleText: local.oracleText || '', tags: [],
         });
         addToast(`Filled from local collection: ${local.name}`, 'success');
         focusSaveButton();
@@ -664,6 +767,7 @@ function CollectionView({
             name: c.name, set: c.set, setCode: c.setCode, collectorNumber: c.collectorNumber,
             rarity: c.rarity, colors: c.colors, types: c.types, manaCost: c.manaCost,
             scryfallId: c.scryfallId, imageUrl: c.imageUrl, price: c.prices?.usd || 0,
+            priceCad: c.prices?.cad || 0,
             oracleText: c.oracleText, tags: [],
             quantity: Math.max(1, Number(item.quantity) || 1),
             condition: item.condition, isFoil: false,
@@ -835,6 +939,7 @@ function CollectionView({
         name: cardData.name, set: cardData.set, setCode: cardData.setCode,
         collectorNumber: cardData.collectorNumber, rarity: cardData.rarity,
         quantity: 1, condition: 'NM', price: cardData.prices?.usd || 0,
+        priceCad: cardData.prices?.cad || 0,
         colors: cardData.colors, types: cardData.types, manaCost: cardData.manaCost,
         scryfallId: cardData.scryfallId, imageUrl: cardData.imageUrl,
         oracleText: cardData.oracleText, tags: [], location: '',
@@ -955,6 +1060,7 @@ function CollectionView({
         name: cardData.name, set: cardData.set, setCode: cardData.setCode,
         collectorNumber: cardData.collectorNumber, rarity: cardData.rarity,
         quantity: 1, condition: 'NM', price: cardData.prices?.usd || 0,
+        priceCad: cardData.prices?.cad || 0,
         colors: cardData.colors, types: cardData.types, manaCost: cardData.manaCost,
         scryfallId: cardData.scryfallId, imageUrl: cardData.imageUrl,
         oracleText: cardData.oracleText, tags: [], location: '',
@@ -1032,22 +1138,21 @@ function CollectionView({
       return matchesSearch && matchesCondition && matchesColor && matchesSet && matchesType && matchesSpecial && matchesRarity && matchesTag && matchesLocation;
     });
     return filtered.sort((a, b) => {
-      if (sortBy === 'name') return a.name.localeCompare(b.name);
-      if (sortBy === 'price') return b.price - a.price;
-      if (sortBy === 'quantity') return b.quantity - a.quantity;
-      if (sortBy === 'totalValue') return (b.price * b.quantity) - (a.price * a.quantity);
-      if (sortBy === 'type') {
-        const aType = a.types?.length > 0 ? a.types.join(' ') : 'zzz';
-        const bType = b.types?.length > 0 ? b.types.join(' ') : 'zzz';
-        return aType.localeCompare(bType);
+      const av = sortValue(sortBy, a);
+      const bv = sortValue(sortBy, b);
+      let cmp;
+      if (typeof av === 'number' && typeof bv === 'number') {
+        cmp = av - bv;
+      } else if (sortBy === 'collectorNumber') {
+        // Collector numbers are numeric strings — without `numeric: true`,
+        // "10" would lexicographically sort before "9".
+        cmp = String(av).localeCompare(String(bv), undefined, { numeric: true });
+      } else {
+        cmp = String(av).localeCompare(String(bv));
       }
-      if (sortBy === 'color') {
-        const cv = (card) => !card.colors?.length ? 'Z' : card.colors.length === 1 ? card.colors[0] : 'M' + card.colors.sort().join('');
-        return cv(a).localeCompare(cv(b));
-      }
-      return 0;
+      return sortDir === 'desc' ? -cmp : cmp;
     });
-  }, [cards, deferredSearchTerm, filterCondition, filterColor, filterSet, filterType, filterSpecial, filterRarity, filterTag, filterLocation, searchIncludesOracleText, sortBy, fuzzyMatchedIds]);
+  }, [cards, deferredSearchTerm, filterCondition, filterColor, filterSet, filterType, filterSpecial, filterRarity, filterTag, filterLocation, searchIncludesOracleText, sortBy, sortDir, fuzzyMatchedIds]);
 
   const totalPages = Math.ceil(filteredAndSortedCards.length / pageSize);
 
@@ -1056,7 +1161,18 @@ function CollectionView({
     return filteredAndSortedCards.slice(start, start + pageSize);
   }, [filteredAndSortedCards, currentPage, pageSize]);
 
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterCondition, filterColor, filterSet, filterType, filterSpecial, filterRarity, filterTag, filterLocation, searchIncludesOracleText, sortBy, pageSize]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterCondition, filterColor, filterSet, filterType, filterSpecial, filterRarity, filterTag, filterLocation, searchIncludesOracleText, sortBy, sortDir, pageSize]);
+
+  // Tap-to-sort: first tap on a column sorts it (sensible default direction),
+  // tapping the same column again flips ascending ↔ descending.
+  const handleHeaderSort = useCallback((key) => {
+    if (key === sortBy) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(key);
+      setSortDir(SORT_DEFAULT_DIR[key] || 'asc');
+    }
+  }, [sortBy]);
 
   return (    <>
           <>
@@ -1236,7 +1352,10 @@ function CollectionView({
           <div className="flex gap-4 items-center flex-wrap">
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => {
+                setSortBy(e.target.value);
+                setSortDir(SORT_DEFAULT_DIR[e.target.value] || 'asc');
+              }}
               className="px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-400"
             >
               <option value="name">Sort by Name</option>
@@ -1246,6 +1365,14 @@ function CollectionView({
               <option value="type">Sort by Type</option>
               <option value="color">Sort by Color</option>
             </select>
+            <button
+              type="button"
+              onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+              title={`${sortBy} sorted ${sortDir === 'asc' ? 'ascending' : 'descending'} — tap to flip`}
+              className="p-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition"
+            >
+              {sortDir === 'asc' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
+            </button>
             <div className="flex gap-1 items-center">
               <select
                 value={filterLocation}
@@ -1750,24 +1877,24 @@ function CollectionView({
                       )}
                     </button>
                   </th>
-                  <th className="px-6 py-3 text-left text-white font-semibold">Card Name</th>
-                  {isColumnVisible('set') && <th className="px-6 py-3 text-left text-white font-semibold hidden lg:table-cell">Set</th>}
-                  {isColumnVisible('setCode') && <th className="px-6 py-3 text-left text-white font-semibold text-sm hidden xl:table-cell">Set Code</th>}
-                  {isColumnVisible('collectorNumber') && <th className="px-6 py-3 text-left text-white font-semibold text-sm hidden xl:table-cell">#</th>}
-                  {isColumnVisible('rarity') && <th className="px-6 py-3 text-left text-white font-semibold text-sm hidden xl:table-cell">Rarity</th>}
-                  {isColumnVisible('manaCost') && <th className="px-6 py-3 text-left text-white font-semibold hidden lg:table-cell">Mana Cost</th>}
-                  {isColumnVisible('colors') && <th className="px-6 py-3 text-left text-white font-semibold hidden lg:table-cell">Colors</th>}
-                  {isColumnVisible('types') && <th className="px-6 py-3 text-left text-white font-semibold hidden lg:table-cell">Types</th>}
-                  {isColumnVisible('location') && <th className="px-6 py-3 text-left text-white font-semibold hidden xl:table-cell">Location</th>}
-                  {isColumnVisible('foil') && <th className="px-6 py-3 text-left text-white font-semibold hidden xl:table-cell">Foil</th>}
-                  {isColumnVisible('token') && <th className="px-6 py-3 text-left text-white font-semibold hidden xl:table-cell">Token</th>}
-                  {isColumnVisible('tags') && <th className="px-6 py-3 text-left text-white font-semibold hidden xl:table-cell">Tags</th>}
-                  <th className="px-6 py-3 text-left text-white font-semibold">Qty</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold">Condition</th>
-                  <th className="px-6 py-3 text-left text-white font-semibold">Price</th>
-                  {isColumnVisible('buylistValue') && <th className="px-6 py-3 text-left text-white font-semibold">Buylist Value</th>}
-                  {isColumnVisible('sellValue') && <th className="px-6 py-3 text-left text-white font-semibold">Sell Value</th>}
-                  {isColumnVisible('total') && <th className="px-6 py-3 text-left text-white font-semibold">Total</th>}
+                  <SortableTh label="Card Name" sortKey="name" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} />
+                  {isColumnVisible('set') && <SortableTh label="Set" sortKey="set" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} className="hidden lg:table-cell" />}
+                  {isColumnVisible('setCode') && <SortableTh label="Set Code" sortKey="setCode" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} className="text-sm hidden xl:table-cell" />}
+                  {isColumnVisible('collectorNumber') && <SortableTh label="#" sortKey="collectorNumber" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} className="text-sm hidden xl:table-cell" />}
+                  {isColumnVisible('rarity') && <SortableTh label="Rarity" sortKey="rarity" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} className="text-sm hidden xl:table-cell" />}
+                  {isColumnVisible('manaCost') && <SortableTh label="Mana Cost" sortKey="manaCost" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} className="hidden lg:table-cell" />}
+                  {isColumnVisible('colors') && <SortableTh label="Colors" sortKey="color" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} className="hidden lg:table-cell" />}
+                  {isColumnVisible('types') && <SortableTh label="Types" sortKey="type" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} className="hidden lg:table-cell" />}
+                  {isColumnVisible('location') && <SortableTh label="Location" sortKey="location" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} className="hidden xl:table-cell" />}
+                  {isColumnVisible('foil') && <SortableTh label="Foil" sortKey="foil" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} className="hidden xl:table-cell" />}
+                  {isColumnVisible('token') && <SortableTh label="Token" sortKey="token" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} className="hidden xl:table-cell" />}
+                  {isColumnVisible('tags') && <SortableTh label="Tags" sortKey="tags" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} className="hidden xl:table-cell" />}
+                  <SortableTh label="Qty" sortKey="quantity" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} />
+                  <SortableTh label="Condition" sortKey="condition" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} />
+                  <SortableTh label="Price" sortKey="price" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} />
+                  {isColumnVisible('buylistValue') && <SortableTh label="Buylist Value" sortKey="buylistValue" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} />}
+                  {isColumnVisible('sellValue') && <SortableTh label="Sell Value" sortKey="sellValue" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} />}
+                  {isColumnVisible('total') && <SortableTh label="Total" sortKey="totalValue" sortBy={sortBy} sortDir={sortDir} onSort={handleHeaderSort} />}
                   {isColumnVisible('actions') && <th className="px-6 py-3 text-left text-white font-semibold">Actions</th>}
                 </tr>
               </thead>
@@ -1923,7 +2050,23 @@ function CollectionView({
                         onMouseEnter={e => handlePriceCellEnter(e, card)}
                         onMouseLeave={handlePriceCellLeave}
                         className="px-6 py-4 text-white/80"
-                      >{formatPrice(card.price)}</td>}
+                      >
+                        {currentUser?.pricePreferences?.primarySource === 'facetoface' && card.priceCad > 0 ? (
+                          <>
+                            <span className="text-white font-medium">C${card.priceCad.toFixed(2)}</span>
+                            {card.price > 0 && (
+                              <span className="block text-white/40 text-xs">${card.price.toFixed(2)}</span>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            {formatPrice(card.price)}
+                            {card.priceCad > 0 && (
+                              <span className="block text-white/40 text-xs">F2F C${card.priceCad.toFixed(2)}</span>
+                            )}
+                          </>
+                        )}
+                      </td>}
                       {isColumnVisible('buylistValue') && <td className="px-6 py-4 text-white">${(card.buylistValue || 0).toFixed(2)}</td>}
                       {isColumnVisible('sellValue') && <td className="px-6 py-4 text-white">${(card.sellValue || 0).toFixed(2)}</td>}
                       {isColumnVisible('total') && <td className="px-6 py-4 text-white font-semibold">

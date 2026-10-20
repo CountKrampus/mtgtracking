@@ -301,12 +301,19 @@ export function AccountSettings({ onClose }) {
           </button>
         </div>
 
-        <div className="flex border-b border-gray-700">
+        {/* Horizontally scrollable tab bar — seven tabs don't fit on a phone
+            screen, and without overflow-x they were clipped with no way to
+            reach Discord/Sessions/Danger Zone. */}
+        <div className="flex overflow-x-auto scrollbar-hide border-b border-gray-700">
           {['profile', 'password', 'privacy', 'notifications', 'discord', 'sessions', 'danger'].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 font-medium ${
+              onClick={(e) => {
+                setActiveTab(tab);
+                // Keep the selected tab in view after tapping on mobile
+                e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+              }}
+              className={`px-4 py-2 font-medium whitespace-nowrap flex-shrink-0 ${
                 activeTab === tab
                   ? 'text-purple-400 border-b-2 border-purple-400'
                   : 'text-gray-400 hover:text-white'
