@@ -64,3 +64,39 @@ frontend/.env.development.local
 
 # Transient scan/OCR/pid scratch files (tmp-* at any depth)
 tmp-*
+
+# Runtime logs anywhere in the repo — boot output, npm/yarn debug logs,
+# session logs. Specific boot logs are listed above for documentation, but
+# this catches any new one (e.g. frontend/npm-debug.log) in any directory.
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Playwright MCP session scratch — console logs, page snapshots, screenshots.
+# Was fully committed (442 files, including a Discord backup-codes file);
+# untracked in the same change that added this rule.
+.playwright-mcp/
+
+# Claude Code local scratch state (.claude/settings.json stays tracked).
+# Mirrors .git/info/exclude so every clone ignores these, not just this machine
+# — .claude/worktrees/ entries were also accidentally committed as gitlinks
+# (no .gitmodules) and were untracked alongside this rule.
+.claude/worktrees/
+.claude/scheduled_tasks.lock
+.claude/scheduled_tasks.json
+.claude/routines/.state/
+.claude/checkpoints/
+.claude/mailbox/
+.claude/agent-registry.json
+.claude/agent-memory-local
+.claude/first-run
+.claude/assistant-daemon-state.json
+
+# Agent session scratch dirs (also in .git/info/exclude locally)
+.freebuff/
+.remember/
+
+# CRA machine-local env overrides — frontend/.env is intentionally tracked
+# (public API URL), but its *.local siblings are per-machine.
+.env.*.local

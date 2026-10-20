@@ -128,6 +128,14 @@ app.use(verifyToken);
 // Mount auth routes (these don't require authentication)
 app.use('/api/auth', authRoutes);
 
+// Maintenance mode gate.
+// Registered here — right after verifyToken has populated req.user, after
+// /api/auth (so the login page can still read maintenance status), and
+// BEFORE every other /api router below. Express matches middleware in
+// registration order; when this sat below the route mounts it never ran for
+// them, so maintenance mode blocked nothing.
+app.use(checkMaintenanceMode);
+
 // Public user profile endpoint (no auth required â€” must be before the auth-protected users router)
 app.use('/api/users', require('./routes/usersPublic'));
 
@@ -169,9 +177,6 @@ app.use('/api/achievements', achievementsRouter);
 
 // Mount deck spotlight routes
 app.use('/api/deck-spotlight', require('./routes/deckSpotlight'));
-
-// Check maintenance mode for all other routes
-app.use(checkMaintenanceMode);
 
 // Location Schema
 const locationSchema = new mongoose.Schema({

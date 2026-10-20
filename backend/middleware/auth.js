@@ -287,8 +287,12 @@ const userRateLimit = (maxRequests = 100, windowMs = 60000) => {
   };
 };
 
-// Clean up rate limit data periodically
-setInterval(() => {
+// Clean up rate limit data periodically.
+// unref()'d so this module-level timer never keeps the Node event loop
+// alive on its own: without this, any Jest worker that imports
+// middleware/auth.js (i.e. nearly every route test) hangs after the last
+// test because the referenced interval holds the process open forever.
+const userRateLimitCleanupTimer = setInterval(() => {
   const now = Date.now();
   for (const [key, data] of userRateLimits.entries()) {
     if (now - data.windowStart > 60000) {
@@ -296,6 +300,9 @@ setInterval(() => {
     }
   }
 }, 60000);
+if (typeof userRateLimitCleanupTimer.unref === 'function') {
+  userRateLimitCleanupTimer.unref();
+}
 
 module.exports = {
   isMultiUserEnabled,

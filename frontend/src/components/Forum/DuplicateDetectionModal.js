@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { X, GitMerge } from 'lucide-react';
-import axios from 'axios';
 import { API_URL } from '../../config';
+import { useAuthContext } from '../../contexts/AuthContext';
 
 export default function DuplicateDetectionModal({ isOpen, onClose, suggestedDuplicates, onMergeRequest, newThreadId }) {
+  const { authFetch } = useAuthContext();
   const [loadingId, setLoadingId] = useState(null);
   const [successId, setSuccessId] = useState(null);
   const [error, setError] = useState('');
@@ -15,14 +16,24 @@ export default function DuplicateDetectionModal({ isOpen, onClose, suggestedDupl
     setError('');
 
     try {
-      await axios.put(`${API_URL}/forum/threads/${newThreadId}/merge-request`, {
-        suggestedThreadId: targetThreadId,
-        reason: 'User submitted merge request after duplicate detection'
+      // The endpoint now requires auth — authFetch attaches (and refreshes)
+      // the bearer token, unlike the old unauthenticated axios.put.
+      const res = await authFetch(`${API_URL}/forum/threads/${newThreadId}/merge-request`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          suggestedThreadId: targetThreadId,
+          reason: 'User submitted merge request after duplicate detection'
+        })
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || `Server error: ${res.status}`);
+      }
       setSuccessId(targetThreadId);
       onMergeRequest?.(targetThreadId);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit merge request');
+      setError(err.message || 'Failed to submit merge request');
     } finally {
       setLoadingId(null);
     }

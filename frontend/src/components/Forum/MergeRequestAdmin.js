@@ -18,7 +18,8 @@ export default function MergeRequestAdmin() {
       setLoading(true);
       setFetchError('');
       try {
-        const res = await fetch(`${API_URL}/forum/admin/merge-requests`);
+        // authFetch: the endpoint now requires forum:moderate auth
+        const res = await authFetch(`${API_URL}/forum/admin/merge-requests`);
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
         const data = await res.json();
 

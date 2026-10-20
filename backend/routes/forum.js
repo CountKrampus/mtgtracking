@@ -1071,47 +1071,53 @@ router.get('/threads/:threadId/duplicates', async (req, res) => {
 });
 
 // PUT /api/forum/threads/:threadId/merge-request
-router.put('/threads/:threadId/merge-request', async (req, res) => {
+// Submit a merge request for a newly created duplicate thread.
+//
+// This route previously had NO auth middleware and only understood
+// `{ status: 'approved' | 'rejected' }` — so anyone, even an unauthenticated
+// caller, could approve a merge and move every post between threads, while
+// the actual UI flow (a logged-in user submitting `{ suggestedThreadId,
+// reason }` from the duplicate-detection modal) was rejected with 400
+// "Invalid status". Submissions now require auth and always create a
+// 'pending' request; only moderators resolve it via POST .../merge or
+// POST .../merge-request/reject below.
+router.put('/threads/:threadId/merge-request', verifyToken, requireAuth, async (req, res) => {
   try {
     const { threadId } = req.params;
-    const { status, reviewedBy } = req.body;
+    const { suggestedThreadId, reason } = req.body;
 
-    if (!['approved', 'rejected'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
+    if (!suggestedThreadId || !mongoose.Types.ObjectId.isValid(suggestedThreadId)) {
+      return res.status(400).json({ message: 'suggestedThreadId required' });
+    }
+    if (String(suggestedThreadId) === String(threadId)) {
+      return res.status(400).json({ message: 'A thread cannot be merged into itself' });
     }
 
-    const thread = await ForumThread.findByIdAndUpdate(
-      threadId,
-      {
-        'mergeRequest.status': status,
-        'mergeRequest.reviewedBy': reviewedBy,
-        'mergeRequest.reviewedAt': new Date()
-      },
-      { new: true }
-    );
-
-    if (status === 'approved' && thread.mergeRequest.suggestedThreadId) {
-      await ForumPost.updateMany(
-        { threadId },
-        { threadId: thread.mergeRequest.suggestedThreadId }
-      );
-
-      const postCount = await ForumPost.countDocuments({
-        threadId: thread.mergeRequest.suggestedThreadId
-      });
-
-      await ForumThread.findByIdAndUpdate(
-        thread.mergeRequest.suggestedThreadId,
-        { postCount }
-      );
-
-      thread.postCount = 0;
-      await thread.save();
+    const thread = await ForumThread.findById(threadId);
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
     }
 
-    res.json(thread);
+    const target = await ForumThread.findById(suggestedThreadId).select('_id');
+    if (!target) {
+      return res.status(404).json({ message: 'Target thread not found' });
+    }
+
+    // Restore the pending flow: a submission always lands as 'pending' and is
+    // only resolved by a moderator through the dedicated approve/reject routes.
+    thread.mergeRequest = {
+      suggestedThreadId: target._id,
+      suggestedBy: req.user ? req.user._id : null,
+      reason: reason || 'User submitted merge request after duplicate detection',
+      status: 'pending',
+      reviewedBy: null,
+      reviewedAt: null
+    };
+    await thread.save();
+
+    res.json({ success: true, message: 'Merge request submitted for review', thread });
   } catch (error) {
-    console.error('Merge threads error:', error);
+    console.error('Merge request error:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -1145,21 +1151,33 @@ router.get('/admin/flagged-posts', verifyToken, requireAuth, requirePermission('
 });
 
 // GET /api/forum/admin/merge-requests - list pending merge requests
-router.get('/admin/merge-requests', async (req, res) => {
+// Moderation data (thread titles + who requested merges): guarded the same
+// way as /admin/flagged-posts — it previously had no middleware at all.
+router.get('/admin/merge-requests', verifyToken, requireAuth, requirePermission('forum:moderate'), async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = 20;
     const skip = (page - 1) * limit;
 
-    const pending = await ForumThread.find({ 'mergeRequest.status': 'pending' })
+    // Every ForumThread defaults mergeRequest.status to 'pending', so filtering
+    // on status alone lists the ENTIRE forum as pending merge requests (the
+    // target thread itself shows up even though nobody requested anything).
+    // Require an actual suggested target too — that's what makes a pending
+    // request a pending request.
+    const pendingFilter = {
+      'mergeRequest.status': 'pending',
+      'mergeRequest.suggestedThreadId': { $ne: null }
+    };
+
+    const pending = await ForumThread.find(pendingFilter)
       .select('title postCount mergeRequest createdAt')
       .populate('mergeRequest.suggestedThreadId', 'title')
-      .sort({ 'mergeRequest.status': 1 })
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
 
-    const total = await ForumThread.countDocuments({ 'mergeRequest.status': 'pending' });
+    const total = await ForumThread.countDocuments(pendingFilter);
 
     res.json({
       pending,
