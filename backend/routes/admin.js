@@ -1,7 +1,11 @@
 const express = require('express');
-const { getPriceWithFallback } = require('../utils/pricing');
+const { getPriceWithFallback, fetchFaceToFacePrice, isPlausibleUsdPrice, isPlausibleCadPrice } = require('../utils/pricing');
+const { fetchCardFromScryfall } = require('../utils/scryfallLookup');
+const { cacheCardImage } = require('../utils/imageCache');
+const { mapWithConcurrency, createStartRateLimiter } = require('../utils/concurrency');
 const router = express.Router();
 const mongoose = require('mongoose');
+const PriceUpdateJob = require('../models/PriceUpdateJob');
 
 const User = require('../models/User');
 const Session = require('../models/Session');
@@ -1811,24 +1815,102 @@ router.get('/moderation-history/:userId', requirePermission('user:ban', 'user:ap
 
 // ==================== PRICING ADMIN ====================
 
-// In-memory job store (simple; resets on server restart)
+// Live in-memory mirrors of jobs owned by *this* process, for cheap polling.
+// The durable copy lives in PriceUpdateJob — it survives restarts and feeds
+// the "Recent Price Jobs" list.
 const priceUpdateJobs = {};
+
+// Keep the in-memory mirror bounded (oldest finished jobs fall off first).
+const MAX_LIVE_JOBS = 50;
+// Cap stored per-card errors so a pathological run (every card failing)
+// doesn't blow up the job document.
+const MAX_STORED_ERRORS = 50;
+// How many cards are priced concurrently. Each card's lookup is 1-3 outbound
+// requests; 5 in flight cuts wall-clock time to ~1/5 of the old serial loop
+// while staying well inside normal API courtesy limits.
+const PRICE_UPDATE_CONCURRENCY = 5;
+// Minimum spacing between request starts across all workers, so concurrency
+// doesn't translate into bursty traffic against the pricing sources.
+const PRICE_UPDATE_MIN_INTERVAL_MS = 200;
+
+async function persistJobProgress(jobId) {
+  const job = priceUpdateJobs[jobId];
+  if (!job) return;
+  try {
+    await PriceUpdateJob.updateOne(
+      { jobId },
+      {
+        $set: {
+          status: job.status,
+          options: job.options,
+          total: job.total,
+          processed: job.processed,
+          updated: job.updated,
+          skipped: job.skipped,
+          failed: job.failed,
+          errors: job.errors.slice(0, MAX_STORED_ERRORS),
+          error: job.error || null,
+          completedAt: job.completedAt || null
+        }
+      }
+    );
+  } catch (err) {
+    console.error(`Failed to persist price job ${jobId}:`, err.message);
+  }
+}
+
+function pruneLiveJobs() {
+  const ids = Object.keys(priceUpdateJobs);
+  if (ids.length <= MAX_LIVE_JOBS) return;
+  ids
+    .sort((a, b) => (priceUpdateJobs[a].startedAt - priceUpdateJobs[b].startedAt))
+    .slice(0, ids.length - MAX_LIVE_JOBS)
+    .forEach((id) => {
+      if (priceUpdateJobs[id].status !== 'running') delete priceUpdateJobs[id];
+    });
+}
 
 /**
  * POST /api/admin/force-price-update - Start async background price update job
  */
 router.post('/force-price-update', requirePermission('prices:force-update'), async (req, res) => {
   try {
+    // fullData: also refresh complete Scryfall metadata per card (set, setCode,
+    // collector number, rarity, colors, types, mana cost, image, oracle text) —
+    // mirrors the bulk endpoint's ?fullData=true path. The admin panel sends
+    // this as a body flag; clients that send nothing get a price-only run.
+    const fullData = req.body?.fullData === true;
     const jobId = `price_update_${Date.now()}`;
+    const startedAt = new Date();
     priceUpdateJobs[jobId] = {
+      jobId,
       status: 'running',
-      startedAt: new Date(),
+      startedAt,
+      completedAt: null,
+      options: { force: false, fullData },
       total: 0,
+      processed: 0,
       updated: 0,
       skipped: 0,
       failed: 0,
       errors: []
     };
+    pruneLiveJobs();
+
+    // Durable copy first so the job shows up in "Recent Price Jobs"
+    // immediately, even if the process dies mid-run.
+    try {
+      await PriceUpdateJob.create({
+        jobId,
+        status: 'running',
+        startedAt,
+        options: { force: false, fullData },
+        total: 0,
+        triggeredBy: req.user._id
+      });
+    } catch (dbErr) {
+      console.error('Failed to create PriceUpdateJob record:', dbErr.message);
+    }
 
     res.json({ jobId, message: 'Price update job started' });
 
@@ -1842,30 +1924,98 @@ router.post('/force-price-update', requirePermission('prices:force-update'), asy
         const cards = await Card.find({});
         priceUpdateJobs[jobId].total = cards.length;
 
-        for (const card of cards) {
+        const limitStart = createStartRateLimiter(PRICE_UPDATE_MIN_INTERVAL_MS);
+        let sincePersist = 0;
+
+        // Price-only refresh: keep whatever metadata the card has, replace
+        // whichever fetched prices actually came back.
+        const applyPriceUpdate = async (card, priceData) => {
+          if (priceData && (priceData.usd > 0 || priceData.source !== 'None (not found)')) {
+            const update = { updatedAt: new Date() };
+            // Only overwrite the USD price when a USD source produced one —
+            // an F2F-only (CAD) result must not zero out the stored price
+            if (priceData.usd > 0) update.price = priceData.usd;
+            if (priceData.cad > 0) update.priceCad = priceData.cad;
+            await Card.findByIdAndUpdate(card._id, update);
+            priceUpdateJobs[jobId].updated++;
+          } else {
+            priceUpdateJobs[jobId].skipped++;
+          }
+        };
+
+        await mapWithConcurrency(cards, PRICE_UPDATE_CONCURRENCY, async (card) => {
           try {
-            // Rate limit: 500ms between requests
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await limitStart();
 
-            const priceData = await getPriceWithFallback(card.name, card.isFoil);
+            if (!fullData) {
+              const priceData = await getPriceWithFallback(card.name, card.isFoil, { userId: card.userId, rarity: card.rarity });
+              await applyPriceUpdate(card, priceData);
+              return;
+            }
 
-            if (priceData && (priceData.usd > 0 || priceData.source !== 'None (not found)')) {
-              await Card.findByIdAndUpdate(card._id, {
-                price: priceData.usd,
-                updatedAt: new Date()
-              });
+            // Full-data run: refresh complete Scryfall metadata for every card.
+            try {
+              // F2F CAD lookup starts in parallel with the full-data fetch
+              const f2fPromise = fetchFaceToFacePrice(card.name, card.isFoil);
+              const { cardData } = await fetchCardFromScryfall(card.name, card.setCode, card.collectorNumber);
+
+              // Fresh rarity from Scryfall drives both the stored value and the
+              // price sanity check
+              const freshRarity = cardData.rarity ? cardData.rarity[0].toUpperCase() : card.rarity;
+
+              // Reuse Scryfall's pricing (already in cardData) instead of a
+              // second round-trip; fall back to the guarded chain when it's
+              // missing or implausible
+              const scryfallPrice = card.isFoil
+                ? (cardData.prices?.usd_foil ? parseFloat(cardData.prices.usd_foil) : 0)
+                : (cardData.prices?.usd ? parseFloat(cardData.prices.usd) : 0);
+              const f2fCad = (await f2fPromise).cad;
+              const priceData = scryfallPrice > 0 && isPlausibleUsdPrice(scryfallPrice, freshRarity)
+                ? { usd: scryfallPrice, cad: isPlausibleCadPrice(f2fCad) ? f2fCad : 0 }
+                : await getPriceWithFallback(card.name, card.isFoil, { userId: card.userId, rarity: freshRarity });
+
+              const scryfallImageUrl = cardData.image_uris ? cardData.image_uris.normal : null;
+              const cachedImageUrl = await cacheCardImage(cardData.id, scryfallImageUrl);
+
+              const update = {
+                updatedAt: new Date(),
+                set: cardData.set_name,
+                setCode: cardData.set.toUpperCase(),
+                collectorNumber: cardData.collector_number,
+                rarity: freshRarity,
+                colors: cardData.colors || [],
+                types: cardData.type_line ? cardData.type_line.split('\u2014')[0].trim().split(' ') : [],
+                manaCost: cardData.mana_cost || '',
+                scryfallId: cardData.id,
+                imageUrl: cachedImageUrl,
+                oracleText: cardData.oracle_text || '',
+                reserved: cardData.reserved || false
+              };
+              if (priceData.usd > 0) update.price = priceData.usd;
+              if (priceData.cad > 0) update.priceCad = priceData.cad;
+              await Card.findByIdAndUpdate(card._id, update);
               priceUpdateJobs[jobId].updated++;
-            } else {
-              priceUpdateJobs[jobId].skipped++;
+            } catch (fullErr) {
+              // Full data failed for this card — fall back to a price-only refresh
+              const priceData = await getPriceWithFallback(card.name, card.isFoil, { userId: card.userId, rarity: card.rarity });
+              await applyPriceUpdate(card, priceData);
             }
           } catch (cardErr) {
             priceUpdateJobs[jobId].failed++;
-            priceUpdateJobs[jobId].errors.push({ card: card.name, error: cardErr.message });
+            if (priceUpdateJobs[jobId].errors.length < MAX_STORED_ERRORS) {
+              priceUpdateJobs[jobId].errors.push({ card: card.name, error: cardErr.message });
+            }
+          } finally {
+            priceUpdateJobs[jobId].processed++;
+            // Flush progress periodically so a crash/restart mid-run leaves
+            // useful counters behind instead of a bare running/total:0 record.
+            if (++sincePersist % 25 === 0) persistJobProgress(jobId);
           }
-        }
+        });
 
         priceUpdateJobs[jobId].status = 'complete';
         priceUpdateJobs[jobId].completedAt = new Date();
+        await persistJobProgress(jobId);
 
         try {
           await ModerationHistory.create({
@@ -1886,6 +2036,8 @@ router.post('/force-price-update', requirePermission('prices:force-update'), asy
       } catch (err) {
         priceUpdateJobs[jobId].status = 'failed';
         priceUpdateJobs[jobId].error = err.message;
+        priceUpdateJobs[jobId].completedAt = new Date();
+        await persistJobProgress(jobId);
       }
     })();
   } catch (error) {
@@ -1895,12 +2047,77 @@ router.post('/force-price-update', requirePermission('prices:force-update'), asy
 });
 
 /**
- * GET /api/admin/force-price-update/:jobId - Poll job status
+ * A persisted job still marked 'running' with no live in-memory entry was
+ * orphaned by a server restart mid-run — nothing is processing it anymore.
+ * Heal it to 'failed' so the admin panel doesn't show a zombie job that will
+ * never progress (this happened whenever the server restarted during an
+ * update: refresh showed the job "running" forever with no way to track it).
+ */
+async function healOrphanedJob(job) {
+  if (job.status !== 'running' || priceUpdateJobs[job.jobId]) return job;
+  const healed = {
+    ...job,
+    status: 'failed',
+    error: 'Interrupted by a server restart before completing',
+    completedAt: new Date()
+  };
+  try {
+    await PriceUpdateJob.updateOne(
+      { jobId: job.jobId, status: 'running' },
+      { $set: { status: 'failed', error: healed.error, completedAt: healed.completedAt } }
+    );
+  } catch (err) {
+    console.error(`Failed to heal orphaned job ${job.jobId}:`, err.message);
+  }
+  return healed;
+}
+
+/**
+ * GET /api/admin/force-price-update - List recent price update jobs (newest
+ * first). Live in-memory jobs are overlaid on the persisted records so an
+ * in-flight job shows fresh counters without waiting for a DB write.
+ */
+router.get('/force-price-update', requirePermission('prices:force-update'), async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const jobs = await PriceUpdateJob.find({}).sort({ startedAt: -1 }).limit(limit).lean();
+
+    const merged = [];
+    for (const job of jobs) {
+      const live = priceUpdateJobs[job.jobId];
+      merged.push(live ? { ...job, ...live, errors: live.errors } : await healOrphanedJob(job));
+    }
+
+    // Include live jobs that predate persistence failures (not in DB yet)
+    const known = new Set(merged.map((j) => j.jobId));
+    for (const live of Object.values(priceUpdateJobs)) {
+      if (!known.has(live.jobId)) merged.push(live);
+    }
+    merged.sort((a, b) => new Date(b.startedAt) - new Date(a.startedAt));
+
+    res.json({ jobs: merged.slice(0, limit) });
+  } catch (error) {
+    console.error('List price jobs error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/force-price-update/:jobId - Poll job status. Falls back to
+ * the persisted record so jobs from before a restart can still be inspected.
  */
 router.get('/force-price-update/:jobId', requirePermission('prices:force-update'), async (req, res) => {
   const job = priceUpdateJobs[req.params.jobId];
-  if (!job) return res.status(404).json({ message: 'Job not found' });
-  res.json({ jobId: req.params.jobId, ...job });
+  if (job) return res.json(job);
+
+  try {
+    const persisted = await PriceUpdateJob.findOne({ jobId: req.params.jobId }).lean();
+    if (!persisted) return res.status(404).json({ message: 'Job not found' });
+    res.json(await healOrphanedJob(persisted));
+  } catch (error) {
+    console.error('Poll price job error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
 });
 
 /**
@@ -2925,11 +3142,14 @@ router.put('/price-flags/:id', requireModerator(), async (req, res) => {
       const card = await Card.findById(flag.cardId);
       if (card) {
         cardName = card.name;
-        const priceData = await getPriceWithFallback(card.name, card.isFoil);
+        const priceData = await getPriceWithFallback(card.name, card.isFoil, { userId: card.userId, rarity: card.rarity });
         if (priceData.usd > 0) {
           card.lastPrice = card.price;
           card.price = priceData.usd;
           resolvedPrice = priceData.usd;
+        }
+        if (priceData.cad > 0) card.priceCad = priceData.cad;
+        if (priceData.usd > 0 || priceData.cad > 0) {
           await card.save();
         }
       }

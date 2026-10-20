@@ -340,8 +340,11 @@ app.get('/api/scryfall/search', async (req, res) => {
     const cacheKey = `scryfall:${name.toLowerCase()}:${(setCode || '').toLowerCase()}:${collectorNumber || ''}`;
     const { cardData } = await cachedApiCall(cacheKey, () => fetchCardFromScryfall(name, setCode, collectorNumber));
 
-    // Get pricing from Scryfall (with MTGGoldfish backup)
-    const priceData = await getPriceWithFallback(name);
+    // Get pricing: the account's primary source first, then the fallback
+    // chain (Scryfall/MTGGoldfish); F2F CAD rides along in parallel
+    const priceData = await getPriceWithFallback(name, false, {
+      primarySource: req.user?.pricePreferences?.primarySource
+    });
 
     // Cache image and get local URL
     const scryfallImageUrl = cardData.image_uris ? cardData.image_uris.normal : null;
@@ -437,7 +440,7 @@ app.get('/api/export/csv', requireAuth, activityLoggers.exportCsv, async (req, r
     // Helper to escape CSV fields
     const escapeCSV = (str) => str ? `"${String(str).replace(/"/g, '""')}"` : '""';
 
-    const csvHeader = 'Name,Set,Set Code,Collector Number,Rarity,Quantity,Condition,Price,Total Value,Colors,Types,Mana Cost,Tags,Location,Is Token,Is Foil,Scryfall ID,Image URL,Oracle Text,Created At,Updated At\n';
+    const csvHeader = 'Name,Set,Set Code,Collector Number,Rarity,Quantity,Condition,Price,Total Value,Colors,Types,Mana Cost,Tags,Location,Is Token,Is Foil,Scryfall ID,Image URL,Oracle Text,Created At,Updated At,Price CAD\n';
     const csvRows = cards.map(card => {
       const colors = card.colors ? card.colors.join(';') : '';
       const types = card.types ? card.types.join(';') : '';
@@ -464,7 +467,8 @@ app.get('/api/export/csv', requireAuth, activityLoggers.exportCsv, async (req, r
         escapeCSV(card.imageUrl),
         escapeCSV(card.oracleText),
         card.createdAt ? card.createdAt.toISOString() : '',
-        card.updatedAt ? card.updatedAt.toISOString() : ''
+        card.updatedAt ? card.updatedAt.toISOString() : '',
+        card.priceCad ?? 0
       ].join(',');
     }).join('\n');
 

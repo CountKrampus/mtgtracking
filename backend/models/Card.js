@@ -12,6 +12,10 @@ const cardSchema = new mongoose.Schema({
   quantity: { type: Number, required: true, default: 1, min: 1 },
   condition: { type: String, required: true, enum: VALID_CONDITIONS },
   price: { type: Number, required: true, default: 0, min: 0 },
+  // Face to Face Games retail price in CAD (0 when F2F doesn't list the
+  // card). Stored alongside `price` (USD market value) so the collection
+  // can show what the card actually costs at F2F.
+  priceCad: { type: Number, default: 0, min: 0 },
   lastPrice: { type: Number, default: null, min: 0 },
   purchasePrice: { type: Number, default: null, min: 0 },
   colors: [{ type: String, trim: true }],

@@ -61,8 +61,8 @@ The backend is a single-file Express application with the following components:
    - `DELETE /api/cards/bulk-delete` - Bulk delete multiple cards
    - `GET /api/scryfall/autocomplete?q={query}` - Autocomplete card names from Scryfall
    - `GET /api/scryfall/search?name={name}` - Search Scryfall for full card data
-   - `POST /api/cards/:id/update-price` - Update single card price (supports `?force=true` and `?fullData=true`)
-   - `POST /api/cards/update-all-prices` - Bulk update all card prices (with 500ms rate limiting, supports `?force=true` and `?fullData=true`)
+   - `POST /api/cards/:id/update-price` - Refresh single card price (always updates; `?fullData=true` for full metadata)
+   - `POST /api/cards/update-all-prices` - Refresh ALL card prices (every card, every run; `?fullData=true` for full metadata)
    - `POST /api/cards/bulk-import` - Bulk import cards from text list (supports online with Scryfall or offline fallback)
    - `POST /api/cards/bulk-import-offline` - Bulk import cards without API calls (offline mode, minimal data)
    - `GET /api/export/json` - Export collection as JSON (all fields)
@@ -125,8 +125,7 @@ React single-page application with all logic in `App.js`:
    - CRUD operations for cards
    - **Price updates** (individual and bulk):
      - Individual: Dollar sign icon on each card row
-     - Bulk: "Update All Prices" button opens modal with options:
-       - "Force Update Existing Cards" - Updates all cards even if they have data
+     - Bulk: "Update All Prices" button opens modal (every card is refreshed, even ones that already have a price):
        - "Update Full Card Data" - Fetches complete metadata (set, rarity, collector number, colors, types, mana cost, images)
    - Export to JSON/CSV (CSV now includes all 21 fields)
    - Collection statistics dashboard
@@ -149,7 +148,7 @@ React single-page application with all logic in `App.js`:
    - Tailwind CSS with glassmorphism design (backdrop-blur)
    - Lucide-react icons (size 18 for most buttons, size 16 for table action buttons)
    - **Compact Button Design**: All buttons use `py-1` (reduced padding) for a streamlined appearance
-   - **Toggle Buttons**: Update options (Force Update, Full Data) are toggle buttons instead of checkboxes
+   - **Toggle Buttons**: Update options (e.g. Full Data) are toggle buttons instead of checkboxes
      - Active state: purple background with checkmark (✓)
      - Inactive state: semi-transparent white background
    - **9-Column Filter Grid**: Search, Condition, Set, Color, Type, Special, Rarity, Tags, Location
@@ -213,19 +212,16 @@ See `MONGODB_SETUP.md` for full installation and configuration instructions.
    - 500ms delay between bulk updates to avoid overloading servers
    - Price source is tracked in response: 'Scryfall', 'MTGGoldfish (backup)', or 'None (not found)'
 
-2. **Smart Price Updates (Skip Existing Data)**:
-   - Price update endpoints (`/api/cards/:id/update-price` and `/api/cards/update-all-prices`) by default only update cards missing price or oracle text
+2. **Price Refresh (Always On)**:
+   - Price update endpoints (`/api/cards/:id/update-price` and `/api/cards/update-all-prices`) refresh EVERY card on every run — cards are never skipped for already having a price or oracle text
    - Query parameters:
-     - `?force=true` - Force update cards even if they have existing data
      - `?fullData=true` - Update complete card data (set, setCode, collectorNumber, rarity, colors, types, manaCost, scryfallId, imageUrl, oracleText, price)
-   - **Skip Logic**:
-     - Skip if: `!force && !fullData && card.price > 0 && card.oracleText`
-     - This means `fullData=true` bypasses the skip check (cards will be updated even if they have existing data)
-   - Without `fullData=true`: Only updates price and oracle text (if missing)
+     - `?force=true` - Still accepted for backward compatibility, but no longer needed (nothing is skipped)
+   - Without `fullData=true`: Updates price (USD + CAD) and oracle text (if missing)
    - With `fullData=true`: Fetches and updates ALL card metadata from Scryfall, including set code, rarity, and collector number
    - **Image Caching**: When `fullData=true`, images are automatically downloaded and cached locally
-   - Prevents unnecessary API calls and respects rate limits when updating large collections
-   - Useful for filling in data for cards imported in offline mode without re-fetching data for complete cards
+   - **Price Sanity Guard** (`backend/utils/pricing.js`): fetched prices are plausibility-checked before being trusted — commons/uncommons above $250 and any USD price above $10k (CAD above $15k) are rejected as likely scraper junk, and the chain falls through to the next source. Prevents another Exor-style decoy price from poisoning the collection
+   - The nightly snapshot job also refreshes each card's `price`/`priceCad` (see `backend/jobs/dailyPriceSnapshot.js`), so stale stored prices self-heal within 24h
 
 3. **Scryfall Integration**: Still used for autocomplete and card data (not pricing)
    - Autocomplete triggers at 2+ characters
@@ -306,18 +302,16 @@ See `MONGODB_SETUP.md` for full installation and configuration instructions.
 - Prices auto-populate from Scryfall (in USD)
 
 **Updating prices:**
-- Individual: Click dollar sign icon on card row (fetches from Scryfall with MTGGoldfish fallback)
-- Bulk: Click "Update All Prices" button (takes time due to 500ms rate limiting per card)
-  - By default, only updates cards missing price or oracle text data
-  - Click "Force Update Existing Cards" toggle button (purple = active) to update ALL cards regardless of existing data
+- Individual: Click dollar sign icon on card row (fetches from Scryfall with MTGGoldfish fallback; always refreshes)
+- Bulk: Click "Update All Prices" button — every card is re-priced, even those that already have a price
   - Click "Update Full Card Data" toggle button (purple = active) to fetch and update complete card metadata:
     - Set name, set code, collector number, rarity
     - Colors, types, mana cost
     - Card images (automatically cached locally for offline use)
     - Oracle text, price
   - Without "Update Full Card Data": Only updates price and oracle text (if missing)
-  - **Note**: `fullData=true` automatically bypasses skip logic, so cards will be updated even if they have existing data
-  - Shows detailed results: cards updated, skipped, and total count
+  - Shows detailed results: cards updated and total count
+  - Implausible fetched prices (see Price Sanity Guard above) are rejected instead of saved
 
 **Bulk importing cards:**
 - Prepare a .txt file with card names (one per line)
@@ -495,3 +489,19 @@ See `MONGODB_SETUP.md` for full installation and configuration instructions.
     found" since the plain-text export has no commander marker at all)
   - Archidekt import now excludes cards in categories marked `includedInDeck: false` (e.g. a
     "Tokens & Extras" category), fixing inflated card counts on import
+
+### Pricing Reliability (October 2026)
+- **No More Skipped Cards**: Price update endpoints now refresh every card on every run;
+  the "Force Update Existing Cards" toggle was removed from the Update Prices modal and the
+  admin panel (nothing is skipped anymore, so it no longer does anything)
+- **Nightly Refresh**: the 00:05 cron writes fetched prices back onto each card (`price` +
+  `priceCad`), not just into snapshot history — stale or wrong stored prices self-heal daily
+- **Price Sanity Guard**: implausible fetched prices (C/U above $250, any USD above $10k,
+  CAD above $15k) are rejected and the next source is tried — prevents another Exor-style
+  decoy price from being stored (a stored $1000 Swords to Plowshares was caught and
+  corrected this way)
+- **Admin "Update full card data" wired up**: the admin force-price-update job now honors
+  the panel's fullData toggle (`POST /api/admin/force-price-update` body `{ fullData: true }`)
+  — each card gets full Scryfall metadata (set, setCode, collector number, rarity, colors,
+  types, mana cost, cached image, oracle text) plus guarded prices. The job records
+  `options.fullData` so Recent Price Jobs shows a "full data" chip

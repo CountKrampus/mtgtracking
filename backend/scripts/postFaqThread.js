@@ -17,7 +17,7 @@ const CONTENT = `Answers to the questions that come up most. If yours isn't here
 Prices come from Scryfall first, with MTGGoldfish as a backup if Scryfall doesn't have a price for that printing. Click the dollar-sign icon on a card to refresh its price individually, or use "Update Prices" in the header to refresh in bulk. If you think a price is genuinely wrong (not just stale), use the Flag button on the card to submit a price correction — a moderator will review it.
 
 **How do I update prices for my whole collection at once?**
-Click "Update Prices" in the header. By default it only fills in cards missing a price or oracle text. Turn on "Force Update Existing Cards" to refresh everything regardless of existing data, and "Update Full Card Data" to also refresh set info, rarity, colors, types, and the card image — not just the price.
+Click "Update Prices" in the header — every card is refreshed, even ones that already have a price. Turn on "Update Full Card Data" to also refresh set info, rarity, colors, types, and the card image — not just the price. Prices are also refreshed automatically every night.
 
 **Can I use this without an internet connection?**
 Yes, once cards have been added and their images cached at least once. Enable Offline Mode before bulk importing to skip API calls entirely (minimal data only), and use "Update All Prices" with "Update Full Card Data" later when you're back online to fill in the rest.

@@ -1,5 +1,6 @@
 import React from 'react';
 import axios from 'axios';
+import { useAuthContext } from '../contexts/AuthContext';
 import { Settings, Plus, Trash2, Edit2, MapPin, QrCode, Printer, Layers, Heart, Crown, BarChart3, Zap, X } from 'lucide-react';
 import { API_URL } from '../config';
 import DeckFoldersTab from './DeckFoldersTab';
@@ -18,7 +19,35 @@ export default function SettingsView({
   newTagName, setNewTagName, handleCreateTag, handleDeleteTag, handleToggleTagIgnorePrice,
 }) {
     const qrLabels = useQRLabels();
+    const auth = useAuthContext() || {};
+    const user = auth.user;
+    const updateProfile = auth.updateProfile;
     const [settingsTab, setSettingsTab] = React.useState('display');
+
+    // Primary price source (account-level, saved to the user profile)
+    const [priceSource, setPriceSource] = React.useState('scryfall');
+    const [priceSourceLoading, setPriceSourceLoading] = React.useState(false);
+    const [priceSourceMsg, setPriceSourceMsg] = React.useState(null);
+
+    React.useEffect(() => {
+      setPriceSource(user?.pricePreferences?.primarySource || 'scryfall');
+    }, [user?.pricePreferences?.primarySource]);
+
+    const savePriceSource = async (source) => {
+      if (source === priceSource || priceSourceLoading || !updateProfile) return;
+      const previous = priceSource;
+      setPriceSource(source); // optimistic — flips the highlight instantly
+      setPriceSourceLoading(true);
+      setPriceSourceMsg(null);
+      const result = await updateProfile({ pricePreferences: { primarySource: source } });
+      setPriceSourceLoading(false);
+      if (result?.success) {
+        setPriceSourceMsg('Saved — future price updates will use this source first.');
+      } else {
+        setPriceSource(previous);
+        setPriceSourceMsg(result?.error || 'Could not save. Please try again.');
+      }
+    };
     const [clearCollectionConfirm, setClearCollectionConfirm] = React.useState(false);
     const [clearCacheConfirm, setClearCacheConfirm] = React.useState(false);
     const [statsData, setStatsData] = React.useState(null);
@@ -177,6 +206,40 @@ export default function SettingsView({
           <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
             <h2 className="text-lg font-semibold text-white mb-4">Pricing Settings</h2>
             <div className="space-y-6">
+              <div>
+                <label className="block text-white/80 text-sm mb-2">Primary price source</label>
+                <p className="text-white/50 text-xs mb-3">
+                  Where your account's prices come from first. The other sources still act as
+                  fallbacks when this one has no price for a card. Face to Face quotes retail
+                  prices in CAD (shown alongside your USD prices in the collection).
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {[
+                    { id: 'scryfall', label: 'Scryfall', desc: 'Market prices in USD (default)' },
+                    { id: 'mtggoldfish', label: 'MTGGoldfish', desc: 'USD price pages, queried first' },
+                    { id: 'facetoface', label: 'Face to Face', desc: 'F2F retail prices in CAD' },
+                  ].map(src => (
+                    <button
+                      key={src.id}
+                      onClick={() => savePriceSource(src.id)}
+                      disabled={priceSourceLoading}
+                      className={`text-left px-4 py-3 rounded-lg border transition disabled:opacity-60 ${
+                        priceSource === src.id
+                          ? 'bg-purple-600 border-purple-400 text-white'
+                          : 'bg-white/10 border-white/20 text-white/70 hover:bg-white/20'
+                      }`}
+                    >
+                      <span className="block font-medium">{src.label}</span>
+                      <span className={`block text-xs ${priceSource === src.id ? 'text-purple-100' : 'text-white/50'}`}>
+                        {src.desc}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                {priceSourceMsg && (
+                  <p className="text-xs text-purple-300 mt-2">{priceSourceMsg}</p>
+                )}
+              </div>
               <div>
                 <label className="block text-white/80 text-sm mb-2">Display Currency</label>
                 <div className="flex gap-2">

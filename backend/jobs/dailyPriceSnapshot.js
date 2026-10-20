@@ -2,14 +2,15 @@ const cron = require('node-cron');
 const CardPriceSnapshot = require('../models/CardPriceSnapshot');
 const ValueSnapshot = require('../models/ValueSnapshot');
 const { getPriceWithFallback } = require('../utils/pricing');
+const { mapWithConcurrency, createStartRateLimiter } = require('../utils/concurrency');
 const { createPriceAlertNotification } = require('../utils/notifications');
 const { deliverWebhookEvent } = require('../utils/webhookDelivery');
 
-const RATE_LIMIT_MS = 500;
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+// Card snapshots run with this many lookups in flight, with request starts
+// spaced SNAPSHOT_MIN_INTERVAL_MS apart (see utils/concurrency.js). Replaces
+// the old one-card-per-500ms serial loop.
+const SNAPSHOT_CONCURRENCY = 5;
+const SNAPSHOT_MIN_INTERVAL_MS = 200;
 
 async function runDailySnapshot() {
   const mongoose = require('mongoose');
@@ -35,11 +36,26 @@ async function runDailySnapshot() {
 
   const updatedPrices = {}; // cardId -> newPrice
 
-  for (const card of cards) {
-    if (!card.name) { skipped++; continue; }
+  const limitStart = createStartRateLimiter(SNAPSHOT_MIN_INTERVAL_MS);
+
+  await mapWithConcurrency(cards, SNAPSHOT_CONCURRENCY, async (card) => {
+    if (!card.name) { skipped++; return; }
     try {
-      const priceData = await getPriceWithFallback(card.name, card.isFoil || false);
+      await limitStart();
+      const priceData = await getPriceWithFallback(card.name, card.isFoil || false, {
+        userId: card.userId,
+        rarity: card.rarity
+      });
+      // Nightly refresh writes the fetched prices back onto the card itself,
+      // not just into snapshot history — so a stale/wrong stored price (e.g.
+      // the old $1000 Swords to Plowshares) self-heals on the next run.
       const newPrice = priceData.usd || 0;
+      const cardPriceUpdate = {};
+      if (newPrice > 0) cardPriceUpdate.price = newPrice;
+      if (priceData.cad > 0) cardPriceUpdate.priceCad = priceData.cad;
+      if (Object.keys(cardPriceUpdate).length > 0) {
+        await Card.updateOne({ _id: card._id }, { $set: cardPriceUpdate });
+      }
       if (newPrice > 0) {
         await CardPriceSnapshot.create({
           cardId: card._id,
@@ -55,8 +71,7 @@ async function runDailySnapshot() {
       console.error(`[dailySnapshot] Error for card "${card.name}":`, err.message);
       errors++;
     }
-    await sleep(RATE_LIMIT_MS);
-  }
+  });
 
   // --- Phase 2: Collection value snapshot (per user) ---
   try {

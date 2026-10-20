@@ -72,6 +72,19 @@ const userSchema = new mongoose.Schema({
   notificationPreferences: {
     healthReportEnabled: { type: Boolean, default: false }
   },
+  // Where this account's prices come from first. The lookup chain queries
+  // this source before the others and credits it as the price source;
+  // fallbacks still apply when it has no price for a card.
+  //   scryfall   - market prices in USD (default)
+  //   mtggoldfish - USD price pages, queried before Scryfall
+  //   facetoface  - Face to Face Games retail prices in CAD
+  pricePreferences: {
+    primarySource: {
+      type: String,
+      enum: ['scryfall', 'mtggoldfish', 'facetoface'],
+      default: 'scryfall'
+    }
+  },
   reputation: {
     type: Number,
     min: 0,
@@ -161,6 +174,7 @@ userSchema.methods.toSafeObject = function() {
     reputation: this.reputation,
     badges: this.badges,
     notificationPreferences: this.notificationPreferences,
+    pricePreferences: this.pricePreferences ?? { primarySource: 'scryfall' },
     avatarUrl: this.avatarUrl,
     referralCount: this.referralCount
   };

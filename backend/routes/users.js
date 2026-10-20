@@ -59,7 +59,7 @@ router.put('/me', async (req, res) => {
       });
     }
 
-    const { displayName, email, privacy, avatarUrl, notificationPreferences } = req.body;
+    const { displayName, email, privacy, avatarUrl, notificationPreferences, pricePreferences } = req.body;
 
     // Update display name if provided
     if (displayName !== undefined) {
@@ -114,6 +114,21 @@ router.put('/me', async (req, res) => {
         if (key in notificationPreferences) {
           user.notificationPreferences[key] = notificationPreferences[key];
         }
+      }
+    }
+
+    // Update pricePreferences (merge, don't replace; validate the source)
+    if (pricePreferences && typeof pricePreferences === 'object') {
+      const validSources = ['scryfall', 'mtggoldfish', 'facetoface'];
+      if (pricePreferences.primarySource !== undefined) {
+        if (!validSources.includes(pricePreferences.primarySource)) {
+          return res.status(400).json({
+            message: 'Invalid primary price source',
+            code: 'INVALID_PRICE_SOURCE'
+          });
+        }
+        if (!user.pricePreferences) user.pricePreferences = {};
+        user.pricePreferences.primarySource = pricePreferences.primarySource;
       }
     }
 

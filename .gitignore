@@ -57,6 +57,7 @@ ip-watch.log
 /caddy-boot.log
 /caddy-run.log
 /frontend/frontend-boot.log
+/backend-boot.log
 
 # Local development env override (templates are .env.local / .env.cloud)
 frontend/.env.development.local

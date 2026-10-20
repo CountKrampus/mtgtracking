@@ -6,7 +6,8 @@ const axios = require('axios');
 const { verifyToken, requireAuth, requirePermission } = require('../middleware/auth');
 const { buildUserQuery, getUserId } = require('../middleware/multiUser');
 const { activityLoggers } = require('../middleware/activityLogger');
-const { getPriceWithFallback } = require('../utils/pricing');
+const { getPriceWithFallback, fetchFaceToFacePrice, isPlausibleUsdPrice, isPlausibleCadPrice } = require('../utils/pricing');
+const { mapWithConcurrency, createStartRateLimiter } = require('../utils/concurrency');
 const { getFromCache, setInCache, clearCache } = require('../utils/statsCache');
 const { cacheCardImage } = require('../utils/imageCache');
 const { fetchCardFromScryfall } = require('../utils/scryfallLookup');
@@ -157,8 +158,7 @@ router.get('/:id', requireAuth, async (req, res, next) => {
 
 // Update prices from Scryfall (with MTGGoldfish backup)
 router.post('/:id/update-price', requireAuth, requirePermission('collection:manage'), activityLoggers.priceUpdate, async (req, res) => {
-  try {
-    const { force, fullData } = req.query; // Optional: force update, fullData for complete card info
+  try {    const { fullData } = req.query; // Optional: fullData for complete card info
     const query = buildUserQuery({ _id: req.params.id }, req);
     const card = await Card.findOne(query);
     if (!card) return res.status(404).json({ message: 'Card not found' });
@@ -166,22 +166,17 @@ router.post('/:id/update-price', requireAuth, requirePermission('collection:mana
     // Capture price before update for lastPrice tracking
     const oldPrice = card.price;
 
-    // Skip if card already has price and oracle text (unless force=true or fullData=true)
-    if (!force && !fullData && card.price > 0 && card.oracleText) {
-      return res.json({
-        ...card.toObject(),
-        skipped: true,
-        message: 'Card already has price and data. Use force=true to update anyway.'
-      });
-    }
+    // The account's primary price source applies to this lookup; rarity lets
+    // the pricing layer sanity-check fetched values (strict cap for C/U)
+    const priceOptions = { primarySource: req.user?.pricePreferences?.primarySource, rarity: card.rarity };
 
     // If fullData is requested, fetch complete card data from Scryfall
     if (fullData === 'true') {
       try {
         const { cardData } = await fetchCardFromScryfall(card.name, card.setCode, card.collectorNumber);
 
-        // Get pricing
-        const priceData = await getPriceWithFallback(card.name, card.isFoil);
+        // Get pricing (honors the account's primary source preference)
+        const priceData = await getPriceWithFallback(card.name, card.isFoil, priceOptions);
 
         // Cache image and get local URL
         const scryfallImageUrl = cardData.image_uris ? cardData.image_uris.normal : null;
@@ -200,17 +195,20 @@ router.post('/:id/update-price', requireAuth, requirePermission('collection:mana
         card.oracleText = cardData.oracle_text || '';
         card.reserved = cardData.reserved || false;
         card.price = priceData.usd > 0 ? priceData.usd : card.price;
+        if (priceData.cad > 0) card.priceCad = priceData.cad;
       } catch (error) {
         console.error(`Failed to fetch full data for ${card.name}:`, error.message);
         // Fall back to just price update
-        const priceData = await getPriceWithFallback(card.name, card.isFoil);
+        const priceData = await getPriceWithFallback(card.name, card.isFoil, priceOptions);
         card.price = priceData.usd > 0 ? priceData.usd : card.price;
+        if (priceData.cad > 0) card.priceCad = priceData.cad;
       }
     } else {
       // Just update price and oracle text
-      const priceData = await getPriceWithFallback(card.name, card.isFoil);
+      const priceData = await getPriceWithFallback(card.name, card.isFoil, priceOptions);
       const price = priceData.usd > 0 ? priceData.usd : card.price;
       card.price = price;
+      if (priceData.cad > 0) card.priceCad = priceData.cad;
 
       // Also fetch oracle text if missing
       if (!card.oracleText) {
@@ -256,40 +254,54 @@ router.post('/:id/update-price', requireAuth, requirePermission('collection:mana
 
 // Bulk update all prices from Scryfall (with MTGGoldfish backup)
 router.post('/update-all-prices', requireAuth, requirePermission('collection:manage'), activityLoggers.priceBulkUpdate, async (req, res) => {
-  try {
-    const { force, fullData } = req.query; // Optional: force update, fullData for complete card info
+  try {    const { fullData } = req.query; // Optional: fullData for complete card info
     const cardQuery = buildUserQuery({}, req);
     const cards = await Card.find(cardQuery);
+    // This account's primary price source applies to every card in the run
+    const priceOptions = { primarySource: req.user?.pricePreferences?.primarySource };
     let updated = 0;
     let skipped = 0;
     const updatedCardNames = new Set();
 
-    for (const card of cards) {
+    // Bounded concurrency + a shared start-rate limiter: responses overlap
+    // (that's the speedup vs the old one-card-per-200ms loop) while request
+    // starts stay spaced so we don't burst the pricing sources.
+    const PRICE_UPDATE_CONCURRENCY = 5;
+    const limitStart = createStartRateLimiter(200);
+
+    await mapWithConcurrency(cards, PRICE_UPDATE_CONCURRENCY, async (card) => {
       try {
+        await limitStart();
+
         // Capture price before update for lastPrice tracking
         const oldPrice = card.price;
 
-        // Skip if card already has price and oracle text (unless force=true or fullData=true)
-        if (!force && !fullData && card.price > 0 && card.oracleText) {
-          console.log(`Skipping ${card.name} - already has price and data`);
-          skipped++;
-          continue;
-        }
+        // Rarity lets the pricing layer sanity-check fetched values (strict cap for C/U)
+        const cardPriceOptions = { ...priceOptions, rarity: card.rarity };
 
         // If fullData is requested, fetch complete card data from Scryfall
         if (fullData === 'true') {
           try {
+            // F2F CAD lookup starts in parallel with the full-data fetch
+            // below — zero added latency on this per-card round trip
+            const f2fPromise = fetchFaceToFacePrice(card.name, card.isFoil);
             const { cardData } = await fetchCardFromScryfall(card.name, card.setCode, card.collectorNumber);
+
+            // Fresh rarity from Scryfall drives both the stored value and the
+            // price sanity check below
+            const freshRarity = cardData.rarity ? cardData.rarity[0].toUpperCase() : card.rarity;
 
             // Pricing is already included in cardData - reuse it instead of a
             // second Scryfall round-trip. Only fall through to the MTGGoldfish
-            // backup (via getPriceWithFallback) if Scryfall itself has no price.
+            // backup (via getPriceWithFallback) if Scryfall itself has no price
+            // or its price fails the plausibility check.
             const scryfallPrice = card.isFoil
               ? (cardData.prices?.usd_foil ? parseFloat(cardData.prices.usd_foil) : 0)
               : (cardData.prices?.usd ? parseFloat(cardData.prices.usd) : 0);
-            const priceData = scryfallPrice > 0
-              ? { usd: scryfallPrice }
-              : await getPriceWithFallback(card.name, card.isFoil);
+            const f2fCad = (await f2fPromise).cad;
+            const priceData = scryfallPrice > 0 && isPlausibleUsdPrice(scryfallPrice, freshRarity)
+              ? { usd: scryfallPrice, cad: isPlausibleCadPrice(f2fCad) ? f2fCad : 0 }
+              : await getPriceWithFallback(card.name, card.isFoil, { ...cardPriceOptions, rarity: freshRarity });
 
             // Cache image and get local URL
             const scryfallImageUrl = cardData.image_uris ? cardData.image_uris.normal : null;
@@ -299,7 +311,7 @@ router.post('/update-all-prices', requireAuth, requirePermission('collection:man
             card.set = cardData.set_name;
             card.setCode = cardData.set.toUpperCase();
             card.collectorNumber = cardData.collector_number;
-            card.rarity = cardData.rarity[0].toUpperCase();
+            card.rarity = freshRarity;
             card.colors = cardData.colors || [];
             card.types = cardData.type_line ? cardData.type_line.split('â€"')[0].trim().split(' ') : [];
             card.manaCost = cardData.mana_cost || '';
@@ -308,17 +320,21 @@ router.post('/update-all-prices', requireAuth, requirePermission('collection:man
             card.oracleText = cardData.oracle_text || '';
             card.reserved = cardData.reserved || false;
             card.price = priceData.usd > 0 ? priceData.usd : card.price;
+            if (priceData.cad > 0) card.priceCad = priceData.cad;
           } catch (error) {
             console.error(`Failed to fetch full data for ${card.name}:`, error.message);
             // Fall back to just price update
-            const priceData = await getPriceWithFallback(card.name, card.isFoil);
+            const priceData = await getPriceWithFallback(card.name, card.isFoil, cardPriceOptions);
             card.price = priceData.usd > 0 ? priceData.usd : card.price;
+            if (priceData.cad > 0) card.priceCad = priceData.cad;
           }
         } else {
-          // Just update price and oracle text
-          const priceData = await getPriceWithFallback(card.name, card.isFoil);
+          // Just update price and oracle text — every card is refreshed on
+          // every run; existing prices never cause a skip
+          const priceData = await getPriceWithFallback(card.name, card.isFoil, cardPriceOptions);
           const price = priceData.usd > 0 ? priceData.usd : card.price;
           card.price = price;
+          if (priceData.cad > 0) card.priceCad = priceData.cad;
 
           // Also fetch oracle text if missing
           if (!card.oracleText) {
@@ -353,15 +369,10 @@ router.post('/update-all-prices', requireAuth, requirePermission('collection:man
         } catch {
           // Non-critical
         }
-
-        // Rate limiting - be respectful to servers. Lowered from 500ms since
-        // the fullData path now makes ~1 Scryfall call per card instead of ~2
-        // (price is read from the already-fetched cardData, see above).
-        await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {
         console.error(`Error updating ${card.name}:`, error.message);
       }
-    }
+    });
 
     // Refresh totalValue on any decks containing updated cards (best-effort)
     if (updatedCardNames.size > 0) {

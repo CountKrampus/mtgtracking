@@ -13,6 +13,8 @@ const cardSchema = new mongoose.Schema({
   name: String,
   isFoil: { type: Boolean, default: false },
   price: { type: Number, default: 0 },
+  priceCad: { type: Number, default: 0 },
+  rarity: String,
   quantity: { type: Number, default: 1 },
   priceAlert: {
     targetPrice: Number,
@@ -117,5 +119,48 @@ describe('runDailySnapshot price alerts', () => {
 
     const notif = await Notification.findOne({ type: 'price_alert' });
     expect(notif).toBeNull();
+  });
+});
+
+describe('runDailySnapshot nightly price refresh', () => {
+  it('writes the fetched USD and CAD prices back onto the card itself', async () => {
+    const user = await makeUser();
+    // A stale/wrong stored price (like the $1000 Swords to Plowshares) must
+    // be overwritten with the fresh market price every night.
+    const card = await Card.create({ userId: user._id, name: 'Stale Card', price: 1000, priceCad: 0 });
+    getPriceWithFallback.mockResolvedValue({ usd: 1.58, cad: 3.99 });
+
+    await runDailySnapshot();
+
+    const updated = await Card.findById(card._id);
+    expect(updated.price).toBe(1.58);
+    expect(updated.priceCad).toBe(3.99);
+    const snap = await CardPriceSnapshot.findOne({ cardId: card._id });
+    expect(snap.price).toBe(1.58);
+  });
+
+  it('leaves the stored price untouched when no USD price is found', async () => {
+    const user = await makeUser();
+    const card = await Card.create({ userId: user._id, name: 'No Price Card', price: 7.25 });
+    getPriceWithFallback.mockResolvedValue({ usd: 0, cad: 0 });
+
+    await runDailySnapshot();
+
+    const updated = await Card.findById(card._id);
+    expect(updated.price).toBe(7.25);
+  });
+
+  it('passes the card rarity to the pricing lookup (sanity-guard input)', async () => {
+    const user = await makeUser();
+    await Card.create({ userId: user._id, name: 'Common Card', price: 1, rarity: 'C' });
+    getPriceWithFallback.mockResolvedValue({ usd: 1, cad: 0 });
+
+    await runDailySnapshot();
+
+    expect(getPriceWithFallback).toHaveBeenCalledWith(
+      'Common Card',
+      false,
+      expect.objectContaining({ rarity: 'C' })
+    );
   });
 });

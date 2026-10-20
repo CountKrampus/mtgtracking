@@ -204,25 +204,22 @@ export function CardCollectionProvider({ children }) {
   };
 
   /**
-   * Update all card prices (and optionally full card data).
-   * @param {boolean} forceUpdate - Force update even if data exists
+   * Update all card prices (and optionally full card data). Every card is
+   * refreshed on every run — existing prices never cause a skip.
    * @param {boolean} updateFullData - Also update full card metadata
    */
-  const updateAllPrices = async (forceUpdate, updateFullData) => {
-    let message = 'This will update prices';
+  const updateAllPrices = async (updateFullData) => {
+    let message = 'This will refresh prices for ALL cards';
     if (updateFullData) {
       message += ' and full card data (set, rarity, collector number, colors, types, mana cost, images)';
     }
-    message += forceUpdate
-      ? ' for ALL cards (even those with existing data). Continue?'
-      : ' only for cards missing data. Continue?';
+    message += '. Continue?';
 
     if (!window.confirm(message)) return;
 
     try {
       setLoading(true);
       const params = new URLSearchParams();
-      if (forceUpdate) params.append('force', 'true');
       if (updateFullData) params.append('fullData', 'true');
 
       const url = `${API_URL}/cards/update-all-prices${params.toString() ? '?' + params.toString() : ''}`;
@@ -233,9 +230,9 @@ export function CardCollectionProvider({ children }) {
       fetchCards();
 
       // Show detailed results
-      const { updated, skipped, total } = response.data;
+      const { updated, total } = response.data;
       const dataType = updateFullData ? 'full card data' : 'prices';
-      addToast(`${dataType} updated: ${updated} cards updated, ${skipped} skipped, ${total} total`, 'success');
+      addToast(`${dataType} refreshed: ${updated} of ${total} cards updated`, 'success');
     } catch (error) {
       console.error('Error updating prices:', error);
       addToast('Error updating prices', 'error');

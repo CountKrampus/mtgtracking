@@ -38,6 +38,21 @@ function StatusBadge({ status }) {
   );
 }
 
+// Backend jobs count every processed card as updated, skipped, or failed —
+// there is no separate `completed` counter, so derive it. (The panel used to
+// read `job.completed`, which never existed, so the bar sat at 0% forever.)
+function jobCompleted(job) {
+  return (job.updated ?? 0) + (job.skipped ?? 0) + (job.failed ?? 0);
+}
+
+function jobDuration(job) {
+  if (!job.startedAt) return null;
+  const end = job.completedAt ? new Date(job.completedAt) : new Date();
+  const secs = Math.max(0, Math.round((end - new Date(job.startedAt)) / 1000));
+  if (secs < 60) return `${secs}s`;
+  return `${Math.floor(secs / 60)}m ${secs % 60}s`;
+}
+
 function ProgressBar({ completed, total }) {
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
   return (
@@ -99,13 +114,17 @@ export function PricingAdminTab() {
   const { authFetch } = useAuthContext();
 
   // Form options
-  const [forceUpdate, setForceUpdate] = useState(false);
   const [fullData, setFullData] = useState(false);
 
   // Job tracking
   const [jobId, setJobId] = useState(null);
   const [job, setJob] = useState(null);
   const [polling, setPolling] = useState(false);
+
+  // Recent jobs list (persisted server-side, survives restarts/page navigation)
+  const [recentJobs, setRecentJobs] = useState([]);
+  const [recentJobsLoading, setRecentJobsLoading] = useState(true);
+  const [recentJobsError, setRecentJobsError] = useState(null);
 
   // UI states
   const [starting, setStarting] = useState(false);
@@ -174,6 +193,53 @@ export function PricingAdminTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ── Recent jobs list ────────────────────────────────────────────────────
+
+  const fetchRecentJobs = async () => {
+    try {
+      const res = await authFetch(`${API_URL}/admin/force-price-update`);
+      if (!res.ok) throw new Error(`${res.status}`);
+      const data = await res.json();
+      setRecentJobs(data.jobs || []);
+      setRecentJobsError(null);
+      return data.jobs || [];
+    } catch (err) {
+      setRecentJobsError(`Failed to load jobs: ${err.message}`);
+      return [];
+    } finally {
+      setRecentJobsLoading(false);
+    }
+  };
+
+  // On mount: load the list, then re-attach to the newest *running* job so a
+  // page refresh resumes live tracking automatically instead of just showing
+  // a static row the user has to click Monitor on.
+  const autoAttachedRef = useRef(false);
+  useEffect(() => {
+    (async () => {
+      const jobs = await fetchRecentJobs();
+      if (autoAttachedRef.current) return;
+      const running = jobs.find(j => j.status === 'running');
+      if (running) {
+        autoAttachedRef.current = true;
+        setJobId(running.jobId);
+        setPolling(true);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Keep the list fresh while any job is still running (locally monitored or
+  // just listed from the server), so a finished job flips to Complete here
+  // without a manual refresh.
+  const anyRunning = polling || recentJobs.some(j => j.status === 'running');
+  useEffect(() => {
+    if (!anyRunning) return;
+    const t = setInterval(fetchRecentJobs, 5000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [anyRunning]);
+
   // ── Handlers ───────────────────────────────────────────────────────────────
 
   const handleStart = async () => {
@@ -187,7 +253,7 @@ export function PricingAdminTab() {
       const res = await authFetch(`${API_URL}/admin/force-price-update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ force: forceUpdate, fullData }),
+        body: JSON.stringify({ fullData }),
       });
       if (!res.ok) {
         const text = await res.text();
@@ -198,6 +264,7 @@ export function PricingAdminTab() {
       const data = await res.json();
       setJobId(data.jobId);
       setPolling(true);
+      fetchRecentJobs(); // show the new job in Recent Price Jobs immediately
     } catch (err) {
       setStartError(`Network error: ${err.message}`);
     } finally {
@@ -207,6 +274,16 @@ export function PricingAdminTab() {
 
   const handleCancel = () => {
     stopPolling();
+    fetchRecentJobs(); // the job keeps running server-side; refresh its row
+  };
+
+  // Re-attach to a job from the Recent list (e.g. after navigating away).
+  const handleMonitorJob = (id) => {
+    stopPolling();
+    setJob(null);
+    setPollError(null);
+    setJobId(id);
+    setPolling(true);
   };
 
   const handleReset = () => {
@@ -223,6 +300,18 @@ export function PricingAdminTab() {
   const isFinished = job && (job.status === 'complete' || job.status === 'failed');
   const hasJob = !!jobId;
 
+  // Refresh the list once a monitored job finishes so its row shows final
+  // counts (the polling effect stops itself on complete/failed).
+  const prevJobStatusRef = React.useRef(null);
+  useEffect(() => {
+    const status = job?.status;
+    if (status && prevJobStatusRef.current === 'running' && status !== 'running') {
+      fetchRecentJobs();
+    }
+    prevJobStatusRef.current = status || null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [job?.status]);
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -233,7 +322,7 @@ export function PricingAdminTab() {
         <div className="px-5 py-4 border-b border-gray-700/50">
           <h2 className="text-base font-semibold text-white flex items-center gap-2">
             <RefreshCw size={18} className="text-purple-400" />
-            Force Price Update
+            Update Database Prices
           </h2>
           <p className="text-xs text-gray-400 mt-1">
             Trigger a background price update job for the entire collection.
@@ -247,22 +336,9 @@ export function PricingAdminTab() {
             <div className="space-y-3">
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Update Options</p>
 
-              <label className="flex items-start gap-3 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={forceUpdate}
-                  onChange={(e) => setForceUpdate(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-500 focus:ring-purple-500 focus:ring-offset-gray-800"
-                />
-                <div>
-                  <span className="text-sm text-white group-hover:text-purple-300 transition-colors">
-                    Force update cards with existing prices
-                  </span>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    By default, cards that already have a price are skipped. Enable this to re-fetch all prices.
-                  </p>
-                </div>
-              </label>
+              <p className="text-xs text-gray-500">
+                Every card is re-priced on each run — cards with an existing price are never skipped.
+              </p>
 
               <label className="flex items-start gap-3 cursor-pointer group">
                 <input
@@ -298,6 +374,11 @@ export function PricingAdminTab() {
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-500 font-mono">Job {job.jobId}</span>
                   <StatusBadge status={job.status} />
+                  {job.options?.fullData && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded bg-purple-900/50 text-purple-300 border border-purple-700/50">
+                      full data
+                    </span>
+                  )}
                 </div>
                 {job.startedAt && (
                   <span className="text-xs text-gray-500">
@@ -306,7 +387,16 @@ export function PricingAdminTab() {
                 )}
               </div>
 
-              <ProgressBar completed={job.completed ?? 0} total={job.total ?? 0} />
+              <ProgressBar completed={jobCompleted(job)} total={job.total ?? 0} />
+
+              <div className="flex flex-wrap gap-3 text-xs text-gray-400">
+                <span><span className="text-green-400 font-medium">{job.updated ?? 0}</span> updated</span>
+                <span><span className="text-yellow-400 font-medium">{job.skipped ?? 0}</span> skipped</span>
+                <span><span className="text-red-400 font-medium">{job.failed ?? 0}</span> failed</span>
+                {jobDuration(job) && (
+                  <span className="text-gray-500">took {jobDuration(job)}</span>
+                )}
+              </div>
 
               {job.completedAt && (
                 <p className="text-xs text-gray-500">
@@ -324,7 +414,9 @@ export function PricingAdminTab() {
                   <ul className="max-h-32 overflow-y-auto space-y-0.5">
                     {job.errors.map((err, i) => (
                       <li key={i} className="text-xs text-red-300 font-mono bg-red-900/20 px-2 py-0.5 rounded">
-                        {err}
+                        {/* Backend stores { card, error } objects; older jobs
+                            stored plain strings — handle both. */}
+                        {typeof err === 'string' ? err : `${err.card}: ${err.error}`}
                       </li>
                     ))}
                   </ul>
@@ -390,23 +482,86 @@ export function PricingAdminTab() {
         </div>
       </div>
 
-      {/* ── Section 2: Info box ── */}
+      {/* ── Section 2: Recent Price Jobs ── */}
       <div className="bg-gray-800 rounded-xl border border-gray-700/50 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-700/50">
-          <h2 className="text-base font-semibold text-white flex items-center gap-2">
-            <Clock size={18} className="text-purple-400" />
-            Recent Price Jobs
-          </h2>
-        </div>
-        <div className="p-5">
-          <div className="flex items-start gap-3 p-4 bg-blue-900/20 border border-blue-700/40 rounded-lg text-sm text-blue-300">
-            <Clock size={16} className="mt-0.5 shrink-0 text-blue-400" />
-            <p>
-              Price update jobs run in the background on the server. You can navigate away and return
-              to this page to check the status of a job using its Job ID. Jobs continue processing
-              even after you leave or cancel monitoring.
+        <div className="px-5 py-4 border-b border-gray-700/50 flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-white flex items-center gap-2">
+              <Clock size={18} className="text-purple-400" />
+              Recent Price Jobs
+            </h2>
+            <p className="text-xs text-gray-400 mt-1">
+              Jobs run in the background and are recorded here even across restarts.
             </p>
           </div>
+          <button
+            onClick={fetchRecentJobs}
+            title="Refresh"
+            className="p-1.5 text-gray-400 hover:text-white transition-colors"
+          >
+            <RefreshCw size={16} />
+          </button>
+        </div>
+        <div className="p-5">
+          {recentJobsLoading ? (
+            <p className="text-gray-400 text-sm">Loading…</p>
+          ) : recentJobsError ? (
+            <div className="flex items-start gap-2 p-3 bg-yellow-900/30 border border-yellow-700/40 rounded-lg text-sm text-yellow-300">
+              <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+              <span>{recentJobsError}</span>
+            </div>
+          ) : recentJobs.length === 0 ? (
+            <p className="text-gray-400 text-sm">No price update jobs yet — start one above.</p>
+          ) : (
+            <div className="space-y-2">
+              {recentJobs.map((j) => (
+                <div
+                  key={j.jobId}
+                  className={`flex flex-wrap items-center gap-3 p-3 rounded-lg border ${
+                    jobId === j.jobId
+                      ? 'bg-purple-900/20 border-purple-700/50'
+                      : 'bg-gray-900/50 border-gray-700/40'
+                  }`}
+                >
+                  <StatusBadge status={j.status} />
+                  <span className="text-xs text-gray-500 font-mono">{j.jobId}</span>
+                  {j.options?.fullData && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded bg-purple-900/50 text-purple-300 border border-purple-700/50">
+                      full data
+                    </span>
+                  )}
+                  <span className="text-xs text-gray-400">
+                    <span className="text-green-400 font-medium">{j.updated ?? 0}</span> upd ·{' '}
+                    <span className="text-yellow-400 font-medium">{j.skipped ?? 0}</span> skip ·{' '}
+                    <span className="text-red-400 font-medium">{j.failed ?? 0}</span> failed
+                    {j.total > 0 && <> / {j.total}</>}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {j.status === 'running' ? 'started ' : 'ran '}
+                    {j.startedAt ? new Date(j.startedAt).toLocaleString() : '—'}
+                    {j.completedAt && <> · {jobDuration(j)}</>}
+                  </span>
+                  <span className="ml-auto flex items-center gap-2">
+                    {j.status === 'running' && jobId !== j.jobId && (
+                      <button
+                        onClick={() => handleMonitorJob(j.jobId)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors"
+                      >
+                        <Activity size={12} />
+                        Monitor
+                      </button>
+                    )}
+                    {jobId === j.jobId && polling && (
+                      <span className="inline-flex items-center gap-1 text-xs text-blue-300">
+                        <RefreshCw size={12} className="animate-spin" />
+                        Monitoring
+                      </span>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
