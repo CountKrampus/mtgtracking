@@ -99,7 +99,13 @@ router.put('/me', async (req, res) => {
 
     // Update privacy sub-fields if provided (merge, don't replace)
     if (privacy && typeof privacy === 'object') {
-      const allowed = ['isPublic', 'showCollection', 'showDecks', 'showWishlist', 'showForum', 'bio'];
+      const allowed = ['isPublic', 'showCollection', 'showDecks', 'showWishlist', 'showForum', 'supportRecognition', 'bio'];
+      if ('supportRecognition' in privacy && typeof privacy.supportRecognition !== 'boolean') {
+        return res.status(400).json({
+          message: 'supportRecognition must be a boolean',
+          code: 'INVALID_SUPPORT_RECOGNITION'
+        });
+      }
       for (const key of allowed) {
         if (key in privacy) {
           user.privacy[key] = privacy[key];
@@ -701,4 +707,3 @@ router.put('/pinned-cards', async (req, res) => {
 });
 
 module.exports = router;
-

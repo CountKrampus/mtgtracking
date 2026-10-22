@@ -92,6 +92,10 @@ function DeckBuilder() {
   const createDeck = async (deckData) => {
     const response = await axios.post(`${API_URL}/decks`, deckData);
     await fetchDecks();
+    if (deckData.format === 'commander') {
+      setCurrentDeck(response.data);
+      setDeckView('edit');
+    }
     return response.data;
   };
 
@@ -147,6 +151,7 @@ function DeckBuilder() {
           deck={currentDeck}
           onSave={(updatedDeck) => {
             setCurrentDeck(updatedDeck);
+            setDecks(prev => prev.map(deck => deck._id === updatedDeck._id ? updatedDeck : deck));
             fetchDeckDetails(updatedDeck._id);
             setDeckView('detail');
           }}

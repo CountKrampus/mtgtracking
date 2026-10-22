@@ -38,6 +38,7 @@ const CollectionHealthReportView = React.lazy(() => import('../components/Collec
 const TradingBoard = React.lazy(() => import('../components/TradingBoard'));
 const ChallengesView = React.lazy(() => import('../components/ChallengesView'));
 const ReferralsView = React.lazy(() => import('../components/ReferralsView'));
+const SupportPage = React.lazy(() => import('../components/SupportPage'));
 
 function SharedDeckViewRoute() {
   const { shareCode } = useParams();
@@ -119,6 +120,10 @@ export default function AppRoutes({
 
       <Route path="/referrals" element={
         <Suspense fallback={<LoadingFallback />}><ReferralsView /></Suspense>
+      } />
+
+      <Route path="/support" element={
+        <Suspense fallback={<LoadingFallback />}><SupportPage authUser={authUser} /></Suspense>
       } />
 
       <Route path="/decks" element={

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { X } from 'lucide-react';
+import { X, Zap, RefreshCw, Plus, Heart } from 'lucide-react';
 import { API_URL } from '../config';
+import { useCardCollection } from '../contexts/CardCollectionContext';
+import { useWishlist } from '../contexts/WishlistContext';
 
 const DAY_OPTIONS = [
   { label: '30d', value: 30 },
@@ -58,8 +60,22 @@ export default function CardDetailPanel({ card, onClose }) {
   const [days, setDays] = useState(30);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  // Card Synergies (ported from CollectionView's Card Synergies feature)
+  const [showSynergies, setShowSynergies] = useState(false);
+  const [loadingSynergies, setLoadingSynergies] = useState(false);
+  const [synergies, setSynergies] = useState({ tribal: [], keywords: [], mechanics: [] });
+  const [synergiesTab, setSynergiesTab] = useState('tribal');
+  const { fetchCards } = useCardCollection();
+  const { addToWishlist } = useWishlist();
   const onCloseRef = useRef(onClose);
   useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+
+  // Collapse the previous card's synergies when a different card is opened
+  useEffect(() => {
+    setShowSynergies(false);
+    setSynergies({ tribal: [], keywords: [], mechanics: [] });
+    setSynergiesTab('tribal');
+  }, [card?._id]);
 
   useEffect(() => {
     if (!card) return;
@@ -78,6 +94,56 @@ export default function CardDetailPanel({ card, onClose }) {
       .catch(() => setHistory([]))
       .finally(() => setLoading(false));
   }, [card, days]);
+
+  // GET /api/cards/:id/synergies — same tribal/keyword/mechanic analysis the
+  // Collection view modal uses (cached server-side, EDHREC-ordered results)
+  const fetchSynergies = async () => {
+    setShowSynergies(true);
+    setLoadingSynergies(true);
+    setSynergies({ tribal: [], keywords: [], mechanics: [] });
+    setSynergiesTab('tribal');
+    try {
+      const res = await axios.get(`${API_URL}/cards/${card._id}/synergies`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('mtg_access_token')}` }
+      });
+      const results = {
+        tribal: res.data?.tribal || [],
+        keywords: res.data?.keywords || [],
+        mechanics: res.data?.mechanics || [],
+      };
+      setSynergies(results);
+      if (results.tribal.length > 0) setSynergiesTab('tribal');
+      else if (results.keywords.length > 0) setSynergiesTab('keywords');
+      else if (results.mechanics.length > 0) setSynergiesTab('mechanics');
+    } catch (error) {
+      console.error('Error finding synergies:', error);
+    } finally {
+      setLoadingSynergies(false);
+    }
+  };
+
+  // Mirrors CollectionView's addSynergyCardToCollection: resolve full card
+  // data via the backend Scryfall proxy, then create the collection entry
+  const addSynergyCardToCollection = async (scryfallCard) => {
+    try {
+      const response = await axios.get(`${API_URL}/scryfall/search?name=${encodeURIComponent(scryfallCard.name)}`);
+      const cardData = response.data;
+      await axios.post(`${API_URL}/cards`, {
+        name: cardData.name, set: cardData.set, setCode: cardData.setCode,
+        collectorNumber: cardData.collectorNumber, rarity: cardData.rarity,
+        quantity: 1, condition: 'NM', price: cardData.prices?.usd || 0,
+        priceCad: cardData.prices?.cad || 0,
+        colors: cardData.colors, types: cardData.types, manaCost: cardData.manaCost,
+        scryfallId: cardData.scryfallId, imageUrl: cardData.imageUrl,
+        oracleText: cardData.oracleText, tags: [], location: '',
+      });
+      alert(`Added ${cardData.name} to your collection!`);
+      fetchCards();
+    } catch (error) {
+      console.error('Error adding card:', error);
+      alert('Error adding card to collection');
+    }
+  };
 
   // Dismiss on Escape — stable listener, never re-registers on parent re-render
   useEffect(() => {
@@ -183,6 +249,93 @@ export default function CardDetailPanel({ card, onClose }) {
             </div>
           </div>
         )}
+
+        {/* Card Synergies */}
+        <div className="px-4 py-3 border-t border-slate-700">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-white font-semibold text-sm flex items-center gap-1.5">
+              <Zap size={14} className="text-yellow-500" /> Card Synergies
+            </h3>
+            <button
+              onClick={fetchSynergies}
+              disabled={loadingSynergies}
+              className="flex items-center gap-1 px-2 py-1 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-50 text-white text-xs rounded transition"
+            >
+              <RefreshCw size={12} className={loadingSynergies ? 'animate-spin' : ''} />
+              {showSynergies ? 'Refresh' : 'Find Synergies'}
+            </button>
+          </div>
+
+          {showSynergies && (
+            <>
+              {/* Synergy category tabs */}
+              <div className="flex gap-1 mb-2">
+                {[['tribal', 'Tribal'], ['keywords', 'Keywords'], ['mechanics', 'Mechanics']].map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setSynergiesTab(key)}
+                    className={`flex-1 px-2 py-1 rounded text-xs font-medium transition ${
+                      synergiesTab === key
+                        ? 'bg-yellow-600 text-white'
+                        : 'bg-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {label} ({synergies[key].length})
+                  </button>
+                ))}
+              </div>
+
+              {loadingSynergies ? (
+                <div className="flex flex-col items-center py-6">
+                  <RefreshCw size={20} className="text-yellow-500 animate-spin mb-2" />
+                  <p className="text-slate-400 text-xs">Analyzing card and searching for synergies…</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-72 overflow-y-auto">
+                  {synergies[synergiesTab].length === 0 ? (
+                    <p className="text-slate-500 text-xs text-center py-4">
+                      No {synergiesTab} synergies found for this card.
+                    </p>
+                  ) : (
+                    synergies[synergiesTab].map((s) => {
+                      const img = s.image_uris?.normal || s.card_faces?.[0]?.image_uris?.normal;
+                      return (
+                        <div key={s.id} className="flex items-center gap-2 bg-slate-800 rounded-lg p-2 hover:bg-slate-700/70 transition">
+                          {img ? (
+                            <img src={img} alt={s.name} className="w-10 rounded flex-shrink-0" loading="lazy" />
+                          ) : (
+                            <div className="w-10 h-14 bg-slate-700 rounded flex-shrink-0" />
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-white text-xs font-semibold truncate" title={s.name}>{s.name}</p>
+                            <p className="text-slate-400 text-xs truncate">{s.type_line || ''}</p>
+                            <p className="text-green-400 text-xs">${s.prices?.usd || '0.00'}</p>
+                          </div>
+                          <div className="flex flex-col gap-1 flex-shrink-0">
+                            <button
+                              onClick={() => addSynergyCardToCollection(s)}
+                              title="Add to collection"
+                              className="p-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
+                            >
+                              <Plus size={12} />
+                            </button>
+                            <button
+                              onClick={() => addToWishlist(s, card.name)}
+                              title="Add to wishlist"
+                              className="p-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded transition"
+                            >
+                              <Heart size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </>
   );

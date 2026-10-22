@@ -43,6 +43,33 @@ function getWishlistItemModel() {
 }
 
 /**
+ * GET /api/users/supporters
+ * Publicly list only supporters who were awarded the badge and opted in.
+ */
+router.get('/supporters', async (req, res) => {
+  try {
+    const supporters = await User.find({
+      isActive: true,
+      'privacy.supportRecognition': true,
+      badges: { $elemMatch: { name: 'Supporter' } },
+    })
+      .select('username displayName avatarUrl')
+      .sort({ username: 1 })
+      .limit(100)
+      .lean();
+
+    res.json(supporters.map(user => ({
+      username: user.username,
+      displayName: user.displayName || user.username,
+      avatarUrl: user.avatarUrl || '',
+    })));
+  } catch (e) {
+    console.error('Public supporters list error:', e);
+    res.status(500).json({ message: e.message });
+  }
+});
+
+/**
  * GET /api/users/:username/public-profile
  * Public endpoint — no auth required.
  * This router is mounted in server.js BEFORE the auth-protected /api/users router.

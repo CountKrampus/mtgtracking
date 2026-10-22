@@ -51,6 +51,7 @@ const Sidebar = ({
   onCommanders,
   onSets,
   onCombos,
+  onSynergies,
   onFinance,
   onOpenSettings,
   onOpenCamera,
@@ -129,6 +130,7 @@ const Sidebar = ({
     'trades': '/trades',
     'challenges': '/challenges',
     'referrals': '/referrals',
+    'support': '/support',
   };
 
   const allNavItems = [
@@ -139,6 +141,7 @@ const Sidebar = ({
     { id: 'trades', label: 'Trading Board', icon: ArrowLeftRight },
     { id: 'challenges', label: 'Challenges', icon: Trophy },
     { id: 'referrals', label: 'Refer a Friend', icon: UserPlus },
+    { id: 'support', label: 'Support the Site', icon: Heart },
     { id: 'forum', label: 'Forum', icon: MessageSquare },
     { id: 'community-decks', label: 'Community Decks', icon: Globe },
     { id: 'lifecounter', label: 'Life Counter', icon: Users },
@@ -186,6 +189,7 @@ const Sidebar = ({
     { label: 'Commanders', icon: Crown, onClick: onCommanders, color: 'text-amber-400', feature: 'commanderRecs' },
     { label: 'Sets', icon: BarChart3, onClick: onSets, color: 'text-teal-400', feature: 'setCompletion' },
     { label: 'Combos', icon: Zap, onClick: onCombos, color: 'text-orange-400', feature: 'comboFinder' },
+    { label: 'Synergies', icon: Zap, onClick: onSynergies, color: 'text-yellow-400' },
     { label: 'Finance', icon: DollarSign, onClick: onFinance, color: 'text-emerald-400' },
     { label: 'Scan Card', icon: Camera, onClick: onOpenCamera, color: 'text-cyan-400' },
   ];

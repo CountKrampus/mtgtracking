@@ -67,6 +67,7 @@ const userSchema = new mongoose.Schema({
     showDecks: { type: Boolean, default: true },
     showWishlist: { type: Boolean, default: false },
     showForum: { type: Boolean, default: false },
+    supportRecognition: { type: Boolean, default: false },
     bio: { type: String, default: '' }
   },
   notificationPreferences: {

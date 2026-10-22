@@ -46,6 +46,7 @@ npm start
 - 📱 QR codes for easy location identification
 - 📷 Camera OCR for quick card addition
 - ⚡ Bulk operations for efficient management
+- 💜 Optional community support with opt-in supporter recognition
 
 ## Full Installation Guides
 
@@ -77,6 +78,7 @@ npm start
 
 - The `dump/` folder containing database exports is ignored by Git to keep the repository lightweight
 - Database backups should be managed separately from the code repository
+- The Support page links to `https://buymeacoffee.com/creamkrampus` by default. Set `REACT_APP_SUPPORT_URL` in the frontend environment to override it, then rebuild/restart the frontend. Contributions are handled externally. To enable recognition, an admin creates the exact `Supporter` badge under **Admin → Community → Badges**, verifies contributions outside the app, and grants the badge under **Admin → User Management → Users**. Users must opt in on **Support the Site** before appearing on the public supporters list.
 
 ## License
 

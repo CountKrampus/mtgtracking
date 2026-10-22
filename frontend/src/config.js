@@ -5,3 +5,5 @@
 // frontend/.env.local (do NOT commit .env.local). The localhost fallback is
 // a safety net so a missing env var still points somewhere sensible in dev.
 export const API_URL = process.env.REACT_APP_API_URL || 'https://mtgtracker.store/api';
+// Set REACT_APP_SUPPORT_URL to the hosted donation page before building the frontend.
+export const SUPPORT_URL = process.env.REACT_APP_SUPPORT_URL || 'https://buymeacoffee.com/creamkrampus';

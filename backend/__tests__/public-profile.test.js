@@ -308,6 +308,54 @@ describe('GET /api/users/:username/public-profile', () => {
   });
 });
 
+describe('GET /api/users/supporters', () => {
+  it('lists only active users with the Supporter badge who opted in', async () => {
+    await User.create({
+      email: 'listed@test.com',
+      username: 'listed',
+      passwordHash: 'hash',
+      role: 'user',
+      displayName: 'Listed Supporter',
+      privacy: { supportRecognition: true },
+      badges: [{ name: 'Supporter' }],
+    });
+    await User.create({
+      email: 'private@test.com',
+      username: 'private',
+      passwordHash: 'hash',
+      role: 'user',
+      privacy: { supportRecognition: false },
+      badges: [{ name: 'Supporter' }],
+    });
+    await User.create({
+      email: 'unbadged@test.com',
+      username: 'unbadged',
+      passwordHash: 'hash',
+      role: 'user',
+      privacy: { supportRecognition: true },
+    });
+    await User.create({
+      email: 'inactive@test.com',
+      username: 'inactive',
+      passwordHash: 'hash',
+      role: 'user',
+      isActive: false,
+      privacy: { supportRecognition: true },
+      badges: [{ name: 'Supporter' }],
+    });
+
+    const app = buildApp();
+    const res = await request(app).get('/api/users/supporters');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([{
+      username: 'listed',
+      displayName: 'Listed Supporter',
+      avatarUrl: '',
+    }]);
+  });
+});
+
 // ---------------------------------------------------------------------------
 // GET /api/users/me/unlock-status
 // ---------------------------------------------------------------------------

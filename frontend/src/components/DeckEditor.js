@@ -24,7 +24,7 @@ function getCategory(card) {
 }
 
 // ── Scryfall card search for adding cards not in collection ───────────────────
-function ScryfallCardSearch({ onAddCard }) {
+function ScryfallCardSearch({ onAddCard, commander = false }) {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -53,7 +53,7 @@ function ScryfallCardSearch({ onAddCard }) {
       const res = await axios.get(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(name)}`);
       const card = res.data;
       const face = card.card_faces?.[0] || card;
-      onAddCard({
+      const deckCard = {
         scryfallId: card.id,
         name: card.name,
         manaCost: face.mana_cost || card.mana_cost || '',
@@ -61,7 +61,16 @@ function ScryfallCardSearch({ onAddCard }) {
         colors: card.colors || face.colors || [],
         imageUrl: face.image_uris?.normal || card.image_uris?.normal || '',
         quantity: 1,
-      });
+      };
+      onAddCard(commander ? {
+        ...deckCard,
+        colorIdentity: card.color_identity || [],
+        oracleText: card.oracle_text || face.oracle_text || '',
+        flavorText: card.flavor_text || face.flavor_text || '',
+        typeLine: card.type_line || face.type_line || '',
+        power: card.power || face.power || '',
+        toughness: card.toughness || face.toughness || '',
+      } : deckCard);
     } catch {
       alert(`Could not find "${name}" on Scryfall`);
     } finally {
@@ -75,7 +84,7 @@ function ScryfallCardSearch({ onAddCard }) {
         type="text"
         value={query}
         onChange={handleInput}
-        placeholder="Search Scryfall to add any card..."
+        placeholder={commander ? 'Search Scryfall for your commander...' : 'Search Scryfall to add any card...'}
         className="w-full px-3 py-2 bg-white/10 border border-purple-500/50 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-purple-400 text-sm"
       />
       {loading && <div className="absolute right-3 top-2.5 text-white/40 text-xs">Loading...</div>}
@@ -100,12 +109,15 @@ function ScryfallCardSearch({ onAddCard }) {
 function DeckEditor({ deck, onSave, onCancel }) {
   const [deckName, setDeckName]       = useState(deck.name);
   const [mainDeck, setMainDeck]       = useState(deck.mainDeck ? [...deck.mainDeck] : []);
+  const [commander, setCommander]     = useState(deck.commander?.name ? { ...deck.commander } : null);
+  const [commanderSearchOpen, setCommanderSearchOpen] = useState(!deck.commander?.name);
   const [sideboard, setSideboard]     = useState(deck.sideboard ? [...deck.sideboard] : []);
   const [considering, setConsidering] = useState(deck.considering ? [...deck.considering] : []);
   const [deckListTab, setDeckListTab] = useState('main'); // 'main' | 'sideboard' | 'considering'
   const [collection, setCollection]   = useState([]);
   const [collFilter, setCollFilter]   = useState('');
   const [saving, setSaving]           = useState(false);
+  const requiresCommander = deck.format === 'commander';
 
   // Helpers to get/set the active list
   const activeList = deckListTab === 'sideboard' ? sideboard : deckListTab === 'considering' ? considering : mainDeck;
@@ -121,9 +133,9 @@ function DeckEditor({ deck, onSave, onCancel }) {
   // ── Deck helpers ────────────────────────────────────────────────────────────
   const totalCardCount = useMemo(() => {
     const mainCount = mainDeck.reduce((sum, c) => sum + (c.quantity || 1), 0);
-    const commanderCount = (deck.commander ? 1 : 0) + (deck.partnerCommander ? 1 : 0);
+    const commanderCount = (commander?.name ? 1 : 0) + (deck.partnerCommander?.name ? 1 : 0);
     return mainCount + commanderCount;
-  }, [mainDeck, deck.commander, deck.partnerCommander]);
+  }, [mainDeck, commander, deck.partnerCommander]);
 
   const deckCardIndex = useMemo(() => {
     const idx = {};
@@ -132,6 +144,14 @@ function DeckEditor({ deck, onSave, onCancel }) {
   }, [activeList]);
 
   const addCard = useCallback((card) => {
+    if (
+      requiresCommander &&
+      commander?.name &&
+      card.name?.trim().toLowerCase() === commander.name.trim().toLowerCase()
+    ) {
+      alert('Your commander belongs in the commander slot, not in the 99.');
+      return;
+    }
     setActiveList(prev => {
       const existing = prev.findIndex(c => c.scryfallId === card.scryfallId);
       if (existing !== -1) {
@@ -141,7 +161,22 @@ function DeckEditor({ deck, onSave, onCancel }) {
       }
       return [...prev, { ...card, quantity: 1 }];
     });
-  }, [setActiveList]);
+  }, [setActiveList, requiresCommander, commander]);
+
+  const selectCommander = useCallback((card) => {
+    setCommander(card);
+    setCommanderSearchOpen(false);
+    const commanderName = card.name?.trim().toLowerCase();
+    setMainDeck(prev => {
+      const index = prev.findIndex(existing => existing.name?.trim().toLowerCase() === commanderName);
+      if (index === -1) return prev;
+      const next = [...prev];
+      const quantity = next[index].quantity || 1;
+      if (quantity > 1) next[index] = { ...next[index], quantity: quantity - 1 };
+      else next.splice(index, 1);
+      return next;
+    });
+  }, []);
 
   const removeCard = useCallback((scryfallId) => {
     setActiveList(prev => {
@@ -190,11 +225,11 @@ function DeckEditor({ deck, onSave, onCancel }) {
   // ── Commander color identity (for auto-filtering collection) ─────────────────
   const commanderColorIdentity = useMemo(() => {
     const ids = new Set([
-      ...(deck.commander?.colorIdentity || []),
+      ...(commander?.colorIdentity || []),
       ...(deck.partnerCommander?.colorIdentity || []),
     ]);
     return Array.from(ids);
-  }, [deck.commander, deck.partnerCommander]);
+  }, [commander, deck.partnerCommander]);
 
   // ── Collection filtering ─────────────────────────────────────────────────────
   const filteredCollection = useMemo(() => {
@@ -232,11 +267,16 @@ function DeckEditor({ deck, onSave, onCancel }) {
   // ── Save ─────────────────────────────────────────────────────────────────────
   const handleSave = async () => {
     if (!deckName.trim()) { alert('Deck name cannot be empty'); return; }
+    if (requiresCommander && !commander?.name) {
+      alert('Select a commander before building the rest of your Commander deck.');
+      return;
+    }
     setSaving(true);
     try {
       const res = await axios.put(`${API_URL}/decks/${deck._id}`, {
         ...deck,
         name: deckName.trim(),
+        commander,
         mainDeck,
         sideboard,
         considering,
@@ -269,7 +309,7 @@ function DeckEditor({ deck, onSave, onCancel }) {
         <div className="flex gap-2 flex-shrink-0">
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || (requiresCommander && !commander?.name)}
             className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg font-semibold transition text-sm"
           >
             {saving ? 'Saving...' : 'Save Deck'}
@@ -283,6 +323,51 @@ function DeckEditor({ deck, onSave, onCancel }) {
         </div>
       </div>
 
+      {requiresCommander && (
+        <div className="bg-purple-900/20 border border-purple-500/40 rounded-lg p-4 mb-4">
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <div>
+              <h3 className="text-base font-bold text-white">Commander</h3>
+              <p className="text-xs text-white/60">
+                {commander?.name
+                  ? 'Your commander is separate from the 99-card main deck.'
+                  : 'Choose your commander first. Then you can add the other 99 cards.'}
+              </p>
+            </div>
+            {commander?.name && !commanderSearchOpen && (
+              <button
+                onClick={() => setCommanderSearchOpen(true)}
+                className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-sm transition"
+              >
+                Change
+              </button>
+            )}
+          </div>
+          {commander?.name && (
+            <div className="flex items-center gap-3 mb-3">
+              {commander.imageUrl && (
+                <img src={commander.imageUrl} alt="" className="w-10 h-14 object-cover rounded" />
+              )}
+              <div>
+                <div className="text-white font-semibold">{commander.name}</div>
+                <div className="text-white/50 text-xs">{commander.typeLine}</div>
+              </div>
+            </div>
+          )}
+          {commanderSearchOpen && (
+            <ScryfallCardSearch onAddCard={selectCommander} commander />
+          )}
+        </div>
+      )}
+
+      {requiresCommander && !commander?.name ? (
+        <div className="bg-white/10 backdrop-blur-md rounded-lg p-8 border border-white/20 text-center">
+          <h3 className="text-lg font-bold text-white mb-2">Select your commander to begin</h3>
+          <p className="text-sm text-white/60">
+            Search for your commander above. It will be saved separately from the 99 cards in your deck.
+          </p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* ── Left: Collection + Scryfall search ───────────────────────────── */}
         <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/30">
@@ -361,8 +446,8 @@ function DeckEditor({ deck, onSave, onCancel }) {
                 </button>
               ))}
             </div>
-            {deck.commander && (
-              <span className="text-xs text-white/40 truncate">Cmdr: {deck.commander.name}</span>
+            {commander?.name && (
+              <span className="text-xs text-white/40 truncate">Cmdr: {commander.name}</span>
             )}
           </div>
 
@@ -432,6 +517,7 @@ function DeckEditor({ deck, onSave, onCancel }) {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

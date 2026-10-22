@@ -330,6 +330,76 @@ function CollectionFAB({ onAddCard, onImport, disabled = false }) {
   );
 }
 
+// Card picker for the Sidebar / command-palette "Find Card Synergies" entry.
+// The synergy finder needs a source card, so when it's opened from navigation
+// (rather than a card row's zap button) the user picks one from their
+// collection first — then the existing Card Synergies modal takes over.
+function SynergyCardPicker({ isOpen, cards, onPick, onClose }) {
+  const [term, setTerm] = useState('');
+  useEffect(() => { if (isOpen) setTerm(''); }, [isOpen]);
+
+  const matches = useMemo(() => {
+    const t = term.trim().toLowerCase();
+    const list = t ? cards.filter(c => c.name?.toLowerCase().includes(t)) : cards;
+    return list.slice(0, 30);
+  }, [cards, term]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 sm:p-4 pb-16 sm:pb-0">
+      <div className="bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-2xl sm:max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col border-2 border-yellow-500">
+        <div className="p-6 border-b border-white/10 flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+              <Zap className="text-yellow-500" size={24} /> Find Card Synergies
+            </h2>
+            <p className="text-white/60 mt-1">Pick a card from your collection to analyze</p>
+          </div>
+          <button onClick={onClose} className="text-white/60 hover:text-white transition">
+            <X size={24} />
+          </button>
+        </div>
+        <div className="p-4 border-b border-white/10">
+          <input
+            autoFocus
+            type="text"
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            placeholder="Search your collection..."
+            className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:border-yellow-500"
+          />
+        </div>
+        <div className="overflow-y-auto flex-1 p-2">
+          {matches.length === 0 ? (
+            <p className="text-white/60 text-center py-8">
+              {cards.length === 0 ? 'Your collection is empty.' : 'No cards match your search.'}
+            </p>
+          ) : (
+            matches.map((c) => (
+              <button
+                key={c._id}
+                onClick={() => onPick(c)}
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 transition flex items-center justify-between gap-2"
+              >
+                <span className="text-white font-semibold text-sm truncate">{c.name}</span>
+                <span className="text-white/50 text-xs flex-shrink-0">
+                  {c.set || 'Unknown'} · {c.condition} · Qty {c.quantity}
+                </span>
+              </button>
+            ))
+          )}
+        </div>
+        <div className="p-4 border-t border-white/10 bg-white/5">
+          <p className="text-white/40 text-xs text-center">
+            Synergies are found by analyzing tribal types, keywords, and card mechanics
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CollectionView({
   fileInputRef,
   isImporting, setIsImporting, importProgress, setImportProgress, importResults, setImportResults,
@@ -355,7 +425,7 @@ function CollectionView({
       // Q2: Sidebar / command palette "Scan Card" opens the camera directly
       setShowCameraModal(true);
     } else {
-      const validTools = ['priceUpdate', 'commanderRecs', 'setCompletion', 'comboFinder', 'finance'];
+      const validTools = ['priceUpdate', 'commanderRecs', 'setCompletion', 'comboFinder', 'finance', 'synergyFinder'];
       if (validTools.includes(tool)) {
         setActiveTool(tool);
       }
@@ -2989,6 +3059,13 @@ function CollectionView({
 
         <FinancePanel
           isOpen={activeTool === 'finance'}
+          onClose={() => setActiveTool(null)}
+        />
+
+        <SynergyCardPicker
+          isOpen={activeTool === 'synergyFinder' && !showSynergies}
+          cards={cards}
+          onPick={(card) => { setActiveTool(null); findCardSynergies(card); }}
           onClose={() => setActiveTool(null)}
         />
 

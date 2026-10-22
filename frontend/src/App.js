@@ -296,6 +296,7 @@ function App() {
       { id: 'tool-commanders', label: 'Commander Recommendations', icon: Crown, category: 'Tools', action: () => navigate('/collection?tool=commanderRecs'), feature: 'commanderRecs' },
       { id: 'tool-sets', label: 'Set Completion Tracker', icon: BarChart3, category: 'Tools', action: () => navigate('/collection?tool=setCompletion'), feature: 'setCompletion' },
       { id: 'tool-combos', label: 'Find Combos', icon: Zap, category: 'Tools', action: () => navigate('/collection?tool=comboFinder'), feature: 'comboFinder' },
+      { id: 'tool-synergies', label: 'Find Card Synergies', icon: Zap, category: 'Tools', action: () => navigate('/collection?tool=synergyFinder') },
       { id: 'tool-camera', label: 'Scan Card with Camera', icon: Camera, category: 'Tools', action: () => navigate('/collection?tool=camera') },
       // Learning
       { id: 'learn-rulings', label: 'Card Rulings Browser', icon: BookOpen, category: 'Learning', action: () => navigate('/learn/card-rulings') },
@@ -351,6 +352,7 @@ function App() {
         onCommanders={() => navigate('/collection?tool=commanderRecs')}
         onSets={() => navigate('/collection?tool=setCompletion')}
         onCombos={() => navigate('/collection?tool=comboFinder')}
+        onSynergies={() => navigate('/collection?tool=synergyFinder')}
         onFinance={() => navigate('/collection?tool=finance')}
         onOpenSettings={() => navigate('/settings')}
         onOpenCamera={() => navigate('/collection?tool=camera')}

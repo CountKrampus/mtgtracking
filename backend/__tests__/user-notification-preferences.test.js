@@ -80,3 +80,41 @@ describe('PUT /api/users/me — notificationPreferences', () => {
     expect(res.body.displayName).toBe('Original Name');
   });
 });
+
+describe('PUT /api/users/me — support recognition', () => {
+  it('lets a user opt into public supporter recognition', async () => {
+    const user = await User.create({
+      email: 'supporter@test.com',
+      username: 'supporter',
+      passwordHash: 'hash',
+      role: 'user',
+    });
+
+    const app = buildApp();
+    const res = await request(app)
+      .put('/api/users/me')
+      .set('Authorization', `Bearer ${makeToken(user._id.toString())}`)
+      .send({ privacy: { supportRecognition: true } });
+
+    expect(res.status).toBe(200);
+    expect(res.body.privacy.supportRecognition).toBe(true);
+  });
+
+  it('rejects non-boolean recognition settings', async () => {
+    const user = await User.create({
+      email: 'invalid-supporter@test.com',
+      username: 'invalidsupporter',
+      passwordHash: 'hash',
+      role: 'user',
+    });
+
+    const app = buildApp();
+    const res = await request(app)
+      .put('/api/users/me')
+      .set('Authorization', `Bearer ${makeToken(user._id.toString())}`)
+      .send({ privacy: { supportRecognition: 'yes' } });
+
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('INVALID_SUPPORT_RECOGNITION');
+  });
+});
