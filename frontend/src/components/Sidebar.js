@@ -34,7 +34,8 @@ import {
   MessageSquare,
   DollarSign,
   Globe,
-  ArrowLeftRight
+  ArrowLeftRight,
+  ClipboardCheck
 } from 'lucide-react';
 
 const Sidebar = ({
@@ -105,6 +106,8 @@ const Sidebar = ({
   const viewToPath = {
     'dashboard': '/dashboard',
     'collection': '/collection',
+    'inventory-audits': '/inventory-audits',
+    'card-lending': '/card-lending',
     'decks': '/decks',
     'wishlist': '/wishlist',
     'forum': '/forum',
@@ -136,6 +139,8 @@ const Sidebar = ({
   const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'collection', label: 'Collection', icon: BookOpen },
+    { id: 'inventory-audits', label: 'Location Audits', icon: ClipboardCheck },
+    { id: 'card-lending', label: 'Card Lending', icon: ArrowLeftRight },
     { id: 'decks', label: 'Deck Builder', icon: Layers, feature: 'deckBuilder' },
     { id: 'wishlist', label: 'Wishlist', icon: Heart, feature: 'wishlist' },
     { id: 'trades', label: 'Trading Board', icon: ArrowLeftRight },

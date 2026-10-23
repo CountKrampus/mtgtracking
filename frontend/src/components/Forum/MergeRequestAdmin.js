@@ -38,7 +38,7 @@ export default function MergeRequestAdmin() {
     };
 
     fetchMergeRequests();
-  }, []);
+  }, [authFetch]);
 
   const handleApprove = async (req) => {
     const targetId = req.mergeRequest?.suggestedThreadId?._id;

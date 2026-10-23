@@ -16,16 +16,16 @@ import { CardCollectionProvider, useCardCollection } from './contexts/CardCollec
 import { LocationTagProvider, useLocationTag } from './contexts/LocationTagContext';
 import { WishlistProvider } from './contexts/WishlistContext';
 import { TradesProvider } from './contexts/TradesContext';
-import { AccountSettings } from './components/auth/AccountSettings';
-import { AdminPanel } from './components/admin/AdminPanel';
-
 import { API_URL } from './config';
 import AppHeader from './components/AppHeader';
-import FeedbackModal from './components/FeedbackModal';
-import CardDetailPanel from './components/CardDetailPanel';
 import SparklinePopup from './components/SparklinePopup';
 import BottomNav from './components/BottomNav';
 import AppRoutes from './routes/AppRoutes';
+
+const AccountSettings = React.lazy(() => import('./components/auth/AccountSettings'));
+const AdminPanel = React.lazy(() => import('./components/admin/AdminPanel'));
+const FeedbackModal = React.lazy(() => import('./components/FeedbackModal'));
+const CardDetailPanel = React.lazy(() => import('./components/CardDetailPanel'));
 
 // Set up axios interceptor to add auth headers to all requests
 axios.interceptors.request.use((config) => {
@@ -437,28 +437,36 @@ function App() {
 
       {/* Account Settings Modal */}
       {showAccountSettings && (
-        <AccountSettings onClose={() => setShowAccountSettings(false)} />
+        <React.Suspense fallback={<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 text-white/70">Loading account settings...</div>}>
+          <AccountSettings onClose={() => setShowAccountSettings(false)} />
+        </React.Suspense>
       )}
 
       {/* Feedback Modal */}
       {showFeedbackModal && (
-        <FeedbackModal onClose={() => setShowFeedbackModal(false)} />
+        <React.Suspense fallback={<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 text-white/70">Loading feedback form...</div>}>
+          <FeedbackModal onClose={() => setShowFeedbackModal(false)} />
+        </React.Suspense>
       )}
 
       {/* Admin Panel Modal */}
       {showAdminPanel && (
-        <AdminPanel
-          onClose={() => setShowAdminPanel(false)}
-          user={authUser}
-        />
+        <React.Suspense fallback={<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 text-white/70">Loading admin panel...</div>}>
+          <AdminPanel
+            onClose={() => setShowAdminPanel(false)}
+            user={authUser}
+          />
+        </React.Suspense>
       )}
 
       {sparkline && <SparklinePopup sparkline={sparkline} />}
       {detailCard && (
-        <CardDetailPanel
-          card={detailCard}
-          onClose={() => setDetailCard(null)}
-        />
+        <React.Suspense fallback={<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 text-white/70">Loading card details...</div>}>
+          <CardDetailPanel
+            card={detailCard}
+            onClose={() => setDetailCard(null)}
+          />
+        </React.Suspense>
       )}
 
       <BottomNav />
@@ -491,6 +499,5 @@ function AppWithAuth() {
 }
 
 export default AppWithAuth;
-
 
 

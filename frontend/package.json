@@ -18,6 +18,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "postinstall": "patch-package",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.16",
+    "patch-package": "^8.0.1",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.3.0"
   }

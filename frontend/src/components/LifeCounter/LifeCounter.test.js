@@ -248,6 +248,28 @@ describe('LifeCounter game flow', () => {
     expect(lifeOf(2)).toBe('40');
   });
 
+  test('optional haptics are saved and used for life changes when supported', async () => {
+    const originalVibrate = Object.getOwnPropertyDescriptor(navigator, 'vibrate');
+    const vibrate = jest.fn(() => true);
+    Object.defineProperty(navigator, 'vibrate', { configurable: true, value: vibrate });
+    try {
+      await mount();
+      await startGame();
+      await click(findButtonByAria(document, 'Settings'));
+
+      const hapticsSwitch = findButtonByAria(document, 'Vibrate on game actions');
+      expect(hapticsSwitch).toBeTruthy();
+      await click(hapticsSwitch);
+      expect(JSON.parse(localStorage.getItem('mtg-life-counter-settings')).hapticsEnabled).toBe(true);
+
+      await click(findButtonByAria(cardOf(1), 'Add 1 life to Player 1'));
+      expect(vibrate).toHaveBeenCalledWith(8);
+    } finally {
+      if (originalVibrate) Object.defineProperty(navigator, 'vibrate', originalVibrate);
+      else delete navigator.vibrate;
+    }
+  });
+
   test('hold-to-repeat: press fires once, holding repeats, release stops', async () => {
     await mount();
     await startGame();

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, X, Volume2, VolumeX, Maximize, Minimize, Palette, Clock, Crown } from 'lucide-react';
+import { Settings, X, Volume2, VolumeX, Maximize, Minimize, Palette, Clock, Crown, Smartphone, Vibrate } from 'lucide-react';
 
 function SettingsPanel({
   isOpen,
@@ -15,6 +15,8 @@ function SettingsPanel({
   isFullscreen,
   onToggleFullscreen,
   fullscreenSupported = true,
+  keepScreenAwakeSupported = false,
+  hapticsSupported = false,
   autoMonarch: propAutoMonarch,
   onToggleAutoMonarch,
   theme: propTheme,
@@ -31,6 +33,8 @@ function SettingsPanel({
   const theme = settings?.theme ?? propTheme ?? 'dark';
   const timerEnabled = settings?.timerEnabled ?? propTimerEnabled ?? false;
   const defaultTimerMinutes = settings?.timerMinutes ?? propDefaultTimerMinutes ?? 10;
+  const hapticsEnabled = settings?.hapticsEnabled ?? false;
+  const keepScreenAwake = settings?.keepScreenAwake ?? false;
 
   // Helper to update settings
   const updateSetting = (key, value) => {
@@ -170,6 +174,58 @@ function SettingsPanel({
               </button>
             ) : (
               <span className="text-white/40 text-sm">Not supported</span>
+            )}
+          </div>
+          <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-3">
+            <div>
+              <span className="block text-white/70">Keep screen awake during games</span>
+              <span className="text-xs text-white/40">
+                {keepScreenAwakeSupported ? 'Prevents your display from sleeping while a game is active' : 'Not supported by this browser'}
+              </span>
+            </div>
+            {keepScreenAwakeSupported ? (
+              <button
+                type="button"
+                role="switch"
+                aria-checked={keepScreenAwake}
+                aria-label="Keep screen awake during games"
+                onClick={() => updateSetting('keepScreenAwake', !keepScreenAwake)}
+                className={`relative h-6 w-12 shrink-0 rounded-full transition ${keepScreenAwake ? 'bg-green-600' : 'bg-gray-600'}`}
+              >
+                <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${keepScreenAwake ? 'left-6' : 'left-0.5'}`} />
+              </button>
+            ) : (
+              <Smartphone size={18} className="shrink-0 text-white/30" />
+            )}
+          </div>
+        </div>
+
+        {/* Haptic Settings */}
+        <div className="bg-white/5 rounded-xl p-4 mb-4">
+          <h4 className="mb-3 flex items-center gap-2 font-semibold text-white/80">
+            <Vibrate size={18} className="text-violet-300" />
+            Haptic Feedback
+          </h4>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <span className="block text-white/70">Vibrate on game actions</span>
+              <span className="text-xs text-white/40">
+                {hapticsSupported ? 'Life, poison, and turn changes' : 'Vibration is not supported by this device'}
+              </span>
+            </div>
+            {hapticsSupported ? (
+              <button
+                type="button"
+                role="switch"
+                aria-checked={hapticsEnabled}
+                aria-label="Vibrate on game actions"
+                onClick={() => updateSetting('hapticsEnabled', !hapticsEnabled)}
+                className={`relative h-6 w-12 shrink-0 rounded-full transition ${hapticsEnabled ? 'bg-green-600' : 'bg-gray-600'}`}
+              >
+                <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${hapticsEnabled ? 'left-6' : 'left-0.5'}`} />
+              </button>
+            ) : (
+              <Vibrate size={18} className="shrink-0 text-white/30" />
             )}
           </div>
         </div>

@@ -179,7 +179,7 @@ router.get('/', requireAuth, async (req, res) => {
       }
     }
 
-    const cardQuery = Card.find(query).sort(sort);
+    const cardQuery = Card.find(query).sort(sort).lean();
     let result;
 
     if (pagination.enabled) {

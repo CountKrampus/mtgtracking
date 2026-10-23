@@ -40,6 +40,9 @@ npm start
 - 🛍️ Export missing set cards as a shopping-list CSV
 - 🔄 Personal JSON backups with previewed, merge-only restore
 - 🔔 Dashboard summary for active card price alerts
+- 📦 Location inventory audits with saved counts and discrepancy review
+- 🤝 Card lending records with due dates, return tracking, and available-copy checks
+- 📈 Dashboard price movers based on saved daily card-price snapshots
 - 🚀 First-run setup guide and configurable compact collection table
 - 🌐 Works offline with local MongoDB
 - 👥 Multi-user support with roles (admin, editor, viewer)

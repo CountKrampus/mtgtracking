@@ -63,6 +63,8 @@ const SORT_DEFAULT_DIR = {
   buylistValue: 'desc',
   sellValue: 'desc'
 };
+const TEXT_SORT_COLLATOR = new Intl.Collator(undefined, { sensitivity: 'base' });
+const COLLECTOR_NUMBER_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
 const CONDITION_SORT_ORDER = ['NM', 'LP', 'MP', 'HP', 'DMG'];
 // Rarity is stored as its first letter (C/U/R/M…); alphabetical would put
@@ -141,7 +143,7 @@ function SortableTh({ label, sortKey, sortBy, sortDir, onSort, className = '' })
 
 const PRESETS_STORAGE_KEY = 'mtg-filter-presets';
 
-function MobileCardRow({ card, formatPrice, onEdit, onDelete, onUpdatePrice, onViewDetail }) {
+function MobileCardRow({ card, formatPrice, onEdit, onDelete, onUpdatePrice, onViewDetail, pageSize }) {
   const swipeActions = [
     {
       label: 'Edit',
@@ -161,6 +163,7 @@ function MobileCardRow({ card, formatPrice, onEdit, onDelete, onUpdatePrice, onV
     <SwipeableRow actions={swipeActions}>
       <div
         className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10 active:bg-white/20 transition"
+        style={pageSize > 20 ? { contentVisibility: 'auto', containIntrinsicSize: 'auto 136px' } : undefined}
         onClick={() => onViewDetail(card)}
       >
         <div className="flex items-start justify-between gap-3">
@@ -1254,7 +1257,7 @@ function CollectionView({
 
   const fuzzyMatchedIds = useMemo(() => {
     if (!deferredSearchTerm || deferredSearchTerm.length < 2) return null;
-    return new Set(fuse.search(deferredSearchTerm).map(r => r.item._id));
+    return new Set(fuse.search(deferredSearchTerm, { limit: 250 }).map(r => r.item._id));
   }, [fuse, deferredSearchTerm]);
 
   const filteredAndSortedCards = useMemo(() => {
@@ -1290,21 +1293,24 @@ function CollectionView({
       const matchesLocation = filterLocation === 'all' || card.location === filterLocation;
       return matchesSearch && matchesCondition && matchesColor && matchesSet && matchesType && matchesSpecial && matchesRarity && matchesTag && matchesLocation;
     });
-    return filtered.sort((a, b) => {
-      const av = sortValue(sortBy, a);
-      const bv = sortValue(sortBy, b);
-      let cmp;
-      if (typeof av === 'number' && typeof bv === 'number') {
-        cmp = av - bv;
-      } else if (sortBy === 'collectorNumber') {
-        // Collector numbers are numeric strings — without `numeric: true`,
-        // "10" would lexicographically sort before "9".
-        cmp = String(av).localeCompare(String(bv), undefined, { numeric: true });
-      } else {
-        cmp = String(av).localeCompare(String(bv));
-      }
-      return sortDir === 'desc' ? -cmp : cmp;
-    });
+    return filtered
+      .map((card, index) => ({ card, value: sortValue(sortBy, card), index }))
+      .sort((a, b) => {
+        const av = a.value;
+        const bv = b.value;
+        let cmp;
+        if (typeof av === 'number' && typeof bv === 'number') {
+          cmp = av - bv;
+        } else if (sortBy === 'collectorNumber') {
+          // Collector numbers are numeric strings — without `numeric: true`,
+          // "10" would lexicographically sort before "9".
+          cmp = COLLECTOR_NUMBER_COLLATOR.compare(String(av), String(bv));
+        } else {
+          cmp = TEXT_SORT_COLLATOR.compare(String(av), String(bv));
+        }
+        return cmp === 0 ? a.index - b.index : sortDir === 'desc' ? -cmp : cmp;
+      })
+      .map(entry => entry.card);
   }, [cards, deferredSearchTerm, filterCondition, filterColor, filterSet, filterType, filterSpecial, filterRarity, filterTag, filterLocation, searchIncludesOracleText, sortBy, sortDir, fuzzyMatchedIds]);
 
   const totalPages = Math.ceil(filteredAndSortedCards.length / pageSize);
@@ -1972,6 +1978,7 @@ function CollectionView({
               <MobileCardRow
                 key={card._id}
                 card={card}
+                pageSize={pageSize}
                 formatPrice={formatPrice}
                 onEdit={(c) => {
                   setEditingId(c._id);
@@ -2060,7 +2067,12 @@ function CollectionView({
                   </tr>
                 ) : (
                   paginatedCards.map(card => (
-                    <tr key={card._id} onClick={e => {
+                    <tr
+                      key={card._id}
+                      style={paginatedCards.length > 20
+                        ? { contentVisibility: 'auto', containIntrinsicSize: `auto ${tableDensity === 'compact' ? 56 : 76}px` }
+                        : undefined}
+                      onClick={e => {
                         if (e.target.closest?.('button') || e.target.closest?.('input') || e.target.closest?.('a')) return;
                         setDetailCard(card);
                       }} className={`hover:bg-white/5 transition cursor-pointer ${selectedCards.has(card._id) ? 'bg-purple-900/30' : ''}`}>

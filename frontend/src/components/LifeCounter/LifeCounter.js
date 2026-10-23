@@ -74,12 +74,21 @@ function LifeCounter({ onBack }) {
   const [useLandscapeLayout, setUseLandscapeLayout] = useState(false);
   const [showTriggerReminders, setShowTriggerReminders] = useState(false);
   const [snapshots, setSnapshots] = useState(loadSnapshots);
-  const [settings, setSettings] = useState({
-    soundEnabled: true,
-    soundVolume: 0.5,
-    autoMonarch: false,
-    timerMinutes: 10,
-    theme: 'dark'
+  const [settings, setSettings] = useState(() => {
+    const defaults = {
+      soundEnabled: true,
+      soundVolume: 0.5,
+      autoMonarch: false,
+      timerMinutes: 10,
+      theme: 'dark',
+      hapticsEnabled: false,
+      keepScreenAwake: false,
+    };
+    try {
+      return { ...defaults, ...JSON.parse(localStorage.getItem('mtg-life-counter-settings') || '{}') };
+    } catch {
+      return defaults;
+    }
   });
 
   // Refs
@@ -145,6 +154,66 @@ function LifeCounter({ onBack }) {
   playersRef.current = players;
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('mtg-life-counter-settings', JSON.stringify(settings));
+    } catch (error) {
+      console.warn('Could not save life counter settings:', error);
+    }
+  }, [settings]);
+
+  const triggerHaptic = useCallback((pattern) => {
+    if (!settingsRef.current.hapticsEnabled) return;
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      navigator.vibrate(pattern);
+    }
+  }, []);
+
+  const wakeLockRef = useRef(null);
+  const wakeLockRequestRef = useRef(false);
+  useEffect(() => {
+    if (gamePhase !== 'game' || !settings.keepScreenAwake ||
+      typeof navigator === 'undefined' || !navigator.wakeLock?.request) return undefined;
+    let disposed = false;
+    const acquireWakeLock = async () => {
+      if (document.visibilityState !== 'visible' || wakeLockRef.current || wakeLockRequestRef.current) return;
+      wakeLockRequestRef.current = true;
+      try {
+        const lock = await navigator.wakeLock.request('screen');
+        if (disposed) {
+          await lock.release();
+          return;
+        }
+        wakeLockRef.current = lock;
+        lock.addEventListener('release', () => {
+          if (wakeLockRef.current === lock) wakeLockRef.current = null;
+        }, { once: true });
+      } catch (error) {
+        console.warn('Could not keep the screen awake:', error);
+        addToast({
+          type: 'warning',
+          title: 'Screen wake lock unavailable',
+          message: 'Could not keep the screen awake on this device.',
+        });
+      } finally {
+        wakeLockRequestRef.current = false;
+      }
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') acquireWakeLock();
+    };
+    acquireWakeLock();
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      disposed = true;
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      if (wakeLockRef.current) {
+        wakeLockRef.current.release().catch(error => console.warn('Could not release screen wake lock:', error));
+        wakeLockRef.current = null;
+      }
+    };
+  }, [gamePhase, settings.keepScreenAwake, addToast]);
 
   // Check for saved game on mount
   useEffect(() => {
@@ -290,7 +359,8 @@ function LifeCounter({ onBack }) {
     if (settingsRef.current.soundEnabled) {
       playSound(amount > 0 ? 'lifeGain' : 'lifeLoss');
     }
-  }, [changeLife, addLogEntry, playSound]);
+    triggerHaptic(8);
+  }, [changeLife, addLogEntry, playSound, triggerHaptic]);
 
   // Set an exact life total from the direct entry pad on the life number
   const handleSetLife = useCallback((playerId, value) => {
@@ -301,7 +371,8 @@ function LifeCounter({ onBack }) {
     if (settingsRef.current.soundEnabled) {
       playSound(value > player.life ? 'lifeGain' : 'lifeLoss');
     }
-  }, [setLife, addLogEntry, playSound]);
+    triggerHaptic(12);
+  }, [setLife, addLogEntry, playSound, triggerHaptic]);
 
   const handleIncrementStorm = () => {
     const newCount = stormCount + 1;
@@ -333,7 +404,9 @@ function LifeCounter({ onBack }) {
     if (settingsRef.current.soundEnabled) {
       playSound('poison');
     }
-  }, [changePoison, addLogEntry, playSound]);
+    const nextPoison = player ? Math.max(0, Math.min(10, player.poison + amount)) : 0;
+    triggerHaptic(nextPoison >= 9 ? [20, 35, 20] : 10);
+  }, [changePoison, addLogEntry, playSound, triggerHaptic]);
 
   // Handle commander damage change
   const handleCommanderDamageChange = useCallback((targetPlayerId, sourcePlayerId, amount) => {
@@ -352,7 +425,8 @@ function LifeCounter({ onBack }) {
     if (settingsRef.current.soundEnabled) {
       playSound('damage');
     }
-  }, [changeCommanderDamage, addLogEntry, playSound]);
+    triggerHaptic(14);
+  }, [changeCommanderDamage, addLogEntry, playSound, triggerHaptic]);
 
   // Handle counters change
   const handleCountersChange = useCallback((playerId, counterType, amount) => {
@@ -657,6 +731,7 @@ function LifeCounter({ onBack }) {
     if (settings.soundEnabled) {
       playSound('turnChange');
     }
+    triggerHaptic([12, 25, 12]);
 
     // Fire upkeep triggers for the new turn (phase resets to upkeep automatically)
     // Use setTimeout to ensure phase state has updated
@@ -674,7 +749,7 @@ function LifeCounter({ onBack }) {
         });
       }
     }, 100);
-  }, [players, nextTurnSkipEliminated, currentPlayerIndex, turnNumber, addLogEntry, settings.soundEnabled, playSound]);
+  }, [players, nextTurnSkipEliminated, currentPlayerIndex, turnNumber, addLogEntry, settings.soundEnabled, playSound, triggerHaptic]);
 
   // Handle undo with keyboard shortcut
   useEffect(() => {
@@ -1217,6 +1292,8 @@ function LifeCounter({ onBack }) {
           onClose={() => setShowSettingsPanel(false)}
           settings={settings}
           onSettingsChange={setSettings}
+          keepScreenAwakeSupported={typeof navigator !== 'undefined' && Boolean(navigator.wakeLock?.request)}
+          hapticsSupported={typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function'}
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}
           fullscreenSupported={fullscreenSupported}

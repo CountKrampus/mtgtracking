@@ -176,6 +176,9 @@ const Dashboard = ({
   const [setHistoryData, setSetHistoryData] = useState({ sets: [], snapshots: [] });
   const [selectedSetKey, setSelectedSetKey] = useState('');
   const [priceChanges, setPriceChanges] = useState({ gainers: [], losers: [] });
+  const [priceMovers, setPriceMovers] = useState({ gainers: [], decliners: [] });
+  const [priceMoverDays, setPriceMoverDays] = useState(7);
+  const [priceMoverError, setPriceMoverError] = useState('');
   const [mostPlayedDecks, setMostPlayedDecks] = useState([]);
   const [valueBreakTab, setValueBreakTab] = useState('rarity');
   const [showPL, setShowPL] = useState(false);
@@ -207,6 +210,26 @@ const Dashboard = ({
       .then(data => setMostPlayedDecks(Array.isArray(data.mostPlayedDecks) ? data.mostPlayedDecks : []))
       .catch(() => setMostPlayedDecks([]));
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPriceMoverError('');
+    fetch(`${API_URL}/price-movers?days=${priceMoverDays}`, { headers: getAuthHeaders() })
+      .then(async response => {
+        if (!response.ok) {
+          const result = await response.json().catch(() => ({}));
+          throw new Error(result.message || 'Could not load price movers.');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (!cancelled) setPriceMovers(data);
+      })
+      .catch(error => {
+        if (!cancelled) setPriceMoverError(error.message || 'Could not load price movers.');
+      });
+    return () => { cancelled = true; };
+  }, [priceMoverDays]);
 
   useEffect(() => {
     if (selectedSetKey || !setHistoryData.sets.length) return;
@@ -482,6 +505,52 @@ const Dashboard = ({
           )}
         </section>
       )}
+
+      <section className="bg-white/10 border border-white/10 rounded-xl p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-white">Collection price movers</h2>
+            <p className="text-xs text-white/50 mt-1">Largest card-price changes from saved daily snapshots.</p>
+          </div>
+          <div className="flex gap-1 rounded-lg bg-black/20 p-1" aria-label="Price mover period">
+            {[7, 30, 90].map(days => (
+              <button key={days} onClick={() => setPriceMoverDays(days)} aria-pressed={priceMoverDays === days}
+                className={`px-3 py-1.5 rounded-md text-xs ${priceMoverDays === days ? 'bg-purple-600 text-white' : 'text-white/60 hover:text-white'}`}>
+                {days}d
+              </button>
+            ))}
+          </div>
+        </div>
+        {priceMoverError ? (
+          <p role="alert" className="mt-3 text-sm text-red-300">{priceMoverError}</p>
+        ) : (
+          <div className="grid sm:grid-cols-2 gap-5 mt-4">
+            {[
+              { key: 'gainers', label: 'Biggest increases', rows: priceMovers.gainers || [], positive: true },
+              { key: 'decliners', label: 'Biggest decreases', rows: priceMovers.decliners || [], positive: false }
+            ].map(group => (
+              <div key={group.key}>
+                <h3 className={`text-sm font-medium mb-2 ${group.positive ? 'text-emerald-300' : 'text-rose-300'}`}>{group.label}</h3>
+                {group.rows.length === 0 ? <p className="text-xs text-white/40">No price changes with enough history yet.</p>
+                  : <ul className="space-y-2">
+                    {group.rows.map(card => (
+                      <li key={card.cardId} className="flex items-center justify-between gap-3 text-sm">
+                        <span className="min-w-0">
+                          <span className="block truncate text-white/85">{card.name}</span>
+                          <span className="block text-xs text-white/40">{card.set} · {fp(card.startPrice)} → {fp(card.currentPrice)}</span>
+                        </span>
+                        <span className={`flex-shrink-0 text-right ${group.positive ? 'text-emerald-300' : 'text-rose-300'}`}>
+                          <span className="block">{card.changePct > 0 ? '+' : ''}{card.changePct.toFixed(1)}%</span>
+                          <span className="block text-xs opacity-70">{card.collectionChange > 0 ? '+' : ''}{fp(card.collectionChange)} collection value</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* Portfolio P&L (only shown when purchasePrice data exists) */}
       {portfolioCost > 0 && (() => {

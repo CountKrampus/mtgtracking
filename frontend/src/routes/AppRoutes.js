@@ -33,6 +33,8 @@ const SetReleaseCalendar = React.lazy(() => import('../components/Tools/SetRelea
 const SpoilerSeasonIntegration = React.lazy(() => import('../components/Tools/SpoilerSeasonIntegration'));
 
 const CollectionView = React.lazy(() => import('../components/CollectionView'));
+const InventoryAuditsView = React.lazy(() => import('../components/InventoryAuditsView'));
+const CardLoansView = React.lazy(() => import('../components/CardLoansView'));
 const WishlistView = React.lazy(() => import('../components/WishlistView'));
 const CollectionHealthReportView = React.lazy(() => import('../components/CollectionHealthReportView'));
 const TradingBoard = React.lazy(() => import('../components/TradingBoard'));
@@ -102,6 +104,14 @@ export default function AppRoutes({
             tableDensity={settings.tableDensity}
           />
         </Suspense>
+      } />
+
+      <Route path="/inventory-audits" element={
+        <Suspense fallback={<LoadingFallback />}><InventoryAuditsView locations={locations} /></Suspense>
+      } />
+
+      <Route path="/card-lending" element={
+        <Suspense fallback={<LoadingFallback />}><CardLoansView cards={cards} /></Suspense>
       } />
 
       <Route path="/wishlist" element={

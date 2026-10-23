@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, BookOpen, MessageSquare, Layers, LayoutGrid, Heart, Users, Settings, Globe, X } from 'lucide-react';
+import { Home, BookOpen, MessageSquare, Layers, LayoutGrid, Heart, Users, Settings, Globe, X, ArrowLeftRight, ClipboardCheck } from 'lucide-react';
 
 const PRIMARY_NAV = [
   { icon: Home,          label: 'Dashboard',  path: '/dashboard' },
@@ -13,6 +13,8 @@ const MORE_NAV = [
   { icon: Heart,    label: 'Wishlist',        path: '/wishlist' },
   { icon: Users,    label: 'Life Counter',    path: '/lifecounter' },
   { icon: Globe,    label: 'Community Decks', path: '/community-decks' },
+  { icon: ClipboardCheck, label: 'Location Audits', path: '/inventory-audits' },
+  { icon: ArrowLeftRight, label: 'Card Lending', path: '/card-lending' },
   { icon: Settings, label: 'Settings',        path: '/settings' },
 ];
 

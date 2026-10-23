@@ -5,6 +5,8 @@ import { ChevronRight, Home } from 'lucide-react';
 const pathLabels = {
   '/dashboard': 'Dashboard',
   '/collection': 'Collection',
+  '/inventory-audits': 'Location Audits',
+  '/card-lending': 'Card Lending',
   '/decks': 'Deck Builder',
   '/wishlist': 'Wishlist',
   '/forum': 'Forum',

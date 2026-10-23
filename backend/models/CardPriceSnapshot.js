@@ -7,5 +7,6 @@ const cardPriceSnapshotSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 cardPriceSnapshotSchema.index({ cardId: 1, createdAt: 1 });
+cardPriceSnapshotSchema.index({ userId: 1, createdAt: 1 });
 
 module.exports = mongoose.model('CardPriceSnapshot', cardPriceSnapshotSchema);
