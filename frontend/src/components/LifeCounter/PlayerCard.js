@@ -70,32 +70,32 @@ function PlayerCard({
   const visualState = getVisualState();
 
   const getContainerClasses = () => {
-    const base = 'rounded-2xl p-4 transition-all duration-300 relative overflow-hidden';
-    const currentPlayerHighlight = isCurrentPlayer ? 'ring-4 ring-yellow-400/50 ring-offset-2 ring-offset-transparent' : '';
+    const base = 'rounded-2xl border p-3 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-200 relative overflow-hidden sm:p-4';
+    const currentPlayerHighlight = isCurrentPlayer ? 'ring-2 ring-amber-300/80 ring-offset-2 ring-offset-slate-950' : '';
 
     switch (visualState) {
       case 'eliminated':
-        return `${base} bg-gray-800/80 border-2 border-gray-600`;
+        return `${base} bg-slate-900/90 border-slate-600/80 opacity-75`;
       case 'critical':
-        return `${base} bg-red-900/50 border-2 border-red-500 animate-pulse ${currentPlayerHighlight}`;
+        return `${base} bg-rose-950/65 border-rose-400/70 ${currentPlayerHighlight}`;
       case 'danger':
-        return `${base} bg-yellow-900/30 border-2 border-yellow-500 ${currentPlayerHighlight}`;
+        return `${base} bg-amber-950/45 border-amber-400/60 ${currentPlayerHighlight}`;
       default:
-        return `${base} bg-white/10 border-2 ${isCurrentPlayer ? 'border-yellow-400' : 'border-white/20'} ${currentPlayerHighlight}`;
+        return `${base} bg-slate-900/65 ${isCurrentPlayer ? 'border-amber-300/60' : 'border-white/10'} ${currentPlayerHighlight}`;
     }
   };
 
   const getLifeTextClasses = () => {
-    const base = 'font-bold transition-colors';
-    const size = compact ? 'text-5xl' : 'text-7xl';
+    const base = 'font-bold tracking-tight tabular-nums transition-colors';
+    const size = compact ? 'text-5xl' : 'text-5xl sm:text-6xl lg:text-7xl';
 
     switch (visualState) {
       case 'eliminated':
         return `${base} ${size} text-gray-500 line-through`;
       case 'critical':
-        return `${base} ${size} text-red-400`;
+        return `${base} ${size} text-rose-300`;
       case 'danger':
-        return `${base} ${size} text-yellow-400`;
+        return `${base} ${size} text-amber-200`;
       default:
         return `${base} ${size} text-white`;
     }
@@ -138,7 +138,16 @@ function PlayerCard({
   );
 
   return (
-    <div ref={playerCardRef} className={getContainerClasses()} data-testid={`player-card-${player.id}`}>
+    <div
+      ref={playerCardRef}
+      className={getContainerClasses()}
+      style={visualState === 'normal' && player.color ? { borderColor: `${player.color}88` } : undefined}
+      data-testid={`player-card-${player.id}`}
+    >
+      <div
+        className="absolute inset-x-0 top-0 h-1 opacity-80"
+        style={{ background: player.color || '#818cf8' }}
+      />
       {/* Background Image */}
       {backgroundImage && !player.isEliminated && (
         <div className="absolute inset-0 z-0">
@@ -162,87 +171,96 @@ function PlayerCard({
       {/* Player Name */}
       <div className="text-center mb-2 relative z-[1]">
         {isCurrentPlayer && !player.isEliminated && (
-          <div className="text-yellow-400 text-xs font-semibold mb-1">▶ CURRENT TURN</div>
+          <div className="mb-1 inline-flex items-center gap-1.5 rounded-full border border-amber-300/20 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-300" /> Current turn
+          </div>
         )}
-        <h3 className={`font-bold truncate ${compact ? 'text-lg' : 'text-xl'} ${player.isEliminated ? 'text-gray-500' : 'text-white'}`}>
+        <h3 className={`font-bold truncate tracking-tight ${compact ? 'text-base sm:text-lg' : 'text-base sm:text-xl'} ${player.isEliminated ? 'text-gray-500' : 'text-white'}`}>
           {player.name}
         </h3>
       </div>
 
       {/* Status Badges */}
       {!player.isEliminated && (isMonarch || hasInitiative || player.citysBlessing || player.ringProgress > 0) && (
-        <div className="flex items-center justify-center gap-2 mb-2 flex-wrap relative z-[1]">
+        <div className="flex items-center justify-center gap-1.5 mb-2 flex-wrap relative z-[1]">
           {isMonarch && (
-            <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-600/30 rounded-full" title="Monarch">
+            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-yellow-600/30 rounded-full" title="Monarch">
               <Crown size={12} className="text-yellow-400" />
-              <span className="text-yellow-400 text-xs font-semibold">Monarch</span>
+              <span className="text-[10px] font-semibold text-yellow-400 sm:text-xs">Monarch</span>
             </div>
           )}
           {hasInitiative && (
             <div className="flex items-center gap-1 px-2 py-0.5 bg-cyan-600/30 rounded-full" title="Has Initiative">
-              <span className="text-cyan-400 text-xs font-semibold">Initiative</span>
+              <span className="text-[10px] font-semibold text-cyan-400 sm:text-xs">Initiative</span>
             </div>
           )}
           {player.citysBlessing && (
             <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600/30 rounded-full" title="City's Blessing">
               <Building2 size={12} className="text-emerald-400" />
-              <span className="text-emerald-400 text-xs font-semibold">Blessed</span>
+              <span className="text-[10px] font-semibold text-emerald-400 sm:text-xs">Blessed</span>
             </div>
           )}
           {player.ringProgress > 0 && (
             <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-600/30 rounded-full" title={`Ring Level ${player.ringProgress}`}>
               <Circle size={12} className="text-amber-400" />
-              <span className="text-amber-400 text-xs font-semibold">Ring {player.ringProgress}</span>
+              <span className="text-[10px] font-semibold text-amber-400 sm:text-xs">Ring {player.ringProgress}</span>
             </div>
           )}
         </div>
       )}
 
       {/* Life Total — tap to enter an exact total directly */}
-      <div className="text-center mb-4 relative z-[1]">
+      <div className="relative z-[1] mb-3 text-center">
         <button
           type="button"
           onClick={openLifeEntry}
           disabled={player.isEliminated}
-          className={`${getLifeTextClasses()} w-full bg-transparent touch-manipulation select-none disabled:cursor-default`}
+          className={`${getLifeTextClasses()} w-full rounded-2xl bg-black/10 py-1 touch-manipulation select-none disabled:cursor-default`}
           aria-label={`Set exact life total for ${player.name}`}
           data-testid={`life-total-${player.id}`}
         >
           <AnimatedLifeChange currentLife={player.life} />
         </button>
+        <span className="mt-0.5 block text-[9px] font-semibold uppercase tracking-[0.22em] text-white/35">
+          Life total · tap to edit
+        </span>
       </div>
 
       {/* Life Adjustment Buttons (hold to repeat) */}
-      <div className={`flex justify-center gap-2 mb-4 relative z-[1] ${player.isEliminated ? 'opacity-30' : ''}`}>
+      <div className={`relative z-[1] mb-3 grid grid-cols-4 gap-1.5 sm:gap-2 ${player.isEliminated ? 'opacity-30' : ''}`}>
         <button
           {...holdDown5}
           disabled={player.isEliminated}
-          className="px-3 py-2 bg-red-600/80 hover:bg-red-600 text-white rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation select-none active:scale-95"
+          className="min-h-11 rounded-xl border border-rose-300/15 bg-rose-500/15 text-sm font-bold text-rose-100 transition hover:border-rose-300/30 hover:bg-rose-500/25 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation select-none sm:min-h-12"
           aria-label={`Remove 5 life from ${player.name}`}
+          title="Hold to repeat"
         >
           -5
         </button>
         <button
           {...holdDown1}
           disabled={player.isEliminated}
-          className="px-4 py-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation select-none active:scale-95"
+          className="min-h-11 rounded-xl border border-rose-300/15 bg-rose-500/20 text-rose-100 transition hover:border-rose-300/30 hover:bg-rose-500/35 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation select-none sm:min-h-12"
           aria-label={`Remove 1 life from ${player.name}`}
+          title="Hold to repeat"
         >
-          <Minus size={18} />
+          <Minus size={20} />
         </button>
         <button
           {...holdUp1}
           disabled={player.isEliminated}
-          className="px-4 py-2 bg-green-500/80 hover:bg-green-500 text-white rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation select-none active:scale-95"
+          className="min-h-11 rounded-xl border border-emerald-300/15 bg-emerald-500/20 text-emerald-100 transition hover:border-emerald-300/30 hover:bg-emerald-500/35 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation select-none sm:min-h-12"
           aria-label={`Add 1 life to ${player.name}`}
+          title="Hold to repeat"
         >
-          <Plus size={18} />
+          <Plus size={20} />
         </button>
         <button
           {...holdUp5}
           disabled={player.isEliminated}
-          className="px-3 py-2 bg-green-600/80 hover:bg-green-600 text-white rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation select-none active:scale-95"
+          className="min-h-11 rounded-xl border border-emerald-300/15 bg-emerald-500/15 text-sm font-bold text-emerald-100 transition hover:border-emerald-300/30 hover:bg-emerald-500/25 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation select-none sm:min-h-12"
           aria-label={`Add 5 life to ${player.name}`}
+          title="Hold to repeat"
         >
           +5
         </button>
@@ -254,7 +272,7 @@ function PlayerCard({
           className="mb-3 relative z-[1]"
           data-testid={`commander-damage-grid-${player.id}`}
         >
-          <div className="text-[10px] text-white/40 text-center font-semibold mb-1 uppercase tracking-wide">
+          <div className="mb-1.5 border-t border-white/10 pt-2 text-center text-[9px] font-bold uppercase tracking-[0.18em] text-white/45">
             Commander Damage
           </div>
           {compact ? (
@@ -344,7 +362,7 @@ function PlayerCard({
             });
           }
         }}
-        className="w-full mt-2 py-2 bg-purple-600/80 hover:bg-purple-600 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2 touch-manipulation"
+        className="mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-violet-300/15 bg-violet-400/10 py-2 text-sm font-semibold text-violet-100 transition hover:border-violet-300/30 hover:bg-violet-400/15 touch-manipulation"
       >
         <Settings size={16} />
         Advanced Controls

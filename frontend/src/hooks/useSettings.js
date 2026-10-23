@@ -5,6 +5,7 @@ const STORAGE_KEY = 'mtg-tracker-settings';
 const DEFAULT_SETTINGS = {
   // Display
   pageSize: 20,
+  tableDensity: 'comfortable',
   defaultSort: 'name',
   defaultCondition: 'NM',
   theme: 'default', // 'default' | 'oled' | 'high-contrast'

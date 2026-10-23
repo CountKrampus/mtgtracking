@@ -1,6 +1,7 @@
 const cron = require('node-cron');
 const CardPriceSnapshot = require('../models/CardPriceSnapshot');
 const ValueSnapshot = require('../models/ValueSnapshot');
+const SetValueSnapshot = require('../models/SetValueSnapshot');
 const { getPriceWithFallback } = require('../utils/pricing');
 const { mapWithConcurrency, createStartRateLimiter } = require('../utils/concurrency');
 const { createPriceAlertNotification } = require('../utils/notifications');
@@ -97,6 +98,26 @@ async function runDailySnapshot() {
           value: totalValue,
           cardCount: userCards.length
         });
+      }
+
+      const dailySets = new Map();
+      for (const card of userCards) {
+        const setCode = (card.setCode || '').toLowerCase();
+        const setName = card.set || 'Unknown';
+        const setKey = setCode || setName.trim().toLowerCase();
+        const current = dailySets.get(setKey) || { setCode, setName, value: 0, cardCount: 0, quantityCount: 0 };
+        const price = updatedPrices[card._id.toString()] ?? (card.price || 0);
+        current.value += price * (card.quantity || 1);
+        current.cardCount++;
+        current.quantityCount += card.quantity || 1;
+        dailySets.set(setKey, current);
+      }
+      for (const [setKey, set] of dailySets) {
+        await SetValueSnapshot.updateOne(
+          { userId: userIdStr, setKey, snapshotDate: todayStart },
+          { $setOnInsert: { userId: userIdStr, setKey, ...set, snapshotDate: todayStart } },
+          { upsert: true }
+        );
       }
     }
   } catch (err) {

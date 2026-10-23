@@ -123,6 +123,48 @@ const cardFallbackBounds = (img) => {
   return { x: (100 - wPct) / 2, y: (100 - hPct) / 2, width: wPct, height: hPct };
 };
 
+const getCameraQualityHint = (video, canvas) => {
+  if (!video.videoWidth || !video.videoHeight) return 'Camera is warming up…';
+  canvas.width = 160;
+  canvas.height = 90;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const gray = new Uint8Array(canvas.width * canvas.height);
+  let brightness = 0;
+  let glarePixels = 0;
+
+  for (let i = 0, p = 0; i < gray.length; i++, p += 4) {
+    const value = (data[p] * 299 + data[p + 1] * 587 + data[p + 2] * 114) / 1000;
+    gray[i] = value;
+    brightness += value;
+    if (value > 246) glarePixels++;
+  }
+
+  brightness /= gray.length;
+  let laplacianMean = 0;
+  let laplacianSquareMean = 0;
+  let samples = 0;
+  for (let y = 1; y < canvas.height - 1; y += 2) {
+    for (let x = 1; x < canvas.width - 1; x += 2) {
+      const index = y * canvas.width + x;
+      const laplacian = gray[index - canvas.width] + gray[index - 1] + gray[index + 1] +
+        gray[index + canvas.width] - 4 * gray[index];
+      laplacianMean += laplacian;
+      laplacianSquareMean += laplacian * laplacian;
+      samples++;
+    }
+  }
+  const sharpness = laplacianSquareMean / samples - (laplacianMean / samples) ** 2;
+  const glareRatio = glarePixels / gray.length;
+
+  if (brightness < 55) return 'Too dark — add light or turn on the camera flash.';
+  if (glareRatio > 0.12) return 'Glare detected — tilt the card or move the light source.';
+  if (sharpness < 90) return 'Image looks soft — hold the card and camera steady, then tap to focus.';
+  if (brightness > 215) return 'Image is very bright — reduce direct light on the card.';
+  return 'Looks good — keep the card flat and fill the guide.';
+};
+
 // When auto-detection fails, the user-dragged name strip still locates the
 // card: the name bar spans nearly the full card width and sits at the very
 // top of it. Card height then follows from MTG's 63:88 aspect. Field scans
@@ -266,7 +308,7 @@ const STOP_WORDS = new Set([
   'than', 'then', 'when', 'each', 'any', 'one', 'two', 'would', 'been',
 ]);
 
-const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
+const CameraModal = ({ isOpen, onClose, onCardExtracted, batchMode = false }) => {
   const [stream, setStream] = useState(null);
   const [capturedImage, setCapturedImage] = useState(null);
   const [processingState, setProcessingState] = useState('idle'); // idle|cropping|processing|complete
@@ -282,6 +324,8 @@ const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
   // Backend image-match capability (fetched on open) so the UI can say when
   // it's warming up / unavailable instead of silently relying on OCR
   const [matchStatus, setMatchStatus] = useState(null);
+  const [qualityHint, setQualityHint] = useState('Center the card in the guide.');
+  const [deskewAngle, setDeskewAngle] = useState(0);
   // Top-3 Scryfall candidates shown when OCR confidence is low (<70%)
   const [lowConfCandidates, setLowConfCandidates] = useState([]);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
@@ -346,6 +390,8 @@ const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const qualityCanvasRef = useRef(null);
+  const baseCaptureRef = useRef(null);
   const tesseractWorkerRef = useRef(null);
   const fileInputRef = useRef(null);
   const cropCanvasRef = useRef(null);
@@ -398,6 +444,21 @@ const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
       stream.getTracks().forEach(track => track.stop());
     };
   }, [stream, isOpen]);
+
+  useEffect(() => {
+    if (!stream || processingState !== 'idle' || inputMode !== 'camera') return undefined;
+    const interval = window.setInterval(() => {
+      const video = videoRef.current;
+      const canvas = qualityCanvasRef.current;
+      if (!video || !canvas) return;
+      try {
+        setQualityHint(getCameraQualityHint(video, canvas));
+      } catch {
+        setQualityHint('Hold the card steady and keep it inside the guide.');
+      }
+    }, 700);
+    return () => window.clearInterval(interval);
+  }, [stream, processingState, inputMode]);
 
   // Fetch Scryfall suggestions when editable name changes
   useEffect(() => {
@@ -647,7 +708,8 @@ const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
     onCardExtracted({
       ...extractedData,
       name: editableName || extractedData?.name
-    }, { batch: true, close: false });
+    }, { batch: true, close: batchMode });
+    if (batchMode) return;
     // Stay in the scanner for the next card (bulk scan loop)
     if (imageQueue.length > 1) handleNextImage();
     else retryCapture();
@@ -684,7 +746,11 @@ const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
   // Enter crop mode and pick a smart default name region: auto-detect the
   // card box and aim at its name bar (top ~4-16% of the card). Falls back
   // to the old top-of-image strip when no card is detected.
-  const prepareCropping = (dataUrl) => {
+  const prepareCropping = (dataUrl, preserveBase = false) => {
+    if (!preserveBase) {
+      baseCaptureRef.current = dataUrl;
+      setDeskewAngle(0);
+    }
     setCapturedImage(dataUrl);
     setProcessingState('cropping');
     setCardBounds(null);
@@ -711,6 +777,27 @@ const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
       });
     };
     img.src = dataUrl;
+  };
+
+  const applyDeskew = (delta) => {
+    const nextAngle = Math.max(-12, Math.min(12, deskewAngle + delta));
+    if (!baseCaptureRef.current || nextAngle === deskewAngle) return;
+    const img = new Image();
+    img.onload = () => {
+      const radians = nextAngle * Math.PI / 180;
+      const width = Math.ceil(Math.abs(img.width * Math.cos(radians)) + Math.abs(img.height * Math.sin(radians)));
+      const height = Math.ceil(Math.abs(img.height * Math.cos(radians)) + Math.abs(img.width * Math.sin(radians)));
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.translate(width / 2, height / 2);
+      ctx.rotate(radians);
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      setDeskewAngle(nextAngle);
+      prepareCropping(canvas.toDataURL('image/jpeg', 0.94), true);
+    };
+    img.src = baseCaptureRef.current;
   };
 
   // Enhanced image preprocessing with sharpening and adaptive contrast
@@ -964,7 +1051,7 @@ const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
           const effectiveBounds = stripDerived || cardBounds || boundsFromNameStrip(cropRegion, img);
 
           // Collector number from the card's bottom-left when we know the box
-          const collectorNumber = await extractCollectorNumber(img, effectiveBounds);
+          const printingInfo = await extractPrintingInfo(img, effectiveBounds);
 
           setOcrProgress(90);
           await processWithOCR(
@@ -973,7 +1060,7 @@ const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
               matchedName: best.resolved || best.cardName,
               resolved: best.resolved,
               partial: best.partial,
-              collectorNumber,
+              ...printingInfo,
               confidence: best.confidence,
             },
             imageMatchPromise,
@@ -1103,6 +1190,7 @@ const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
         name: finalName,
         originalOcrName: ocrResult.cardName || '',
         collectorNumber: ocrResult.collectorNumber,
+        setCode: ocrResult.setCode,
         confidence: finalConfidence,
         matchSource,
         nameResolved,
@@ -1453,9 +1541,9 @@ const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
   };
 
   // Collector number: bottom-left of the detected card box, else of the frame
-  const extractCollectorNumber = async (img, bounds) => {
+  const extractPrintingInfo = async (img, bounds) => {
     const worker = tesseractWorkerRef.current;
-    if (!worker) return null;
+    if (!worker) return {};
     const fullCanvas = document.createElement('canvas');
     fullCanvas.width = img.width;
     fullCanvas.height = img.height;
@@ -1474,12 +1562,26 @@ const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
           height: Math.floor(img.height * 0.08),
         };
     try {
+      const footerRegion = {
+        ...region,
+        left: bounds ? Math.floor(img.width * (bounds.x + bounds.width * 0.58) / 100) : Math.floor(img.width * 0.55),
+        width: bounds ? Math.floor(img.width * bounds.width * 0.37 / 100) : Math.floor(img.width * 0.4),
+        top: Math.floor(img.height * (bounds ? (bounds.y + bounds.height * 0.94) / 100 : 0.94)),
+        height: Math.max(region.height, Math.floor(img.height * 0.04)),
+      };
       const collectorResult = await worker.recognize(fullCanvas, { rectangle: region });
-      const collectorMatch = collectorResult.data.text.match(/(\d+)\/(\d+)/);
-      return collectorMatch ? collectorMatch[1] : null;
+      const footerResult = await worker.recognize(fullCanvas, { rectangle: footerRegion });
+      const collectorText = collectorResult.data.text.toUpperCase();
+      const collectorMatch = collectorText.match(/(?:^|\s)(\d{1,4}[A-Z]?)\s*\/\s*\d+/) ||
+        collectorText.match(/(?:^|\s)(\d{1,4}[A-Z]?)(?:\s|$)/);
+      const setMatch = footerResult.data.text.toUpperCase().match(/\b([A-Z]{3,5})\b/);
+      return {
+        collectorNumber: collectorMatch ? collectorMatch[1] : null,
+        setCode: setMatch ? setMatch[1].toLowerCase() : null,
+      };
     } catch (e) {
-      console.log('Could not extract collector number');
-      return null;
+      console.log('Could not extract printing details');
+      return {};
     }
   };
 
@@ -1616,7 +1718,7 @@ const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
     if (editableName || extractedData?.name) {
       // A multi-image queue means bulk scan — batch it and show the review
       // table; a single scan keeps the confirm-step form flow (Q4).
-      const bulk = imageQueue.length > 1;
+      const bulk = imageQueue.length > 1 || batchMode;
       onCardExtracted({
         ...extractedData,
         name: editableName || extractedData?.name
@@ -1661,6 +1763,7 @@ const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
           className="hidden"
         />
         <canvas ref={cropCanvasRef} className="hidden" />
+        <canvas ref={qualityCanvasRef} className="hidden" />
 
         {/* Camera/Upload Selection */}
         {showCameraSelection && !error && (
@@ -1726,6 +1829,11 @@ const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
               className="w-full rounded-lg"
             />
             <canvas ref={canvasRef} className="hidden" />
+            <div className={`absolute bottom-20 left-3 right-3 rounded-lg px-3 py-2 text-sm font-medium ${
+              qualityHint.startsWith('Looks good') ? 'bg-green-700/80 text-white' : 'bg-black/75 text-yellow-100'
+            }`} role="status" aria-live="polite">
+              {qualityHint}
+            </div>
 
             {/* Guide overlay */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
@@ -1777,6 +1885,20 @@ const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
 
             {/* Zoom controls */}
             <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-2 mr-auto">
+                <span className="text-white/60 text-xs">Straighten</span>
+                <button
+                  onClick={() => applyDeskew(-1)}
+                  className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-white text-xs"
+                  aria-label="Rotate image one degree counterclockwise"
+                >−1°</button>
+                <span className="text-white/70 text-xs w-9 text-center">{deskewAngle}°</span>
+                <button
+                  onClick={() => applyDeskew(1)}
+                  className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-white text-xs"
+                  aria-label="Rotate image one degree clockwise"
+                >+1°</button>
+              </div>
               {(() => {
                 const mid = { x: (imgWrapRef.current?.clientWidth || 0) / 2, y: (imgWrapRef.current?.clientHeight || 0) / 2 };
                 return (
@@ -2058,6 +2180,12 @@ const CameraModal = ({ isOpen, onClose, onCardExtracted }) => {
                     <div>
                       <p className="text-white/60 text-sm">Collector Number:</p>
                       <p className="text-white font-semibold">{extractedData.collectorNumber}</p>
+                    </div>
+                  )}
+                  {extractedData.setCode && (
+                    <div>
+                      <p className="text-white/60 text-sm">Possible set code:</p>
+                      <p className="text-white font-semibold">{extractedData.setCode.toUpperCase()}</p>
                     </div>
                   )}
 

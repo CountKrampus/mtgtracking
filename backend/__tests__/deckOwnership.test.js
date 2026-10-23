@@ -63,6 +63,7 @@ describe('GET /api/decks/:id/ownership', () => {
       partnerCommander: null,
       mainDeck: [{ scryfallId: 'sf-1', name: 'Card One', quantity: 1 }]
     });
+
     await Card.create({ userId: user._id, name: 'Test Commander', scryfallId: 'sf-commander', condition: 'NM', quantity: 1 });
     await Card.create({ userId: user._id, name: 'Card One', scryfallId: 'sf-1', condition: 'NM', quantity: 1 });
     const token = tokenFor(user);
@@ -106,5 +107,45 @@ describe('GET /api/decks/:id/ownership', () => {
     const user = await makeUser();
     const deck = await Deck.create({ userId: user._id, name: 'Test Deck', commander: { name: 'Test Commander', colorIdentity: ['G'] }, mainDeck: [] });
     await request(app).get(`/api/decks/${deck._id}/ownership`).expect(401);
+  });
+});
+
+describe('GET /api/decks/card-allocation', () => {
+  test('reports cross-deck copy shortages without including another user’s decks or cards', async () => {
+    const user = await makeUser();
+    const otherUser = await User.create({ email: 'other@test.com', username: 'other', passwordHash: 'x', role: 'editor' });
+    await Deck.create([
+      {
+        userId: user._id,
+        name: 'Deck One',
+        mainDeck: [{ scryfallId: 'shared-card', name: 'Shared Card', quantity: 2 }]
+      },
+      {
+        userId: user._id,
+        name: 'Deck Two',
+        mainDeck: [{ scryfallId: 'shared-card', name: 'Shared Card', quantity: 1 }]
+      },
+      {
+        userId: otherUser._id,
+        name: 'Other User Deck',
+        mainDeck: [{ scryfallId: 'private-card', name: 'Private Card', quantity: 4 }]
+      },
+    ]);
+    await Card.create({ userId: user._id, name: 'Shared Card', scryfallId: 'shared-card', condition: 'NM', quantity: 2 });
+    await Card.create({ userId: otherUser._id, name: 'Private Card', scryfallId: 'private-card', condition: 'NM', quantity: 1 });
+
+    const res = await request(app)
+      .get('/api/decks/card-allocation')
+      .set('Authorization', `Bearer ${tokenFor(user)}`)
+      .expect(200);
+
+    expect(res.body.totalCopiesShort).toBe(1);
+    expect(res.body.shortages).toHaveLength(1);
+    expect(res.body.shortages[0]).toMatchObject({
+      name: 'Shared Card',
+      owned: 2,
+      required: 3,
+      shortfall: 1,
+    });
   });
 });

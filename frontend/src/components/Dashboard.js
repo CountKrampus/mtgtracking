@@ -4,6 +4,7 @@ import { Plus, Upload, RefreshCw, BookOpen, Star, Layers, TrendingUp, TrendingDo
 import { API_URL } from '../config';
 import { getAuthHeaders } from '../utils/auth';
 import AchievementsGrid from './AchievementsGrid';
+import GettingStartedCard from './GettingStartedCard';
 
 // Reusable horizontal bar component
 const HorizontalBar = ({ label, value, total, color, formatLabel }) => {
@@ -28,13 +29,13 @@ const HorizontalBar = ({ label, value, total, color, formatLabel }) => {
 };
 
 // SVG line chart for value over time
-const ValueLineChart = ({ data, formatPrice }) => {
+const ValueLineChart = ({ data, formatPrice, emptyMessage }) => {
   const [tooltip, setTooltip] = useState(null);
 
   if (!data || data.length < 2) {
     return (
       <div className="flex items-center justify-center h-32 text-white/40 text-sm">
-        {data && data.length === 1 ? 'Visit again tomorrow to see your value trend.' : 'No history yet. Value snapshots are saved daily when you view stats.'}
+        {data && data.length === 1 ? 'Visit again tomorrow to see your value trend.' : (emptyMessage || 'No history yet. Value snapshots are saved daily when you view stats.')}
       </div>
     );
   }
@@ -165,12 +166,15 @@ const Dashboard = ({
   onUpdatePrices,
   fileInputRef,
   isImporting,
-  formatPrice
+  formatPrice,
+  userId
 }) => {
   const navigate = useNavigate();
   const fp = formatPrice || ((v) => `$${v.toFixed(2)}`);
   const avgValue = totalCards > 0 ? (totalValue / totalCards) : 0;
   const [valueHistory, setValueHistory] = useState([]);
+  const [setHistoryData, setSetHistoryData] = useState({ sets: [], snapshots: [] });
+  const [selectedSetKey, setSelectedSetKey] = useState('');
   const [priceChanges, setPriceChanges] = useState({ gainers: [], losers: [] });
   const [mostPlayedDecks, setMostPlayedDecks] = useState([]);
   const [valueBreakTab, setValueBreakTab] = useState('rarity');
@@ -188,6 +192,11 @@ const Dashboard = ({
       .then(data => setValueHistory(Array.isArray(data?.snapshots) ? data.snapshots : (Array.isArray(data) ? data : [])))
       .catch(() => setValueHistory([]));
 
+    fetch(`${API_URL}/stats/set-value-history?days=90`, { headers })
+      .then(r => r.ok ? r.json() : { sets: [], snapshots: [] })
+      .then(data => setSetHistoryData(data && Array.isArray(data.sets) ? data : { sets: [], snapshots: [] }))
+      .catch(() => setSetHistoryData({ sets: [], snapshots: [] }));
+
     fetch(`${API_URL}/stats/price-changes`, { headers })
       .then(r => r.ok ? r.json() : { gainers: [], losers: [] })
       .then(data => setPriceChanges(data && data.gainers ? data : { gainers: [], losers: [] }))
@@ -199,11 +208,32 @@ const Dashboard = ({
       .catch(() => setMostPlayedDecks([]));
   }, []);
 
+  useEffect(() => {
+    if (selectedSetKey || !setHistoryData.sets.length) return;
+    setSelectedSetKey(setHistoryData.sets[0].setKey);
+  }, [selectedSetKey, setHistoryData.sets]);
+
+  const selectedSet = setHistoryData.sets.find(set => set.setKey === selectedSetKey);
+  const selectedSetHistory = useMemo(() => setHistoryData.snapshots
+    .filter(snapshot => snapshot.setKey === selectedSetKey)
+    .map(snapshot => ({ value: snapshot.value, createdAt: snapshot.snapshotDate })), [setHistoryData.snapshots, selectedSetKey]);
+
   const recentCards = useMemo(() => {
     return [...cards]
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 5);
   }, [cards]);
+
+  const priceWatchAlerts = useMemo(() => cards
+    .filter(card => card.priceAlert?.targetPrice > 0 || card.priceAlert?.targetHigh > 0)
+    .map(card => {
+      const low = Number(card.priceAlert?.targetPrice) || 0;
+      const high = Number(card.priceAlert?.targetHigh) || 0;
+      const price = Number(card.price) || 0;
+      const triggered = price > 0 && ((low > 0 && price <= low) || (high > 0 && price >= high));
+      return { card, low, high, price, triggered };
+    })
+    .sort((a, b) => Number(b.triggered) - Number(a.triggered) || a.card.name.localeCompare(b.card.name)), [cards]);
 
   const topValueCards = useMemo(() => {
     return [...cards]
@@ -378,6 +408,8 @@ const Dashboard = ({
 
   return (
     <div className="space-y-6">
+      <GettingStartedCard userId={userId} cardCount={totalCards} navigate={navigate} />
+
       {/* Slogan */}
       <div className="bg-white/10 backdrop-blur-md rounded-lg px-4 py-3 shadow-xl border border-white/10 text-center">
         <p className="text-sm italic text-purple-300/90">
@@ -409,6 +441,47 @@ const Dashboard = ({
           <div className="text-3xl font-bold text-white">{fp(avgValue)}</div>
         </div>
       </div>
+
+      {priceWatchAlerts.length > 0 && (
+        <section className="bg-amber-950/25 border border-amber-400/20 rounded-xl p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-white">Price watch</h2>
+              <p className="text-sm text-white/55 mt-1">
+                {priceWatchAlerts.length} active {priceWatchAlerts.length === 1 ? 'alert' : 'alerts'}.
+                {' '}{priceWatchAlerts.filter(alert => alert.triggered).length} currently at or beyond a target.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/collection')}
+              className="px-3 py-2 bg-amber-700/70 hover:bg-amber-700 text-white rounded-lg text-sm"
+            >
+              Manage alerts
+            </button>
+          </div>
+          <ul className="mt-4 grid sm:grid-cols-2 gap-2">
+            {priceWatchAlerts.slice(0, 4).map(({ card, low, high, price, triggered }) => (
+              <li key={card._id} className="flex items-center justify-between gap-3 p-3 bg-black/15 rounded-lg">
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium text-white">{card.name}</span>
+                  <span className="block text-xs text-white/50">
+                    {low > 0 && high > 0
+                      ? `${fp(low)} – ${fp(high)}`
+                      : `${low > 0 ? 'Low target' : 'High target'} ${fp(low || high)}`}
+                  </span>
+                </span>
+                <span className={`text-right text-xs flex-shrink-0 ${triggered ? 'text-amber-300' : 'text-white/65'}`}>
+                  <span className="block">{fp(price)}</span>
+                  <span className="block">{triggered ? 'Target reached' : 'Watching'}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          {priceWatchAlerts.length > 4 && (
+            <p className="text-xs text-white/45 mt-3">And {priceWatchAlerts.length - 4} more alerts.</p>
+          )}
+        </section>
+      )}
 
       {/* Portfolio P&L (only shown when purchasePrice data exists) */}
       {portfolioCost > 0 && (() => {
@@ -577,6 +650,45 @@ const Dashboard = ({
             </div>
           );
         })()}
+      </div>
+
+      <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 shadow-xl">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div>
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <TrendingUp size={18} className="text-teal-400" /> Set Value History
+            </h2>
+            <p className="text-xs text-white/50 mt-1">Daily snapshots begin accruing after the nightly refresh.</p>
+          </div>
+          {setHistoryData.sets.length > 0 && (
+            <select
+              value={selectedSetKey}
+              onChange={event => setSelectedSetKey(event.target.value)}
+              className="max-w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+              aria-label="Select set for value history"
+            >
+              {setHistoryData.sets.map(set => (
+                <option key={set.setKey} value={set.setKey} className="text-black">
+                  {set.setName} · {fp(set.value)}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+        {selectedSet ? (
+          <>
+            <div className="text-white/60 text-xs mb-2">
+              {selectedSet.cardCount} unique entries · {selectedSet.quantityCount} copies · Current value {fp(selectedSet.value)}
+            </div>
+            <ValueLineChart
+              data={selectedSetHistory}
+              formatPrice={fp}
+              emptyMessage="No set snapshots yet. Daily tracking begins with the next nightly price refresh."
+            />
+          </>
+        ) : (
+          <p className="text-white/50 text-sm">Add cards with set information to start tracking set values.</p>
+        )}
       </div>
 
       {/* Gainers / Losers Widget */}

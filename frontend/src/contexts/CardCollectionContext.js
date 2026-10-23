@@ -361,65 +361,134 @@ export function CardCollectionProvider({ children }) {
     if (!file) return;
 
     const parseCSV = (text) => {
-      const lines = text.split('\n').filter(line => line.trim());
-      if (lines.length < 2) return [];
+      const rows = [];
+      let row = [];
+      let cell = '';
+      let inQuotes = false;
+      const source = text.replace(/^\uFEFF/, '');
 
-      const header = lines[0].split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
-      const cards = [];
-
-      for (let i = 1; i < lines.length; i++) {
-        const values = [];
-        let current = '';
-        let inQuotes = false;
-
-        for (const char of lines[i]) {
-          if (char === '"') {
-            inQuotes = !inQuotes;
-          } else if (char === ',' && !inQuotes) {
-            values.push(current.trim());
-            current = '';
-          } else {
-            current += char;
-          }
+      for (let index = 0; index < source.length; index++) {
+        const char = source[index];
+        if (char === '"' && inQuotes && source[index + 1] === '"') {
+          cell += '"';
+          index++;
+        } else if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          row.push(cell.trim());
+          cell = '';
+        } else if ((char === '\n' || char === '\r') && !inQuotes) {
+          if (char === '\r' && source[index + 1] === '\n') index++;
+          row.push(cell.trim());
+          if (row.some(value => value !== '')) rows.push(row);
+          row = [];
+          cell = '';
+        } else {
+          cell += char;
         }
-        values.push(current.trim());
+      }
+      if (cell || row.length) {
+        row.push(cell.trim());
+        if (row.some(value => value !== '')) rows.push(row);
+      }
+      if (rows.length < 2) return [];
 
-        const card = {};
-        header.forEach((key, idx) => {
-          const fieldMap = {
-            'name': 'name',
-            'set': 'set',
-            'quantity': 'quantity',
-            'condition': 'condition',
-            'price': 'price',
-            'colors': 'colors',
-            'types': 'types',
-            'mana cost': 'manaCost',
-            'manacost': 'manaCost',
-            'total value': null,
-            'totalvalue': null,
-            'setcode': 'setCode',
-            'set code': 'setCode',
-            'collectornumber': 'collectorNumber',
-            'collector number': 'collectorNumber',
-            'rarity': 'rarity',
-            'scryfallid': 'scryfallId',
-            'imageurl': 'imageUrl',
-            'isfoil': 'isFoil',
-            'istoken': 'isToken',
-            'oracletext': 'oracleText',
-            'tags': 'tags'
-          };
-          const field = fieldMap[key] || key;
-          if (field && values[idx] !== undefined) {
-            card[field] = values[idx];
-          }
-        });
-
-        if (card.name) cards.push(card);
+      const normalizeHeader = (value) => value
+        .toLowerCase()
+        .replace(/[_-]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const fieldMap = {
+        name: 'name',
+        card: 'name',
+        'card name': 'name',
+        'card name / item': 'name',
+        quantity: 'quantity',
+        count: 'quantity',
+        qty: 'quantity',
+        set: 'set',
+        edition: 'set',
+        'set name': 'set',
+        expansion: 'set',
+        setcode: 'setCode',
+        'set code': 'setCode',
+        editioncode: 'setCode',
+        'edition code': 'setCode',
+        'collector number': 'collectorNumber',
+        'collector no': 'collectorNumber',
+        number: 'collectorNumber',
+        rarity: 'rarity',
+        condition: 'condition',
+        price: 'price',
+        'market price': 'price',
+        'price usd': 'price',
+        'price cad': 'priceCad',
+        pricecad: 'priceCad',
+        'purchase price': 'purchasePrice',
+        'colors': 'colors',
+        color: 'colors',
+        types: 'types',
+        type: 'types',
+        'mana cost': 'manaCost',
+        manacost: 'manaCost',
+        'scryfall id': 'scryfallId',
+        scryfallid: 'scryfallId',
+        'card id': 'scryfallId',
+        'image url': 'imageUrl',
+        imageurl: 'imageUrl',
+        'oracle text': 'oracleText',
+        oracletext: 'oracleText',
+        foil: 'isFoil',
+        isfoil: 'isFoil',
+        'is foil': 'isFoil',
+        token: 'isToken',
+        istoken: 'isToken',
+        'is token': 'isToken',
+        tags: 'tags',
+        location: 'location',
+        notes: 'notes',
+        reserved: 'reserved',
+        'total value': null,
+        totalvalue: null,
+        language: null,
+        proxy: null,
+        alter: null,
+        signed: null,
+        'tradelist count': null,
+        'price currency': null,
+        'purchase price currency': null,
+      };
+      const header = rows[0].map(normalizeHeader);
+      const nameIndex = header.findIndex(key => fieldMap[key] === 'name');
+      if (nameIndex < 0) {
+        throw new Error('Could not find a card-name column. Supported headers include Name, Card Name, and Card.');
       }
 
-      return cards;
+      return rows.slice(1).map(values => {
+        const card = {};
+        header.forEach((key, index) => {
+          const field = Object.prototype.hasOwnProperty.call(fieldMap, key) ? fieldMap[key] : null;
+          if (field && values[index] !== undefined && values[index] !== '') {
+            const value = values[index];
+            if (field === 'isFoil' || field === 'isToken' || field === 'reserved') {
+              card[field] = ['true', 'yes', '1', 'foil'].includes(value.toLowerCase());
+            } else if (field === 'condition') {
+              const condition = value.toLowerCase().replace(/[^a-z]/g, '');
+              const conditionMap = {
+                nm: 'NM', mint: 'NM', nearmint: 'NM',
+                lp: 'LP', lightlyplayed: 'LP', slightlyplayed: 'LP',
+                mp: 'MP', moderatelyplayed: 'MP',
+                hp: 'HP', heavilyplayed: 'HP',
+                dmg: 'DMG', damaged: 'DMG',
+              };
+              card[field] = conditionMap[condition] || value;
+            } else {
+              card[field] = value;
+            }
+          }
+        });
+        return card;
+      }).filter(card => card.name);
     };
 
     try {
@@ -441,6 +510,16 @@ export function CardCollectionProvider({ children }) {
 
       } else if (fileExtension === 'csv') {
         const cards = parseCSV(text);
+        if (!cards.length) {
+          throw new Error('No cards were found in this CSV file.');
+        }
+        const sample = cards.slice(0, 5).map(card => `${card.quantity || 1}x ${card.name}`).join('\n');
+        const remaining = cards.length > 5 ? `\n…and ${cards.length - 5} more` : '';
+        if (!window.confirm(
+          `CSV import preview\n\n${file.name}\n${cards.length} card entries detected.\n\n${sample}${remaining}\n\nMatching cards will be merged into your collection. Continue?`
+        )) {
+          return;
+        }
         setImportProgress({ current: 0, total: cards.length, cardName: '' });
         response = await sendRequest({
           method: 'post',
@@ -526,4 +605,3 @@ export function useCardCollection() {
   if (!ctx) throw new Error('useCardCollection must be used inside CardCollectionProvider');
   return ctx;
 }
-

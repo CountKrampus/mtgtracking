@@ -36,6 +36,135 @@ async function updateDeckTotalValuesForCard(cardName, req) {
 
 router.use(verifyToken);
 
+const RESTORE_CARD_LIMIT = 5000;
+const RESTORE_CARD_FIELDS = [
+  'name', 'set', 'setCode', 'collectorNumber', 'rarity', 'quantity', 'condition', 'price',
+  'priceCad', 'lastPrice', 'purchasePrice', 'colors', 'types', 'manaCost', 'scryfallId',
+  'imageUrl', 'isFoil', 'isToken', 'oracleText', 'notes', 'reserved', 'tags', 'location',
+  'buylistValue', 'sellValue', 'priceAlert', 'createdAt', 'updatedAt'
+];
+
+function prepareRestoreCards(input) {
+  if (!Array.isArray(input) || input.length === 0 || input.length > RESTORE_CARD_LIMIT) {
+    return { cards: null, error: `cards must be a non-empty array of at most ${RESTORE_CARD_LIMIT} cards` };
+  }
+
+  const cards = [];
+  const errors = [];
+  input.forEach((source, index) => {
+    if (!source || typeof source !== 'object' || Array.isArray(source)) {
+      errors.push({ index, message: 'Card must be an object' });
+      return;
+    }
+    const card = Object.fromEntries(RESTORE_CARD_FIELDS
+      .filter(field => source[field] !== undefined)
+      .map(field => [field, source[field]]));
+    if (typeof card.name === 'string') card.name = card.name.trim();
+    card.quantity = card.quantity ?? 1;
+    card.condition = card.condition || 'NM';
+    card.set = card.set || 'Unknown';
+    card.price = card.price ?? 0;
+    const validationErrors = validateCardPayload(card);
+    for (const field of ['price', 'priceCad', 'lastPrice', 'purchasePrice', 'buylistValue', 'sellValue']) {
+      if (card[field] == null) continue;
+      const numericValue = Number(card[field]);
+      if (!Number.isFinite(numericValue) || numericValue < 0) {
+        validationErrors.push(`${field} must be a non-negative number`);
+      } else {
+        card[field] = numericValue;
+      }
+    }
+    if (card.priceAlert) {
+      for (const field of ['targetPrice', 'targetHigh']) {
+        if (card.priceAlert[field] == null) continue;
+        const numericValue = Number(card.priceAlert[field]);
+        if (!Number.isFinite(numericValue) || numericValue < 0) {
+          validationErrors.push(`priceAlert.${field} must be a non-negative number`);
+        } else {
+          card.priceAlert[field] = numericValue;
+        }
+      }
+    }
+    if (validationErrors.length) {
+      errors.push({ index, name: source.name || '', message: validationErrors.join('; ') });
+      return;
+    }
+    cards.push(card);
+  });
+
+  return errors.length ? { cards: null, errors } : { cards, errors: [] };
+}
+
+function getRestoreCardKey(card) {
+  const printing = card.setCode && card.collectorNumber
+    ? `${card.setCode}:${card.collectorNumber}`
+    : card.set || 'Unknown';
+  return `${card.name}|${card.condition || 'NM'}|${Boolean(card.isFoil)}|${printing}`;
+}
+
+async function findMissingRestoreCards(cards, req) {
+  const existingCards = await Card.find(buildUserQuery({}, req))
+    .select('name set setCode collectorNumber condition isFoil')
+    .lean();
+  const existingKeys = new Set(existingCards.map(getRestoreCardKey));
+  const missing = [];
+  let skipped = 0;
+
+  for (const card of cards) {
+    const key = getRestoreCardKey(card);
+    if (existingKeys.has(key)) {
+      skipped++;
+    } else {
+      missing.push(card);
+      existingKeys.add(key);
+    }
+  }
+  return { missing, skipped };
+}
+
+router.post('/restore/preview', requireAuth, requirePermission('collection:manage'), async (req, res) => {
+  const { cards, error, errors } = prepareRestoreCards(req.body?.cards);
+  if (error) return res.status(400).json({ message: error });
+  if (errors?.length) return res.status(400).json({ message: 'Backup contains invalid cards', errors });
+
+  try {
+    const { missing, skipped } = await findMissingRestoreCards(cards, req);
+    res.json({ total: cards.length, toAdd: missing.length, alreadyOwned: skipped, copiesToAdd: missing.reduce((sum, card) => sum + card.quantity, 0) });
+  } catch (requestError) {
+    console.error('Collection restore preview error:', requestError);
+    res.status(500).json({ message: 'Could not preview collection restore' });
+  }
+});
+
+router.post('/restore/merge', requireAuth, requirePermission('collection:manage'), activityLoggers.cardBulkImport, async (req, res) => {
+  const { cards, error, errors } = prepareRestoreCards(req.body?.cards);
+  if (error) return res.status(400).json({ message: error });
+  if (errors?.length) return res.status(400).json({ message: 'Backup contains invalid cards', errors });
+  if (req.body?.confirmation !== 'MERGE_MISSING') {
+    return res.status(400).json({ message: 'confirmation must be MERGE_MISSING' });
+  }
+
+  try {
+    const userId = getUserId(req);
+    const { missing, skipped } = await findMissingRestoreCards(cards, req);
+    let imported = 0;
+    const failed = [];
+    for (const card of missing) {
+      try {
+        await new Card({ ...card, ...(userId ? { userId } : {}) }).save();
+        imported++;
+      } catch (saveError) {
+        failed.push({ name: card.name, message: saveError.message });
+      }
+    }
+
+    if (imported > 0) clearCache(userId);
+    res.json({ imported, skipped, failed, message: `Restored ${imported} missing cards; left ${skipped} existing cards unchanged.` });
+  } catch (requestError) {
+    console.error('Collection restore error:', requestError);
+    res.status(500).json({ message: 'Could not restore collection backup' });
+  }
+});
 
 // Get all cards
 router.get('/', requireAuth, async (req, res) => {
@@ -569,6 +698,10 @@ router.post('/bulk-import-full', requireAuth, requirePermission('collection:mana
           quantity: parseInt(cardData.quantity) || 1,
           condition: cardData.condition || 'NM',
           price: parseFloat(cardData.price) || 0,
+          priceCad: parseFloat(cardData.priceCad) || 0,
+          purchasePrice: cardData.purchasePrice !== undefined && cardData.purchasePrice !== ''
+            ? parseFloat(cardData.purchasePrice)
+            : null,
           colors: Array.isArray(cardData.colors) ? cardData.colors :
                   (typeof cardData.colors === 'string' && cardData.colors ? cardData.colors.split(';') : []),
           types: Array.isArray(cardData.types) ? cardData.types :
@@ -580,7 +713,10 @@ router.post('/bulk-import-full', requireAuth, requirePermission('collection:mana
           isToken: cardData.isToken === true || cardData.isToken === 'true',
           oracleText: cardData.oracleText || '',
           tags: Array.isArray(cardData.tags) ? cardData.tags :
-                (typeof cardData.tags === 'string' && cardData.tags ? cardData.tags.split(';') : [])
+                (typeof cardData.tags === 'string' && cardData.tags ? cardData.tags.split(';') : []),
+          location: cardData.location || '',
+          notes: cardData.notes || '',
+          reserved: cardData.reserved === true || cardData.reserved === 'true'
         };
 
         const existingQuery = getDuplicateCardQuery(cardInfo, req);
@@ -1205,4 +1341,3 @@ router.get('/changelog', requireAuth, async (req, res) => {
 });
 
 module.exports = router;
-

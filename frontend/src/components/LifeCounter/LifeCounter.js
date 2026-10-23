@@ -910,130 +910,144 @@ function LifeCounter({ onBack }) {
   // Game screen
   return (
     <PlayersContext.Provider value={players}>
-    <div>
+    <div className="mx-auto max-w-screen-2xl space-y-4 pb-6">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+      <div className="sticky top-0 z-30 -mx-3 space-y-2 border-b border-white/10 bg-slate-950/90 px-3 py-2 shadow-lg backdrop-blur-xl sm:static sm:mx-0 sm:space-y-0 sm:rounded-2xl sm:border sm:bg-slate-950/70 sm:p-3">
+        <div className="flex items-center gap-2">
         <button
           onClick={onBack}
-          className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold transition flex items-center gap-2"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white/75 transition hover:bg-white/10 hover:text-white"
+          aria-label="Back"
         >
-          <ArrowLeft size={18} /> Back
+          <ArrowLeft size={20} />
         </button>
 
-        {/* Undo/Redo Buttons */}
-        <div className="flex items-center gap-1">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <h1 className="truncate text-base font-bold tracking-tight text-white">Life Counter</h1>
+            <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/55">
+              {gameFormat === 'commander' ? 'EDH' : 'Standard'}
+            </span>
+          </div>
+          <div className="mt-0.5 truncate text-[11px] text-white/50">
+            Turn {turnNumber} <span className="px-1 text-white/20">·</span>
+            {players.filter(p => !p.isEliminated).length}/{playerCount} active
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-0.5" aria-label="History controls">
           <button
             onClick={undo}
             disabled={!canUndo}
-            className={`p-2 rounded-lg transition flex items-center gap-1 ${
-              canUndo
-                ? 'bg-blue-600/80 hover:bg-blue-600 text-white'
-                : 'bg-white/10 text-white/30 cursor-not-allowed'
+            className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
+              canUndo ? 'text-white/75 hover:bg-white/10 hover:text-white' : 'cursor-not-allowed text-white/25'
             }`}
             title="Undo (Ctrl+Z)"
+            aria-label="Undo"
           >
-            <Undo2 size={16} />
+            <Undo2 size={18} />
           </button>
           <button
             onClick={redo}
             disabled={!canRedo}
-            className={`p-2 rounded-lg transition flex items-center gap-1 ${
-              canRedo
-                ? 'bg-blue-600/80 hover:bg-blue-600 text-white'
-                : 'bg-white/10 text-white/30 cursor-not-allowed'
+            className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
+              canRedo ? 'text-white/75 hover:bg-white/10 hover:text-white' : 'cursor-not-allowed text-white/25'
             }`}
             title="Redo (Ctrl+Shift+Z)"
+            aria-label="Redo"
           >
-            <Redo2 size={16} />
+            <Redo2 size={18} />
           </button>
         </div>
+        </div>
 
-        {/* Tool Buttons */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-start gap-1 overflow-x-auto overscroll-x-contain pb-0.5 sm:gap-1.5" aria-label="Game and session actions">
           <button
             onClick={() => setShowToolsPanel(true)}
-            className="p-2 bg-orange-600/80 hover:bg-orange-600 text-white rounded-lg transition"
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-2 text-xs font-medium text-orange-200 transition hover:bg-orange-400/15 hover:text-orange-100"
             title="Tools (Dice, Timer, Log)"
+            aria-label="Tools: dice, timer, and log"
           >
-            <Wrench size={16} />
+            <Wrench size={18} /><span>Tools</span>
           </button>
           <button
             onClick={() => setShowTriggerReminders(true)}
-            className="p-2 bg-yellow-600/80 hover:bg-yellow-600 text-white rounded-lg transition"
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-2 text-xs font-medium text-yellow-200 transition hover:bg-yellow-400/15 hover:text-yellow-100"
             title="Trigger Reminders"
+            aria-label="Trigger reminders"
           >
-            <Bell size={16} />
+            <Bell size={18} /><span>Triggers</span>
           </button>
           <button
             onClick={() => setShowSettingsPanel(true)}
-            className="p-2 bg-gray-600/80 hover:bg-gray-600 text-white rounded-lg transition"
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-2 text-xs font-medium text-white/65 transition hover:bg-white/10 hover:text-white"
             title="Settings"
+            aria-label="Settings"
           >
-            <Settings size={16} />
+            <Settings size={18} /><span>Settings</span>
           </button>
           {fullscreenSupported && (
             <button
               onClick={toggleFullscreen}
-              className={`p-2 rounded-lg transition ${
-                isFullscreen ? 'bg-green-600/80 hover:bg-green-600' : 'bg-white/10 hover:bg-white/20'
-              } text-white`}
+              className={`flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-2 text-xs font-medium transition ${
+                isFullscreen ? 'bg-emerald-400/15 text-emerald-200' : 'text-white/65 hover:bg-white/10 hover:text-white'
+              }`}
               title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+              aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
             >
-              <Maximize size={16} />
+              <Maximize size={18} /><span>{isFullscreen ? 'Exit full' : 'Full screen'}</span>
             </button>
           )}
           {playerCount === 2 && (
             <button
               onClick={() => setUseLandscapeLayout(true)}
-              className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition"
+              className="flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-2 text-xs font-medium text-white/65 transition hover:bg-white/10 hover:text-white"
               title="Landscape Layout"
+              aria-label="Switch to two-player landscape layout"
             >
-              <Users size={16} />
+              <Users size={18} /><span>Layout</span>
             </button>
           )}
-        </div>
 
-        <div className="text-white/60 text-sm hidden md:block">
-          {gameFormat === 'commander' ? 'Commander' : 'Standard'} -
-          {' '}{players.filter(p => !p.isEliminated).length}/{playerCount} players
-        </div>
-
-        {/* Game Actions */}
-        <div className="flex items-center gap-1">
           <button
             onClick={() => setShowGameHistory(true)}
-            className="p-2 bg-blue-600/80 hover:bg-blue-600 text-white rounded-lg transition"
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-2 text-xs font-medium text-sky-200 transition hover:bg-sky-400/15 hover:text-sky-100"
             title="Game History"
+            aria-label="Game history"
           >
-            <History size={16} />
+            <History size={18} /><span>History</span>
           </button>
           <button
             onClick={() => setShowStatsDashboard(true)}
-            className="p-2 bg-green-600/80 hover:bg-green-600 text-white rounded-lg transition"
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-2 text-xs font-medium text-emerald-200 transition hover:bg-emerald-400/15 hover:text-emerald-100"
             title="Statistics"
+            aria-label="Statistics"
           >
-            <BarChart3 size={16} />
+            <BarChart3 size={18} /><span>Stats</span>
           </button>
           <button
             onClick={() => setShowShareGame(true)}
-            className="p-2 bg-purple-600/80 hover:bg-purple-600 text-white rounded-lg transition"
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-2 text-xs font-medium text-violet-200 transition hover:bg-violet-400/15 hover:text-violet-100"
             title="Share Game"
+            aria-label="Share game"
           >
-            <Share2 size={16} />
+            <Share2 size={18} /><span>Share</span>
           </button>
           <button
             onClick={() => setShowEndGameModal(true)}
-            className="p-2 bg-yellow-600/80 hover:bg-yellow-600 text-white rounded-lg transition"
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-2 text-xs font-medium text-amber-200 transition hover:bg-amber-400/15 hover:text-amber-100"
             title="End Game"
+            aria-label="End game"
           >
-            <Trophy size={16} />
+            <Trophy size={18} /><span>End</span>
           </button>
           <button
             onClick={() => setShowResetConfirm(true)}
-            className="p-2 bg-red-600/80 hover:bg-red-600 text-white rounded-lg transition"
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-2 text-xs font-medium text-rose-200 transition hover:bg-rose-400/15 hover:text-rose-100"
             title="Reset Game"
+            aria-label="Reset game"
           >
-            <RotateCcw size={16} />
+            <RotateCcw size={18} /><span>Reset</span>
           </button>
         </div>
       </div>
@@ -1041,10 +1055,13 @@ function LifeCounter({ onBack }) {
       {/* Turn Tracker Toggle */}
       <button
         onClick={() => setShowTurnTracker(!showTurnTracker)}
-        className="w-full mb-2 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 text-sm flex items-center justify-center gap-1 transition"
+        className="flex min-h-10 w-full items-center justify-between rounded-xl border border-white/10 bg-white/[0.035] px-4 text-sm font-semibold text-white/70 transition hover:border-white/15 hover:bg-white/[0.06] hover:text-white"
       >
-        {showTurnTracker ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        Turn Tracker
+        <span className="flex items-center gap-2"><Clock size={16} className="text-indigo-300" /> Turn Tracker</span>
+        <span className="flex items-center gap-2 text-xs font-medium text-white/40">
+          Turn {turnNumber}
+          {showTurnTracker ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </span>
       </button>
 
       {/* Turn Tracker */}
@@ -1063,18 +1080,17 @@ function LifeCounter({ onBack }) {
           currentPhase={currentPhase}
           onAdvancePhase={handleAdvancePhase}
           onSetPhase={handleSetPhase}
-          compact={playerCount > 4}
+          compact
         />
       )}
 
       {/* Game Mechanics Toggle */}
       <button
         onClick={() => setShowGameMechanics(!showGameMechanics)}
-        className="w-full mb-2 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 text-sm flex items-center justify-center gap-1 transition"
+        className="flex min-h-10 w-full items-center justify-between rounded-xl border border-white/10 bg-white/[0.035] px-4 text-sm font-semibold text-white/70 transition hover:border-white/15 hover:bg-white/[0.06] hover:text-white"
       >
-        {showGameMechanics ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        <Sparkles size={14} />
-        Game Mechanics
+        <span className="flex items-center gap-2"><Sparkles size={15} className="text-fuchsia-300" /> Game Mechanics</span>
+        {showGameMechanics ? <ChevronUp size={16} className="text-white/40" /> : <ChevronDown size={16} className="text-white/40" />}
       </button>
 
       {/* Game Mechanics Panel */}
@@ -1095,7 +1111,7 @@ function LifeCounter({ onBack }) {
       )}
 
       {/* Player Grid */}
-      <div className={`grid ${getGridClasses()} gap-4`}>
+      <div className={`grid ${getGridClasses()} gap-3 sm:gap-4`}>
         {players.map((player, index) => {
           const cb = playerCallbacks[player.id];
           return (

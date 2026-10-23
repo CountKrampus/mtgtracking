@@ -403,7 +403,7 @@ function SynergyCardPicker({ isOpen, cards, onPick, onClose }) {
 function CollectionView({
   fileInputRef,
   isImporting, setIsImporting, importProgress, setImportProgress, importResults, setImportResults,
-  showImportResults, setShowImportResults,
+  showImportResults, setShowImportResults, tableDensity = 'comfortable',
 }) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -452,7 +452,7 @@ function CollectionView({
     return () => window.removeEventListener('keydown', handleEscape);
   }, [activeTool]);
 
-  const { user: currentUser } = useAuthContext() || {};
+  const { user: currentUser, isMultiUserEnabled } = useAuthContext() || {};
 
   const {
     cards, setLoading, editingId, setEditingId, fetchCards,
@@ -497,11 +497,62 @@ function CollectionView({
   const [showTagInput, setShowTagInput] = useState(null);
   const [newTag, setNewTag] = useState('');
   const [showCameraModal, setShowCameraModal] = useState(false);
+  const [scanRescanId, setScanRescanId] = useState(null);
   // Bulk scan: rows queued by the camera modal, reviewed in a table before
   // anything is saved (the confirm step, Q4)
   const [scanBatch, setScanBatch] = useState([]);
+  const [scanDraftReadyKey, setScanDraftReadyKey] = useState(null);
+  const [scanDraftError, setScanDraftError] = useState('');
+  const scanDraftUserKey = currentUser?._id || currentUser?.id || currentUser?.username;
+  const scanDraftStorageKey = scanDraftUserKey
+    ? `mtg_scan_batch_draft:${scanDraftUserKey}`
+    : isMultiUserEnabled ? null : 'mtg_scan_batch_draft:local';
   const [batchSaving, setBatchSaving] = useState(false);
   const [batchProgress, setBatchProgress] = useState(null);
+  useEffect(() => {
+    setScanDraftReadyKey(null);
+    if (!scanDraftStorageKey) {
+      setScanBatch([]);
+      return;
+    }
+    try {
+      const savedDraft = localStorage.getItem(scanDraftStorageKey);
+      if (!savedDraft) {
+        setScanBatch([]);
+      } else {
+        const parsedDraft = JSON.parse(savedDraft);
+        if (!Array.isArray(parsedDraft) || parsedDraft.some(row =>
+          !row || typeof row.id !== 'string' || typeof row.name !== 'string' ||
+          !row.name.trim() || !['NM', 'LP', 'MP', 'HP', 'DMG'].includes(row.condition)
+        )) {
+          throw new Error('Saved scan draft is invalid.');
+        }
+        setScanBatch(parsedDraft);
+      }
+      setScanDraftError('');
+      setScanDraftReadyKey(scanDraftStorageKey);
+    } catch (error) {
+      setScanBatch([]);
+      const message = `Could not restore the scan draft: ${error.message}`;
+      setScanDraftError(message);
+      addToast(message, 'error');
+      setScanDraftReadyKey(scanDraftStorageKey);
+    }
+  }, [scanDraftStorageKey, addToast]);
+
+  useEffect(() => {
+    if (!scanDraftStorageKey || scanDraftReadyKey !== scanDraftStorageKey) return;
+    try {
+      if (scanBatch.length) {
+        localStorage.setItem(scanDraftStorageKey, JSON.stringify(scanBatch));
+      } else {
+        localStorage.removeItem(scanDraftStorageKey);
+      }
+      setScanDraftError('');
+    } catch (error) {
+      setScanDraftError(`Could not save the scan draft: ${error.message}`);
+    }
+  }, [scanBatch, scanDraftReadyKey, scanDraftStorageKey]);
   // Last single-scan result: offers other destinations (Q9) and other faces (Q10)
   const [scanResult, setScanResult] = useState(null);
   const [showDeckPicker, setShowDeckPicker] = useState(false);
@@ -639,10 +690,19 @@ function CollectionView({
     }, 300);
   };
 
-  const selectAutocompleteCard = async (cardName) => {
+  const selectAutocompleteCard = async (cardName, printing = {}) => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/scryfall/search?name=${cardName}`);
+      const params = new URLSearchParams({ name: cardName });
+      if (printing.setCode) params.set('setCode', printing.setCode);
+      if (printing.collectorNumber) params.set('collectorNumber', printing.collectorNumber);
+      let response;
+      try {
+        response = await axios.get(`${API_URL}/scryfall/search?${params.toString()}`);
+      } catch (error) {
+        if (!printing.setCode && !printing.collectorNumber) throw error;
+        response = await axios.get(`${API_URL}/scryfall/search?name=${encodeURIComponent(cardName)}`);
+      }
       const cardData = response.data;
       setFormData({
         ...formData, name: cardData.name, set: cardData.set,
@@ -670,7 +730,10 @@ function CollectionView({
   };
 
   const handleOpenCamera = () => setShowCameraModal(true);
-  const handleCameraClose = () => setShowCameraModal(false);
+  const handleCameraClose = () => {
+    setShowCameraModal(false);
+    setScanRescanId(null);
+  };
 
   // Q3: after a scan fills the form, make sure the user actually sees it —
   // force the Add form open, scroll to it, and focus Save.
@@ -687,7 +750,10 @@ function CollectionView({
 
   const handleCardExtracted = async (extractedData, meta = { batch: false, close: true }) => {
     if (!extractedData.name) {
-      if (meta.close) setShowCameraModal(false);
+      if (meta.close) {
+        setShowCameraModal(false);
+        setScanRescanId(null);
+      }
       addToast('No card name extracted. Please try again or use manual entry.', 'warning');
       return;
     }
@@ -695,13 +761,19 @@ function CollectionView({
     // Bulk scan path: queue the row for the review table instead of the
     // single-card form — the review table IS the confirm step (Q4).
     if (meta.batch) {
-      setScanBatch(prev => [...prev, {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      const scannedRow = {
+        id: scanRescanId || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         name: extractedData.name,
+        setCode: extractedData.setCode || '',
+        collectorNumber: extractedData.collectorNumber || '',
         confidence: extractedData.confidence || 0,
         quantity: 1,
         condition: settings.defaultCondition,
-      }]);
+      };
+      setScanBatch(prev => scanRescanId
+        ? prev.map(row => row.id === scanRescanId ? { ...row, ...scannedRow, quantity: row.quantity, condition: row.condition } : row)
+        : [...prev, scannedRow]);
+      setScanRescanId(null);
       if (meta.close) setShowCameraModal(false);
       return;
     }
@@ -714,7 +786,9 @@ function CollectionView({
       // local collection if we already own this card, else the local image,
       // else name-only (original behavior).
       const local = (cards || []).find(
-        c => c.name.toLowerCase() === extractedData.name.toLowerCase()
+        c => c.name.toLowerCase() === extractedData.name.toLowerCase() &&
+          (!extractedData.setCode || c.setCode?.toLowerCase() === extractedData.setCode.toLowerCase()) &&
+          (!extractedData.collectorNumber || c.collectorNumber === extractedData.collectorNumber)
       );
       if (local) {
         setFormData({
@@ -747,7 +821,7 @@ function CollectionView({
 
     try {
       setLoading(true);
-      const cardData = await selectAutocompleteCard(extractedData.name);
+      const cardData = await selectAutocompleteCard(extractedData.name, extractedData);
       const ct = extractedData.confidence ? ` (${Math.round(extractedData.confidence)}% confidence)` : '';
       addToast(`Card found: ${extractedData.name}${ct}`, 'success');
       focusSaveButton();
@@ -831,7 +905,16 @@ function CollectionView({
         const item = scanBatch[i];
         setBatchProgress({ done: i, total, added, merged, failed: stillFailed.length });
         try {
-          const r = await axios.get(`${API_URL}/scryfall/search?name=${encodeURIComponent(item.name)}`);
+          const params = new URLSearchParams({ name: item.name });
+          if (item.setCode) params.set('setCode', item.setCode);
+          if (item.collectorNumber) params.set('collectorNumber', item.collectorNumber);
+          let r;
+          try {
+            r = await axios.get(`${API_URL}/scryfall/search?${params.toString()}`);
+          } catch (error) {
+            if (!item.setCode && !item.collectorNumber) throw error;
+            r = await axios.get(`${API_URL}/scryfall/search?name=${encodeURIComponent(item.name)}`);
+          }
           const c = r.data;
           const res = await axios.post(`${API_URL}/cards`, {
             name: c.name, set: c.set, setCode: c.setCode, collectorNumber: c.collectorNumber,
@@ -1919,7 +2002,7 @@ function CollectionView({
         <div className="hidden sm:block bg-white/10 backdrop-blur-md rounded-lg overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
             <table
-              className="w-full"
+              className={`w-full ${tableDensity === 'compact' ? '[&_th]:!py-2 [&_td]:!py-2 [&_th]:!px-3 [&_td]:!px-3' : ''}`}
               onContextMenu={(e) => {
                 e.preventDefault();
                 const menuWidth = 250;
@@ -3108,8 +3191,13 @@ function CollectionView({
                 <h3 className="text-white text-lg font-bold">
                   Scan batch — {scanBatch.length} card{scanBatch.length !== 1 ? 's' : ''}
                 </h3>
-                <span className="text-white/50 text-xs">review &amp; confirm before saving</span>
+                <span className="text-white/50 text-xs">draft autosaved on this device for your account</span>
               </div>
+              {scanDraftError && (
+                <p className="mb-3 rounded-lg bg-red-900/40 border border-red-500/40 px-3 py-2 text-sm text-red-200" role="alert">
+                  {scanDraftError}
+                </p>
+              )}
               <div className="space-y-2">
                 {scanBatch.map((row, idx) => (
                   <div key={row.id} className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2">
@@ -3117,8 +3205,21 @@ function CollectionView({
                       <p className="text-white text-sm truncate">{row.name}</p>
                       <p className={`text-xs ${row.confidence >= 70 ? 'text-green-400' : 'text-yellow-400'}`}>
                         {Math.round(row.confidence)}% confidence
+                        {row.setCode && ` · ${row.setCode.toUpperCase()}`}
+                        {row.collectorNumber && ` #${row.collectorNumber}`}
                       </p>
                     </div>
+                    <button
+                      onClick={() => {
+                        setScanRescanId(row.id);
+                        setShowCameraModal(true);
+                      }}
+                      title={`Rescan ${row.name}`}
+                      aria-label={`Rescan ${row.name}`}
+                      className="text-blue-300 hover:text-blue-200 p-1"
+                    >
+                      <Camera size={16} />
+                    </button>
                     <input
                       type="number" min="1" value={row.quantity}
                       onChange={(e) => setScanBatch(prev => prev.map((r, i) => i === idx ? { ...r, quantity: e.target.value } : r))}
@@ -3214,6 +3315,7 @@ function CollectionView({
               isOpen={showCameraModal}
               onClose={handleCameraClose}
               onCardExtracted={handleCardExtracted}
+              batchMode={Boolean(scanRescanId)}
             />
           </Suspense>
         )}

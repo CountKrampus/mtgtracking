@@ -8,6 +8,7 @@ import WebhooksTab from './WebhooksTab';
 import useQRLabels from '../hooks/useQRLabels';
 import QRPreviewModal from './CollectionTools/QRPreviewModal';
 import PrintLabelsModal from './CollectionTools/PrintLabelsModal';
+import CollectionBackupPanel from './CollectionBackupPanel';
 
 export default function SettingsView({
   settings, updateSettings, resetSettings, formatPrice,
@@ -132,7 +133,7 @@ export default function SettingsView({
         {settingsTab === 'display' && (
           <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
             <h2 className="text-lg font-semibold text-white mb-4">Display Settings</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div>
                 <label className="block text-white/80 text-sm mb-2">Items per page</label>
                 <select
@@ -144,6 +145,17 @@ export default function SettingsView({
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                   <option value={100}>100</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-white/80 text-sm mb-2">Collection table density</label>
+                <select
+                  value={settings.tableDensity || 'comfortable'}
+                  onChange={(e) => updateSettings({ tableDensity: e.target.value })}
+                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white"
+                >
+                  <option value="comfortable">Comfortable</option>
+                  <option value="compact">Compact</option>
                 </select>
               </div>
               <div>
@@ -395,6 +407,7 @@ export default function SettingsView({
                 Reset All Settings
               </button>
             </div>
+            <CollectionBackupPanel />
           </div>
         )}
 

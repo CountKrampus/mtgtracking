@@ -68,6 +68,33 @@ export default function SetMissingCardsModal({ setCode, setName, ownedCardNames,
   const selectAll = () => setCheckedNames(new Set(missing.map(c => c.name)));
   const selectNone = () => setCheckedNames(new Set());
 
+  const handleExportSelected = () => {
+    const selected = missing.filter(card => checkedNames.has(card.name));
+    const escapeCsv = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const rows = [
+      ['Name', 'Set', 'Set Code', 'Collector Number', 'Rarity', 'Quantity', 'Scryfall ID', 'Price'],
+      ...selected.map(card => [
+        card.name,
+        card.set_name,
+        card.set,
+        card.collector_number,
+        card.rarity,
+        1,
+        card.id,
+        card.prices?.usd || '',
+      ]),
+    ];
+    const csv = rows.map(row => row.map(escapeCsv).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${setCode.toLowerCase()}-missing-cards.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   const handleAddSelected = async () => {
     setAdding(true);
     const wishlistNames = new Set(wishlistItems.map(w => w.name));
@@ -196,6 +223,13 @@ export default function SetMissingCardsModal({ setCode, setName, ownedCardNames,
                 className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition"
               >
                 {adding ? 'Adding…' : `Add Selected to Wishlist (${checkedNames.size})`}
+              </button>
+              <button
+                onClick={handleExportSelected}
+                disabled={checkedNames.size === 0}
+                className="w-full mt-2 px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition"
+              >
+                Export Selected Shopping List
               </button>
             </>
           )}

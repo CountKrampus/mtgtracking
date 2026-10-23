@@ -244,6 +244,31 @@ function StatsDashboard({ isOpen, onClose }) {
               </div>
             )}
 
+            {stats.commanderMatchups && stats.commanderMatchups.length > 0 && (
+              <div className="bg-white/5 rounded-xl p-4 mb-6">
+                <h4 className="text-white/80 font-semibold mb-3 flex items-center gap-2">
+                  <Users size={18} className="text-blue-400" />
+                  Deck Matchups
+                </h4>
+                <div className="space-y-2">
+                  {stats.commanderMatchups.map((matchup, index) => (
+                    <div key={`${matchup.deckId}-${matchup.opponentCommander}-${index}`} className="flex items-center justify-between gap-3 p-2 bg-white/5 rounded-lg">
+                      <div className="min-w-0">
+                        <span className="block text-xs text-white/45 truncate">{matchup.deckName}</span>
+                        <span className="block text-sm text-white truncate">vs. {matchup.opponentCommander}</span>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <span className={`block font-bold ${matchup.winRate >= 50 ? 'text-green-400' : 'text-amber-300'}`}>
+                          {matchup.winRate}%
+                        </span>
+                        <span className="block text-xs text-white/45">{matchup.wins}–{matchup.losses} · {matchup.gamesPlayed} games</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {stats.totalGames === 0 && (
               <div className="text-center text-white/60 py-8">
                 No games recorded yet. Complete and save games to see statistics.

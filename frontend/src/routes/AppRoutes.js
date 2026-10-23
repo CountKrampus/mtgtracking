@@ -85,6 +85,7 @@ export default function AppRoutes({
               fileInputRef={fileInputRef}
               isImporting={isImporting}
               formatPrice={formatPrice}
+              userId={authUser?._id || authUser?.id}
             />
           </Suspense>
         </ChunkErrorBoundary>
@@ -98,6 +99,7 @@ export default function AppRoutes({
             importProgress={importProgress} setImportProgress={setImportProgress}
             importResults={importResults} setImportResults={setImportResults}
             showImportResults={showImportResults} setShowImportResults={setShowImportResults}
+            tableDensity={settings.tableDensity}
           />
         </Suspense>
       } />

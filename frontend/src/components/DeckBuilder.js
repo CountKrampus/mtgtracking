@@ -4,6 +4,7 @@ import DeckList from './DeckList';
 import DeckDetail from './DeckDetail';
 import DeckImport from './DeckImport';
 import DeckEditor from './DeckEditor';
+import DeckAllocationSummary from './DeckAllocationSummary';
 import { API_URL } from '../config';
 import { getAuthHeaders } from '../utils/auth';
 
@@ -113,21 +114,24 @@ function DeckBuilder() {
   return (
     <div>
       {deckView === 'list' && (
-        <DeckList
-          decks={decks}
-          onViewDeck={(deck) => {
-            setCurrentDeck(deck);
-            fetchDeckDetails(deck._id);
-            setDeckView('detail');
-          }}
-          onDeleteDeck={deleteDeck}
-          onCreateDeck={createDeck}
-          onImportClick={() => setDeckView('import')}
-          deckPlayCounts={deckPlayCounts}
-          folders={folders}
-          onFolderCreate={createFolder}
-          onDeckMoveToFolder={moveDeckToFolder}
-        />
+        <>
+          <DeckAllocationSummary />
+          <DeckList
+            decks={decks}
+            onViewDeck={(deck) => {
+              setCurrentDeck(deck);
+              fetchDeckDetails(deck._id);
+              setDeckView('detail');
+            }}
+            onDeleteDeck={deleteDeck}
+            onCreateDeck={createDeck}
+            onImportClick={() => setDeckView('import')}
+            deckPlayCounts={deckPlayCounts}
+            folders={folders}
+            onFolderCreate={createFolder}
+            onDeckMoveToFolder={moveDeckToFolder}
+          />
+        </>
       )}
 
       {deckView === 'detail' && currentDeck && (

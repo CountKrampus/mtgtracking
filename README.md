@@ -35,6 +35,12 @@ npm start
 - 🖼️ Offline support with image and collection cache
 - 📊 Collection statistics and filtering
 - 💾 Export to JSON/CSV
+- 📥 Import ManaBox, Moxfield, and Deckbox-style CSV exports with a preview
+- ⚠️ Cross-deck copy allocation warnings and game matchup analytics
+- 🛍️ Export missing set cards as a shopping-list CSV
+- 🔄 Personal JSON backups with previewed, merge-only restore
+- 🔔 Dashboard summary for active card price alerts
+- 🚀 First-run setup guide and configurable compact collection table
 - 🌐 Works offline with local MongoDB
 - 👥 Multi-user support with roles (admin, editor, viewer)
 - 🔐 Authentication and user management with password reset functionality
@@ -44,9 +50,11 @@ npm start
 - 🛒 Wishlist functionality
 - 📍 Location tracking for physical cards
 - 📱 QR codes for easy location identification
-- 📷 Camera OCR for quick card addition
+- 📷 Camera OCR with live capture-quality hints, image straightening, printing recognition, and batch rescans
+- 📈 Daily collection value history broken down by set
 - ⚡ Bulk operations for efficient management
 - 💜 Optional community support with opt-in supporter recognition
+- 🚩 Community content reports and a moderator review queue
 
 ## Full Installation Guides
 
@@ -77,7 +85,7 @@ npm start
 ## Notes
 
 - The `dump/` folder containing database exports is ignored by Git to keep the repository lightweight
-- Database backups should be managed separately from the code repository
+- Database backups should be managed separately from the code repository. For an individual collection backup, use **Settings → Data → Collection backup** to download a JSON file. Restoring previews the changes and only adds missing cards; it does not overwrite or delete existing entries.
 - The Support page links to `https://buymeacoffee.com/creamkrampus` by default. Set `REACT_APP_SUPPORT_URL` in the frontend environment to override it, then rebuild/restart the frontend. Contributions are handled externally. To enable recognition, an admin creates the exact `Supporter` badge under **Admin → Community → Badges**, verifies contributions outside the app, and grants the badge under **Admin → User Management → Users**. Users must opt in on **Support the Site** before appearing on the public supporters list.
 
 ## License

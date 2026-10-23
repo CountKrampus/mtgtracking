@@ -37,6 +37,7 @@ const CardValueSnapshot = require('./models/CardValueSnapshot');
 const CardPriceHistory = require('./models/CardPriceHistory');
 const CardPriceSnapshot = require('./models/CardPriceSnapshot');
 const ValueSnapshot = require('./models/ValueSnapshot');
+const SetValueSnapshot = require('./models/SetValueSnapshot');
 const User = require('./models/User');
 const Role = require('./models/Role');
 const Card = require('./models/Card');
@@ -676,6 +677,59 @@ app.get('/api/stats/value-history', requireAuth, async (req, res) => {
     ).sort({ createdAt: 1 });
 
     res.json({ snapshots, earliest });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.get('/api/stats/set-value-history', requireAuth, async (req, res) => {
+  try {
+    const days = Number(req.query.days || 90);
+    if (!Number.isInteger(days) || days < 7 || days > 365) {
+      return res.status(400).json({ message: 'days must be an integer between 7 and 365.' });
+    }
+
+    const sets = await Card.aggregate([
+      { $match: buildUserQuery({}, req) },
+      {
+        $group: {
+          _id: {
+            setCode: { $toLower: { $ifNull: ['$setCode', ''] } },
+            setName: { $ifNull: ['$set', 'Unknown'] },
+          },
+          value: { $sum: { $multiply: [{ $ifNull: ['$price', 0] }, { $ifNull: ['$quantity', 1] }] } },
+          cardCount: { $sum: 1 },
+          quantityCount: { $sum: { $ifNull: ['$quantity', 1] } },
+        },
+      },
+      {
+        $addFields: {
+          setKey: {
+            $cond: [
+              { $ne: ['$_id.setCode', ''] },
+              '$_id.setCode',
+              { $toLower: { $trim: { input: '$_id.setName' } } },
+            ],
+          },
+          setCode: '$_id.setCode',
+          setName: '$_id.setName',
+        },
+      },
+      { $sort: { value: -1 } },
+      { $limit: 20 },
+      { $project: { _id: 0, setKey: 1, setCode: 1, setName: 1, value: 1, cardCount: 1, quantityCount: 1 } },
+    ]);
+    const from = new Date();
+    from.setDate(from.getDate() - days);
+    from.setHours(0, 0, 0, 0);
+    const snapshots = sets.length
+      ? await SetValueSnapshot.find(buildUserQuery({
+          setKey: { $in: sets.map(set => set.setKey) },
+          snapshotDate: { $gte: from },
+        }, req)).sort({ snapshotDate: 1 }).lean()
+      : [];
+
+    res.json({ sets, snapshots });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -1879,6 +1933,7 @@ app.get('/api/lifecounter/stats', requireAuth, async (req, res) => {
     const totalGames = games.length;
     const winsByPlayer = {};
     const gamesByFormat = {};
+    const matchupStats = {};
     let totalTurns = 0;
     let totalDuration = 0;
     let gamesWithTurns = 0;
@@ -1905,6 +1960,26 @@ app.get('/api/lifecounter/stats', requireAuth, async (req, res) => {
         totalDuration += game.duration;
         gamesWithDuration++;
       }
+
+      const trackedPlayers = game.players.filter(player => player.deckId);
+      trackedPlayers.forEach(player => {
+        game.players.forEach(opponent => {
+          if (opponent === player) return;
+          const opponentName = opponent.commanderName || opponent.name || 'Unknown';
+          const key = `${player.deckId}:${opponentName}`;
+          if (!matchupStats[key]) {
+            matchupStats[key] = {
+              deckId: player.deckId,
+              commanderName: player.commanderName || '',
+              opponentCommander: opponentName,
+              wins: 0,
+              losses: 0,
+            };
+          }
+          if (player.isWinner) matchupStats[key].wins++;
+          else matchupStats[key].losses++;
+        });
+      });
     });
 
     // Calculate win rates
@@ -1939,11 +2014,14 @@ app.get('/api/lifecounter/stats', requireAuth, async (req, res) => {
       .slice(0, 5);
 
     // Resolve deck names from DB
-    const deckIds = topDecks.map(d => d.deckId).filter(Boolean);
+    const deckIds = [
+      ...topDecks.map(d => d.deckId),
+      ...Object.values(matchupStats).map(item => item.deckId),
+    ].filter(Boolean);
     let deckNameMap = {};
     if (deckIds.length) {
       const Deck = mongoose.model('Deck');
-      const deckDocs = await Deck.find({ _id: { $in: deckIds } }).select('name').lean();
+      const deckDocs = await Deck.find(buildUserQuery({ _id: { $in: deckIds } }, req)).select('name').lean();
       deckDocs.forEach(d => { deckNameMap[d._id.toString()] = d.name; });
     }
 
@@ -1953,6 +2031,19 @@ app.get('/api/lifecounter/stats', requireAuth, async (req, res) => {
       winRate: d.gamesPlayed > 0 ? Math.round((d.wins / d.gamesPlayed) * 100) : 0
     }));
 
+    const commanderMatchups = Object.values(matchupStats)
+      .map(item => {
+        const gamesPlayed = item.wins + item.losses;
+        return {
+          ...item,
+          deckName: deckNameMap[item.deckId?.toString()] || item.commanderName || 'Unknown Deck',
+          gamesPlayed,
+          winRate: gamesPlayed > 0 ? Math.round((item.wins / gamesPlayed) * 100) : 0,
+        };
+      })
+      .sort((a, b) => b.gamesPlayed - a.gamesPlayed || b.winRate - a.winRate)
+      .slice(0, 10);
+
     res.json({
       totalGames,
       winsByPlayer,
@@ -1960,7 +2051,8 @@ app.get('/api/lifecounter/stats', requireAuth, async (req, res) => {
       gamesByFormat,
       averageTurns: gamesWithTurns > 0 ? Math.round(totalTurns / gamesWithTurns) : 0,
       averageDuration: gamesWithDuration > 0 ? Math.round(totalDuration / gamesWithDuration) : 0,
-      mostPlayedDecks
+      mostPlayedDecks,
+      commanderMatchups
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

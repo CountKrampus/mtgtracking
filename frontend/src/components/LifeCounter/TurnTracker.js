@@ -33,21 +33,21 @@ function TurnTracker({
 
   if (compact) {
     return (
-      <div className="bg-white/10 backdrop-blur-md rounded-xl px-4 py-2 mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
+      <div className="rounded-2xl border border-white/10 bg-slate-950/55 px-3 py-2.5 shadow-lg backdrop-blur-xl sm:px-4">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-1.5">
             <button
               onClick={onPreviousTurn}
-              className="p-1 hover:bg-white/20 rounded-lg transition"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/65 transition hover:bg-white/10 hover:text-white"
               title="Previous turn"
             >
               <ChevronLeft size={18} className="text-white/70" />
             </button>
 
-            <div className="text-center">
-              <div className="text-white/60 text-xs">Turn {turnNumber}</div>
+            <div className="min-w-0 text-center">
+              <div className="text-[10px] uppercase tracking-wide text-white/45">Turn {turnNumber}</div>
               <div
-                className="text-white font-bold text-sm truncate max-w-[120px]"
+                className="max-w-[120px] truncate text-sm font-bold text-white"
                 style={{ color: currentPlayer?.color || '#fff' }}
               >
                 {currentPlayer?.name || 'Unknown'}
@@ -56,7 +56,7 @@ function TurnTracker({
 
             <button
               onClick={onNextTurn}
-              className="p-1 hover:bg-white/20 rounded-lg transition"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/65 transition hover:bg-white/10 hover:text-white"
               title="Next turn"
             >
               <ChevronRight size={18} className="text-white/70" />
@@ -64,27 +64,55 @@ function TurnTracker({
           </div>
 
           {/* Storm Counter */}
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 rounded-xl bg-black/20 px-2 py-1">
             <Zap size={14} className="text-yellow-400" />
             <button
               onClick={onDecrementStorm}
               disabled={stormCount <= 0}
-              className="w-6 h-6 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded text-white/70 text-sm disabled:opacity-30"
+              className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-sm text-white/70 transition hover:bg-white/10 disabled:opacity-30"
             >
               -
             </button>
             <span className="text-yellow-400 font-bold w-6 text-center">{stormCount}</span>
             <button
               onClick={onIncrementStorm}
-              className="w-6 h-6 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded text-white/70 text-sm"
+              className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-sm text-white/70 transition hover:bg-white/10"
             >
               +
+            </button>
+            <button
+              onClick={onResetStorm}
+              disabled={stormCount <= 0}
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-white/45 transition hover:bg-white/10 hover:text-white disabled:opacity-25"
+              title="Reset storm count"
+              aria-label="Reset storm count"
+            >
+              <RotateCcw size={13} />
             </button>
           </div>
         </div>
 
+        <div className="mt-2 flex gap-1 overflow-x-auto pb-1">
+          {players.map((player, index) => (
+            <button
+              key={player.id}
+              onClick={() => onSetCurrentPlayer(index)}
+              disabled={player.isEliminated}
+              className={`max-w-[120px] shrink-0 truncate rounded-lg border px-2.5 py-1 text-[11px] font-medium transition ${
+                index === currentPlayerIndex
+                  ? 'border-white/25 bg-white/10 text-white'
+                  : 'border-transparent bg-black/15 text-white/50 hover:bg-white/5'
+              } disabled:opacity-30`}
+              style={index === currentPlayerIndex ? { boxShadow: `inset 0 -2px ${player.color || '#818cf8'}` } : undefined}
+              title={`Set ${player.name} as the current player`}
+            >
+              {player.name}
+            </button>
+          ))}
+        </div>
+
         {/* Phase Bar - Compact */}
-        <div className="flex gap-1">
+        <div className="mt-1 flex gap-1">
           {GAME_PHASES.map((phase) => {
             const config = PHASE_CONFIG[phase];
             const isActive = currentPhase === phase;
@@ -94,8 +122,8 @@ function TurnTracker({
                 onClick={() => onSetPhase ? onSetPhase(phase) : (onAdvancePhase && onAdvancePhase())}
                 className={`flex-1 py-1 px-1 rounded text-xs font-medium transition ${
                   isActive
-                    ? `${config.color} text-white ring-2 ring-white/50`
-                    : `bg-white/10 text-white/50 ${config.hoverColor}`
+                    ? `${config.color} text-white shadow-md shadow-black/20 ring-1 ring-white/30`
+                    : `bg-white/5 text-white/50 ${config.hoverColor}`
                 }`}
                 title={`${config.label}${isActive ? ' (current)' : ''}`}
               >
@@ -109,7 +137,7 @@ function TurnTracker({
   }
 
   return (
-    <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 mb-4">
+    <div className="rounded-2xl border border-white/10 bg-slate-950/55 p-4 shadow-lg backdrop-blur-xl">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-white/60 text-sm font-semibold">Turn Tracker</h3>
         <div className="text-white/80 font-bold">Turn {turnNumber}</div>
@@ -119,14 +147,14 @@ function TurnTracker({
       <div className="flex items-center justify-center gap-4 mb-4">
         <button
           onClick={onPreviousTurn}
-          className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 transition hover:bg-white/10"
           title="Previous turn"
         >
           <ChevronLeft size={24} className="text-white" />
         </button>
 
         <div
-          className="flex-1 text-center py-3 rounded-xl transition"
+          className="flex-1 rounded-2xl border border-white/10 py-3 transition"
           style={{ backgroundColor: `${currentPlayer?.color || '#6366f1'}30` }}
         >
           <div className="text-white/60 text-xs mb-1">Current Player</div>
@@ -143,7 +171,7 @@ function TurnTracker({
 
         <button
           onClick={onNextTurn}
-          className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 transition hover:bg-white/10"
           title="Next turn"
         >
           <ChevronRight size={24} className="text-white" />
@@ -159,7 +187,7 @@ function TurnTracker({
             disabled={player.isEliminated}
             className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
               index === currentPlayerIndex
-                ? 'ring-2 ring-white'
+                ? 'ring-2 ring-white/80 shadow-md shadow-black/20'
                 : ''
             } ${
               player.isEliminated
@@ -189,8 +217,8 @@ function TurnTracker({
                 onClick={() => onSetPhase ? onSetPhase(phase) : (onAdvancePhase && onAdvancePhase())}
                 className={`flex-1 py-2 px-2 rounded-lg text-sm font-medium transition ${
                   isActive
-                    ? `${config.color} text-white ring-2 ring-white/50 shadow-lg`
-                    : `bg-white/10 text-white/50 ${config.hoverColor}`
+                    ? `${config.color} text-white shadow-md shadow-black/20 ring-1 ring-white/40`
+                    : `bg-white/5 text-white/55 ${config.hoverColor}`
                 }`}
                 title={`${config.label}${isActive ? ' (current)' : ''}`}
               >
@@ -202,7 +230,7 @@ function TurnTracker({
       </div>
 
       {/* Storm Counter */}
-      <div className="flex items-center justify-between bg-black/20 rounded-lg p-3">
+      <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/25 p-3">
         <div className="flex items-center gap-2">
           <Zap size={18} className="text-yellow-400" />
           <span className="text-white/80 font-medium">Storm Count</span>

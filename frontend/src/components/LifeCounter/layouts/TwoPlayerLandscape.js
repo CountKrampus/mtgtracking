@@ -69,8 +69,8 @@ function TwoPlayerLandscape({
 
     return (
       <div
-        className={`flex-1 flex flex-col relative overflow-hidden transition-all ${getBgColor()} ${
-          isCurrentTurn ? 'ring-4 ring-yellow-400/50 ring-inset' : ''
+        className={`relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-b transition-colors last:border-b-0 ${getBgColor()} ${
+          isCurrentTurn ? 'ring-2 ring-yellow-300/60 ring-inset' : ''
         }`}
         style={{
           transform: isFlipped ? 'rotate(180deg)' : 'none',
@@ -81,47 +81,47 @@ function TwoPlayerLandscape({
         {/* Eliminated Overlay */}
         {player.isEliminated && (
           <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10">
-            <Skull size={64} className="text-gray-400 mb-2" />
-            <span className="text-gray-400 font-semibold text-xl">Eliminated</span>
+            <Skull size={40} className="mb-2 text-gray-400 sm:h-12 sm:w-12" />
+            <span className="text-sm font-semibold text-gray-300 sm:text-base">Eliminated</span>
           </div>
         )}
 
         {/* Player Content */}
-        <div className="flex-1 flex flex-col items-center justify-center p-4">
+        <div className="relative z-[1] flex min-h-0 flex-1 flex-col items-center justify-evenly gap-1 px-3 py-2 sm:px-5 sm:py-3">
           {/* Status Badges */}
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex min-h-5 flex-wrap items-center justify-center gap-1.5">
             {isCurrentTurn && !player.isEliminated && (
-              <div className="px-2 py-0.5 bg-yellow-600/30 rounded-full text-yellow-400 text-xs font-semibold">
-                CURRENT TURN
+              <div className="rounded-full border border-amber-300/20 bg-amber-300/10 px-2 py-0.5 text-[9px] font-bold tracking-wider text-amber-200">
+                TURN
               </div>
             )}
             {isMonarch && (
-              <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-600/30 rounded-full">
+              <div className="flex items-center gap-1 rounded-full bg-yellow-600/20 px-2 py-0.5">
                 <Crown size={12} className="text-yellow-400" />
-                <span className="text-yellow-400 text-xs font-semibold">Monarch</span>
+                <span className="text-[10px] font-semibold text-yellow-300">Monarch</span>
               </div>
             )}
             {hasInitiative && (
-              <div className="px-2 py-0.5 bg-cyan-600/30 rounded-full text-cyan-400 text-xs font-semibold">
+              <div className="rounded-full bg-cyan-600/20 px-2 py-0.5 text-[10px] font-semibold text-cyan-300">
                 Initiative
               </div>
             )}
             {player.citysBlessing && (
-              <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600/30 rounded-full">
+              <div className="flex items-center gap-1 rounded-full bg-emerald-600/20 px-2 py-0.5">
                 <Building2 size={12} className="text-emerald-400" />
               </div>
             )}
             {player.ringProgress > 0 && (
-              <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-600/30 rounded-full">
+              <div className="flex items-center gap-1 rounded-full bg-amber-600/20 px-2 py-0.5">
                 <Circle size={12} className="text-amber-400" />
-                <span className="text-amber-400 text-xs font-semibold">{player.ringProgress}</span>
+                <span className="text-[10px] font-semibold text-amber-300">{player.ringProgress}</span>
               </div>
             )}
           </div>
 
           {/* Player Name */}
           <h2
-            className="text-2xl font-bold mb-4"
+            className="mb-0 max-w-full truncate text-lg font-bold tracking-tight sm:text-xl"
             style={{ color: player.isEliminated ? '#6b7280' : (player.color || '#fff') }}
           >
             {player.name}
@@ -129,64 +129,83 @@ function TwoPlayerLandscape({
 
           {/* Life Total - Big touch target */}
           <div
-            className={`text-9xl font-bold mb-6 cursor-pointer select-none transition ${getLifeColor()} ${
+            className={`cursor-pointer select-none py-0 font-bold leading-none tracking-tighter transition ${getLifeColor()} ${
               player.isEliminated ? 'line-through' : ''
             } ${visualState === 'critical' ? 'animate-pulse' : ''}`}
+            style={{ fontSize: 'clamp(2.75rem, 11vh, 6rem)' }}
             onClick={() => !player.isEliminated && onLifeChange(player.id, 1)}
+            role="button"
+            tabIndex={player.isEliminated ? -1 : 0}
+            aria-label={`${player.name}: ${player.life} life. Tap to gain 1 life.`}
+            onKeyDown={event => {
+              if (!player.isEliminated && (event.key === 'Enter' || event.key === ' ')) {
+                event.preventDefault();
+                onLifeChange(player.id, 1);
+              }
+            }}
           >
             {player.life}
           </div>
 
           {/* Life Adjustment Buttons */}
-          <div className={`flex gap-4 mb-6 ${player.isEliminated ? 'opacity-30' : ''}`}>
+          <div className={`grid w-full max-w-sm grid-cols-4 gap-2 ${player.isEliminated ? 'opacity-30' : ''}`}>
             <button
               onClick={() => onLifeChange(player.id, -5)}
               disabled={player.isEliminated}
-              className="w-16 h-16 bg-red-600/80 hover:bg-red-600 text-white rounded-2xl font-bold text-2xl transition disabled:opacity-50"
+              className="rounded-xl border border-rose-300/15 bg-rose-500/20 text-lg font-bold text-rose-100 transition active:scale-95 disabled:opacity-50"
+              aria-label={`Remove 5 life from ${player.name}`}
+              style={{ height: 'clamp(2.25rem, 8vh, 3rem)' }}
             >
               -5
             </button>
             <button
               onClick={() => onLifeChange(player.id, -1)}
               disabled={player.isEliminated}
-              className="w-16 h-16 bg-red-500/80 hover:bg-red-500 text-white rounded-2xl transition disabled:opacity-50 flex items-center justify-center"
+              className="flex items-center justify-center rounded-xl border border-rose-300/15 bg-rose-500/25 text-rose-100 transition active:scale-95 disabled:opacity-50"
+              aria-label={`Remove 1 life from ${player.name}`}
+              style={{ height: 'clamp(2.25rem, 8vh, 3rem)' }}
             >
-              <Minus size={32} />
+              <Minus size={24} />
             </button>
             <button
               onClick={() => onLifeChange(player.id, 1)}
               disabled={player.isEliminated}
-              className="w-16 h-16 bg-green-500/80 hover:bg-green-500 text-white rounded-2xl transition disabled:opacity-50 flex items-center justify-center"
+              className="flex items-center justify-center rounded-xl border border-emerald-300/15 bg-emerald-500/25 text-emerald-100 transition active:scale-95 disabled:opacity-50"
+              aria-label={`Add 1 life to ${player.name}`}
+              style={{ height: 'clamp(2.25rem, 8vh, 3rem)' }}
             >
-              <Plus size={32} />
+              <Plus size={24} />
             </button>
             <button
               onClick={() => onLifeChange(player.id, 5)}
               disabled={player.isEliminated}
-              className="w-16 h-16 bg-green-600/80 hover:bg-green-600 text-white rounded-2xl font-bold text-2xl transition disabled:opacity-50"
+              className="rounded-xl border border-emerald-300/15 bg-emerald-500/20 text-lg font-bold text-emerald-100 transition active:scale-95 disabled:opacity-50"
+              aria-label={`Add 5 life to ${player.name}`}
+              style={{ height: 'clamp(2.25rem, 8vh, 3rem)' }}
             >
               +5
             </button>
           </div>
 
           {/* Bottom Row: Poison + Commander Damage */}
-          <div className={`flex items-center gap-6 ${player.isEliminated ? 'opacity-30' : ''}`}>
+          <div className={`flex flex-wrap items-center justify-center gap-2 sm:gap-4 ${player.isEliminated ? 'opacity-30' : ''}`}>
             {/* Poison Counter */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => onPoisonChange(player.id, -1)}
                 disabled={player.isEliminated || player.poison <= 0}
-                className="w-10 h-10 bg-purple-600/80 hover:bg-purple-600 text-white rounded-xl transition disabled:opacity-50 flex items-center justify-center"
+                className="flex h-8 w-8 items-center justify-center rounded-xl border border-violet-300/15 bg-violet-500/20 text-white transition disabled:opacity-50"
+                aria-label={`Remove poison counter from ${player.name}`}
               >
                 <Minus size={20} />
               </button>
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
+              <div className={`flex items-center gap-1.5 rounded-xl border border-white/10 px-2.5 py-1 ${
                 player.poison >= 9 ? 'bg-red-600/50' :
                 player.poison >= 7 ? 'bg-yellow-600/50' :
                 'bg-purple-900/50'
               }`}>
-                <Droplets size={24} className="text-purple-300" />
-                <span className={`text-2xl font-bold ${
+                <Droplets size={18} className="text-purple-300" />
+                <span className={`text-lg font-bold tabular-nums ${
                   player.poison >= 9 ? 'text-red-300' :
                   player.poison >= 7 ? 'text-yellow-300' :
                   'text-purple-300'
@@ -197,7 +216,8 @@ function TwoPlayerLandscape({
               <button
                 onClick={() => onPoisonChange(player.id, 1)}
                 disabled={player.isEliminated}
-                className="w-10 h-10 bg-purple-600/80 hover:bg-purple-600 text-white rounded-xl transition disabled:opacity-50 flex items-center justify-center"
+                className="flex h-8 w-8 items-center justify-center rounded-xl border border-violet-300/15 bg-violet-500/20 text-white transition disabled:opacity-50"
+                aria-label={`Add poison counter to ${player.name}`}
               >
                 <Plus size={20} />
               </button>
@@ -208,14 +228,15 @@ function TwoPlayerLandscape({
               <button
                 onClick={() => onCommanderDamageClick(player.id)}
                 disabled={player.isEliminated}
-                className={`px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2 ${
+                className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
                   player.isEliminated
-                    ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
-                    : 'bg-orange-600/80 hover:bg-orange-600 text-white'
+                    ? 'cursor-not-allowed border-white/5 bg-gray-700/50 text-gray-500'
+                    : 'border-orange-300/20 bg-orange-500/20 text-orange-100 hover:bg-orange-500/30'
                 }`}
+                aria-label={`Manage commander damage to ${player.name}`}
               >
-                <Swords size={24} />
-                <span className="text-lg">CMD</span>
+                <Swords size={18} />
+                <span>CMD</span>
                 {getTotalCommanderDamage() > 0 && (
                   <span className={`ml-1 px-2 py-0.5 rounded-full text-sm ${
                     getTotalCommanderDamage() >= 18 ? 'bg-red-500' :
@@ -234,43 +255,50 @@ function TwoPlayerLandscape({
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-gray-900 relative">
+    <div
+      className="fixed inset-0 z-40 flex w-screen flex-col overflow-hidden bg-slate-950"
+      style={{
+        height: '100dvh',
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
+    >
       {/* Player 1 - Flipped (top) */}
       {renderPlayerSide(players[0], 0, true)}
 
       {/* Center Controls */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex gap-2">
+      <div className="z-20 flex h-10 shrink-0 items-center justify-center gap-2 border-y border-white/10 bg-slate-950 px-3">
         {onBack && (
           <button
             onClick={onBack}
-            className="p-3 bg-gray-800/90 hover:bg-gray-700 text-white rounded-full shadow-lg transition"
+            className="flex h-8 w-10 items-center justify-center rounded-lg text-white/75 transition hover:bg-white/10 hover:text-white"
             title="Back"
+            aria-label="Back"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={18} />
           </button>
         )}
         {onToggleLayout && (
           <button
             onClick={onToggleLayout}
-            className="p-3 bg-blue-600/90 hover:bg-blue-500 text-white rounded-full shadow-lg transition"
+            className="flex h-8 w-10 items-center justify-center rounded-lg text-sky-200 transition hover:bg-sky-400/15 hover:text-white"
             title="Grid Layout"
+            aria-label="Switch to grid layout"
           >
-            <LayoutGrid size={20} />
+            <LayoutGrid size={18} />
           </button>
         )}
         {onReset && (
           <button
             onClick={onReset}
-            className="p-3 bg-red-600/90 hover:bg-red-500 text-white rounded-full shadow-lg transition"
+            className="flex h-8 w-10 items-center justify-center rounded-lg text-rose-200 transition hover:bg-rose-400/15 hover:text-white"
             title="Reset"
+            aria-label="Reset game"
           >
-            <RotateCcw size={20} />
+            <RotateCcw size={18} />
           </button>
         )}
       </div>
-
-      {/* Divider */}
-      <div className="h-1 bg-white/20 flex-shrink-0" />
 
       {/* Player 2 - Normal (bottom) */}
       {renderPlayerSide(players[1], 1, false)}

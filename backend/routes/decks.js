@@ -105,6 +105,59 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
+router.get('/card-allocation', requireAuth, async (req, res) => {
+  try {
+    const [decks, collectionCards] = await Promise.all([
+      Deck.find(buildUserQuery({}, req)).select('name commander partnerCommander mainDeck sideboard').lean(),
+      Card
+        ? Card.find(buildUserQuery({}, req)).select('name scryfallId quantity').lean()
+        : Promise.resolve([]),
+    ]);
+    const allocatedById = new Map();
+
+    const addAllocation = (card, deckName) => {
+      if (!card?.scryfallId) return;
+      const quantity = Math.max(1, Number(card.quantity) || 1);
+      const allocation = allocatedById.get(card.scryfallId) || {
+        scryfallId: card.scryfallId,
+        name: card.name,
+        required: 0,
+        decks: [],
+      };
+      allocation.required += quantity;
+      allocation.decks.push({ name: deckName, quantity });
+      allocatedById.set(card.scryfallId, allocation);
+    };
+
+    for (const deck of decks) {
+      addAllocation(deck.commander, deck.name);
+      addAllocation(deck.partnerCommander, deck.name);
+      [...(deck.mainDeck || []), ...(deck.sideboard || [])].forEach(card => addAllocation(card, deck.name));
+    }
+
+    const ownedById = new Map();
+    collectionCards.forEach(card => {
+      if (card.scryfallId) {
+        ownedById.set(card.scryfallId, (ownedById.get(card.scryfallId) || 0) + (Number(card.quantity) || 0));
+      }
+    });
+
+    const shortages = [...allocatedById.values()]
+      .map(item => ({
+        ...item,
+        owned: ownedById.get(item.scryfallId) || 0,
+        shortfall: Math.max(0, item.required - (ownedById.get(item.scryfallId) || 0)),
+      }))
+      .filter(item => item.shortfall > 0)
+      .sort((a, b) => b.shortfall - a.shortfall || a.name.localeCompare(b.name));
+
+    res.json({ shortages, totalCardsShort: shortages.length, totalCopiesShort: shortages.reduce((sum, item) => sum + item.shortfall, 0) });
+  } catch (error) {
+    console.error('Deck card allocation error:', error);
+    res.status(500).json({ message: 'Could not calculate deck card allocation' });
+  }
+});
+
 // Public: get a deck by share code (no auth required)
 router.get('/shared/:shareCode', async (req, res) => {
   try {

@@ -3,6 +3,7 @@ const { MongoMemoryServer } = require('mongodb-memory-server');
 const User = require('../models/User');
 const CardPriceSnapshot = require('../models/CardPriceSnapshot');
 const Notification = require('../models/Notification');
+const SetValueSnapshot = require('../models/SetValueSnapshot');
 
 // runDailySnapshot() resolves Card via mongoose.model('Card') lazily at call time
 // (Card is registered dynamically by server.js, not a requirable file). Register a
@@ -15,6 +16,8 @@ const cardSchema = new mongoose.Schema({
   price: { type: Number, default: 0 },
   priceCad: { type: Number, default: 0 },
   rarity: String,
+  set: String,
+  setCode: String,
   quantity: { type: Number, default: 1 },
   priceAlert: {
     targetPrice: Number,
@@ -49,6 +52,7 @@ afterEach(async () => {
   await User.deleteMany({});
   await CardPriceSnapshot.deleteMany({});
   await Notification.deleteMany({});
+  await SetValueSnapshot.deleteMany({});
   jest.clearAllMocks();
 });
 
@@ -57,6 +61,23 @@ async function makeUser() {
 }
 
 describe('runDailySnapshot price alerts', () => {
+  it('stores one per-set value snapshot per user and day', async () => {
+    const user = await makeUser();
+    await Card.create([
+      { userId: user._id, name: 'Card One', set: 'Test Set', setCode: 'tst', quantity: 2, price: 1 },
+      { userId: user._id, name: 'Card Two', set: 'Test Set', setCode: 'tst', quantity: 3, price: 1 },
+    ]);
+    getPriceWithFallback.mockResolvedValue({ usd: 2 });
+
+    await runDailySnapshot();
+
+    const snapshots = await SetValueSnapshot.find({ userId: user._id, setKey: 'tst' });
+    expect(snapshots).toHaveLength(1);
+    expect(snapshots[0].value).toBe(10);
+    expect(snapshots[0].cardCount).toBe(2);
+    expect(snapshots[0].quantityCount).toBe(5);
+  });
+
   it('fires a low-target notification on a fresh downward crossing', async () => {
     const user = await makeUser();
     const card = await Card.create({
